@@ -3,16 +3,19 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const db = require('_helpers/db');
 const User = db.User;
+const { validationResult } = require('express-validator');
 
 module.exports = {
-    getUsers,
-    registerUser
+	getUsers,
+	registerUser,
 };
 
 async function getUsers() {
-    return await User.find();
+	return await User.find();
 }
+
 async function registerUser(userParam) {
-    const user = new User(userParam);
-    await user.save();
+	// const user = new User(userParam);
+	// await user.save();
+	// return user;
 }
