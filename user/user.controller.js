@@ -2,7 +2,10 @@ const express = require('express');
 const router = express.Router();
 const userService = require('./user.service');
 const db = require('_helpers/db');
+
 const { check, validationResult } = require('express-validator');
+const bcrypt = require('bcryptjs');
+
 const User = db.User;
 
 // routes
@@ -55,6 +58,12 @@ async function registerUser(req, res) {
 			phone_number,
 			password,
 		});
+
+		let pass = user.password;
+
+		const salt = await bcrypt.genSalt(10);
+
+		user.password = await bcrypt.hash(pass, salt);
 
 		await user.save();
 
