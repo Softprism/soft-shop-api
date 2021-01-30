@@ -2,16 +2,18 @@ const express = require('express');
 const router = express.Router();
 const userService = require('./user.service');
 const db = require('_helpers/db');
+const auth = require('../_helpers/auth');
 
-const { check, validationResult } = require('express-validator');
-const bcrypt = require('bcryptjs');
+const { check } = require('express-validator');
 
-const User = db.User;
+// @route   GET /user
+// @desc    Get all Users
+// @access  Public
+router.get('/', userService.getUsers);
 
-// routes
-router.get('/', getUsers);
-
-// Register a User
+// @route   POST user/register
+// @desc    Register a User
+// @access  Public
 router.post(
 	'/register',
 	[
@@ -24,24 +26,16 @@ router.post(
 			'Please Enter Password with 6 or more characters'
 		).isLength({ min: 6 }),
 	],
-	registerUser
+	userService.registerUser
 );
 
+// @route   POST user/login
+// @desc    Login a User & get token
+// @access  Public
+
+router.post('/', [
+	check('email', 'Please enter a Valid Email').isEmail(),
+	check('password', 'Password is Required').exists(),
+]);
+
 module.exports = router;
-
-function getUsers(req, res, next) {
-	userService
-		.getUsers()
-		.then((users) => res.json(users))
-		.catch((err) => next(err));
-}
-
-function registerUser(req,res,next){
-	const errors = validationResult(req);
-	if (!errors.isEmpty()) {
-		return res.status(400).json({ errors: errors.array() });
-	}
-	userService.registerUser(req.body)
-        .then((result) => res.json(result))
-        .catch(err => next(err));
-}

@@ -5,7 +5,7 @@ const userService = require('../user/user.service');
 module.exports = jwt;
 
 function jwt() {
-    const secret = config.secret;
+    const secret = config.jwtSecret;
     return expressJwt({ secret, algorithms: ['HS256'], isRevoked }).unless({
         path: [
             /\/user/i,
@@ -18,7 +18,7 @@ function jwt() {
 }
 
 async function isRevoked(req, payload, done) {
-    const user = await userService.getById(payload.sub);
+    const user = await userService.getById(payload.id);
 
     // revoke token if user no longer exists
     if (!user) {
