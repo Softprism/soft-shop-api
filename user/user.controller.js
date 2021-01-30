@@ -35,41 +35,13 @@ function getUsers(req, res, next) {
 		.then((users) => res.json(users))
 		.catch((err) => next(err));
 }
-async function registerUser(req, res) {
-	const errors = validationResult(req);
 
+function registerUser(req,res,next){
+	const errors = validationResult(req);
 	if (!errors.isEmpty()) {
 		return res.status(400).json({ errors: errors.array() });
 	}
-
-	const { first_name, last_name, email, phone_number, password } = req.body;
-
-	try {
-		let user = await User.findOne({ email });
-
-		if (user) {
-			return res.status(400).json({ msg: 'User already exists' });
-		}
-
-		user = new User({
-			first_name,
-			last_name,
-			email,
-			phone_number,
-			password,
-		});
-
-		let pass = user.password;
-
-		const salt = await bcrypt.genSalt(10);
-
-		user.password = await bcrypt.hash(pass, salt);
-
-		await user.save();
-
-		return res.status(200).json({ user });
-	} catch (err) {
-		console.error(err.message);
-		res.status(500).send('Server Error');
-	}
+	userService.registerUser(req.body)
+        .then((result) => res.json(result))
+        .catch(err => next(err));
 }
