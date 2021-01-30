@@ -1,4 +1,4 @@
 {
-	"connectionString": "mongodb+srv://softprism:2021@Softprism@softprism.hz11h.mongodb.net/softshopais?retryWrites=true&w=majority",
+	"connectionString": "mongodb+srv://softprism:2021@Softprism@softprism.hz11h.mongodb.net/softshopapis?retryWrites=true&w=majority",
 	"secret": "softprismsoftshop"
 }
