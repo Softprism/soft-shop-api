@@ -33,9 +33,22 @@ router.post(
 // @desc    Login a User & get token
 // @access  Public
 
-router.post('/', [
-	check('email', 'Please enter a Valid Email').isEmail(),
-	check('password', 'Password is Required').exists(),
-]);
+router.post(
+	'/login',
+	[
+		check('email', 'Please enter a Valid Email').isEmail(),
+		check('password', 'Password should be 6 characters or more').isLength({
+			min: 6,
+		}),
+		check('password', 'Password is Required').exists(),
+	],
+	userService.loginUser
+);
+
+// @route   GET user/login
+// @desc    Get logged in user
+// @access  Private
+
+router.get('/login', auth, userService.getLoggedInUser);
 
 module.exports = router;
