@@ -154,17 +154,20 @@ const updateUser = async (req, res) => {
 
 		if (!user) return res.status(404).json({ msg: 'User not found' });
 
-		// Check if address array is not empty
-		if (!user.address.length < 1) {
-			// Set the address value in user object to address found from db, then append new address
-			userFields.address = [...user.address, address];
+		// Check if address field is not empty
+		if (address !== '' || null) {
+			if (!user.address.length < 1) {
+				// Check if address array is not empty
+				// Set the address value in user object to address found from db, then append new address
+				userFields.address = [...user.address, address];
+			}
 		}
 
 		// Updates the user Object with the changed values
 		user = await User.findByIdAndUpdate(
 			req.params.id,
 			{ $set: userFields },
-			{ new: true }
+			{ new: true, useFindAndModify: true }
 		);
 
 		res.json(user);
