@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const userService = require('./user.service');
-const db = require('_helpers/db');
 const auth = require('../_helpers/auth');
 
 const { check } = require('express-validator');
@@ -50,5 +49,11 @@ router.post(
 // @access  Private
 
 router.get('/login', auth, userService.getLoggedInUser);
+
+// @route   PUT user/:id
+// @desc    Update User Details
+// @access  Private
+
+router.put('/update/:id', auth, userService.updateUser);
 
 module.exports = router;
