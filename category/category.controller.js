@@ -2,21 +2,23 @@ const express = require('express');
 const router = express.Router();
 const categoryService = require('./category.service');
 
-// routes
+const { check } = require('express-validator');
 
-router.get('/', getCategories);
-router.post('/create', createCategory)
+// @route   GET /category
+// @desc    Get all Categories
+// @access  Public
+router.get('/', categoryService.getCategories);
+
+// @route   POST /category/new
+// @desc    Create New Category
+// @access  Public
+router.post(
+	'/new',
+	[
+		check('name', 'Please enter valid category name').isString(),
+		check('image', 'Please upload Image').exists(),
+	],
+	categoryService.createCategory
+);
 
 module.exports = router;
-
-function getCategories(req, res, next) {
-    categoryService.getCategories()
-        .then(categories => res.json(categories))
-        .catch(err => next(err));
-}
-function createCategory(req,res,next) {
-    console.log(req.body)
-    categoryService.createCategory(req.body)
-    .then(()=>res.json({}))
-    .catch(err => next(err))
-}
