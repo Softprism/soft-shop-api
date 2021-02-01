@@ -21,6 +21,11 @@ router.post(
 	categoryService.createCategory
 );
 
+// @route   PUT /category/edit/:id
+// @desc    Edit Category Category
+// @access  Public
+router.put('/edit/:id', categoryService.editCategory);
+
 // @route   DELETE /category/delete/:id
 // @desc    Create New Category
 // @access  Public

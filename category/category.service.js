@@ -45,6 +45,51 @@ const createCategory = async (req, res) => {
 	}
 };
 
+// Edit a category
+const editCategory = async (req, res) => {
+	const errors = validationResult(req);
+
+	if (!errors.isEmpty()) {
+		return res.status(400).json({ errors: errors.array() });
+	}
+
+	const { name, image } = req.body;
+
+	// Build Category Object
+	const categoryFields = {};
+
+	// Check for fields
+	if (image) categoryFields.name = image;
+	if (name) categoryFields.name = name;
+
+	try {
+		let category = await Category.findById(req.params.id);
+
+		if (!category) return res.status(404).json({ msg: 'Category not found' });
+
+		// Check if image field is not empty
+		if (image !== '' || null) {
+			// Check if image array is not empty
+			if (!category.image.length < 1) {
+				// Set the image value in user object to image found from db, then append new address
+				categoryFields.image = [...category.image, image];
+			}
+		}
+
+		// Updates the user Object with the changed values
+		category = await Category.findByIdAndUpdate(
+			req.params.id,
+			{ $set: categoryFields },
+			{ new: true, useFindAndModify: true }
+		);
+
+		res.json(category);
+	} catch (err) {
+		console.error(err.message);
+		res.status(500).send('Server Error');
+	}
+};
+
 //   Delete a Category
 const deleteCategory = async (req, res) => {
 	try {
@@ -66,5 +111,6 @@ const deleteCategory = async (req, res) => {
 module.exports = {
 	getCategories,
 	createCategory,
+	editCategory,
 	deleteCategory,
 };
