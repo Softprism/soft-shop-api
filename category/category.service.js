@@ -71,7 +71,7 @@ const editCategory = async (req, res) => {
 		if (image !== '' || null) {
 			// Check if image array is not empty
 			if (!category.image.length < 1) {
-				// Set the image value in user object to image found from db, then append new address
+				// Set the image string value in category object to image found from db, then append new image string
 				categoryFields.image = [...category.image, image];
 			}
 		}
