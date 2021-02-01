@@ -21,4 +21,9 @@ router.post(
 	categoryService.createCategory
 );
 
+// @route   DELETE /category/delete/:id
+// @desc    Create New Category
+// @access  Public
+router.delete('/delete/:id', categoryService.deleteCategory);
+
 module.exports = router;
