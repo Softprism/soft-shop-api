@@ -156,8 +156,8 @@ const updateUser = async (req, res) => {
 
 		// Check if address field is not empty
 		if (address !== '' || null) {
+			// Check if address array is not empty
 			if (!user.address.length < 1) {
-				// Check if address array is not empty
 				// Set the address value in user object to address found from db, then append new address
 				userFields.address = [...user.address, address];
 			}
