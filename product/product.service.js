@@ -70,8 +70,8 @@ async function createProduct(productParam, id) {
 async function updateProduct(productParam, productId, storeId) {
     const { product_name, category, availability, price, rating } = productParam;
 
+    console.log(productId);
     let store = await Store.findById(storeId);
-
     if (!store) {
         throw ({
             code: 400,

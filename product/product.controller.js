@@ -122,7 +122,7 @@ function updateProduct(req, res, next) {
     //         errors: errors.array()['msg']
     //     });
     // }
-
+    console.log(req.params.id);
     productService.updateProduct(req.body, req.params.id, req.user.id)
         .then(product => {
             res.json({
