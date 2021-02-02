@@ -1,5 +1,6 @@
 const config = require('config.json');
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
 const connectionOptions = {
 	useCreateIndex: true,

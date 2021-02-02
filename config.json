@@ -1,4 +1,4 @@
 {
-	"connectionString": "mongodb://localhost:27017/soft-shop-api?readPreference=primary&appname=MongoDB%20Compass&ssl=false",
+	"connectionString": "mongodb+srv://Archie:oluwatstar@new.fmjcw.mongodb.net/softshop?retryWrites=true&w=majority",
 	"jwtSecret": "softprismsoftshop"
 }
