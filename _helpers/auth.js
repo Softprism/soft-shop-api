@@ -7,12 +7,10 @@ module.exports = (req, res, next) => {
 
 	// Check if it's not a token
 	if (!token) {
-		return res
-			.status(401)
-			.json({ 
-				success: false,
-				message: 'No token detected, authorization denied'
-			});
+		return res.status(401).json({
+			success: false,
+			message: 'No token detected, authorization denied',
+		});
 	}
 
 	try {
@@ -30,7 +28,7 @@ module.exports = (req, res, next) => {
 	} catch (err) {
 		res.status(401).json({
 			success: false,
-			msg: 'Token is not Valid'
+			msg: 'Token is not Valid',
 		});
 	}
 };

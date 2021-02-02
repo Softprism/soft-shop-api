@@ -9,18 +9,16 @@ const User = db.User;
 
 // Get all Users
 const getUsers = async () => {
-	try{
+	try {
 		const users = await User.find();
-			return users;
+		return users;
 	} catch (err) {
-		return err
+		return err;
 	}
-	
 };
 
 // Register User
 const registerUser = async (userParam) => {
-
 	const { first_name, last_name, email, phone_number, password } = userParam;
 
 	try {
@@ -30,7 +28,7 @@ const registerUser = async (userParam) => {
 			// return res
 			// 	.status(400)
 			// 	.json({ msg: 'User with this email already exists' });
-			throw 'User with this email already exists' 
+			throw 'User with this email already exists';
 		}
 
 		// Create User Object
@@ -70,7 +68,6 @@ const registerUser = async (userParam) => {
 
 // Login User
 const loginUser = async (loginParam) => {
-
 	const { email, password } = loginParam;
 
 	try {
@@ -85,7 +82,7 @@ const loginUser = async (loginParam) => {
 		const isMatch = await bcrypt.compare(password, user.password);
 
 		if (!isMatch) {
-			throw 'Invalid Credentials' ;
+			throw 'Invalid Credentials';
 		}
 
 		// Define payload for token
@@ -97,22 +94,21 @@ const loginUser = async (loginParam) => {
 
 		// Generate and return token to server
 		const token = jwt.sign(payload, config.jwtSecret, { expiresIn: 36000 });
-		if(!token){
-			throw 'missing token' ;
+		if (!token) {
+			throw 'missing token';
 		}
 		return token;
-
 	} catch (err) {
-		return err ;
+		return err;
 	}
 };
 
 // Get Logged in User
 const getLoggedInUser = async (userParam) => {
-	console.log('running')
+	console.log('running');
 	try {
 		const user = await User.findById(userParam).select('-password');
-		console.log(user)
+		console.log(user);
 		return user;
 	} catch (err) {
 		// console.error(err.message);
@@ -121,8 +117,8 @@ const getLoggedInUser = async (userParam) => {
 };
 
 // Update User Details
-const updateUser = async (updateParam,id) => {
-	console.log(updateParam,id)
+const updateUser = async (updateParam, id) => {
+	console.log(updateParam, id);
 	const { address, password, email } = updateParam;
 
 	// Build User Object
@@ -141,7 +137,6 @@ const updateUser = async (updateParam,id) => {
 	try {
 		// Find use from DB Collection
 		let user = await User.findById(id);
-		
 
 		if (!user) throw 'User not found';
 
@@ -163,7 +158,7 @@ const updateUser = async (updateParam,id) => {
 
 		throw user;
 	} catch (err) {
-		return err
+		return err;
 	}
 };
 
