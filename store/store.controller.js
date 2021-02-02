@@ -8,8 +8,14 @@ const { check, validationResult } = require('express-validator');
 
 // routes
 
+// @route   GET /store
+// @desc    Get all stores
+// @access  Private
 router.get('/', auth, getStores);
 
+// @route   POST /store/create
+// @desc    Register a store
+// @access  Public
 router.post(
     '/create',
     [
@@ -26,6 +32,9 @@ router.post(
     createStore
 )
 
+// @route   POST /store/login
+// @desc    Login a store
+// @access  Public
 router.post(
     '/login',
     [
