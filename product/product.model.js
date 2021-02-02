@@ -8,6 +8,7 @@ const Productschema = new Schema({
     category: { type: Schema.Types.ObjectId, ref: "Category", required: true },
     availability: { type: Boolean, required: true },
     price: {type: String, required: true},
+    rating: {type: String, required: false},
     createdDate: { type: Date, default: Date.now }
 });
 
