@@ -12,7 +12,7 @@ module.exports = {
 };
 
 async function getStores() {
-    return await Store.find();
+    return await Store.find().select('-password, -__v');
 }
 
 async function createStore(StoreParam) {
