@@ -48,6 +48,15 @@ router.post(
     loginStore
 )
 
+// @route   PUT /store/update
+// @desc    Update a store
+// @access  Private
+router.put(
+    '/update',
+    auth,
+    loginStore
+)
+
 module.exports = router;
 
 function getStores(req, res, next) {
@@ -132,6 +141,29 @@ function loginStore(req,res,next) {
                     token: token
                 }
             });
+        });
+    })
+    .catch(err => res.status(err.code != null ? err.code : 500).send({
+        success: false,
+        message: err.msg != null ? err.msg : 'Server Error'
+    }));
+}
+
+function updateStore(req,res,next) {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+        res.status(400).json({ 
+            success: false,
+            errors: errors.array()['msg']
+        });
+    }
+    
+    storeService.updateStore(req)
+    .then(store => {
+        res.json({
+            success: true,
+            store: store
         });
     })
     .catch(err => res.status(err.code != null ? err.code : 500).send({

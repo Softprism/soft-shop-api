@@ -7,7 +7,8 @@ const Store = db.Store;
 module.exports = {
     getStores,
     createStore,
-    loginStore
+    loginStore,
+    updateStore
 };
 
 async function getStores() {
@@ -62,28 +63,36 @@ async function loginStore(StoreParam) {
     return storeRes;
 }
 
-async function loginStore(StoreParam) {
-    const { name, password } = StoreParam;
+async function updateStore(req) {
+    const { email, password, address, phone_number } = req.body;
 
-    let store = await Store.findOne({ name });
-    let storeRes = await Store.findOne({ name }).select('-password, -__v');
+    const storeUpdate = {};
+
+    // Check for fields
+	if (address) storeUpdate.address = address;
+	if (email) storeUpdate.email = email;
+	if (phone_number) storeUpdate.email = phone_number;
+	if (password) {
+		const salt = await bcrypt.genSalt(10)
+		storeUpdate.password = await bcrypt.hash(password, salt);
+	}
+
+    let store = await Store.findById(req.params.id);
 
     if (!store) {
         throw({
             code: 400,
-            msg: 'Invalid Credentials'
+            msg: 'Store not found'
         });
     }
 
-    // Check if password matches with stored hash
-    const isMatch = await bcrypt.compare(password, store.password);
+    store = await Store.findByIdAndUpdate(
+        req.params.id,
+        { $set: storeUpdate },
+        { new: true, useFindAndModify: true }
+    );
 
-    if (!isMatch) {
-        throw({
-            code: 400,
-            msg: 'Invalid Credentials'
-        });
-    }
+    let storeRes = await Store.findById(req.params.id ).select('-password, -__v');
 
     return storeRes;
 }
