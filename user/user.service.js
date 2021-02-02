@@ -8,29 +8,29 @@ const { validationResult } = require('express-validator');
 const User = db.User;
 
 // Get all Users
-const getUsers = async (req, res) => {
-	const users = await User.find();
-
-	return res.json(users);
+const getUsers = async () => {
+	try{
+		const users = await User.find();
+			return users;
+	} catch (err) {
+		return err
+	}
+	
 };
 
 // Register User
-const registerUser = async (req, res) => {
-	const errors = validationResult(req);
+const registerUser = async (userParam) => {
 
-	if (!errors.isEmpty()) {
-		return res.status(400).json({ errors: errors.array() });
-	}
-
-	const { first_name, last_name, email, phone_number, password } = req.body;
+	const { first_name, last_name, email, phone_number, password } = userParam;
 
 	try {
 		let user = await User.findOne({ email });
 
 		if (user) {
-			return res
-				.status(400)
-				.json({ msg: 'User with this email already exists' });
+			// return res
+			// 	.status(400)
+			// 	.json({ msg: 'User with this email already exists' });
+			throw 'User with this email already exists' 
 		}
 
 		// Create User Object
@@ -58,41 +58,34 @@ const registerUser = async (req, res) => {
 		};
 
 		// Generate and return token to server
-		jwt.sign(payload, config.jwtSecret, { expiresIn: 36000 }, (err, token) => {
-			if (err) throw err;
-			res.json(token);
-		});
+		const token = jwt.sign(payload, config.jwtSecret, { expiresIn: 36000 });
+		return token;
 
 		// return res.status(200).json({ user });
 	} catch (err) {
-		console.error(err.message);
-		res.status(500).send('Server Error');
+		// console.error(err);
+		return err;
 	}
 };
 
 // Login User
-const loginUser = async (req, res) => {
-	const errors = validationResult(req);
+const loginUser = async (loginParam) => {
 
-	if (!errors.isEmpty()) {
-		return res.status(400).json({ errors: errors.array() });
-	}
-
-	const { email, password } = req.body;
+	const { email, password } = loginParam;
 
 	try {
 		// Find user with email
 		let user = await User.findOne({ email });
 
 		if (!user) {
-			return res.status(400).json({ msg: 'Invalid Credentials' });
+			throw 'Invalid Credentials';
 		}
 
 		// Check if password matches with stored hash
 		const isMatch = await bcrypt.compare(password, user.password);
 
 		if (!isMatch) {
-			return res.status(400).json({ msg: 'Invalid Credentials' });
+			throw 'Invalid Credentials' ;
 		}
 
 		// Define payload for token
@@ -103,37 +96,34 @@ const loginUser = async (req, res) => {
 		};
 
 		// Generate and return token to server
-		jwt.sign(payload, config.jwtSecret, { expiresIn: 36000 }, (err, token) => {
-			if (err) throw err;
-			res.json(token);
-		});
+		const token = jwt.sign(payload, config.jwtSecret, { expiresIn: 36000 });
+		if(!token){
+			throw 'missing token' ;
+		}
+		return token;
+
 	} catch (err) {
-		console.error(err.message);
-		res.status(500).send('Server Error');
+		return err ;
 	}
 };
 
 // Get Logged in User
-const getLoggedInUser = async (req, res) => {
+const getLoggedInUser = async (userParam) => {
+	console.log('running')
 	try {
-		const user = await User.findById(req.user.id).select('-password');
-
-		res.json(user);
+		const user = await User.findById(userParam).select('-password');
+		console.log(user)
+		return user;
 	} catch (err) {
-		console.error(err.message);
-		res.status(500).send('Server Error');
+		// console.error(err.message);
+		return err;
 	}
 };
 
 // Update User Details
-const updateUser = async (req, res) => {
-	const errors = validationResult(req);
-
-	if (!errors.isEmpty()) {
-		return res.status(400).json({ errors: errors.array() });
-	}
-
-	const { address, password, email } = req.body;
+const updateUser = async (updateParam,id) => {
+	console.log(updateParam,id)
+	const { address, password, email } = updateParam;
 
 	// Build User Object
 	const userFields = {};
@@ -150,12 +140,13 @@ const updateUser = async (req, res) => {
 
 	try {
 		// Find use from DB Collection
-		let user = await User.findById(req.params.id);
+		let user = await User.findById(id);
+		
 
-		if (!user) return res.status(404).json({ msg: 'User not found' });
+		if (!user) throw 'User not found';
 
 		// Check if address field is not empty
-		if (address !== '' || null || typeof address !== undefined) {
+		if (address !== '' || null) {
 			// Check if address array is not empty
 			if (!user.address.length < 1) {
 				// Set the address value in user object to address found from db, then append new address
@@ -165,13 +156,15 @@ const updateUser = async (req, res) => {
 
 		// Updates the user Object with the changed values
 		user = await User.findByIdAndUpdate(
-			req.params.id,
+			id,
 			{ $set: userFields },
 			{ new: true, useFindAndModify: true }
 		);
 
-		res.json(user);
-	} catch (err) {}
+		throw user;
+	} catch (err) {
+		return err
+	}
 };
 
 module.exports = {

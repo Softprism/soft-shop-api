@@ -1,14 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const userService = require('./user.service');
+const userService = require('./user.service')
 const auth = require('../_helpers/auth');
+const { check, validationResult } = require('express-validator');
 
-const { check } = require('express-validator');
 
 // @route   GET /user
 // @desc    Get all Users
 // @access  Public
-router.get('/', userService.getUsers);
+router.get('/', getUsers);
 
 // @route   POST user/register
 // @desc    Register a User
@@ -25,7 +25,7 @@ router.post(
 			'Please Enter Password with 6 or more characters'
 		).isLength({ min: 6 }),
 	],
-	userService.registerUser
+	registerUser
 );
 
 // @route   POST user/login
@@ -41,19 +41,61 @@ router.post(
 		}),
 		check('password', 'Password is Required').exists(),
 	],
-	userService.loginUser
+	loginUser
 );
 
 // @route   GET user/login
 // @desc    Get logged in user
 // @access  Private
 
-router.get('/login', auth, userService.getLoggedInUser);
+router.get('/login', auth, getLoggedInUser);
+// router.get('/getAllUsers',getUsers);
 
 // @route   PUT user/:id
 // @desc    Update User Details
 // @access  Private
 
-router.put('/update/:id', auth, userService.updateUser);
+router.put('/update/:id', auth, updateUser);
 
 module.exports = router;
+
+function registerUser( req, res, next) {
+	const errors = validationResult(req);
+	if (!errors.isEmpty()) {
+		return res.status(400).json({ errors: errors.array() });
+	}
+	userService.registerUser(req.body)
+	.then(result => res.json(result))
+	.catch(err => next(err))
+}
+function loginUser( req, res, next) {
+	const errors = validationResult(req);
+
+	if (!errors.isEmpty()) {
+		return res.status(400).json({ errors: errors.array() });
+	}
+	userService.loginUser(req.body)
+		.then(result => res.json(result))
+		.catch(err =>next(err))
+ }
+function getUsers( req, res, next) {
+	userService.getUsers()
+		.then(users =>users ? res.json(users) : res.status(404).json({ msg: 'User not found' })
+		.catch(err => next(err))
+		)
+}
+function getLoggedInUser(req,res,next) {
+	userService.getLoggedInUser(req.user.id)
+		.then(loggedInUser => res.json(loggedInUser))
+		.catch(err => next(err))
+}
+function updateUser( req, res, next) {
+	const errors = validationResult(req);
+
+	if (!errors.isEmpty()) {
+		return res.status(400).json({ errors: errors.array() });
+	}
+	userService.updateUser(req.body,req.params.id)
+		.then(user => res.json(user))
+		.catch(err => next(err))
+}
