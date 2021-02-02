@@ -6,7 +6,7 @@ const Orderschema = new Schema({
     quantity: { type: String, required: true },
     store: { type: Schema.Types.ObjectId, ref: "Store", required: true },
     user: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    status: { type: String, required: true }, // "cart","sent","received","delivered"
+    status: { type: String, required: true }, // "cart","sent","received","delivered","canceled"
     createdDate: { type: Date, default: Date.now }
 });
 

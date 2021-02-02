@@ -8,6 +8,7 @@ const Storeschema = new StoreSchema({
     phone_number: { type: String, required: true },
     email: { type: String, required: true },
     password: { type: String, required: true },
+    rating: {type: String, required: false},
     createdDate: { type: Date, default: Date.now }
 });
 
