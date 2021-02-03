@@ -59,11 +59,11 @@ router.put('/update/:id', auth, updateUser);
 function getUsers(req, res, next) {
 	// Call GetUsers function from userService
 	userService.getUsers().then((users) =>
-		users
+		users && users.length > 0
 			? res.json(users)
 			: res
 					.status(404)
-					.json({ msg: 'User not found' })
+					.json({ msg: 'No Users found' })
 					.catch((err) => next(err))
 	);
 }

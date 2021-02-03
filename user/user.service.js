@@ -28,7 +28,7 @@ const registerUser = async (userParam) => {
 			// return res
 			// 	.status(400)
 			// 	.json({ msg: 'User with this email already exists' });
-			throw 'User with this email already exists';
+			throw { err: 'User with this email already exists' };
 		}
 
 		// Create User Object
@@ -75,14 +75,14 @@ const loginUser = async (loginParam) => {
 		let user = await User.findOne({ email });
 
 		if (!user) {
-			throw 'Invalid Credentials';
+			throw { err: 'User not found' };
 		}
 
 		// Check if password matches with stored hash
 		const isMatch = await bcrypt.compare(password, user.password);
 
 		if (!isMatch) {
-			throw 'Invalid Credentials';
+			throw { err: 'Invalid Credentials' };
 		}
 
 		// Define payload for token
@@ -95,7 +95,7 @@ const loginUser = async (loginParam) => {
 		// Generate and return token to server
 		const token = jwt.sign(payload, config.jwtSecret, { expiresIn: 36000 });
 		if (!token) {
-			throw 'missing token';
+			throw { err: 'Missing Token' };
 		}
 		return token;
 	} catch (err) {
@@ -138,7 +138,7 @@ const updateUser = async (updateParam, id) => {
 		// Find use from DB Collection
 		let user = await User.findById(id);
 
-		if (!user) throw 'User not found';
+		if (!user) throw { msg: 'User not found' };
 
 		// Check if address field is not empty
 		if (address !== '' || null) {
