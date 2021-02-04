@@ -4,20 +4,18 @@ const adminService = require('./admin.service');
 const auth = require('../_helpers/auth');
 const { check, validationResult } = require('express-validator');
 
-// @route   GET /user
-// @desc    Get all Users
+// @route   GET /admin
+// @desc    Get all Admin Users
 // @access  Public
 router.get('/', getAdmins);
 
-// @route   POST user/register
-// @desc    Register a User
+// @route   POST admin/register
+// @desc    Register an Admin account
 // @access  Public
 router.post(
 	'/register',
 	[
-		check('first_name', 'Please Enter First Name').not().isEmpty(),
-		check('last_name', 'Please Enter Last Name').not().isEmpty(),
-		check('email', 'Please Enter Valid Email').isEmail(),
+		check('username', 'Please Enter Username').not().isEmpty(),
 		check(
 			'password',
 			'Please Enter Password with 6 or more characters'
@@ -33,7 +31,7 @@ router.post(
 router.post(
 	'/login',
 	[
-		check('email', 'Please enter a Valid Email').isEmail(),
+		check('username', 'Please enter a Username').exists(),
 		check('password', 'Password should be 6 characters or more').isLength({
 			min: 6,
 		}),
@@ -54,19 +52,23 @@ router.get('/login', auth, getLoggedInAdmin);
 
 router.put('/update/:id', auth, updateAdmin);
 
-// Functions
+// FUNCTIONS
+
+// Get Admins
 function getAdmins(req, res, next) {
+	console.log('ad');
 	// Call GetAdmins function from adminService
 	adminService.getAdmins().then((admins) =>
 		admins && admins.length > 0
-			? res.json(users)
+			? res.json(admins)
 			: res
 					.status(404)
-					.json({ msg: 'No admin found' })
+					.json({ msg: 'No Admin found' })
 					.catch((err) => next(err))
 	);
 }
 
+// Register Admin
 function registerAdmin(req, res, next) {
 	const errors = validationResult(req);
 	if (!errors.isEmpty()) {
@@ -95,9 +97,10 @@ function loginAdmin(req, res, next) {
 }
 
 function getLoggedInAdmin(req, res, next) {
+	console.log(req.admin);
 	// Call Get Logged in admin function from adminService
 	adminService
-		.getLoggedInAdmin(req.user.id)
+		.getLoggedInAdmin(req.admin.id)
 		.then((loggedInAdmin) => res.json(loggedInAdmin))
 		.catch((err) => next(err));
 }
@@ -107,8 +110,8 @@ function updateAdmin(req, res, next) {
 
 	if (!errors.isEmpty()) {
 		return res.status(400).json({ errors: errors.array() });
-    }
-    // Call Get update profile function from adminService
+	}
+	// Call Get update profile function from adminService
 	adminService
 		.updateAdmin(req.body, req.params.id)
 		.then((admin) => res.json(admin))

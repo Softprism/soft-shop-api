@@ -8,6 +8,7 @@ function jwt() {
     const secret = config.jwtSecret;
     return expressJwt({ secret, algorithms: ['HS256'], isRevoked }).unless({
         path: [
+            /\/admin/i,
             /\/user/i,
             /\/store/i,
             /\/category/i,

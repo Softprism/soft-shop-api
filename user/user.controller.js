@@ -9,7 +9,7 @@ const { check, validationResult } = require('express-validator');
 // @access  Public
 router.get('/', getUsers);
 
-// @route   POST user/register
+// @route   POST /user/register
 // @desc    Register a User
 // @access  Public
 router.post(
@@ -27,7 +27,7 @@ router.post(
 	registerUser
 );
 
-// @route   POST user/login
+// @route   POST /user/login
 // @desc    Login a User & get token
 // @access  Public
 
@@ -43,7 +43,7 @@ router.post(
 	loginUser
 );
 
-// @route   GET user/login
+// @route   GET /user/login
 // @desc    Get logged in user
 // @access  Private
 

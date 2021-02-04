@@ -11,6 +11,7 @@ const User = db.User;
 const getUsers = async () => {
 	try {
 		const users = await User.find();
+
 		return users;
 	} catch (err) {
 		return err;
@@ -156,7 +157,7 @@ const updateUser = async (updateParam, id) => {
 			{ new: true, useFindAndModify: true }
 		);
 
-		throw user;
+		return user;
 	} catch (err) {
 		return err;
 	}

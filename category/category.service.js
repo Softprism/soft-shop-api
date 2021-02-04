@@ -1,10 +1,9 @@
 const db = require('_helpers/db');
-const { validationResult } = require('express-validator');
 
 const Category = db.Category;
 
 //  Get all Categories
-const getCategories = async (req, res) => {
+const getCategories = async () => {
 	try {
 		const categories = await Category.find();
 
@@ -35,8 +34,7 @@ const createCategory = async (categoryParams) => {
 		// Save Category to db
 		await category.save();
 
-		// res.json(`Category ${category} successfully created`)
-		return category;
+		return `Category ${category.name} successfully created`;
 	} catch (err) {
 		return err;
 	}

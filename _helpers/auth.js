@@ -21,7 +21,11 @@ module.exports = (req, res, next) => {
 		}
 
 		if (decoded.store) {
-			req.user = decoded.user;
+			req.store = decoded.store;
+		}
+
+		if (decoded.admin) {
+			req.admin = decoded.admin;
 		}
 
 		next();
