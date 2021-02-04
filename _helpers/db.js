@@ -30,4 +30,5 @@ module.exports = {
 	Product: require('../product/product.model'),
 	Category: require('../category/category.model'),
 	Order: require('../order/order.model'),
+	Admin: require('../admin/admin.model')
 };
