@@ -24,8 +24,10 @@ router.put('/add_favorite/:orderID', auth, addFavorite)
 router.get('/get_order_details/:orderID', auth, getOrderDetails)
 router.get('/get_favorites/:userID', auth, getFavorites)
 router.get('/user_order_history/:userID', auth, getOrderHistory)
+router.get('/store_order_history/:storeID', getStoreOrderHistory)
 router.get('/get_user_cart/:userID', auth, getCartItems)
-
+router.put('/edit_user_order/:orderID', auth, editOrder)
+router.put('/cancel_user_order/:orderID', auth, cancelOrder)
 module.exports = router;
 
 //======================================================================
@@ -77,6 +79,8 @@ function getOrderDetails(req,res,next) {
         .catch(err => next(err))
 }
 
+//======================================================================
+
 function getOrderHistory(req,res,next) {
     
     orderService
@@ -88,6 +92,20 @@ function getOrderHistory(req,res,next) {
             .catch(err => next(err))
 }
 
+//======================================================================
+
+function getStoreOrderHistory(req,res,next) {
+    
+    orderService
+        .getStoreOrderHistory(req.params.storeID)
+            .then(orders => res.json({
+                success: true,
+                message: orders,
+            }))
+            .catch(err => next(err))
+}
+
+//======================================================================
 function getCartItems(req,res,next) {
 
     orderService.getCartItems(req.params.userID)
@@ -97,6 +115,29 @@ function getCartItems(req,res,next) {
         }))
         .catch(err => next(err))
 }
+
+//======================================================================
+
+function editOrder(req, res, next) {
+
+    orderService.editOrder(req.params.orderID,req.body)
+        .then(() => res.json({
+            success: true
+        }))
+        .catch(err => next(err))
+}
+
+//======================================================================
+
+function cancelOrder(req, res, next) {
+
+    orderService.cancelOrder(req.params.orderID)
+        .then(() => res.json({
+            success: true
+        }))
+        .catch(err => next(err))
+}
+
 //======================================================================
 
 function getFavorites(req,res,next) {
@@ -108,3 +149,5 @@ function getFavorites(req,res,next) {
             }))
             .catch(err => next(err))
 }
+
+//======================================================================

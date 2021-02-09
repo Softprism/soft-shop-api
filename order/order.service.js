@@ -30,6 +30,7 @@ const getFavorites = async (userID) => {
 
 const getOrderDetails = async (orderID) => {
     //get users order details
+    //can be used by users, stores and admin
     return await Order.findById(orderID)
 }
 
@@ -38,10 +39,32 @@ const getOrderHistory = async (userID) => {
     return await Order.find({user:userID})
 }
 
+const getStoreOrderHistory = async (storeID) => {
+    //gets store order history
+    return await Order.find({store:storeID})
+}
+
+const editOrder = async (orderID,orderParam) => {
+    //can be used by both stores and users
+    await Order.findByIdAndUpdate(
+        orderID,
+        {$set: orderParam},
+        { omitUndefined: true, new: true },
+    )
+}
+
+const cancelOrder = async (orderID) => {
+    //user/store cancel order
+    let order = await Order.findById(orderID)
+    order.CancelOrder()
+    order.save()
+}
 const getCartItems = async (userID) => {
     //get user cart items
     return Order.find({user: userID, status: "cart"})
 }
+
+
 module.exports = {
     getOrders,
     createOrder,
@@ -49,5 +72,8 @@ module.exports = {
     getOrderDetails,
     getFavorites,
     getOrderHistory,
-    getCartItems
+    getCartItems,
+    editOrder,
+    cancelOrder,
+    getStoreOrderHistory
 };

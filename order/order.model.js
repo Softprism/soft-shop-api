@@ -18,4 +18,9 @@ Orderschema.methods.favoriteAction = function() {
      this.favorite = !this.favorite
   }
 
+  Orderschema.methods.CancelOrder = function() {
+    //change the previous status of favorite
+     this.status = "canceled"
+  }
+
 module.exports = mongoose.model('Order', Orderschema);
