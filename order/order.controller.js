@@ -28,6 +28,9 @@ router.get('/store_order_history/:storeID', getStoreOrderHistory)
 router.get('/get_user_cart/:userID', auth, getCartItems)
 router.put('/edit_user_order/:orderID', auth, editOrder)
 router.put('/cancel_user_order/:orderID', auth, cancelOrder)
+router.put('/deliver_order/:orderID', deliverOrder)
+router.put('/receive_order/:orderID', receiveOrder)
+router.put('/complete_order/:orderID', completeOrder)
 module.exports = router;
 
 //======================================================================
@@ -140,6 +143,38 @@ function cancelOrder(req, res, next) {
 
 //======================================================================
 
+function completeOrder(req, res, next) {
+
+    orderService.completeOrder(req.params.orderID)
+        .then(() => res.json({
+            success: true
+        }))
+        .catch(err => next(err))
+}
+
+//======================================================================
+
+function receiveOrder(req, res, next) {
+
+    orderService.receiveOrder(req.params.orderID)
+        .then(() => res.json({
+            success: true
+        }))
+        .catch(err => next(err))
+}
+
+//======================================================================
+
+function deliverOrder(req, res, next) {
+
+    orderService.deliverOrder(req.params.orderID)
+        .then(() => res.json({
+            success: true
+        }))
+        .catch(err => next(err))
+}
+
+//======================================================================
 function getFavorites(req,res,next) {
     orderService
         .getFavorites(req.params.userID)

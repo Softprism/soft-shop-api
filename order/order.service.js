@@ -59,6 +59,28 @@ const cancelOrder = async (orderID) => {
     order.CancelOrder()
     order.save()
 }
+
+const completeOrder = async (orderID) => {
+    //fires after payment is confirmed
+    let order = await Order.findById(orderID)
+    order.completeOrder()
+    order.save()
+}
+
+const receiveOrder = async (orderID) => {
+    //store acknoledges order
+    let order = await Order.findById(orderID)
+    order.receiveOrder()
+    order.save()
+}
+
+const deliverOrder = async (orderID) => {
+    //store delivers order
+    let order = await Order.findById(orderID)
+    order.deliverOrder()
+    order.save()
+}
+
 const getCartItems = async (userID) => {
     //get user cart items
     return Order.find({user: userID, status: "cart"})
@@ -75,5 +97,8 @@ module.exports = {
     getCartItems,
     editOrder,
     cancelOrder,
-    getStoreOrderHistory
+    getStoreOrderHistory,
+    completeOrder,
+    deliverOrder,
+    receiveOrder
 };

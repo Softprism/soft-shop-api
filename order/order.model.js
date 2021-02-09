@@ -23,4 +23,19 @@ Orderschema.methods.favoriteAction = function() {
      this.status = "canceled"
   }
 
+  Orderschema.methods.completeOrder = function() {
+    //change the previous status of favorite
+     this.status = "completed"
+  }
+
+  Orderschema.methods.receiveOrder = function() {
+    //change the previous status of favorite
+     this.status = "received"
+  }
+
+  Orderschema.methods.deliverOrder = function() {
+    //change the previous status of favorite
+     this.status = "delivered"
+  }
+
 module.exports = mongoose.model('Order', Orderschema);
