@@ -22,6 +22,11 @@ const addFavorite = async (orderID) => {
     order.save()
 }
 
+const getFavorites = async (userID) => {
+    console.log(userID)
+    return await Order.find({user: userID, favorite: true})
+}
+
 const getOrderDetails = async (orderID) => {
     return await Order.findById(orderID)
 }
@@ -30,5 +35,6 @@ module.exports = {
     getOrders,
     createOrder,
     addFavorite,
-    getOrderDetails
+    getOrderDetails,
+    getFavorites
 };

@@ -5,6 +5,7 @@ const auth = require('../_helpers/auth');
 
 const { check, validationResult } = require('express-validator');
 
+//======================================================================
 // routes
 
 router.get('/', getOrders);
@@ -21,14 +22,20 @@ router.post(
 )
 router.put('/add_favorite/:orderID', auth, addFavorite)
 router.get('/get_order_details/:orderID', auth, getOrderDetails)
+router.get('/get_favorites/:userID', getFavorites)
 
 module.exports = router;
+
+//======================================================================
 
 function getOrders(req, res, next) {
     orderService.getOrders()
         .then(orders => res.json(orders))
         .catch(err => next(err));
 }
+
+//======================================================================
+
 function createOrder(req,res,next) {
     const errors = validationResult(req);
 
@@ -44,6 +51,9 @@ function createOrder(req,res,next) {
     }))
     .catch(err => next(err))
 }
+
+//======================================================================
+
 function addFavorite(req,res,next) {
     orderService.addFavorite(req.params.orderID)
     .then(()=>res.json({
@@ -51,6 +61,9 @@ function addFavorite(req,res,next) {
     }))
     .catch(err => next(err))
 }
+
+//======================================================================
+
 function getOrderDetails(req,res,next) {
 
     orderService
@@ -60,4 +73,16 @@ function getOrderDetails(req,res,next) {
             message: result,
         }))
         .catch(err => next(err))
+}
+
+//======================================================================
+
+function getFavorites(req,res,next) {
+    orderService
+        .getFavorites(req.params.userID)
+            .then(orders => res.json({
+                success: true,
+                message: orders
+            }))
+            .catch(err => next(err))
 }
