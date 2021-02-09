@@ -11,24 +11,31 @@ const getOrders = async () => {
 }
 
 const  createOrder = async (orderParam) => {
+    //creates an order for user
     const order = new Order(orderParam);
     await order.save();
 }
 
 const addFavorite = async (orderID) => {
-
+    //adds or remove users favorite order
     let order = await Order.findById(orderID)
     order.favoriteAction() //calls an instance method
     order.save()
 }
 
 const getFavorites = async (userID) => {
-    console.log(userID)
+    //get users favorite orders
     return await Order.find({user: userID, favorite: true})
 }
 
 const getOrderDetails = async (orderID) => {
+    //get users order details
     return await Order.findById(orderID)
+}
+
+const getOrderHistory = async (userID) => {
+    //gets user order history
+    return await Order.find({user:userID})
 }
 
 module.exports = {
@@ -36,5 +43,6 @@ module.exports = {
     createOrder,
     addFavorite,
     getOrderDetails,
-    getFavorites
+    getFavorites,
+    getOrderHistory
 };
