@@ -2,12 +2,20 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const Orderschema = new Schema({
-    products: { type: Schema.Types.ObjectId, unique: true, ref:"Product", required: true },
-    quantity: { type: String, required: true },
+    product_meta: [{
+        product_id: { type: Schema.Types.ObjectId, ref:"Product", required: true },
+        quantity: { type: String, required: true },
+    }],
     store: { type: Schema.Types.ObjectId, ref: "Store", required: true },
     user: { type: Schema.Types.ObjectId, ref: "User", required: true },
     status: { type: String, required: true }, // "cart","sent","received","delivered","canceled"
+    favorite: {type:Boolean},
     createdDate: { type: Date, default: Date.now }
+    
 });
+Orderschema.methods.favoriteAction = function() {
+    //change the previous status of favorite
+     this.favorite = !this.favorite
+  }
 
 module.exports = mongoose.model('Order', Orderschema);

@@ -109,7 +109,7 @@ const getLoggedInUser = async (userParam) => {
 	console.log('running');
 	try {
 		const user = await User.findById(userParam).select('-password');
-		console.log(user);
+
 		return user;
 	} catch (err) {
 		// console.error(err.message);
