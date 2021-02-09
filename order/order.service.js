@@ -38,11 +38,16 @@ const getOrderHistory = async (userID) => {
     return await Order.find({user:userID})
 }
 
+const getCartItems = async (userID) => {
+    //get user cart items
+    return Order.find({user: userID, status: "cart"})
+}
 module.exports = {
     getOrders,
     createOrder,
     addFavorite,
     getOrderDetails,
     getFavorites,
-    getOrderHistory
+    getOrderHistory,
+    getCartItems
 };

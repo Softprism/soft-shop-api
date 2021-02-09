@@ -24,6 +24,7 @@ router.put('/add_favorite/:orderID', auth, addFavorite)
 router.get('/get_order_details/:orderID', auth, getOrderDetails)
 router.get('/get_favorites/:userID', auth, getFavorites)
 router.get('/user_order_history/:userID', auth, getOrderHistory)
+router.get('/get_user_cart/:userID', auth, getCartItems)
 
 module.exports = router;
 
@@ -87,6 +88,15 @@ function getOrderHistory(req,res,next) {
             .catch(err => next(err))
 }
 
+function getCartItems(req,res,next) {
+
+    orderService.getCartItems(req.params.userID)
+        .then(items => res.json({
+            success: true,
+            message: items
+        }))
+        .catch(err => next(err))
+}
 //======================================================================
 
 function getFavorites(req,res,next) {
