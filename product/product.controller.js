@@ -47,6 +47,7 @@ router.put('/update/:id', auth, updateProduct);
 // @desc    Delete product
 // @access  Private
 router.delete('/delete/:id', auth, deleteProduct);
+router.get("/find/:searchParam", findProduct)
 
 module.exports = router;
 
@@ -148,4 +149,13 @@ function deleteProduct(req, res, next) {
             success: false,
             message: err.msg != null ? err.msg : 'Server Error'
         }));
+}
+
+function findProduct( req, res, next) {
+    productService.findProduct(req.params.searchParam)
+    .then(results => res.json({
+        success: true,
+        message: results
+    }))
+    .catch(err => next(err))
 }

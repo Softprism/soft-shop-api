@@ -12,11 +12,17 @@ module.exports = {
     getStoreProducts,
     createProduct,
     updateProduct,
-    deleteProduct
+    deleteProduct,
+    findProduct
 };
 
 async function getProducts() {
     return await Product.find();
+}
+
+async function findProduct(searchParam) {
+    let regex = new RegExp(searchParam, 'i');
+    return await Product.find({ product_name: regex}).exec(); // we'll prioritize results to be the ones closer to the users
 }
 
 async function getMyProducts(storeId) {
