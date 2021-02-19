@@ -134,7 +134,7 @@ function loginStore(req, res, next) {
 		.then((store) => {
 			// Define payload for token
 			const payload = {
-				user: {
+				store: {
 					id: store.id,
 				},
 			};
@@ -148,9 +148,7 @@ function loginStore(req, res, next) {
 					if (err) throw err;
 					res.json({
 						success: true,
-						// value: {
 						token: token,
-						// },
 					});
 				}
 			);
