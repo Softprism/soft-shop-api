@@ -51,8 +51,6 @@ router.post(
 // @access  Private
 router.put('/update/:id', auth, updateStore);
 
-module.exports = router;
-
 function getStores(req, res, next) {
 	storeService
 		.getStores()
@@ -186,3 +184,5 @@ function updateStore(req, res, next) {
 			})
 		);
 }
+
+module.exports = router;

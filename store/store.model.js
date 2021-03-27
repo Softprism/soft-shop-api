@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const StoreSchema = new mongoose.Schema({
+const StoreSchema = mongoose.Schema({
 	name: { type: String, unique: true, required: true },
 	images: [{ type: String, required: true }], // array to store multiple images
 	address: { type: String, required: true },
