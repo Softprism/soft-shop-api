@@ -58,7 +58,7 @@ const registerUser = async (userParam) => {
 
 		// Generate and return token to server
 		const token = jwt.sign(payload, config.jwtSecret, { expiresIn: 36000 });
-		return token;
+		return "token";
 
 		// return res.status(200).json({ user });
 	} catch (err) {
