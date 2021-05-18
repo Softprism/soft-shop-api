@@ -1,5 +1,5 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/techsoftprism/public_html/
+    - export DEPLOYPATH=/home/shopsoftprism/soft-shop-api/
     - /bin/cp -R * $DEPLOYPATH
