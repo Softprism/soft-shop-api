@@ -3,3 +3,4 @@ deployment:
   tasks:
     - export DEPLOYPATH=/home/shopsoftprism/soft-shop-api/    
     - /bin/cp -R * $DEPLOYPATH
+
