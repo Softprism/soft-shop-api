@@ -1,7 +1,0 @@
----
-deployment:
-  tasks:
-    - export DEPLOYPATH=/home/shopsoftprism/softshop/    
-    - /bin/cp -R * $DEPLOYPATH
-
-
