@@ -20,6 +20,9 @@ app.use('/order', require('./order/order.controller'));
 app.use('/product', require('./product/product.controller'));
 app.use('/category', require('./category/category.controller'));
 
+  // this is just here to verify if the server is online
+app.use('/', require('./app.controller'));  
+
 // global error handler
 app.use(errorHandler);
 
