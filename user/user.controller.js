@@ -73,7 +73,6 @@ function registerUser(req, res, next) {
 	if (!errors.isEmpty()) {
 		return res.status(400).json({ errors: errors.array() });
 	}
-
 	// Call Register function from userService
 	userService
 		.registerUser(req.body)
@@ -91,7 +90,12 @@ function loginUser(req, res, next) {
 	// Call Login function from userService
 	userService
 		.loginUser(req.body)
-		.then((result) => res.json(result))
+		.then((result) =>{
+      res.json({
+        success: true,
+        result: result
+      })
+    })
 		.catch((err) => next(err));
 }
 
