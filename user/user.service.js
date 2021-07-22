@@ -100,7 +100,8 @@ const loginUser = async (loginParam) => {
 		}
 		return token;
 	} catch (err) {
-		return err;
+    console.log(err)
+		throw err;
 	}
 };
 

@@ -34,7 +34,7 @@ router.post(
 router.post(
 	'/login',
 	[
-		check('email', 'Please enter a Valid Email').isEmail(),
+		check('login', 'Please enter a Valid Email').isEmail(),
 		check('password', 'Password should be 6 characters or more').isLength({
 			min: 6,
 		}),
@@ -82,7 +82,7 @@ function registerUser(req, res, next) {
 
 function loginUser(req, res, next) {
 	const errors = validationResult(req);
-
+  console.log(req.body)
 	if (!errors.isEmpty()) {
 		return res.status(400).json({ errors: errors.array() });
 	}
@@ -90,14 +90,19 @@ function loginUser(req, res, next) {
 	// Call Login function from userService
 	userService
 		.loginUser(req.body)
-		.then((result) =>{
-      res.json({
+		.then(result => {
+      res.status(200).json({
         success: true,
         result: result
       })
     })
-		.catch((err) => next(err));
-}
+		.catch(err => {
+      res.status(400).send({
+        success: false,
+        error: err
+      })
+    })
+  }
 
 function getLoggedInUser(req, res, next) {
 	// Call Get Logged in User function from userService
