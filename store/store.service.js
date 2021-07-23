@@ -64,12 +64,13 @@ async function loginStore(StoreParam) {
 }
 
 async function updateStore(req) {
-	const { email, password, address, phone_number } = req.body;
+	const { email, password, address, phone_number, images } = req.body;
 
 	const storeUpdate = {};
 
 	// Check for fields
 	if (address) storeUpdate.address = address;
+  if (images) storeUpdate.address = images;
 	if (email) storeUpdate.email = email;
 	if (phone_number) storeUpdate.email = phone_number;
 	if (password) {

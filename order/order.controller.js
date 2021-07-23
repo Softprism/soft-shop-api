@@ -8,7 +8,7 @@ const { check, validationResult } = require('express-validator');
 //======================================================================
 // routes
 
-router.get('/', getOrders);
+router.get('/', auth, getOrders);
 router.post(
     '/create',
     auth,
@@ -24,13 +24,13 @@ router.put('/add_favorite/:orderID', auth, addFavorite)
 router.get('/get_order_details/:orderID', auth, getOrderDetails)
 router.get('/get_favorites/:userID', auth, getFavorites)
 router.get('/user_order_history/:userID', auth, getOrderHistory)
-router.get('/store_order_history/:storeID', getStoreOrderHistory)
+router.get('/store_order_history/:storeID', auth, getStoreOrderHistory)
 router.get('/get_user_cart/:userID', auth, getCartItems)
 router.put('/edit_user_order/:orderID', auth, editOrder)
 router.put('/cancel_user_order/:orderID', auth, cancelOrder)
-router.put('/deliver_order/:orderID', deliverOrder)
-router.put('/receive_order/:orderID', receiveOrder)
-router.put('/complete_order/:orderID', completeOrder)
+router.put('/deliver_order/:orderID', auth, deliverOrder)
+router.put('/receive_order/:orderID', auth, receiveOrder)
+router.put('/complete_order/:orderID', auth, completeOrder)
 module.exports = router;
 
 //======================================================================
