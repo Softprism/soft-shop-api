@@ -84,10 +84,10 @@ const loginAdmin = async (loginParam) => {
 		if (!token) {
 			throw { err: 'Missing Token' };
 		}
-
 		return token;
 	} catch (err) {
-		return err;
+    console.log(err)
+		throw err;
 	}
 };
 

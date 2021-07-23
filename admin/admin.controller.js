@@ -42,7 +42,7 @@ router.post(
 
 // @route   GET user/login
 // @desc    Get logged in user
-// @access  Private
+// @access  Private 
 
 router.get('/login', auth, getLoggedInAdmin);
 
@@ -83,17 +83,30 @@ function registerAdmin(req, res, next) {
 }
 
 function loginAdmin(req, res, next) {
+
 	const errors = validationResult(req);
 
 	if (!errors.isEmpty()) {
-		return res.status(400).json({ errors: errors.array() });
+		return res.status(400).json({
+      success: false, 
+      msg: errors.array() 
+    });
 	}
 
 	// Call Login function from adminService
 	adminService
 		.loginAdmin(req.body)
-		.then((result) => res.json(result))
-		.catch((err) => next(err));
+		.then((result) => res.status(200).json({
+      success: true,
+      result
+    }))
+		.catch((err) => {
+      console.log(err)
+      res.status(400).json({
+        success: false,
+        msg: err.err
+      })
+    });
 }
 
 function getLoggedInAdmin(req, res, next) {
