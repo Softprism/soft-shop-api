@@ -38,10 +38,10 @@ async function createStore(StoreParam) {
 }
 
 async function loginStore(StoreParam) {
-	const { name, password } = StoreParam;
+	const { email, password } = StoreParam;
 
-	let store = await Store.findOne({ name });
-	let storeRes = await Store.findOne({ name }).select('-password');
+	let store = await Store.findOne({ email });
+	let storeRes = await Store.findOne({ email }).select('-password');
 
 	if (!store) {
 		throw {
