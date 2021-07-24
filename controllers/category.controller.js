@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const categoryService = require('./category.service');
+const categoryService = require('../services/category.service');
 
 const { check, validationResult } = require('express-validator');
 

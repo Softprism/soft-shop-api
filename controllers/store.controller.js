@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const config = require('../config.json');
 const router = express.Router();
 const auth = require('../middlewares/auth');
-const storeService = require('./store.service');
+const storeService = require('../services/store.service');
 const { check, validationResult } = require('express-validator');
 
 // @route   GET /store

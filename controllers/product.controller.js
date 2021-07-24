@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const productService = require('./product.service');
-const auth = require('../_helpers/auth');
+const productService = require('../services/product.service');
+const auth = require('../middlewares/auth');
 const { check, validationResult } = require('express-validator');
 
 const getProducts  = (req, res, next) => {

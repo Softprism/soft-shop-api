@@ -24,10 +24,10 @@ mongoose.pluralize(null);
 mongoose.Promise = global.Promise;
 
 module.exports = {
-	User: require('../user/user.model'),
-	Store: require('../store/store.model'),
-	Product: require('../product/product.model'),
-	Category: require('../category/category.model'),
-	Order: require('../order/order.model'),
-	Admin: require('../admin/admin.model'),
+	User: require('../models/user.model'),
+	Store: require('../models/store.model'),
+	Product: require('../models/product.model'),
+	Category: require('../models/category.model'),
+	Order: require('../models/order.model'),
+	Admin: require('../models/admin.model'),
 };
