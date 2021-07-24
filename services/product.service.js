@@ -20,7 +20,7 @@ const getProducts = async () => {
 	}
 };
 
-async function findProduct(searchParam) {
+const findProduct = (searchParam) => {
   try {
     let regex = new RegExp(searchParam, 'i');
 	  return await Product.find({ product_name: regex }).exec(); // we'll prioritize results to be the ones closer to the users
@@ -29,7 +29,7 @@ async function findProduct(searchParam) {
   }
 }
 
-async function getMyProducts(storeId) {
+const getMyProducts = (storeId) => {
 	let storeProduct = await Product.find({
 		store: mongoose.Types.ObjectId(storeId),
 	});
