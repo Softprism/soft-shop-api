@@ -129,8 +129,9 @@ function deleteProduct(req, res, next) {
 }
 
 function findProduct(req, res, next) {
+  console.log(req.params)
 	productService
-		.findProduct(req.params.searchParam)
+		.findProduct(req.params)
 		.then((results) =>
 			res.json({
 				success: true,
@@ -183,6 +184,9 @@ router.put('/update/:id', auth, updateProduct);
 // @desc    Delete product
 // @access  Private
 router.delete('/delete/:id', auth, deleteProduct);
-router.get('/find/:searchParam', findProduct);
+// @route   DELETE /product/delete/:id
+// @desc    Delete product
+// @access  Private
+router.get('/find/:productName/:availability/:price', findProduct);
 
 module.exports = router;

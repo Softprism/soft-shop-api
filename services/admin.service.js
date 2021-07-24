@@ -1,18 +1,18 @@
 const config = require('../config.json');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const db = require('../_helpers/db');
+const db = require('../middlewares/db');
 
 const Admin = db.Admin;
 
 const getAdmins = async () => {
-	try {
-		const admins = await Admin.find();
+  const admins = await Admin.find();
 
-		return admins;
-	} catch (err) {
-		throw err;
-	}
+  if(admins.length > 0) {
+    return admins;
+  } else {
+    throw {msg: 'No Admin found'}
+  }
 };
 
 const registerAdmin = async (params) => {

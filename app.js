@@ -2,8 +2,8 @@ require('rootpath')();
 const express = require('express');
 const app = express();
 const cors = require('cors');
-const jwt = require('_helpers/jwt');
-const errorHandler = require('_helpers/error-handler');
+const jwt = require('middlewares/jwt');
+const errorHandler = require('middlewares/error-handler');
 
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());

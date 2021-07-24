@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const adminService = require('./admin.service');
-const auth = require('../_helpers/auth');
+const adminService = require('../services/admin.service');
+const auth = require('../middlewares/auth');
 const { check, validationResult } = require('express-validator');
 
 // @route   GET /admin
@@ -58,14 +58,19 @@ router.put('/update/:id', auth, updateAdmin);
 function getAdmins(req, res, next) {
 	console.log('ad');
 	// Call GetAdmins function from adminService
-	adminService.getAdmins().then((admins) =>
-		admins && admins.length > 0
-			? res.status(200).json(admins)
-			: res
-					.status(404)
-					.json({ msg: 'No Admin found' })
-					.catch((err) => next(err))
-	);
+	adminService.getAdmins()
+  .then((admins) =>
+		res.status(200).json({
+      success: true,
+      result: admins
+    })
+	)
+  .catch((error) => {
+    res.status(400).json({
+      success: false,
+      msg: error.msg
+    })
+  })
 }
 
 // Register Admin

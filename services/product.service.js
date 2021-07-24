@@ -1,7 +1,7 @@
 const config = require('../config.json');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const db = require('_helpers/db');
+const db = require('middlewares/db');
 const mongoose = require('mongoose');
 const Product = db.Product;
 const Store = db.Store;
@@ -10,7 +10,10 @@ const getProducts = async () => {
 	console.log(1);
 	try {
 		//get all products in the db
-		return await Product.find();
+		let allProducts =  await Product.find();
+    if(!allProducts) {
+      throw {msg: 'no products found'}
+    }
 	} catch (error) {
 		console.log(error);
 		throw error;
@@ -18,14 +21,23 @@ const getProducts = async () => {
 };
 
 async function findProduct(searchParam) {
-	let regex = new RegExp(searchParam, 'i');
-	return await Product.find({ product_name: regex }).exec(); // we'll prioritize results to be the ones closer to the users
+  try {
+    let regex = new RegExp(searchParam, 'i');
+	  return await Product.find({ product_name: regex }).exec(); // we'll prioritize results to be the ones closer to the users
+  } catch (error) {
+    throw error
+  }
 }
 
 async function getMyProducts(storeId) {
-	return await Product.find({
+	let storeProduct = await Product.find({
 		store: mongoose.Types.ObjectId(storeId),
 	});
+  if(storeProduct.length < 1) {
+    throw 'no product found in this store' 
+  } else {
+    return storeProduct
+  }
 }
 
 async function getStoreProducts(storeId) {

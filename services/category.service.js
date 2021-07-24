@@ -1,4 +1,4 @@
-const db = require('_helpers/db');
+const db = require('middlewares/db');
 
 const Category = db.Category;
 
