@@ -42,7 +42,7 @@ router.post(
 
 // @route   GET user/login
 // @desc    Get logged in user
-// @access  Private 
+// @access  Private
 
 router.get('/login', auth, getLoggedInAdmin);
 
@@ -60,7 +60,7 @@ function getAdmins(req, res, next) {
 	// Call GetAdmins function from adminService
 	adminService.getAdmins().then((admins) =>
 		admins && admins.length > 0
-			? res.json(admins)
+			? res.status(200).json(admins)
 			: res
 					.status(404)
 					.json({ msg: 'No Admin found' })
@@ -71,42 +71,55 @@ function getAdmins(req, res, next) {
 // Register Admin
 function registerAdmin(req, res, next) {
 	const errors = validationResult(req);
+
 	if (!errors.isEmpty()) {
-		return res.status(400).json({ errors: errors.array() });
+		return res.status(400).json({ success: false, msg: errors.array() });
 	}
 
 	// Call Register function from adminService
 	adminService
 		.registerAdmin(req.body)
-		.then((result) => res.json(result))
-		.catch((err) => next(err));
+		.then((token) =>
+			res.status(201).json({
+				success: true,
+				token,
+			})
+		)
+		.catch((err) => {
+			console.log(err);
+			res.status(400).json({
+				success: false,
+				msg: err.err,
+			});
+		});
 }
 
 function loginAdmin(req, res, next) {
-
 	const errors = validationResult(req);
 
 	if (!errors.isEmpty()) {
 		return res.status(400).json({
-      success: false, 
-      msg: errors.array() 
-    });
+			success: false,
+			msg: errors.array(),
+		});
 	}
 
 	// Call Login function from adminService
 	adminService
 		.loginAdmin(req.body)
-		.then((result) => res.status(200).json({
-      success: true,
-      result
-    }))
+		.then((token) =>
+			res.status(200).json({
+				success: true,
+				token,
+			})
+		)
 		.catch((err) => {
-      console.log(err)
-      res.status(400).json({
-        success: false,
-        msg: err.err
-      })
-    });
+			console.log(err);
+			res.status(400).json({
+				success: false,
+				msg: err.err,
+			});
+		});
 }
 
 function getLoggedInAdmin(req, res, next) {
@@ -114,7 +127,7 @@ function getLoggedInAdmin(req, res, next) {
 	// Call Get Logged in admin function from adminService
 	adminService
 		.getLoggedInAdmin(req.admin.id)
-		.then((loggedInAdmin) => res.json(loggedInAdmin))
+		.then((loggedInAdmin) => res.status(200).json(loggedInAdmin))
 		.catch((err) => next(err));
 }
 

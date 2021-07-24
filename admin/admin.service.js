@@ -17,6 +17,7 @@ const getAdmins = async () => {
 
 const registerAdmin = async (params) => {
 	const { username, password } = params;
+
 	try {
 		let admin = await Admin.findOne({ username });
 
@@ -50,7 +51,7 @@ const registerAdmin = async (params) => {
 
 		return token;
 	} catch (err) {
-		return err;
+		throw err;
 	}
 };
 
@@ -81,12 +82,14 @@ const loginAdmin = async (loginParam) => {
 
 		// Generate and return token to server
 		const token = jwt.sign(payload, config.jwtSecret, { expiresIn: 36000 });
+
 		if (!token) {
 			throw { err: 'Missing Token' };
 		}
+
 		return token;
 	} catch (err) {
-    console.log(err)
+		console.log(err);
 		throw err;
 	}
 };
