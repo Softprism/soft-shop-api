@@ -36,7 +36,7 @@ router.post(
 router.post(
 	'/login',
 	[
-		check('name', 'Please enter store name').not().isEmpty(),
+		check('email', 'Please enter store email').not().isEmpty(),
 		check(
 			'password',
 			'Please Enter Password with 6 or more characters'
@@ -123,7 +123,7 @@ function loginStore(req, res, next) {
 	if (!errors.isEmpty()) {
 		res.status(400).json({
 			success: false,
-			errors: [errors.array()[0].msg, errors.array()[1].msg],
+			errors: errors,
 		});
 	}
 

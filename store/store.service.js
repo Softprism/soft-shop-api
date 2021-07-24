@@ -38,19 +38,20 @@ async function createStore(StoreParam) {
 }
 
 async function loginStore(StoreParam) {
-	const { email, password } = StoreParam;
 
-	let store = await Store.findOne({ email });
-	let storeRes = await Store.findOne({ email }).select('-password');
+  try {
+    const { email, password } = StoreParam;
 
-	if (!store) {
-		throw {
-			code: 400,
-			msg: 'Invalid Credentials',
-		};
-	}
+    let store = await Store.findOne({ email });
+    let storeRes = await Store.findOne({ email }).select('-password');
 
-	// Check if password matches with stored hash
+    if (!store) {
+      throw {
+        msg: 'Invalid Credentials',
+      };
+    }
+
+    // Check if password matches with stored hash
 	const isMatch = await bcrypt.compare(password, store.password);
 
 	if (!isMatch) {
@@ -61,6 +62,13 @@ async function loginStore(StoreParam) {
 	}
 
 	return storeRes;
+  } catch (error) {
+    console.log(error)
+    throw error
+  }
+	
+
+	
 }
 
 async function updateStore(req) {

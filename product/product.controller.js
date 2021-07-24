@@ -4,54 +4,7 @@ const productService = require('./product.service');
 const auth = require('../_helpers/auth');
 const { check, validationResult } = require('express-validator');
 
-// routes
-
-// @route   GET /product
-// @desc    Get all products
-// @access  Private
-router.get('/', auth, getProducts);
-
-// @route   GET /product/my-products
-// @desc    Get all products for a particular store when store is logged in
-// @access  Private
-router.get('/my-products', auth, getMyProducts);
-
-// @route   GET /product/:id
-// @desc    Get all products for a particular store when users are logged in
-// @access  Private
-router.get('/:id', auth, getStoreProducts);
-
-// @route   POST /product/create
-// @desc    Create product
-// @access  Private
-router.post(
-	'/create',
-	[
-		check('product_name', 'Please Enter Product Name').not().isEmpty(),
-		// check('images', 'Please add images for your store').not().isEmpty(),
-		check('category', 'Please select Category').not().isEmpty(),
-		check('availability', 'Please select availability status').not().isEmpty(),
-		check('price', 'Please enter price of product').not().isEmpty(),
-		// check('rating', 'Please Enter Stores Address').not().isEmpty(),
-	],
-	auth,
-	createProduct
-);
-
-// @route   PUT /product/update/:id
-// @desc    Update product
-// @access  Private
-router.put('/update/:id', auth, updateProduct);
-
-// @route   DELETE /product/delete/:id
-// @desc    Delete product
-// @access  Private
-router.delete('/delete/:id', auth, deleteProduct);
-router.get('/find/:searchParam', findProduct);
-
-module.exports = router;
-
-function getProducts(req, res, next) {
+const getProducts  = (req, res, next) => {
 	productService
 		.getProducts()
 		.then((products) =>
@@ -59,28 +12,28 @@ function getProducts(req, res, next) {
 				success: true,
 				result: products,
 			})
-		)
+		) 
 		.catch((err) =>
 			res.status(400).send({
 				success: false,
-				message: err,
+				msg: err,
 			})
 		);
 }
 
 function getMyProducts(req, res, next) {
 	productService
-		.getMyProducts(req.user.id)
+		.getMyProducts(req.store.id)
 		.then((products) =>
 			res.json({
 				success: true,
-				products: products,
+				result: products,
 			})
 		)
 		.catch((err) =>
 			res.status(500).send({
 				success: false,
-				message: err,
+				msg: err,
 			})
 		);
 }
@@ -186,3 +139,50 @@ function findProduct(req, res, next) {
 		)
 		.catch((err) => next(err));
 }
+
+// routes
+
+// @route   GET /product
+// @desc    Get all products
+// @access  Private
+router.get('/', auth, getProducts);
+
+// @route   GET /product/my-products
+// @desc    Get all products for a particular store when store is logged in
+// @access  Private
+router.get('/my-products', auth, getMyProducts);
+
+// @route   GET /product/:id
+// @desc    Get all products for a particular store when users are logged in
+// @access  Private
+router.get('/:id', auth, getStoreProducts);
+
+// @route   POST /product/create
+// @desc    Create product
+// @access  Private
+router.post(
+	'/create',
+	[
+		check('product_name', 'Please Enter Product Name').not().isEmpty(),
+		// check('images', 'Please add images for your store').not().isEmpty(),
+		check('category', 'Please select Category').not().isEmpty(),
+		check('availability', 'Please select availability status').not().isEmpty(),
+		check('price', 'Please enter price of product').not().isEmpty(),
+		// check('rating', 'Please Enter Stores Address').not().isEmpty(),
+	],
+	auth,
+	createProduct
+);
+
+// @route   PUT /product/update/:id
+// @desc    Update product
+// @access  Private
+router.put('/update/:id', auth, updateProduct);
+
+// @route   DELETE /product/delete/:id
+// @desc    Delete product
+// @access  Private
+router.delete('/delete/:id', auth, deleteProduct);
+router.get('/find/:searchParam', findProduct);
+
+module.exports = router;

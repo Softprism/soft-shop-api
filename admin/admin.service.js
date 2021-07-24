@@ -11,7 +11,7 @@ const getAdmins = async () => {
 
 		return admins;
 	} catch (err) {
-		return err;
+		throw err;
 	}
 };
 
@@ -100,7 +100,7 @@ const getLoggedInAdmin = async (adminParam) => {
 
 		return admin;
 	} catch (err) {
-		return err;
+		throw err;
 	}
 };
 
@@ -134,7 +134,7 @@ const updateAdmin = async (updateParam, id) => {
 
 		return admin;
 	} catch (err) {
-		return err;
+		throw err;
 	}
 };
 
