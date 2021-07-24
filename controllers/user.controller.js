@@ -1,10 +1,10 @@
 import express from 'express';
-const router = express.Router();
-import { check, validationResult } from 'express-validator';
-
+import { validationResult } from 'express-validator';
 import { auth } from '../middleware/auth.js';
 
 import * as userService from '../services/user.service.js';
+
+const router = express.Router();
 
 const getUsers = async (req, res) => {
 	const users = await userService.getUsers();

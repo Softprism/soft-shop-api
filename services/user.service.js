@@ -1,8 +1,6 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
-import db from '../config/db.js';
 
-// const User = db.User;
 import User from '../models/user.model.js';
 
 // Get all Users

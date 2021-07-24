@@ -1,17 +1,18 @@
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
-const db = require('../config/db');
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 
-const Admin = db.Admin;
+import Admin from '../models/admin.model.js';
 
 const getAdmins = async () => {
-  const admins = await Admin.find();
+	try {
+		const admins = await Admin.find();
 
-  if(admins.length > 0) {
-    return admins;
-  } else {
-    throw {msg: 'No Admin found'}
-  }
+		if (admins.length > 0) {
+			return admins;
+		}
+	} catch (err) {
+		return err;
+	}
 };
 
 const registerAdmin = async (params) => {
@@ -46,11 +47,13 @@ const registerAdmin = async (params) => {
 		};
 
 		// Generate and return token to server
-		const token = jwt.sign(payload, config.jwtSecret, { expiresIn: 36000 });
+		const token = jwt.sign(payload, process.env.JWT_SECRET, {
+			expiresIn: 36000,
+		});
 
 		return token;
 	} catch (err) {
-		throw err;
+		return err;
 	}
 };
 
@@ -80,7 +83,9 @@ const loginAdmin = async (loginParam) => {
 		};
 
 		// Generate and return token to server
-		const token = jwt.sign(payload, config.jwtSecret, { expiresIn: 36000 });
+		const token = jwt.sign(payload, process.env.JWT_SECRET, {
+			expiresIn: 36000,
+		});
 
 		if (!token) {
 			throw { err: 'Missing Token' };
@@ -89,7 +94,7 @@ const loginAdmin = async (loginParam) => {
 		return token;
 	} catch (err) {
 		console.log(err);
-		throw err;
+		return err;
 	}
 };
 
@@ -99,7 +104,7 @@ const getLoggedInAdmin = async (adminParam) => {
 
 		return admin;
 	} catch (err) {
-		throw err;
+		return err;
 	}
 };
 
@@ -133,14 +138,8 @@ const updateAdmin = async (updateParam, id) => {
 
 		return admin;
 	} catch (err) {
-		throw err;
+		return err;
 	}
 };
 
-module.exports = {
-	getAdmins,
-	registerAdmin,
-	loginAdmin,
-	getLoggedInAdmin,
-	updateAdmin,
-};
+export { getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin };

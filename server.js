@@ -23,7 +23,7 @@ app.use(cors());
 // app.use(jwt());
 
 app.use('/users', userRoutes);
-app.use('/admin', adminRoutes);
+app.use('/admins', adminRoutes);
 
 // api routes
 // app.use('/admin', require('./controllers/admin.controller'));
