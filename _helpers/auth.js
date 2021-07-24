@@ -3,8 +3,8 @@ const config = require('../config.json');
 
 module.exports = (req, res, next) => {
 	// Get Token from Header
-	const token = req.header('auth-token');
-
+	const Bearertoken = req.header('authorization');
+  const token = Bearertoken.split(' ')[1]; //removes the bearer phrase
 	// Check if it's not a token
 	if (!token) {
 		return res.status(401).json({

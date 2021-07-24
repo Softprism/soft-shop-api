@@ -55,9 +55,9 @@ function getProducts(req, res, next) {
     productService.getProducts()
         .then(products => res.json({
             success: true,
-            products: products
+            result: products
         }))
-        .catch(err => res.status(500).send({
+        .catch(err => res.status(400).send({
             success: false,
             message: err
         }));

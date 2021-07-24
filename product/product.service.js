@@ -6,18 +6,16 @@ const mongoose = require('mongoose');
 const Product = db.Product;
 const Store = db.Store;
 
-module.exports = {
-    getProducts,
-    getMyProducts,
-    getStoreProducts,
-    createProduct,
-    updateProduct,
-    deleteProduct,
-    findProduct
-};
-
-async function getProducts() {
+const getProducts = async () => {
+console.log(1)
+  try {
+    //get all products in the db
     return await Product.find();
+  } catch (error) {
+    console.log(error)
+    throw error
+  }  
+
 }
 
 async function findProduct(searchParam) {
@@ -132,3 +130,13 @@ async function deleteProduct(productId, storeId) {
 
     return { message: 'Product deleted Successfully' };
 }
+
+module.exports = {
+  getProducts,
+  getMyProducts,
+  getStoreProducts,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+  findProduct
+};
