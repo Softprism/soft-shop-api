@@ -1,61 +1,63 @@
-const express = require('express');
-const router = express.Router();
-const productService = require('../services/product.service');
-const auth = require('../middleware/auth');
-const { check, validationResult } = require('express-validator');
+import express from 'express';
+import * as productService from '../services/product.service.js'
+import { auth } from '../middleware/auth.js';
+import { check, validationResult } from 'express-validator';
 
-const getProducts  = (req, res, next) => {
-	productService
-		.getProducts()
-		.then((products) =>
-			res.json({
-				success: true,
-				result: products,
-			})
-		) 
-		.catch((err) =>
-			res.status(400).send({
-				success: false,
-				msg: err,
-			})
-		);
+const getProducts  = async (req, res, next) => {
+  if (req.query.skip === undefined || req.query.limit === undefined) {
+    res.status(400).json({
+      success: false,
+      msg: 'missing some parameters',
+    })
+  }
+  let allProducts = await productService.getProducts(req.query)
+
+  allProducts && allProducts.length > 0 
+  ? res.status(200).json({success:true, result: allProducts})
+  : res.status(404).json({success: false, msg: 'No product found'})
+  
+  if (allProducts.err) {
+		res.status(500).json({ success: false, msg: allProducts.err });
+	}
 }
 
-function getMyProducts(req, res, next) {
-	productService
-		.getMyProducts(req.store.id)
-		.then((products) =>
-			res.json({
-				success: true,
-				result: products,
-			})
-		)
-		.catch((err) =>
-			res.status(500).send({
-				success: false,
-				msg: err,
-			})
-		);
+const getStoreProducts = async (req, res, next) => {
+  let storeID // container to store the store's ID, be it a store request or an admin request
+  if (req.store === undefined && req.query.storeID === undefined) {
+    res.status(400).json({
+      success: false,
+      msg: 'unable to authenticate this store',
+    })
+  } 
+
+  if(req.store) storeID = req.store.id
+  if(req.query.storeID) storeID = req.query.storeID
+
+	let storeProducts = await productService.getStoreProducts(storeID,req.query)
+
+  if(storeProducts.err) res.status(500).json({ success: false, msg: storeProducts.err })
+
+  storeProducts && storeProducts.length > 0
+  ? res.status(200).json({ success: true, result: storeProducts })
+	: res.status(404).json({ success: false, msg: 'No product found' })
 }
 
-function getStoreProducts(req, res, next) {
-	productService
-		.getStoreProducts(req.params.id)
-		.then((products) =>
-			res.json({
-				success: true,
-				products: products,
-			})
-		)
-		.catch((err) =>
-			res.status(500).send({
-				success: false,
-				message: err,
-			})
-		);
-}
+const createProduct = async (req, res, next) => {
+  let storeID // container to store the store's ID, be it a store request or an admin request
 
-function createProduct(req, res, next) {
+  if (req.store === undefined && req.query.storeID === undefined) {
+    res.status(400).json({
+      success: false,
+      msg: 'unable to authenticate this store',
+    })
+  } 
+  if(req.store) {
+    storeID = req.store.id
+  }
+  if(req.query.storeID) {
+    storeID = req.query.storeID
+  }
+
 	const errors = validationResult(req);
 
 	if (!errors.isEmpty()) {
@@ -65,135 +67,92 @@ function createProduct(req, res, next) {
 		});
 		return res.status(400).json({
 			success: false,
-			errors: error_msgs,
+			msg: error_msgs,
 		});
 	}
 
-	productService
-		.createProduct(req.body, req.user.id)
-		.then((product) => {
-			res.json({
-				success: true,
-				product: product,
-			});
-		})
-		.catch((err) =>
-			res.status(err.code != null ? err.code : 500).send({
-				success: false,
-				message: err.msg != null ? err.msg : 'Server Error',
-			})
-		);
+	productService.createProduct(req.body, storeID)
+	.then(() => {
+    res.status(201).json({success: true });
+  })
+  .catch((err) => {
+    res.status(500).send({ success: false, msg: err.err })
+  }
+  );
 }
 
-function updateProduct(req, res, next) {
-	// const errors = validationResult(req);
+const updateProduct = async (req, res, next) => {
+	const errors = validationResult(req);
 
-	// if (!errors.isEmpty()) {
-	//     res.status(400).json({
-	//         success: false,
-	//         errors: errors.array()['msg']
-	//     });
-	// }
-	console.log(req.params.id);
-	productService
-		.updateProduct(req.body, req.params.id, req.user.id)
-		.then((product) => {
-			res.json({
-				success: true,
-				product: product,
-			});
-		})
-		.catch((err) =>
-			res.status(err.code != null ? err.code : 500).send({
-				success: false,
-				message: err.msg != null ? err.msg : 'Server Error',
-			})
-		);
-}
+	if (!errors.isEmpty()) {
+	    res.status(400).json({
+	        success: false,
+	        errors: errors.array()['msg']
+	    });
+	}
 
-function deleteProduct(req, res, next) {
-	productService
-		.deleteProduct(req.params.id, req.user.id)
-		.then((message) => {
-			res.json({
-				success: true,
-				message: message,
-			});
-		})
-		.catch((err) =>
-			res.status(err.code != null ? err.code : 500).send({
-				success: false,
-				message: err.msg != null ? err.msg : 'Server Error',
-			})
-		);
-}
+  let storeID // container to store the store's ID, be it a store request or an admin request
 
-function findProduct(req, res, next) {
-  Object.keys(req.body).forEach(key => req.body[key] === undefined  && delete req.body[key])
-	productService
-		.findProduct(req.body,req.params)
-		.then((results) =>
-			res.status(200).json({
-				success: true,
-				message: results,
-			})
-		)
-		.catch((err) => {
-      res.status(400).json({
-        success: false,
-        msg: err.msg
-      })
+  if (req.store === undefined && req.query.storeID === undefined) {
+    res.status(400).json({
+      success: false,
+      msg: 'unable to authenticate this store',
     })
+  } 
+  if(req.store) {
+    storeID = req.store.id
+  }
+  if(req.query.storeID) {
+    storeID = req.query.storeID
+  }
+
+	productService
+  .updateProduct(req.body, req.params.id, storeID)
+  .then(() => {
+    console.log(1234)
+    res.status(200).json({ success: true });
+  })
+  .catch((err) => {
+    res.status(500).json({ success: false, message: err.err })});
 }
 
-// routes
+const deleteProduct = (req, res, next) => {
+  let storeID;
+  if (req.store === undefined && req.query.storeID === undefined) {
+    res.status(400).json({
+      success: false,
+      msg: 'unable to authenticate this store',
+    })
+  } 
 
-// @route   GET /product
-// @desc    Get all products
-// @access  Private
-router.get('/', auth, getProducts);
+  if(req.store) storeID = req.store.id
 
-// @route   GET /product/my-products
-// @desc    Get all products for a particular store when store is logged in
-// @access  Private
-router.get('/my-products', auth, getMyProducts);
+  if(req.query.storeID) storeID = req.query.storeID
 
-// @route   GET /product/:id
-// @desc    Get all products for a particular store when users are logged in
-// @access  Private
-router.get('/:id', auth, getStoreProducts);
+	productService
+  .deleteProduct(req.params.id, storeID)
+  .then( () => res.status(200).json({ success: true }) )
+  .catch((err) => res.status(500).json({ success: false, message: err.err }) );
+}
 
-// @route   POST /product/create
-// @desc    Create product
-// @access  Private
-router.post(
-	'/create',
-	[
-		check('product_name', 'Please Enter Product Name').not().isEmpty(),
-		// check('images', 'Please add images for your store').not().isEmpty(),
-		check('category', 'Please select Category').not().isEmpty(),
-		check('availability', 'Please select availability status').not().isEmpty(),
-		check('price', 'Please enter price of product').not().isEmpty(),
-		// check('rating', 'Please Enter Stores Address').not().isEmpty(),
-	],
-	auth,
-	createProduct
-);
+const findProduct = async (req, res, next) => {
+  if (req.query.skip === undefined || req.query.limit === undefined) {
+    res.status(400).json({
+      success: false,
+      msg: 'missing some parameters',
+    })
+  }
 
-// @route   PUT /product/update/:id
-// @desc    Update product
-// @access  Private
-router.put('/update/:id', auth, updateProduct);
+  let allProducts = await productService.findProduct(req.body,req.query)
 
-// @route   DELETE /product/delete/:id
-// @desc    Delete product
-// @access  Private
-router.delete('/delete/:id', auth, deleteProduct);
-// @route   DELETE /product/delete/:id
-// @desc    Delete product
-// @access  Private
-router.get('/find/:productName/:availability/:price', findProduct);
+  allProducts && allProducts.length > 0 
+  ? res.status(200).json({success:true, result: allProducts})
+  : res.status(404).json({success: false, msg: 'No product found'})
+  
+  if (allProducts.err) {
+		res.status(500).json({ success: false, msg: allProducts.err });
+	}
 
-module.exports = {
-  getMyProducts, findProduct, createProduct
-};
+}
+
+export { findProduct, deleteProduct, updateProduct, createProduct, getProducts, getStoreProducts }

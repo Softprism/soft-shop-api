@@ -1,10 +1,10 @@
 import express from 'express';
-const router = express.Router();
-import { check, validationResult } from 'express-validator';
-
+import { validationResult } from 'express-validator';
 import { auth } from '../middleware/auth.js';
 
 import * as userService from '../services/user.service.js';
+
+const router = express.Router();
 
 const getUsers = async (req, res) => {
 	const users = await userService.getUsers();
@@ -20,13 +20,13 @@ const registerUser = async (req, res, next) => {
 		res.status(400).json({ errors: errors.array() });
 	}
 
-	const user = await userService.registerUser(req.body);
+	const token = await userService.registerUser(req.body);
 
-	if (user.err) {
-		res.status(500).json({ success: false, msg: user.err });
+	if (token.err) {
+		res.status(500).json({ success: false, msg: token.err });
 	}
 
-	res.status(201).json({ success: true, token: user });
+	res.status(201).json({ success: true, result: token });
 };
 
 const loginUser = async (req, res, next) => {
@@ -37,15 +37,15 @@ const loginUser = async (req, res, next) => {
 	}
 
 	// Call Login function from userService
-	const user = await userService.loginUser(req.body);
+	const token = await userService.loginUser(req.body);
 
-	if (user.err) {
-		res.status(500).json({ success: false, msg: user.err });
+	if (token.err) {
+		res.status(500).json({ success: false, msg: token.err });
 	}
 
 	res.status(200).json({
 		success: true,
-		token: user,
+		result: token,
 	});
 };
 
