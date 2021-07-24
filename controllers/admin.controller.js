@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const adminService = require('../services/admin.service');
-const auth = require('../middlewares/auth');
+const auth = require('../middleware/auth');
 const { check, validationResult } = require('express-validator');
 
 // @route   GET /admin

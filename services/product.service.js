@@ -1,4 +1,3 @@
-const config = require('../config.json');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const db = require('../middlewares/db');
@@ -9,6 +8,7 @@ const Store = require('../models/store.model');
 const getProducts = async () => {
 	try {
 		//get all products in the db
+<<<<<<< HEAD
 		let allProducts =  await Product
     .find()
     .sort({createdDate: -1}) // -1 for descending sort
@@ -21,12 +21,19 @@ const getProducts = async () => {
     } else {
       return allProducts
     }
+=======
+		let allProducts = await Product.find();
+		if (!allProducts) {
+			throw { msg: 'no products found' };
+		}
+>>>>>>> 84d7e03ec8551e21d98ab7dbb85592a71b9e0804
 	} catch (error) {
 		console.log(error);
 		throw error;
 	}
 };
 
+<<<<<<< HEAD
 const findProduct = async (searchParam, opts) => {
   try {
     console.log(opts)
@@ -57,10 +64,21 @@ const findProduct = async (searchParam, opts) => {
     throw error
   }
 }
+=======
+const findProduct = async (searchParam) => {
+	try {
+		let regex = new RegExp(searchParam, 'i');
+		return await Product.find({ product_name: regex }).exec(); // we'll prioritize results to be the ones closer to the users
+	} catch (error) {
+		throw error;
+	}
+};
+>>>>>>> 84d7e03ec8551e21d98ab7dbb85592a71b9e0804
 
 const getMyProducts = async (storeId) => {
 	let storeProduct = await Product.find({
 		store: mongoose.Types.ObjectId(storeId),
+<<<<<<< HEAD
 	})
   .populate('store category')
   if(storeProduct.length < 1) {
@@ -69,6 +87,15 @@ const getMyProducts = async (storeId) => {
     return storeProduct
   }
 }
+=======
+	});
+	if (storeProduct.length < 1) {
+		throw 'no product found in this store';
+	} else {
+		return storeProduct;
+	}
+};
+>>>>>>> 84d7e03ec8551e21d98ab7dbb85592a71b9e0804
 
 async function getStoreProducts(storeId) {
 	return await Product.find({

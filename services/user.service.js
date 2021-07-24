@@ -1,11 +1,9 @@
-const config = require('../config.json');
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
-const db = require('middlewares/db');
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
+import db from '../config/db.js';
 
-const { validationResult } = require('express-validator');
-
-const User = db.User;
+// const User = db.User;
+import User from '../models/user.model.js';
 
 // Get all Users
 const getUsers = async () => {
@@ -24,6 +22,8 @@ const registerUser = async (userParam) => {
 
 	try {
 		let user = await User.findOne({ email });
+
+		console.log(user);
 
 		if (user) {
 			// return res
@@ -57,9 +57,11 @@ const registerUser = async (userParam) => {
 		};
 
 		// Generate and return token to server
-		const token = jwt.sign(payload, config.jwtSecret, { expiresIn: 36000 });
-		return token;
+		const token = jwt.sign(payload, process.env.JWT_SECRET, {
+			expiresIn: 36000,
+		});
 
+		return token;
 		// return res.status(200).json({ user });
 	} catch (err) {
 		// console.error(err);
@@ -94,14 +96,16 @@ const loginUser = async (loginParam) => {
 		};
 
 		// Generate and return token to server
-		const token = jwt.sign(payload, config.jwtSecret, { expiresIn: 36000 });
+		const token = jwt.sign(payload, process.env.JWT_SECRET, {
+			expiresIn: 36000,
+		});
 		if (!token) {
 			throw { err: 'Missing Token' };
 		}
 		return token;
 	} catch (err) {
-    console.log(err)
-		throw err;
+		console.log(err);
+		return err;
 	}
 };
 
@@ -163,10 +167,4 @@ const updateUser = async (updateParam, id) => {
 	}
 };
 
-module.exports = {
-	getUsers,
-	registerUser,
-	loginUser,
-	getLoggedInUser,
-	updateUser,
-};
+export { getUsers, registerUser, loginUser, getLoggedInUser, updateUser };
