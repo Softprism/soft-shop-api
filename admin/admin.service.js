@@ -134,7 +134,7 @@ const updateAdmin = async (updateParam, id) => {
 
 		return admin;
 	} catch (err) {
-		return err;
+		throw err;
 	}
 };
 

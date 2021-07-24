@@ -137,11 +137,18 @@ function updateAdmin(req, res, next) {
 	if (!errors.isEmpty()) {
 		return res.status(400).json({ errors: errors.array() });
 	}
+
 	// Call Get update profile function from adminService
 	adminService
 		.updateAdmin(req.body, req.params.id)
-		.then((admin) => res.json(admin))
-		.catch((err) => next(err));
+		.then((admin) => res.status(201).json(admin))
+		.catch((err) => {
+			console.log(err);
+			res.status(400).json({
+				success: false,
+				msg: err.msg,
+			});
+		});
 }
 
 module.exports = router;
