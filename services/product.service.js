@@ -1,18 +1,25 @@
 const config = require('../config.json');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const db = require('middlewares/db');
+const db = require('../middlewares/db');
 const mongoose = require('mongoose');
-const Product = db.Product;
-const Store = db.Store;
+const Product = require('../models/product.model');
+const Store = require('../models/store.model');
 
 const getProducts = async () => {
-	console.log(1);
 	try {
 		//get all products in the db
-		let allProducts =  await Product.find();
+		let allProducts =  await Product
+    .find()
+    .sort({createdDate: -1}) // -1 for descending sort
+    .limit(1)
+    .skip(3)
+    .populate('store category');
+
     if(!allProducts) {
       throw {msg: 'no products found'}
+    } else {
+      return allProducts
     }
 	} catch (error) {
 		console.log(error);
@@ -20,19 +27,42 @@ const getProducts = async () => {
 	}
 };
 
-const findProduct = (searchParam) => {
+const findProduct = async (searchParam, opts) => {
   try {
-    let regex = new RegExp(searchParam, 'i');
-	  return await Product.find({ product_name: regex }).exec(); // we'll prioritize results to be the ones closer to the users
+    console.log(opts)
+    opts.skip = Number(opts.skip)
+    opts.limit = Number(opts.limit)
+    const {skip, limit} = opts
+    console.log(opts)
+    if(searchParam.product_name) {
+      searchParam.product_name = new RegExp(searchParam.product_name, 'i'); 
+      // i for case insensitive
+    }
+
+	  const searchedProducts = await Product
+    .find(searchParam)
+    .sort({createdDate: -1}) // -1 for descending sort
+    .limit(limit) //number of records to return
+    .skip(skip) //number of records to skip
+    .populate('store category')
+    // we'll prioritize results to be the ones closer to the users
+
+    if(searchedProducts.length < 1) {
+      throw {msg: 'match not found'}
+    }
+
+    return searchedProducts
   } catch (error) {
+    console.log(error)
     throw error
   }
 }
 
-const getMyProducts = (storeId) => {
+const getMyProducts = async (storeId) => {
 	let storeProduct = await Product.find({
 		store: mongoose.Types.ObjectId(storeId),
-	});
+	})
+  .populate('store category')
   if(storeProduct.length < 1) {
     throw 'no product found in this store' 
   } else {
@@ -47,9 +77,9 @@ async function getStoreProducts(storeId) {
 }
 
 async function createProduct(productParam, id) {
-	const { product_name, category, availability, price, rating } = productParam;
+	const { product_name, category, availability, price, rating, product_image } = productParam;
 
-	let store = await Store.findById(id);
+	let store = await Store.findById("601a7ab504b3e62cf65f79df");
 
 	if (!store) {
 		throw {
@@ -76,6 +106,7 @@ async function createProduct(productParam, id) {
 		availability: availability,
 		price: price,
 		rating: rating,
+    product_image
 	});
 
 	await newProduct.save();

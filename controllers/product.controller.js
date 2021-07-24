@@ -129,16 +129,21 @@ function deleteProduct(req, res, next) {
 }
 
 function findProduct(req, res, next) {
-  console.log(req.params)
+  Object.keys(req.body).forEach(key => req.body[key] === undefined  && delete req.body[key])
 	productService
-		.findProduct(req.params)
+		.findProduct(req.body,req.params)
 		.then((results) =>
-			res.json({
+			res.status(200).json({
 				success: true,
 				message: results,
 			})
 		)
-		.catch((err) => next(err));
+		.catch((err) => {
+      res.status(400).json({
+        success: false,
+        msg: err.msg
+      })
+    })
 }
 
 // routes
@@ -189,4 +194,6 @@ router.delete('/delete/:id', auth, deleteProduct);
 // @access  Private
 router.get('/find/:productName/:availability/:price', findProduct);
 
-module.exports = router;
+module.exports = {
+  getMyProducts, findProduct, createProduct
+};

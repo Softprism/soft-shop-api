@@ -1,6 +1,6 @@
 const expressJwt = require('express-jwt');
 const config = require('config.json');
-const userService = require('../user/user.service');
+const userService = require('../services/user.service');
 
 module.exports = jwt;
 

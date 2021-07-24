@@ -10,8 +10,8 @@ const ProductSchema = mongoose.Schema({
 		required: true,
 	},
 	availability: { type: Boolean, required: true },
-	price: { type: String, required: true },
-	rating: { type: String, required: false },
+	price: { type: Number, required: true },
+	rating: { type: Number, required: false },
 	createdDate: { type: Date, default: Date.now },
 });
 

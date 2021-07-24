@@ -13,15 +13,15 @@ app.use(cors());
 app.use(jwt());
 
 // api routes
-app.use('/admin', require('./controllers/admin.controller'));
-app.use('/user', require('./controllers/user.controller'));
-app.use('/store', require('./controllers/store.controller'));
-app.use('/order', require('./controllers/order.controller'));
-app.use('/product', require('./controllers/product.controller'));
-app.use('/category', require('./controllers/category.controller'));
+// app.use('/admin', require('./controllers/admin.controller'));
+// app.use('/user', require('./controllers/user.controller'));
+// app.use('/store', require('./controllers/store.controller'));
+// app.use('/order', require('./controllers/order.controller'));
+app.use('/product', require('./routes/product.router'));
+// app.use('/category', require('./controllers/category.controller'));
 
   // this is just here to verify if the server is online
-app.use('/', require('./controllers/app.controller'));  
+// app.use('/', require('./controllers/app.controller'));  
 
 // global error handler
 app.use(errorHandler);
