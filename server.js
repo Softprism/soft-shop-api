@@ -7,6 +7,7 @@ import cors from 'cors';
 import connectDB from './config/db.js';
 
 import userRoutes from './routes/user.routes.js';
+import adminRoutes from './routes/admin.routes.js';
 
 dotenv.config();
 
@@ -22,6 +23,7 @@ app.use(cors());
 // app.use(jwt());
 
 app.use('/users', userRoutes);
+app.use('/admin', adminRoutes);
 
 // api routes
 // app.use('/admin', require('./controllers/admin.controller'));
