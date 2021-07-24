@@ -21,7 +21,7 @@ app.use('/product', require('./controllers/product.controller'));
 app.use('/category', require('./controllers/category.controller'));
 
   // this is just here to verify if the server is online
-app.use('/', require('./app.controller'));  
+app.use('/', require('./controllers/app.controller'));  
 
 // global error handler
 app.use(errorHandler);
