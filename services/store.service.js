@@ -1,7 +1,6 @@
-const config = require('../config.json');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const db = require('../middlewares/db');
+const db = require('../config/db');
 const Store = db.Store;
 
 module.exports = {

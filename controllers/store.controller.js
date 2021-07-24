@@ -1,8 +1,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
-const config = require('../config.json');
 const router = express.Router();
-const auth = require('../middlewares/auth');
+const auth = require('../middleware/auth');
 const storeService = require('../services/store.service');
 const { check, validationResult } = require('express-validator');
 
@@ -95,7 +94,7 @@ function createStore(req, res, next) {
 			// Generate and return token to server
 			jwt.sign(
 				payload,
-				config.jwtSecret,
+				process.env.JWT_SECRET,
 				{ expiresIn: 36000 },
 				(err, token) => {
 					if (err) throw err;
@@ -140,7 +139,7 @@ function loginStore(req, res, next) {
 			// Generate and return token to server
 			jwt.sign(
 				payload,
-				config.jwtSecret,
+				process.env.JWT_SECRET,
 				{ expiresIn: 36000 },
 				(err, token) => {
 					if (err) throw err;
