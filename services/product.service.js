@@ -8,63 +8,16 @@ const Store = require('../models/store.model');
 const getProducts = async () => {
 	try {
 		//get all products in the db
-<<<<<<< HEAD
-		let allProducts =  await Product
-    .find()
-    .sort({createdDate: -1}) // -1 for descending sort
-    .limit(1)
-    .skip(3)
-    .populate('store category');
-
-    if(!allProducts) {
-      throw {msg: 'no products found'}
-    } else {
-      return allProducts
-    }
-=======
 		let allProducts = await Product.find();
 		if (!allProducts) {
 			throw { msg: 'no products found' };
 		}
->>>>>>> 84d7e03ec8551e21d98ab7dbb85592a71b9e0804
 	} catch (error) {
 		console.log(error);
 		throw error;
 	}
 };
 
-<<<<<<< HEAD
-const findProduct = async (searchParam, opts) => {
-  try {
-    console.log(opts)
-    opts.skip = Number(opts.skip)
-    opts.limit = Number(opts.limit)
-    const {skip, limit} = opts
-    console.log(opts)
-    if(searchParam.product_name) {
-      searchParam.product_name = new RegExp(searchParam.product_name, 'i'); 
-      // i for case insensitive
-    }
-
-	  const searchedProducts = await Product
-    .find(searchParam)
-    .sort({createdDate: -1}) // -1 for descending sort
-    .limit(limit) //number of records to return
-    .skip(skip) //number of records to skip
-    .populate('store category')
-    // we'll prioritize results to be the ones closer to the users
-
-    if(searchedProducts.length < 1) {
-      throw {msg: 'match not found'}
-    }
-
-    return searchedProducts
-  } catch (error) {
-    console.log(error)
-    throw error
-  }
-}
-=======
 const findProduct = async (searchParam) => {
 	try {
 		let regex = new RegExp(searchParam, 'i');
@@ -73,21 +26,10 @@ const findProduct = async (searchParam) => {
 		throw error;
 	}
 };
->>>>>>> 84d7e03ec8551e21d98ab7dbb85592a71b9e0804
 
 const getMyProducts = async (storeId) => {
 	let storeProduct = await Product.find({
 		store: mongoose.Types.ObjectId(storeId),
-<<<<<<< HEAD
-	})
-  .populate('store category')
-  if(storeProduct.length < 1) {
-    throw 'no product found in this store' 
-  } else {
-    return storeProduct
-  }
-}
-=======
 	});
 	if (storeProduct.length < 1) {
 		throw 'no product found in this store';
@@ -95,7 +37,6 @@ const getMyProducts = async (storeId) => {
 		return storeProduct;
 	}
 };
->>>>>>> 84d7e03ec8551e21d98ab7dbb85592a71b9e0804
 
 async function getStoreProducts(storeId) {
 	return await Product.find({
@@ -104,9 +45,10 @@ async function getStoreProducts(storeId) {
 }
 
 async function createProduct(productParam, id) {
-	const { product_name, category, availability, price, rating, product_image } = productParam;
+	const { product_name, category, availability, price, rating, product_image } =
+		productParam;
 
-	let store = await Store.findById("601a7ab504b3e62cf65f79df");
+	let store = await Store.findById('601a7ab504b3e62cf65f79df');
 
 	if (!store) {
 		throw {
@@ -133,7 +75,7 @@ async function createProduct(productParam, id) {
 		availability: availability,
 		price: price,
 		rating: rating,
-    product_image
+		product_image,
 	});
 
 	await newProduct.save();
