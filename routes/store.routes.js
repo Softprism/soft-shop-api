@@ -1,0 +1,66 @@
+import express from 'express';
+import { check } from 'express-validator';
+
+const router = express.Router();
+
+import {
+	getStores,
+	createStore,
+	loginStore,
+	getLoggedInStore,
+	updateStore,
+} from '../controllers/store.controller.js';
+
+import { auth } from '../middleware/auth.js';
+
+// @route   GET /store
+// @desc    Get all stores
+// @access  Private
+router.get('/', auth, getStores);
+
+// @route   POST /store/create
+// @desc    Register a store
+// @access  Public
+router.post(
+	'/create',
+	[
+		check('name', 'Please Enter Store Name').not().isEmpty(),
+		// check('images', 'Please add images for your store').not().isEmpty(),
+		check('address', 'Please Enter Stores Address').not().isEmpty(),
+		check('email', 'Please Enter Valid Email').isEmail(),
+		check('phone_number', 'Please Enter Valid Phone Number').isMobilePhone(),
+		check(
+			'password',
+			'Please Enter Password with 6 or more characters'
+		).isLength({ min: 6 }),
+	],
+	createStore
+);
+
+// @route   POST /store/login
+// @desc    Login a store
+// @access  Public
+router.post(
+	'/login',
+	[
+		check('email', 'Please enter store email').not().isEmpty(),
+		check(
+			'password',
+			'Please Enter Password with 6 or more characters'
+		).isLength({ min: 6 }),
+		check('password', 'Password is Required').exists(),
+	],
+	loginStore
+);
+
+// @route   GET /stores/login
+// @desc    Get logged in Store
+// @access  Private
+router.get('/login', auth, getLoggedInStore);
+
+// @route   PUT /store/update
+// @desc    Update a store
+// @access  Private
+router.put('/update/:id', auth, updateStore);
+
+export default router;

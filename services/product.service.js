@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+
 import Product from '../models/product.model.js';
 import Store from '../models/store.model.js';
 
@@ -96,6 +97,8 @@ const createProduct = async (productParam, storeId) => {
 		});
 
 		await newProduct.save(); // save new product
+
+		return newProduct;
 	} catch (error) {
 		return error;
 	}
@@ -151,8 +154,10 @@ const deleteProduct = async (productId, storeId) => {
 			};
 		}
 
-		//deleete the product
+		//delete the product
 		await Product.deleteOne({ _id: productId });
+
+		return { msg: 'Successfully Deleted Product' };
 	} catch (error) {
 		return error;
 	}
