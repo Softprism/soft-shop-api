@@ -86,7 +86,7 @@ const updateProduct = async (req, res, next) => {
   if(req.store) storeID = req.store.id
   if(req.query.storeID) storeID = req.query.storeID
 
-	const request = productService.updateProduct(req.body, req.params.id, storeID)
+	const request = await productService.updateProduct(req.body, req.params.id, storeID)
 
   if (request.err) {
 		res.status(500).json({ success: false, msg: request.err });
@@ -105,7 +105,7 @@ const deleteProduct = (req, res, next) => {
 
   if(req.query.storeID) storeID = req.query.storeID
 
-	const request = productService.deleteProduct(req.params.id, storeID)
+	const request = await productService.deleteProduct(req.params.id, storeID)
 
   if (request.err) {
 		res.status(500).json({ success: false, msg: request.err });
