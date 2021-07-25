@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const ProductSchema = mongoose.Schema({
+const productSchema = mongoose.Schema({
 	product_name: { type: String, required: true },
 	product_image: [{ type: String, required: true }], // array to store multiple images
 	store: { type: mongoose.Schema.Types.ObjectId, ref: 'Store', required: true },
@@ -15,4 +15,6 @@ const ProductSchema = mongoose.Schema({
 	createdDate: { type: Date, default: Date.now },
 });
 
-module.exports = mongoose.model('Product', ProductSchema);
+const Product = mongoose.model('Product', productSchema);
+
+export default Product;

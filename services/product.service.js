@@ -1,9 +1,9 @@
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
-const db = require('../middlewares/db');
-const mongoose = require('mongoose');
-const Product = require('../models/product.model');
-const Store = require('../models/store.model');
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
+import mongoose from 'mongoose';
+
+import Product from '../models/product.model.js';
+import Store from '../models/store.model.js';
 
 const getProducts = async () => {
 	try {
@@ -21,7 +21,8 @@ const getProducts = async () => {
 const findProduct = async (searchParam) => {
 	try {
 		let regex = new RegExp(searchParam, 'i');
-		return await Product.find({ product_name: regex }).exec(); // we'll prioritize results to be the ones closer to the users
+		// We'll prioritize results to be the ones closer to the users
+		return await Product.find({ product_name: regex }).exec();
 	} catch (error) {
 		throw error;
 	}
