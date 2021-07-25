@@ -1,73 +1,23 @@
-const express = require('express');
-const jwt = require('jsonwebtoken');
-const router = express.Router();
-const auth = require('../middleware/auth');
-const storeService = require('../services/store.service');
-const { check, validationResult } = require('express-validator');
+import express from 'express';
+import * as storeService from '../services/store.service.js';
+import jwt from 'jsonwebtoken';
+import { auth } from '../middleware/auth.js';
+import { check, validationResult } from 'express-validator';
 
-// @route   GET /store
-// @desc    Get all stores
-// @access  Private
-router.get('/', auth, getStores);
+const getStores = async (req, res, next) => {
+	const stores = await storeService.getStores();
 
-// @route   POST /store/create
-// @desc    Register a store
-// @access  Public
-router.post(
-	'/create',
-	[
-		check('name', 'Please Enter Store Name').not().isEmpty(),
-		// check('images', 'Please add images for your store').not().isEmpty(),
-		check('address', 'Please Enter Stores Address').not().isEmpty(),
-		check('email', 'Please Enter Valid Email').isEmail(),
-		check('phone_number', 'Please Enter Valid Phone Number').isMobilePhone(),
-		check(
-			'password',
-			'Please Enter Password with 6 or more characters'
-		).isLength({ min: 6 }),
-	],
-	createStore
-);
+	stores && stores.length > 0
+		? res.status(200).json({ success: true, result: stores })
+		: res.status(404).json({ success: false, msg: 'No Store found' });
 
-// @route   POST /store/login
-// @desc    Login a store
-// @access  Public
-router.post(
-	'/login',
-	[
-		check('email', 'Please enter store email').not().isEmpty(),
-		check(
-			'password',
-			'Please Enter Password with 6 or more characters'
-		).isLength({ min: 6 }),
-		check('password', 'Password is Required').exists(),
-	],
-	loginStore
-);
+	res.json({
+		success: true,
+		stores: stores,
+	});
+};
 
-// @route   PUT /store/update
-// @desc    Update a store
-// @access  Private
-router.put('/update/:id', auth, updateStore);
-
-function getStores(req, res, next) {
-	storeService
-		.getStores()
-		.then((stores) =>
-			res.json({
-				success: true,
-				stores: stores,
-			})
-		)
-		.catch((err) =>
-			res.status(500).send({
-				success: false,
-				message: err,
-			})
-		);
-}
-
-function createStore(req, res, next) {
+const createStore = async (req, res, next) => {
 	const errors = validationResult(req);
 
 	if (!errors.isEmpty()) {
@@ -81,42 +31,18 @@ function createStore(req, res, next) {
 		});
 	}
 
-	storeService
-		.createStore(req.body)
-		.then((store) => {
-			// Define payload for token
-			const payload = {
-				user: {
-					id: store.id,
-				},
-			};
+	const store = await storeService.createStore(req.body);
 
-			// Generate and return token to server
-			jwt.sign(
-				payload,
-				process.env.JWT_SECRET,
-				{ expiresIn: 36000 },
-				(err, token) => {
-					if (err) throw err;
-					res.json({
-						success: true,
-						value: {
-							store: store,
-							token: token,
-						},
-					});
-				}
-			);
-		})
-		.catch((err) =>
-			res.status(err.code != null ? err.code : 500).send({
-				success: false,
-				message: err.msg != null ? err.msg : err,
-			})
-		);
-}
+	console.log(store);
 
-function loginStore(req, res, next) {
+	if (store.err) {
+		res.status(500).json({ success: false, msg: store.err });
+	}
+
+	res.status(200).json({ success: true, result: store });
+};
+
+const loginStore = async (req, res, next) => {
 	const errors = validationResult(req);
 
 	if (!errors.isEmpty()) {
@@ -126,39 +52,32 @@ function loginStore(req, res, next) {
 		});
 	}
 
-	storeService
-		.loginStore(req.body)
-		.then((store) => {
-			// Define payload for token
-			const payload = {
-				store: {
-					id: store.id,
-				},
-			};
+	const store = await storeService.loginStore(req.body);
 
-			// Generate and return token to server
-			jwt.sign(
-				payload,
-				process.env.JWT_SECRET,
-				{ expiresIn: 36000 },
-				(err, token) => {
-					if (err) throw err;
-					res.json({
-						success: true,
-						token: token,
-					});
-				}
-			);
-		})
-		.catch((err) =>
-			res.status(err.code != null ? err.code : 500).send({
-				success: false,
-				message: err.msg != null ? err.msg : 'Server Error',
-			})
-		);
-}
+	if (store.err) {
+		res.status(500).json({ success: false, msg: store.err });
+	}
 
-function updateStore(req, res, next) {
+	res.status(200).json({ success: true, result: store });
+};
+
+const getLoggedInStore = async (req, res, next) => {
+	// Call Get Logged in User function from userService
+	const store = await storeService.getLoggedInStore(req.store.id);
+
+	console.log(store);
+
+	if (store.err) {
+		res.status(500).json({ success: false, msg: store.err });
+	}
+
+	res.status(200).json({
+		success: true,
+		result: store,
+	});
+};
+
+const updateStore = async (req, res, next) => {
 	const errors = validationResult(req);
 
 	if (!errors.isEmpty()) {
@@ -168,20 +87,13 @@ function updateStore(req, res, next) {
 		});
 	}
 
-	storeService
-		.updateStore(req)
-		.then((store) => {
-			res.json({
-				success: true,
-				store: store,
-			});
-		})
-		.catch((err) =>
-			res.status(err.code != null ? err.code : 500).send({
-				success: false,
-				message: err.msg != null ? err.msg : 'Server Error',
-			})
-		);
-}
+	const store = await storeService.updateStore(req);
 
-module.exports = router;
+	if (store.err) {
+		res.status(500).json({ success: false, msg: store.err });
+	}
+
+	res.status(200).json({ success: true, result: store });
+};
+
+export { getStores, createStore, loginStore, getLoggedInStore, updateStore };
