@@ -64,7 +64,6 @@ const getStoreProducts = async (storeId, getParam) => {
     .skip(skip)
     .populate('store category')
 
-    
     return storeProduct
   } catch (error) {
     return error
@@ -90,7 +89,7 @@ const createProduct = async (productParam, storeId) => {
 
     await newProduct.save(); // save new product
   } catch (error) {
-    throw error
+    return error
   }
 }
 
@@ -121,7 +120,7 @@ const  updateProduct = async (productParam, productId, storeId) => {
       { new: true, useFindAndModify: true }
     );
   } catch (error) {
-    throw error
+    return error
   }
 }
 
@@ -143,11 +142,11 @@ const deleteProduct = async (productId, storeId) => {
         err: 'Product not found',
       };
     }
-    
+
     //deleete the product
 	  await Product.deleteOne({ _id: productId });
   } catch (error) {
-    throw error
+    return error
   }
 }
 
