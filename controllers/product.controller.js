@@ -10,7 +10,7 @@ const getProducts  = async (req, res, next) => {
       msg: 'missing some parameters',
     })
   }
-  let allProducts = await productService.getProducts(req.query)
+  const allProducts = await productService.getProducts(req.query)
 
   allProducts && allProducts.length > 0 
   ? res.status(200).json({success:true, result: allProducts})
@@ -33,7 +33,7 @@ const getStoreProducts = async (req, res, next) => {
   if(req.store) storeID = req.store.id
   if(req.query.storeID) storeID = req.query.storeID
 
-	let storeProducts = await productService.getStoreProducts(storeID,req.query)
+	const storeProducts = await productService.getStoreProducts(storeID,req.query)
 
   if(storeProducts.err) res.status(500).json({ success: false, msg: storeProducts.err })
 
@@ -143,7 +143,7 @@ const findProduct = async (req, res, next) => {
     })
   }
 
-  let allProducts = await productService.findProduct(req.body,req.query)
+  const allProducts = await productService.findProduct(req.body,req.query)
 
   allProducts && allProducts.length > 0 
   ? res.status(200).json({success:true, result: allProducts})

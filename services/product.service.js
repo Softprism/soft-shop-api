@@ -6,11 +6,11 @@ import Store from '../models/store.model.js';
 const getProducts = async (getParam) => {
 	try {
     // get limit and skip from url parameters
-    let limit = Number(getParam.limit)
-    let skip = Number(getParam.skip)
+    const limit = Number(getParam.limit)
+    const skip = Number(getParam.skip)
 
 		//find all products in the db
-		let allProducts =  await Product
+		const allProducts =  await Product
     .find()
     .sort({createdDate: -1}) // -1 for descending sort
     .limit(limit)
@@ -55,12 +55,16 @@ const getStoreProducts = async (storeId, getParam) => {
     // get limit and skip from url parameters
     let limit = Number(getParam.limit)
     let skip = Number(getParam.skip)
-    let storeProduct = await Product
+
+    //find store products
+    const storeProduct = await Product
     .find({ store: storeId })
     .sort({createdDate: -1}) // -1 for descending sort
     .limit(limit)
     .skip(skip)
     .populate('store category')
+
+    
     return storeProduct
   } catch (error) {
     return error
@@ -71,18 +75,19 @@ const getStoreProducts = async (storeId, getParam) => {
 const createProduct = async (productParam, storeId) => {
   try {
     const { product_name, category, availability, price, rating, product_image } = productParam;
+
     // validate store, we have to make sure we're assigning a product to a store
-	  let store = await Store.findById(storeId);
-    console.log(store)
+	  const store = await Store.findById(storeId);
     if (store == null) {
       throw { err: 'unable to add product to this store' };
     }
 
     //create new product
-    let newProduct = new Product({ 
+    const newProduct = new Product({ 
       store: storeId,
       product_name, category, availability, price, rating, product_image
     });
+
     await newProduct.save(); // save new product
   } catch (error) {
     throw error
@@ -92,7 +97,7 @@ const createProduct = async (productParam, storeId) => {
 const  updateProduct = async (productParam, productId, storeId) => {
   try {
     // validate store, we have to make sure the product belongs to a store
-	  let store = await Store.findById(storeId);
+	  const store = await Store.findById(storeId);
 
     if (!store) {
       throw {
@@ -101,7 +106,7 @@ const  updateProduct = async (productParam, productId, storeId) => {
     }
 
     //check if product exists
-	  let product = await Product.findById(productId);
+	  const product = await Product.findById(productId);
 
     if (!product) {
       throw {
@@ -123,21 +128,22 @@ const  updateProduct = async (productParam, productId, storeId) => {
 const deleteProduct = async (productId, storeId) => {
   try {
     // validate store, we have to make sure the product belongs to a store
-	  // let store = await Store.findById(storeId);
+	  const store = await Store.findById(storeId);
 
-    // if (!store) {
-    //   throw {
-    //     err: 'Unable to delete products from this store',
-    //   };
-    // }
-    //check if product exists
-    let product = await Product.findById(productId);
+    if (!store) {
+      throw {
+        err: 'Unable to delete products from this store',
+      };
+    }
+    // check if product exists
+    const product = await Product.findById(productId);
 
     if (!product) {
       throw {
         err: 'Product not found',
       };
     }
+    
     //deleete the product
 	  await Product.deleteOne({ _id: productId });
   } catch (error) {
