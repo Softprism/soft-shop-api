@@ -27,7 +27,6 @@ const findProduct = async (searchParam, opts) => {
 		opts.skip = Number(opts.skip);
 		opts.limit = Number(opts.limit);
 		const { skip, limit } = opts;
-
 		if (searchParam.product_name)
 			searchParam.product_name = new RegExp(searchParam.product_name, 'i');
 		// i for case insensitive
