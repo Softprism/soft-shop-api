@@ -8,7 +8,7 @@ import connectDB from './config/db.js';
 
 import userRoutes from './routes/user.routes.js';
 import adminRoutes from './routes/admin.routes.js';
-import productRoutes from './routes/product.routes.js'
+import productRoutes from './routes/product.routes.js';
 
 dotenv.config();
 
@@ -25,7 +25,7 @@ app.use(cors());
 
 app.use('/users', userRoutes);
 app.use('/admins', adminRoutes);
-app.use('/product', productRoutes);
+app.use('/products', productRoutes);
 
 // api routes
 // app.use('/admin', require('./controllers/admin.controller'));
