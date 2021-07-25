@@ -1,155 +1,148 @@
-import jwt from 'jsonwebtoken';
-import bcrypt from 'bcryptjs';
-import mongoose from 'mongoose';
 
+import mongoose from 'mongoose';
 import Product from '../models/product.model.js';
 import Store from '../models/store.model.js';
 
-const getProducts = async () => {
+const getProducts = async (getParam) => {
 	try {
-		//get all products in the db
-		let allProducts = await Product.find();
-		if (!allProducts) {
-			throw { msg: 'no products found' };
-		}
+    // get limit and skip from url parameters
+    let limit = Number(getParam.limit)
+    let skip = Number(getParam.skip)
+
+		//find all products in the db
+		let allProducts =  await Product
+    .find()
+    .sort({createdDate: -1}) // -1 for descending sort
+    .limit(limit)
+    .skip(skip)
+    // .populate('store category');
+
+    return allProducts
 	} catch (error) {
-		console.log(error);
-		throw error;
+		return error;
 	}
 };
 
-const findProduct = async (searchParam) => {
-	try {
-		let regex = new RegExp(searchParam, 'i');
-		// We'll prioritize results to be the ones closer to the users
-		return await Product.find({ product_name: regex }).exec();
-	} catch (error) {
-		throw error;
-	}
-};
+const findProduct = async (searchParam, opts) => {
+  try {
+    opts.skip = Number(opts.skip)
+    opts.limit = Number(opts.limit)
+    const {skip, limit} = opts
+    if(searchParam.product_name)
+      searchParam.product_name = new RegExp(searchParam.product_name, 'i'); 
+      // i for case insensitive
 
-const getMyProducts = async (storeId) => {
-	let storeProduct = await Product.find({
-		store: mongoose.Types.ObjectId(storeId),
-	});
-	if (storeProduct.length < 1) {
-		throw 'no product found in this store';
-	} else {
-		return storeProduct;
-	}
-};
+	  const searchedProducts = await Product
+    .find(searchParam)
+    .sort({createdDate: -1}) // -1 for descending sort
+    .limit(limit) //number of records to return
+    .skip(skip) //number of records to skip
+    // .populate('store category')
+    // we'll prioritize results to be the ones closer to the users
 
-async function getStoreProducts(storeId) {
-	return await Product.find({
-		store: mongoose.Types.ObjectId(storeId),
-	});
+    if(searchedProducts.length < 1) {
+      throw {msg: 'match not found'}
+    }
+
+    return searchedProducts
+  } catch (error) {
+    return error
+  }
 }
 
-async function createProduct(productParam, id) {
-	const { product_name, category, availability, price, rating, product_image } =
-		productParam;
+const getStoreProducts = async (storeId, getParam) => {
+  try {
+    // get limit and skip from url parameters
+    let limit = Number(getParam.limit)
+    let skip = Number(getParam.skip)
+    let storeProduct = await Product
+    .find({ store: storeId })
+    .sort({createdDate: -1}) // -1 for descending sort
+    .limit(limit)
+    .skip(skip)
+    .populate('store category')
+    return storeProduct
+  } catch (error) {
+    return error
+  }
+	
+}
+ 
+const createProduct = async (productParam, storeId) => {
+  try {
+    const { product_name, category, availability, price, rating, product_image } = productParam;
+    // validate store, we have to make sure we're assigning a product to a store
+	  let store = await Store.findById(storeId);
+    console.log(store)
+    if (store == null) {
+      throw { err: 'unable to add product to this store' };
+    }
 
-	let store = await Store.findById('601a7ab504b3e62cf65f79df');
-
-	if (!store) {
-		throw {
-			code: 400,
-			msg: 'Login your store to create a product',
-		};
-	}
-
-	let products = await getProducts();
-
-	products.forEach((element) => {
-		if (element.product_name == product_name) {
-			throw {
-				code: 400,
-				msg: 'Product already exists',
-			};
-		}
-	});
-
-	newProduct = new Product({
-		product_name: product_name,
-		store: store._id,
-		category: mongoose.Types.ObjectId(category),
-		availability: availability,
-		price: price,
-		rating: rating,
-		product_image,
-	});
-
-	await newProduct.save();
-	return newProduct;
+    //create new product
+    let newProduct = new Product({ 
+      store: storeId,
+      product_name, category, availability, price, rating, product_image
+    });
+    await newProduct.save(); // save new product
+  } catch (error) {
+    throw error
+  }
 }
 
-async function updateProduct(productParam, productId, storeId) {
-	const { product_name, category, availability, price, rating } = productParam;
+const  updateProduct = async (productParam, productId, storeId) => {
+  try {
+    // validate store, we have to make sure the product belongs to a store
+	  let store = await Store.findById(storeId);
 
-	console.log(productId);
-	let store = await Store.findById(storeId);
-	if (!store) {
-		throw {
-			code: 400,
-			msg: 'Login your store to create a product',
-		};
-	}
+    if (!store) {
+      throw {
+        err: 'Unable to edit product in this store',
+      };
+    }
 
-	let product = await Product.findById(productId);
+    //check if product exists
+	  let product = await Product.findById(productId);
 
-	if (!product) {
-		throw {
-			code: 400,
-			msg: 'Product not found',
-		};
-	}
+    if (!product) {
+      throw {
+        err: 'Product not found',
+      };
+    };
 
-	const productUpdate = {};
-
-	if (product_name) productUpdate.product_name = product_name;
-	if (category) productUpdate.category = mongoose.Types.ObjectId(category);
-	if (availability) productUpdate.availability = availability;
-	if (price) productUpdate.price = price;
-	if (rating) productUpdate.rating = rating;
-
-	updatedProduct = await Product.findByIdAndUpdate(
-		productId,
-		{ $set: productUpdate },
-		{ new: true, useFindAndModify: true }
-	);
-	return updatedProduct;
+    //apply changes to the product
+   await Product.findByIdAndUpdate(
+      productId,
+      { $set: productParam },
+      { new: true, useFindAndModify: true }
+    );
+  } catch (error) {
+    throw error
+  }
 }
 
-async function deleteProduct(productId, storeId) {
-	let store = await Store.findById(storeId);
+const deleteProduct = async (productId, storeId) => {
+  try {
+    // validate store, we have to make sure the product belongs to a store
+	  // let store = await Store.findById(storeId);
 
-	if (!store) {
-		throw {
-			code: 400,
-			msg: 'Login your store to create a product',
-		};
-	}
+    // if (!store) {
+    //   throw {
+    //     err: 'Unable to delete products from this store',
+    //   };
+    // }
+    //check if product exists
+    let product = await Product.findById(productId);
 
-	let product = await Product.findById(productId);
-
-	if (!product) {
-		throw {
-			code: 400,
-			msg: 'Product not found',
-		};
-	}
-
-	await Product.deleteOne({ _id: productId });
-
-	return { message: 'Product deleted Successfully' };
+    if (!product) {
+      throw {
+        err: 'Product not found',
+      };
+    }
+    //deleete the product
+	  await Product.deleteOne({ _id: productId });
+  } catch (error) {
+    throw error
+  }
 }
 
-module.exports = {
-	getProducts,
-	getMyProducts,
-	getStoreProducts,
-	createProduct,
-	updateProduct,
-	deleteProduct,
-	findProduct,
-};
+export {getProducts, getStoreProducts, createProduct, updateProduct, deleteProduct, findProduct};

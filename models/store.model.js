@@ -1,6 +1,6 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
-const storeSchema = mongoose.Schema({
+const StoreSchema = mongoose.Schema({
 	name: { type: String, unique: true, required: true },
 	images: [{ type: String, required: true }], // array to store multiple images
 	address: { type: String, required: true },
@@ -11,6 +11,6 @@ const storeSchema = mongoose.Schema({
 	createdDate: { type: Date, default: Date.now },
 });
 
-const Store = mongoose.model('Store', storeSchema);
+const Store = mongoose.model('Store', StoreSchema);
 
-export default Store;
+export default Store

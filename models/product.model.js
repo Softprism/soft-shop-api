@@ -1,6 +1,6 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
-const productSchema = mongoose.Schema({
+const ProductSchema = mongoose.Schema({
 	product_name: { type: String, required: true },
 	product_image: [{ type: String, required: true }], // array to store multiple images
 	store: { type: mongoose.Schema.Types.ObjectId, ref: 'Store', required: true },
@@ -10,11 +10,11 @@ const productSchema = mongoose.Schema({
 		required: true,
 	},
 	availability: { type: Boolean, required: true },
-	price: { type: Number, required: true },
-	rating: { type: Number, required: false },
+	price: { type: String, required: true },
+	rating: { type: String, required: false },
 	createdDate: { type: Date, default: Date.now },
 });
 
-const Product = mongoose.model('Product', productSchema);
+const Product = mongoose.model('Product', ProductSchema);
 
-export default Product;
+export default Product
