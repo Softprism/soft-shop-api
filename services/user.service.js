@@ -181,7 +181,7 @@ const addItemToCart = async (userID,product) => {
     return {msg: 'product added to cart'}
   } catch (error) {
     console.log(error)
-    return error
+    return {err: 'error adding product to cart'}
   }
 }
 
