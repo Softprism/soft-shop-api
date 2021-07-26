@@ -3,14 +3,14 @@
 	"version": "1.0.0",
 	"description": "api endpoint for the soft shop app",
 	"main": "index.js",
+  "engines": {
+    "node": "14.x"
+  },
 	"type": "module",
 	"scripts": {
 		"start": "node ./server.js",
 		"start:dev": "nodemon ./server.js"
 	},
-  "engines": {
-    "node": "14.17.0"
-  },
 	"dependencies": {
 		"bcryptjs": "^2.4.3",
 		"body-parser": "^1.19.0",
