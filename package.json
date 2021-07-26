@@ -2,7 +2,6 @@
 	"name": "soft-shop-api",
 	"version": "1.0.0",
 	"description": "api endpoint for the soft shop app",
-	"main": "index.js",
   "engines": {
     "node": "14.x"
   },
