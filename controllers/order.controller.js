@@ -1,120 +1,139 @@
-const express = require('express');
-const router = express.Router();
-const orderService = require('../services/order.service');
-const auth = require('../middleware/auth');
+import * as orderService from '../services/order.service.js';
 
-const { check, validationResult } = require('express-validator');
+import { check, validationResult } from 'express-validator';
 
-//======================================================================
-// routes
+// router.get('/', auth, getOrders);
+// router.post(
+// 	'/create',
+// 	auth,
+// 	[
+// 		check('product_meta', 'error with product data ').isLength({ min: 1 }),
+// 		check('store', 'Please select a store').not().isEmpty(),
+// 		check('user', 'user field missing').not().isEmpty(),
+// 		check('status', 'status field missing').not().isEmpty(),
+// 	],
+// 	createOrder
+// );
 
-router.get('/', auth, getOrders);
-router.post(
-	'/create',
-	auth,
-	[
-		check('product_meta', 'error with product data ').isLength({ min: 1 }),
-		check('store', 'Please select a store').not().isEmpty(),
-		check('user', 'user field missing').not().isEmpty(),
-		check('status', 'status field missing').not().isEmpty(),
-	],
-	createOrder
-);
-
-router.put('/add_favorite/:orderID', auth, addFavorite);
-router.get('/get_order_details/:orderID', auth, getOrderDetails);
-router.get('/get_favorites/:userID', auth, getFavorites);
-router.get('/user_order_history/:userID', auth, getOrderHistory);
-router.get('/store_order_history/:storeID', auth, getStoreOrderHistory);
-router.get('/get_user_cart/:userID', auth, getCartItems);
-router.put('/edit_user_order/:orderID', auth, editOrder);
-router.put('/cancel_user_order/:orderID', auth, cancelOrder);
-router.put('/deliver_order/:orderID', auth, deliverOrder);
-router.put('/receive_order/:orderID', auth, receiveOrder);
-router.put('/complete_order/:orderID', auth, completeOrder);
+// router.put('/add_favorite/:orderID', auth, addFavorite);
+// router.get('/get_order_details/:orderID', auth, getOrderDetails);
+// router.get('/get_favorites/:userID', auth, getFavorites);
+// router.get('/user_order_history/:userID', auth, getOrderHistory);
+// router.get('/store_order_history/:storeID', auth, getStoreOrderHistory);
+// router.get('/get_user_cart/:userID', auth, getCartItems);
+// router.put('/edit_user_order/:orderID', auth, editOrder);
+// router.put('/cancel_user_order/:orderID', auth, cancelOrder);
+// router.put('/deliver_order/:orderID', auth, deliverOrder);
+// router.put('/receive_order/:orderID', auth, receiveOrder);
+// router.put('/complete_order/:orderID', auth, completeOrder);
 
 //======================================================================
 
-function getOrders(req, res, next) {
-	orderService
-		.getOrders()
-		.then((orders) => res.json(orders))
-		.catch((err) => next(err));
+const getOrders = async (req, res, next) => {
+  if (req.query.skip === undefined || req.query.limit === undefined) {
+		res.status(400).json({ success: false, msg: 'missing some parameters' });
+	}
+
+	const allOrders = await orderService.getOrders(req.query)
+	
+  allOrders && allOrders.length > 0
+  ? res.status(200).json({ success: true, result: allOrders })
+  : res.status(404).json({ success: false, msg: 'No order found' });
+
+  if (allOrders.err) {
+		res.status(500).json({ success: false, msg: allOrders.err });
+	}
+
 }
 
 //======================================================================
 
-function createOrder(req, res, next) {
+const createOrder = async (req, res, next) => {
 	const errors = validationResult(req);
 
 	if (!errors.isEmpty()) {
 		return res.status(400).json({ errors: errors.array() });
 	}
 
-	orderService
-		.createOrder(req.body)
-		.then(() =>
-			res.json({
-				success: true,
-				message: 'order created',
-			})
-		)
-		.catch((err) => next(err));
+	let newOrder = await orderService.createOrder(req.body)
+
+	if (newOrder.err) {
+		res.status(500).json({ success: false, msg: newOrder.err });
+	}
+
+	res.status(200).json({ success: true, result: newOrder });
 }
 
 //======================================================================
 
-function addFavorite(req, res, next) {
-	orderService
-		.addFavorite(req.params.orderID)
-		.then(() =>
-			res.json({
-				success: true,
-			})
-		)
-		.catch((err) => next(err));
+const toggleFavorite = async (req, res, next) => {
+	let favoriteOrder = await orderService.toggleFavorite(req.params.orderID)
+	
+  if (favoriteOrder.err) {
+		res.status(500).json({ success: false, msg: favoriteOrder.err });
+	}
+
+	res.status(200).json({ success: true, result: favoriteOrder });
 }
 
 //======================================================================
 
-function getOrderDetails(req, res, next) {
-	orderService
-		.getOrderDetails(req.params.orderID)
-		.then((result) =>
-			res.json({
-				success: true,
-				message: result,
-			})
-		)
-		.catch((err) => next(err));
+const getOrderDetails = async (req, res, next) => {
+	const orderDetails = await orderService.getOrderDetails(req.params.orderID)
+	
+  if (orderDetails.err) {
+		res.status(500).json({ success: false, msg: orderDetails.err });
+	}
+
+	res.status(200).json({ success: true, result: orderDetails });
 }
 
 //======================================================================
 
-function getOrderHistory(req, res, next) {
-	orderService
-		.getOrderHistory(req.params.userID)
-		.then((orders) =>
-			res.json({
-				success: true,
-				message: orders,
-			})
-		)
-		.catch((err) => next(err));
+const getOrderHistory = async (req, res, next) => {
+  let userID;
+  if (req.user === undefined && req.query.userID === undefined) {
+		res
+			.status(400)
+			.json({ success: false, msg: 'unable to authenticate this user' });
+	}
+
+  if (req.user) userID = req.user.id;
+	if (req.query.userID) userID = req.query.userID;
+
+	const userOrderHistory = await orderService.getOrderHistory(userID, req.query)
+	
+  userOrderHistory && userOrderHistory.length > 0
+  ? res.status(200).json({ success: true, result: userOrderHistory })
+  : res.status(404).json({ success: false, msg: 'No order found' });
+
+  if (userOrderHistory.err) {
+		res.status(500).json({ success: false, msg: userOrderHistory.err });
+	}
 }
 
 //======================================================================
 
-function getStoreOrderHistory(req, res, next) {
-	orderService
-		.getStoreOrderHistory(req.params.storeID)
-		.then((orders) =>
-			res.json({
-				success: true,
-				message: orders,
-			})
-		)
-		.catch((err) => next(err));
+const getStoreOrderHistory = async (req, res, next) => {
+  let storeID;
+  if (req.store === undefined && req.query.storeID === undefined) {
+		res
+			.status(400)
+			.json({ success: false, msg: 'unable to authenticate this store' });
+	}
+
+  if (req.store) storeID = req.store.id;
+	if (req.query.storeID) storeID = req.query.storeID;
+	const storeOrderHistory = await orderService.getStoreOrderHistory(storeID,req.query)
+	
+  storeOrderHistory && storeOrderHistory.length > 0
+  ? res.status(200).json({ success: true, result: storeOrderHistory })
+  : res.status(404).json({ success: false, msg: 'No order found' });
+
+  if (storeOrderHistory.err) {
+		res.status(500).json({ success: false, msg: storeOrderHistory.err });
+	}
+
 }
 
 //======================================================================
@@ -209,4 +228,11 @@ function getFavorites(req, res, next) {
 }
 
 //======================================================================
-module.exports = router;
+export {
+	getOrders,
+  createOrder,
+  toggleFavorite,
+  getOrderDetails,
+  getOrderHistory,
+  getStoreOrderHistory
+};

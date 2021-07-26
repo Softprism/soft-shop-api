@@ -1,25 +1,42 @@
-// const jwt = require('jsonwebtoken');
-// const bcrypt = require('bcryptjs');
-const db = require('middlewares/db');
-const Order = db.Order;
+import Order from '../models/order.model.js'
 
-
-
-const getOrders = async () => {
-    return await Order.find();
+const getOrders = async (urlParams) => {
+  try {
+    const limit = Number(urlParams.limit);
+		const skip = Number(urlParams.skip);
+    return await Order.find()
+    .sort({ createdDate: -1 }) // -1 for descending sort
+    .limit(limit)
+		.skip(skip)
+    .populate('product_meta.product_id')
+    .populate({path: 'store', select: '-password'})
+    .populate({path: 'user', select: '-password'})
+  } catch (error) {
+    return {err: 'error loading products'}
+  }
 }
 
 const  createOrder = async (orderParam) => {
+  try {
+
     //creates an order for user
     const order = new Order(orderParam);
-    await order.save();
+    return  order.save();
+  } catch (error) {
+    return {err: 'error creating order'}
+    
+  }
 }
 
-const addFavorite = async (orderID) => {
+const toggleFavorite = async (orderID) => {
+  try {
     //adds or remove users favorite order
     let order = await Order.findById(orderID)
     order.favoriteAction() //calls an instance method
-    order.save()
+    return order.save()
+  } catch (error) {
+    return {err: 'error modifying your order'}
+  }
 }
 
 const getFavorites = async (userID) => {
@@ -28,19 +45,54 @@ const getFavorites = async (userID) => {
 }
 
 const getOrderDetails = async (orderID) => {
+  try {
     //get users order details
     //can be used by users, stores and admin
     return await Order.findById(orderID)
+    .populate('product_meta.product_id')
+    .populate({path: 'store', select: '-password'})
+    .populate({path: 'user', select: '-password'})
+  } catch (error) {
+    return {err: 'error getting this order details'}
+  }
 }
 
-const getOrderHistory = async (userID) => {
+const getOrderHistory = async (userID, urlParams) => {
+  try {
+    const limit = Number(urlParams.limit);
+		const skip = Number(urlParams.skip);
     //gets user order history
-    return await Order.find({user:userID})
+    return await Order.find({ user:userID })
+    .sort({ createdDate: -1 }) // -1 for descending sort
+    .limit(limit)
+		.skip(skip)
+    .populate('product_meta.product_id')
+    .populate({path: 'store', select: '-password'})
+    .populate({path: 'user', select: '-password'})
+
+  } catch (error) {
+    return {err: 'error getting the order history'}
+  }
 }
 
-const getStoreOrderHistory = async (storeID) => {
+const getStoreOrderHistory = async (storeID,urlParams) => {
+  console.log(storeID,urlParams)
+  try {
+    const limit = Number(urlParams.limit);
+		const skip = Number(urlParams.skip);
+
     //gets store order history
-    return await Order.find({store:storeID})
+    return await Order.find({ store:storeID })
+    .sort({ createdDate: -1 }) // -1 for descending sort
+    .limit(limit)
+		.skip(skip)
+    .populate('product_meta.product_id')
+    .populate({path: 'store', select: '-password'})
+    .populate({path: 'user', select: '-password'})
+  } catch (error) {
+    return {err: 'error getting the order history'}
+  }
+    
 }
 
 const editOrder = async (orderID,orderParam) => {
@@ -86,10 +138,10 @@ const getCartItems = async (userID) => {
 }
 
 
-module.exports = {
+export {
     getOrders,
     createOrder,
-    addFavorite,
+    toggleFavorite,
     getOrderDetails,
     getFavorites,
     getOrderHistory,

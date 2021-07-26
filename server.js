@@ -10,6 +10,7 @@ import userRoutes from './routes/user.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 import productRoutes from './routes/product.routes.js';
 import storeRoutes from './routes/store.routes.js';
+import orderRoutes from './routes/order.routes.js';
 
 dotenv.config();
 
@@ -28,11 +29,12 @@ app.use('/users', userRoutes);
 app.use('/admins', adminRoutes);
 app.use('/products', productRoutes);
 app.use('/stores', storeRoutes);
+app.use('/order', orderRoutes);
+
 
 // api routes
 // app.use('/admin', require('./controllers/admin.controller'));
 // app.use('/store', require('./controllers/store.controller'));
-// app.use('/order', require('./controllers/order.controller'));
 // app.use('/product', require('./controllers/product.controller'));
 // app.use('/category', require('./controllers/category.controller'));
 

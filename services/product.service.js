@@ -1,5 +1,3 @@
-import mongoose from 'mongoose';
-
 import Product from '../models/product.model.js';
 import Store from '../models/store.model.js';
 

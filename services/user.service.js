@@ -122,7 +122,7 @@ const getLoggedInUser = async (userParam) => {
 // Update User Details
 const updateUser = async (updateParam, id) => {
 	console.log(updateParam, id);
-	const { address, password, email } = updateParam;
+	const { address, password, email, phone_number } = updateParam;
 
 	// Build User Object
 	const userFields = {};
@@ -130,6 +130,7 @@ const updateUser = async (updateParam, id) => {
 	// Check for fields
 	if (address) userFields.address = address;
 	if (email) userFields.email = email;
+  if (phone_number) userFields.phone_number = phone_number;
 	if (password) {
 		const salt = await bcrypt.genSalt(10);
 
@@ -144,14 +145,13 @@ const updateUser = async (updateParam, id) => {
 		if (!user) throw { msg: 'User not found' };
 
 		// Check if address field is not empty
-		if (address !== '' || null) {
+		if (address !== '' && address !== undefined) {
 			// Check if address array is not empty
 			if (!user.address.length < 1) {
 				// Set the address value in user object to address found from db, then append new address
 				userFields.address = [...user.address, address];
 			}
 		}
-
 		// Updates the user Object with the changed values
 		user = await User.findByIdAndUpdate(
 			id,

@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const OrderSchema = mongoose.Schema({
 	product_meta: [
@@ -43,4 +43,6 @@ OrderSchema.methods.deliverOrder = function () {
 	this.status = 'delivered';
 };
 
-module.exports = mongoose.model('Order', OrderSchema);
+const Order = mongoose.model('Order', OrderSchema);
+
+export default Order
