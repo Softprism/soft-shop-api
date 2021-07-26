@@ -1,4 +1,5 @@
-import Order from '../models/order.model.js'
+import Order from '../models/order.model.js';
+import User from '../models/user.model.js';
 
 const getOrders = async (urlParams) => {
   try {
@@ -96,19 +97,31 @@ const getStoreOrderHistory = async (storeID,urlParams) => {
 }
 
 const editOrder = async (orderID,orderParam) => {
+  try {
     //can be used by both stores and users
-    await Order.findByIdAndUpdate(
-        orderID,
-        {$set: orderParam},
-        { omitUndefined: true, new: true },
+    const newOrder = await Order.findByIdAndUpdate(
+      orderID,
+      {$set: orderParam},
+      { omitUndefined: true, new: true },
     )
+
+    return newOrder
+  } catch (error) {
+    return error
+  }
+    
 }
 
 const cancelOrder = async (orderID) => {
+  try {
     //user/store cancel order
     let order = await Order.findById(orderID)
     order.CancelOrder()
     order.save()
+  } catch (error) {
+    console.log(error)
+    return error
+  }
 }
 
 const completeOrder = async (orderID) => {
@@ -133,8 +146,15 @@ const deliverOrder = async (orderID) => {
 }
 
 const getCartItems = async (userID) => {
+  try {
     //get user cart items
-    return Order.find({user: userID, status: "cart"})
+    return await User.findById(userID)
+    .select('cart')
+    .populate('cart.product_id')
+  } catch (error) {
+    return {err: 'error getting user cart items'}
+  }
+    
 }
 
 

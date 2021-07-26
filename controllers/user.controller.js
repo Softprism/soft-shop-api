@@ -84,4 +84,19 @@ const updateUser = async (req, res) => {
 	});
 };
 
-export { getUsers, registerUser, loginUser, getLoggedInUser, updateUser };
+const addItemToCart = async (req, res) => {
+  const action = await userService.addItemToCart(req.params.id, req.body)
+
+  if (action.err) {
+		res.status(404).json({ success: false, msg: action.err });
+	}
+
+  //check if product ID is a valid one
+  if (action.stringValue) {
+		res.status(500).json({ success: false, msg: 'request failed' });
+	}
+
+	res.status(200).json({ success: true, result: action.msg });
+}
+
+export { getUsers, registerUser, loginUser, getLoggedInUser, updateUser, addItemToCart };

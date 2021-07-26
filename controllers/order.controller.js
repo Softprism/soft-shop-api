@@ -115,16 +115,7 @@ const getOrderHistory = async (req, res, next) => {
 //======================================================================
 
 const getStoreOrderHistory = async (req, res, next) => {
-  let storeID;
-  if (req.store === undefined && req.query.storeID === undefined) {
-		res
-			.status(400)
-			.json({ success: false, msg: 'unable to authenticate this store' });
-	}
-
-  if (req.store) storeID = req.store.id;
-	if (req.query.storeID) storeID = req.query.storeID;
-	const storeOrderHistory = await orderService.getStoreOrderHistory(storeID,req.query)
+	const storeOrderHistory = await orderService.getStoreOrderHistory(req.params.storeID,req.query)
 	
   storeOrderHistory && storeOrderHistory.length > 0
   ? res.status(200).json({ success: true, result: storeOrderHistory })
@@ -137,42 +128,47 @@ const getStoreOrderHistory = async (req, res, next) => {
 }
 
 //======================================================================
-function getCartItems(req, res, next) {
-	orderService
-		.getCartItems(req.params.userID)
-		.then((items) =>
-			res.json({
-				success: true,
-				message: items,
-			})
-		)
-		.catch((err) => next(err));
+const getCartItems = async (req, res, next) => {
+	const cartItems = await orderService.getCartItems(req.params.userID)
+	
+  cartItems && cartItems.cart.length > 0
+  ? res.status(200).json({ success: true, result: cartItems })
+  : res.status(404).json({ success: false, msg: 'No order in cart' });
+
+  if (cartItems.err) {
+		res.status(500).json({ success: false, msg: cartItems.err });
+	}
+
 }
 
 //======================================================================
 
-function editOrder(req, res, next) {
-	orderService
-		.editOrder(req.params.orderID, req.body)
-		.then(() =>
-			res.json({
-				success: true,
-			})
-		)
-		.catch((err) => next(err));
+const editOrder = async (req, res, next) => {
+	let updatedOrder = await orderService.editOrder(req.params.orderID, req.body)
+
+	//check if product ID is a valid one
+  if (updatedOrder.stringValue) {
+		res.status(500).json({ success: false, msg: 'request failed' });
+	}
+
+  if (updatedOrder.err) {
+		res.status(500).json({ success: false, msg: updatedOrder.err });
+	}
+
+	res.status(200).json({ success: true, result: 'order updated' });
+
 }
 
 //======================================================================
 
-function cancelOrder(req, res, next) {
-	orderService
-		.cancelOrder(req.params.orderID)
-		.then(() =>
-			res.json({
-				success: true,
-			})
-		)
-		.catch((err) => next(err));
+const cancelOrder = (req, res, next) => {
+	const request = await orderService.cancelOrder(req.params.orderID)
+		
+  if (request.err) {
+		res.status(500).json({ success: false, msg: request.err });
+	}
+
+	res.status(200).json({ success: true, result: 'order updated' });
 }
 
 //======================================================================
@@ -234,5 +230,7 @@ export {
   toggleFavorite,
   getOrderDetails,
   getOrderHistory,
-  getStoreOrderHistory
+  getStoreOrderHistory,
+  getCartItems,
+  editOrder
 };

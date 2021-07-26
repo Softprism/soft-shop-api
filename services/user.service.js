@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 
 import User from '../models/user.model.js';
+import Product from '../models/product.model.js';
 
 // Get all Users
 const getUsers = async () => {
@@ -165,4 +166,23 @@ const updateUser = async (updateParam, id) => {
 	}
 };
 
-export { getUsers, registerUser, loginUser, getLoggedInUser, updateUser };
+const addItemToCart = async (userID,product) => {
+  try {
+    const productFinder = await Product.findById(product.product_id)
+
+    if(!productFinder) throw { err: 'can\'t find this product' }
+
+    const user = await User.findByIdAndUpdate(
+      userID,
+      {$push: {cart: product}},
+			{ new: true, useFindAndModify: true }
+    );
+
+    return {msg: 'product added to cart'}
+  } catch (error) {
+    console.log(error)
+    return error
+  }
+}
+
+export { getUsers, registerUser, loginUser, getLoggedInUser, updateUser, addItemToCart };
