@@ -40,7 +40,7 @@ app.use('/stores', storeRoutes);
 // app.use('/', require('./controllers/app.controller'));
 
 app.get('/', (req, res) => {
-	res.send('API is running...');
+	res.status(200).json({ success: true, msg: 'API is running...'} );
 });
 
 // global error handler
@@ -48,7 +48,7 @@ app.use(errorHandler);
 
 // Start server
 const PORT = process.env.PORT || 5000;
-console.log(process.env.JWT_SECRET)
+
 app.listen(
 	PORT,
 	console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`)
