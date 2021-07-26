@@ -30,55 +30,55 @@ router.post(
 // @access  Private
 router.put('/toggle-favorite/:orderID', auth, toggleFavorite);
 
-// @route   GET /get_order_details:orderID
+// @route   GET /order-details/:orderID
 // @desc    toggles an order's detail
 // @access  Private
-router.get('/get_order_details/:orderID', auth, getOrderDetails);
+router.get('/order-details/:orderID', auth, getOrderDetails);
 
-// @route   GET /user_order_history
+// @route   GET /user-order-history
 // @desc    get all orders created by a user, uses req.user.id or req.query.userID to validate user
 // @access  Private
-router.get('/user_order_history', auth, getOrderHistory);
+router.get('/user-order-history', auth, getOrderHistory);
 
-// @route   GET /store_order_history/:storeID
+// @route   GET /store-order-history/:storeID
 // @desc    get all orders owned by a store
 // @access  Private
-router.get('/store_order_history/:storeID', auth, getStoreOrderHistory);
+router.get('/store-order-history/:storeID', auth, getStoreOrderHistory);
 
-// @route   GET /get_user_cart/:userID
+// @route   GET /user-cart/:userID
 // @desc    get all products in user's cart
 // @access  Private
-router.get('/get_user_cart/:userID', auth, getCartItems);
+router.get('/user-cart/:userID', auth, getCartItems);
 
-// @route   PUT /edit_user_order/:orderID
+// @route   PUT /edit-user-order/:orderID
 // @desc    modify fields in an order
 // @access  Private
-router.put('/edit_user_order/:orderID', auth, editOrder);
+router.put('/edit-user-order/:orderID', auth, editOrder);
 
-// @route   PUT /cancel_user_order/:orderID
+// @route   PUT /cancel-user-order/:orderID
 // @desc    cancels an order
 // @access  Private
-router.put('/cancel_user_order/:orderID', auth, cancelOrder);
+router.put('/cancel-user-order/:orderID', auth, cancelOrder);
 
-// @route   PUT /deliver_order/:orderID
+// @route   PUT /deliver-order/:orderID
 // @desc    delivers an order
 // @access  Private
-router.put('/deliver_order/:orderID', auth, deliverOrder);
+router.put('/deliver-order/:orderID', auth, deliverOrder);
 
-// @route   PUT /receive_order/:orderID
+// @route   PUT /receive-order/:orderID
 // @desc    receive an order
 // @access  Private
-router.put('/receive_order/:orderID', auth, receiveOrder);
+router.put('/receive-order/:orderID', auth, receiveOrder);
 
-// @route   PUT /complete_order/:orderID
+// @route   PUT /complete-order/:orderID
 // @desc    cancels an order
 // @access  Private
-router.put('/complete_order/:orderID', auth, completeOrder);
+router.put('/complete-order/:orderID', auth, completeOrder);
 
-// @route   PUT /get_favorites/:userID
+// @route   PUT /favorites/:userID
 // @desc    get user favorite orders
 // @access  Private
-router.get('/get_favorites/:userID', auth, getFavorites);
+router.get('/favorites/:userID', auth, getFavorites);
 
 
 export default router;
