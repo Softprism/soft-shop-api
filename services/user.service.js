@@ -130,7 +130,8 @@ const updateUser = async (updateParam, id) => {
 	// Check for fields
 	if (address) userFields.address = address;
 	if (email) userFields.email = email;
-  if (phone_number) userFields.phone_number = phone_number;
+	if (phone_number) userFields.phone_number = phone_number;
+
 	if (password) {
 		const salt = await bcrypt.genSalt(10);
 
