@@ -56,6 +56,6 @@ router.get('/login', auth, getLoggedInAdmin);
 // @route   PUT admins/:id
 // @desc    Update User Details
 // @access  Private
-router.put('/update/:id', auth, updateAdmin);
+router.put('/:id', auth, updateAdmin);
 
 export default router;

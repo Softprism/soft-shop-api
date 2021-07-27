@@ -36,14 +36,14 @@ router.get('/store-products', getStoreProducts);
 // @access  Private
 router.post('/find', findProduct);
 
-// @route   PUT /update/:id
+// @route   PUT /:id
 // @desc    update a store product, can be used by admin and stores
 // @access  Private
-router.put('/update/:id', updateProduct);
+router.put('/:id', updateProduct);
 
-// @route   DELETE /delete/:id
+// @route   DELETE /:id
 // @desc    delete a store product, can be used by admin and stores
 // @access  Private
-router.delete('/delete/:id', deleteProduct);
+router.delete('/:id', deleteProduct);
 
 export default router;

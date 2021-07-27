@@ -13,7 +13,7 @@ const OrderSchema = mongoose.Schema({
 	],
 	store: { type: mongoose.Schema.Types.ObjectId, ref: 'Store', required: true },
 	user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-	status: { type: String, required: true }, // "cart","sent","received","delivered","canceled", "complete"
+	status: { type: String, required: true }, // "sent","received","delivered","canceled", "complete"
 	favorite: { type: Boolean },
 	createdDate: { type: Date, default: Date.now },
 });

@@ -8,6 +8,14 @@ const userSchema = mongoose.Schema({
 	email: { type: String, unique: true, required: true },
 	password: { type: String, required: true },
 	orders: [{ type: mongoose.Types.ObjectId, ref: 'Order' }], // array to store multiple orders
+  cart: [{
+    product_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Product',
+      required: true,
+    },
+    quantity: { type: Number, required: true },
+  }], // array to store multiple products in cart
 	createdDate: { type: Date, default: Date.now },
 });
 

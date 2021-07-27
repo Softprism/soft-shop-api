@@ -58,9 +58,9 @@ router.post(
 // @access  Private
 router.get('/login', auth, getLoggedInStore);
 
-// @route   PUT /store/update
+// @route   PUT /store/
 // @desc    Update a store
 // @access  Private
-router.put('/update/:id', auth, updateStore);
+router.put('/:id', auth, updateStore);
 
 export default router;

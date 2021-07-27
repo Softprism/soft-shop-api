@@ -1,4 +1,5 @@
-import Order from '../models/order.model.js'
+import Order from '../models/order.model.js';
+import User from '../models/user.model.js';
 
 const getOrders = async (urlParams) => {
   try {
@@ -39,9 +40,24 @@ const toggleFavorite = async (orderID) => {
   }
 }
 
-const getFavorites = async (userID) => {
+const getFavorites = async (userID,urlParams) => {
+  try {
+    const limit = Number(urlParams.limit);
+		const skip = Number(urlParams.skip);
     //get users favorite orders
-    return await Order.find({user: userID, favorite: true})
+    let favoriteOrders = await Order.find({user: userID, favorite: true})
+    .sort({ createdDate: -1 }) // -1 for descending sort
+    .limit(limit)
+		.skip(skip)
+    .populate('product_meta.product_id')
+    .populate({path: 'store', select: '-password'})
+    .populate({path: 'user', select: '-password'})
+
+    return favoriteOrders
+  } catch (error) {
+    return {err: 'error getting your favorite orders'}
+
+  }
 }
 
 const getOrderDetails = async (orderID) => {
@@ -96,45 +112,88 @@ const getStoreOrderHistory = async (storeID,urlParams) => {
 }
 
 const editOrder = async (orderID,orderParam) => {
+  try {
+
     //can be used by both stores and users
-    await Order.findByIdAndUpdate(
-        orderID,
-        {$set: orderParam},
-        { omitUndefined: true, new: true },
+    const newOrder = await Order.findByIdAndUpdate(
+      orderID,
+      {$set: orderParam},
+      { omitUndefined: true, new: true },
     )
+    return newOrder
+  } catch (error) {
+    console.log(error)
+    return {err: 'error editing this order'}
+  }
+    
 }
 
 const cancelOrder = async (orderID) => {
+  try {
     //user/store cancel order
     let order = await Order.findById(orderID)
+    if(!order) throw {err: 'unable to cancel order'}
     order.CancelOrder()
     order.save()
+    return order
+  } catch (error) {
+    console.log(error)
+    return {err: 'error canceling order'}
+  }
 }
 
 const completeOrder = async (orderID) => {
+  try {
     //fires after payment is confirmed
     let order = await Order.findById(orderID)
+    if(!order) throw {err: 'unable to complete order'}
     order.completeOrder()
     order.save()
+    return order
+  } catch (error) {
+    console.log(error)
+    return {err: 'error completing this order'}
+  }
 }
 
 const receiveOrder = async (orderID) => {
+  try {
     //store acknoledges order
     let order = await Order.findById(orderID)
+    if(!order) throw {err: 'unable to receive order'}
     order.receiveOrder()
     order.save()
+    return order
+  } catch (error) {
+    return {err: 'error receiving this order'}
+  }
+    
 }
 
 const deliverOrder = async (orderID) => {
+  try {
     //store delivers order
     let order = await Order.findById(orderID)
+    if(!order) throw {err: 'unable to deliver order'}
     order.deliverOrder()
     order.save()
+    return order
+  } catch (error) {
+    return {err: 'error delivering this order'}
+  }
+    
 }
 
 const getCartItems = async (userID) => {
+  try {
     //get user cart items
-    return Order.find({user: userID, status: "cart"})
+    return await User.findById(userID)
+    .select('cart')
+    .populate('cart.product_id')
+  } catch (error) {
+    return {err: 'error getting user cart items'}
+  }
+    
 }
 
 
