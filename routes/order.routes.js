@@ -19,7 +19,6 @@ router.post(
 	[
 		check('product_meta', 'error with product data ').isLength({ min: 1 }),
 		check('store', 'Please select a store').not().isEmpty(),
-		check('user', 'user field missing').not().isEmpty(),
 		check('status', 'status field missing').not().isEmpty(),
 	],
 	createOrder

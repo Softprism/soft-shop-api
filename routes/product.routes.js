@@ -5,7 +5,7 @@ const router = express.Router();
 
 import { findProduct, deleteProduct, getStoreProducts, updateProduct, createProduct, getProducts } from '../controllers/product.controller.js'
 
-// @route   GET /product
+// @route   GET /
 // @desc    Get all products from all stores.
 // @access  Private
 router.get('/', getProducts);

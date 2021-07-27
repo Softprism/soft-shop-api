@@ -68,11 +68,10 @@ const createProduct = async (req, res, next) => {
 
 	const product = await productService.createProduct(req.body, storeID);
 
-	if (product.err) {
-		res.status(500).json({ success: false, msg: product.err });
-	}
-
-	res.status(200).json({ success: true, result: product });
+  product.err 
+  ? res.status(500).json({ success: false, msg: product.err })
+  : res.status(200).json({ success: true, result: product })
+	
 };
 
 
@@ -104,11 +103,10 @@ const updateProduct = async (req, res, next) => {
 		storeID
 	);
 
-	if (request.err) {
-		res.status(500).json({ success: false, msg: request.err });
-	}
-
-	res.status(200).json({ success: true });
+  request.err 
+  ? res.status(500).json({ success: false, msg: request.err })
+  : res.status(200).json({ success: true, result: request })
+	
 };
 
 const deleteProduct =async (req, res, next) => {
@@ -125,12 +123,10 @@ const deleteProduct =async (req, res, next) => {
 
 	const product = await productService.deleteProduct(req.params.id, storeID);
 
-	console.log(product);
-	if (product.err) {
-		res.status(500).json({ success: false, msg: product.err });
-	}
-
-	res.status(200).json({ success: true, result: product.msg });
+  product.err 
+  ? res.status(500).json({ success: false, msg: product.err })
+  : res.status(200).json({ success: true, result: product.msg })
+	
 };
 
 const findProduct = async (req, res, next) => {

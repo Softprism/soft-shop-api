@@ -1,5 +1,6 @@
 import Order from '../models/order.model.js';
 import User from '../models/user.model.js';
+import Store from '../models/store.model.js'
 
 const getOrders = async (urlParams) => {
 	try {
@@ -19,7 +20,17 @@ const getOrders = async (urlParams) => {
 
 const createOrder = async (orderParam) => {
 	try {
-		//creates an order for user
+    const {store, user} = orderParam
+
+    //validate user
+    const vUser = await User.findById(user)
+    if(!vUser) throw {err: 'user not found'}
+
+    //validate store
+    const vStore = await Store.findById(store)
+    if(!vStore) throw {err: 'store not found'}
+
+		//creates an order for user after all validation passes
 		const order = new Order(orderParam);
 		return order.save();
 	} catch (error) {

@@ -27,14 +27,14 @@ const createOrder = async (req, res, next) => {
 	if (!errors.isEmpty()) {
 		return res.status(400).json({ errors: errors.array() });
 	}
-
+  console.log(req.body, req.admin)
+  if(req.user) req.body.user = req.user.id
+  console.log(req.body)
 	let newOrder = await orderService.createOrder(req.body);
 
-	if (newOrder.err) {
-		res.status(500).json({ success: false, msg: newOrder.err });
-	}
-
-	res.status(200).json({ success: true, result: newOrder });
+  newOrder.err 
+  ? res.status(500).json({ success: false, msg: newOrder.err })
+  : res.status(200).json({ success: true, result: newOrder });
 };
 
 //======================================================================
@@ -42,11 +42,10 @@ const createOrder = async (req, res, next) => {
 const toggleFavorite = async (req, res, next) => {
 	let favoriteOrder = await orderService.toggleFavorite(req.params.orderID);
 
-	if (favoriteOrder.err) {
-		res.status(500).json({ success: false, msg: favoriteOrder.err });
-	}
+  newOrder.err 
+  ? res.status(500).json({ success: false, msg: favoriteOrder.err })
+  : res.status(200).json({ success: true, result: favoriteOrder.msg });
 
-	res.status(200).json({ success: true, result: favoriteOrder.msg });
 };
 
 //======================================================================
@@ -54,13 +53,10 @@ const toggleFavorite = async (req, res, next) => {
 const getOrderDetails = async (req, res, next) => {
 	const orderDetails = await orderService.getOrderDetails(req.params.orderID);
 
-	console.log(orderDetails);
+	orderDetails.err 
+  ? res.status(500).json({ success: false, msg: orderDetails.err })
+  : res.status(200).json({ success: true, result: orderDetails });
 
-	if (!orderDetails) {
-		res.status(500).json({ success: false, msg: orderDetails.err });
-	}
-
-	res.status(200).json({ success: true, result: orderDetails });
 };
 
 //======================================================================
@@ -125,13 +121,10 @@ const getCartItems = async (req, res, next) => {
 const editOrder = async (req, res, next) => {
 	let updatedOrder = await orderService.editOrder(req.params.orderID, req.body);
 
-	if (updatedOrder.err) {
-		res.status(400).json({ success: false, msg: updatedOrder.err });
-	}
+  updatedOrder.err 
+  ? res.status(500).json({ success: false, msg: updatedOrder.err })
+  : res.status(200).json({ success: true, result: 'order modified successfully' })
 
-	res
-		.status(200)
-		.json({ success: true, result: 'order modified successfully' });
 };
 
 //======================================================================
@@ -139,11 +132,10 @@ const editOrder = async (req, res, next) => {
 const cancelOrder = async (req, res, next) => {
 	const request = await orderService.cancelOrder(req.params.orderID);
 
-	if (request.err) {
-		res.status(400).json({ success: false, msg: request.err });
-	}
-
-	res.status(200).json({ success: true, result: 'order canceled' });
+  request.err 
+  ? res.status(500).json({ success: false, msg: request.err })
+  : res.status(200).json({ success: true, result: 'order canceled' })
+	
 };
 
 //======================================================================
@@ -151,11 +143,10 @@ const cancelOrder = async (req, res, next) => {
 const completeOrder = async (req, res, next) => {
 	const request = await orderService.completeOrder(req.params.orderID);
 
-	if (request.err) {
-		res.status(400).json({ success: false, msg: request.err });
-	}
-
-	res.status(200).json({ success: true, result: 'order completed' });
+  request.err 
+  ? res.status(500).json({ success: false, msg: request.err })
+  : res.status(200).json({ success: true, result: 'order completed' })
+	
 };
 
 //======================================================================
@@ -163,11 +154,10 @@ const completeOrder = async (req, res, next) => {
 const receiveOrder = async (req, res, next) => {
 	const request = await orderService.receiveOrder(req.params.orderID);
 
-	if (request.err) {
-		res.status(400).json({ success: false, msg: request.err });
-	}
-
-	res.status(200).json({ success: true, result: 'order received' });
+  request.err 
+  ? res.status(500).json({ success: false, msg: request.err })
+  : res.status(200).json({ success: true, result: 'order received' })
+	
 };
 
 //======================================================================
@@ -175,11 +165,10 @@ const receiveOrder = async (req, res, next) => {
 const deliverOrder = async (req, res, next) => {
 	const request = await orderService.deliverOrder(req.params.orderID);
 
-	if (request.err) {
-		res.status(400).json({ success: false, msg: request.err });
-	}
-
-	res.status(200).json({ success: true, result: 'order delivered' });
+  request.err 
+  ? res.status(500).json({ success: false, msg: request.err })
+  : res.status(200).json({ success: true, result: 'order delivered' })
+	
 };
 
 //======================================================================
