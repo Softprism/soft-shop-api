@@ -10,13 +10,14 @@ const getOrders = async (req, res, next) => {
 
 	const allOrders = await orderService.getOrders(req.query);
 
+  if (allOrders.err) {
+		res.status(500).json({ success: false, msg: allOrders.err });
+	}
+
 	allOrders && allOrders.length > 0
 		? res.status(200).json({ success: true, result: allOrders })
 		: res.status(404).json({ success: false, msg: 'No order found' });
 
-	if (allOrders.err) {
-		res.status(500).json({ success: false, msg: allOrders.err });
-	}
 };
 
 //======================================================================
@@ -27,9 +28,9 @@ const createOrder = async (req, res, next) => {
 	if (!errors.isEmpty()) {
 		return res.status(400).json({ errors: errors.array() });
 	}
-  console.log(req.body, req.admin)
+
   if(req.user) req.body.user = req.user.id
-  console.log(req.body)
+
 	let newOrder = await orderService.createOrder(req.body);
 
   newOrder.err 
@@ -68,52 +69,69 @@ const getOrderHistory = async (req, res, next) => {
 			.status(400)
 			.json({ success: false, msg: 'unable to authenticate this user' });
 	}
-
 	if (req.user) userID = req.user.id;
-	if (req.query.userID) userID = req.query.userID;
+	if (req.query.userID && req.admin) userID = req.query.userID;
 
 	const userOrderHistory = await orderService.getOrderHistory(
 		userID,
 		req.query
 	);
 
+  if (userOrderHistory.err) {
+		res.status(500).json({ success: false, msg: userOrderHistory.err });
+	}
+
 	userOrderHistory && userOrderHistory.length > 0
 		? res.status(200).json({ success: true, result: userOrderHistory })
 		: res.status(404).json({ success: false, msg: 'No order found' });
-
-	if (userOrderHistory.err) {
-		res.status(500).json({ success: false, msg: userOrderHistory.err });
-	}
 };
 
 //======================================================================
 
 const getStoreOrderHistory = async (req, res, next) => {
+  let storeID;
+	if (req.store === undefined && req.query.storeID === undefined) {
+		res
+			.status(400)
+			.json({ success: false, msg: 'unable to authenticate this store' });
+	}
+	if (req.store) storeID = req.store.id;
+	if (req.query.storeID && req.admin) storeID = req.query.storeID;
 	const storeOrderHistory = await orderService.getStoreOrderHistory(
-		req.params.storeID,
+		storeID,
 		req.query
 	);
 
+  if (storeOrderHistory.err) {
+		res.status(500).json({ success: false, msg: storeOrderHistory.err });
+	}
+  
 	storeOrderHistory && storeOrderHistory.length > 0
 		? res.status(200).json({ success: true, result: storeOrderHistory })
 		: res.status(404).json({ success: false, msg: 'No order found' });
-
-	if (storeOrderHistory.err) {
-		res.status(500).json({ success: false, msg: storeOrderHistory.err });
-	}
 };
 
 //======================================================================
 const getCartItems = async (req, res, next) => {
-	const cartItems = await orderService.getCartItems(req.params.userID);
+  let userID;
+	if (req.user === undefined && req.query.userID === undefined) {
+		res
+			.status(400)
+			.json({ success: false, msg: 'unable to authenticate this user' });
+	}
+	if (req.user) userID = req.user.id;
+	if (req.query.userID && req.admin) userID = req.query.userID;
+
+	const cartItems = await orderService.getCartItems(userID);
+
+  if (cartItems.err) {
+		res.status(500).json({ success: false, msg: cartItems.err });
+	}
 
 	cartItems && cartItems.cart.length > 0
 		? res.status(200).json({ success: true, result: cartItems })
 		: res.status(404).json({ success: false, msg: 'No order in cart' });
 
-	if (cartItems.err) {
-		res.status(500).json({ success: false, msg: cartItems.err });
-	}
 };
 
 //======================================================================
@@ -173,12 +191,19 @@ const deliverOrder = async (req, res, next) => {
 
 //======================================================================
 const getFavorites = async (req, res, next) => {
+  let userID;
+	if (req.user === undefined && req.query.userID === undefined) {
+		res
+			.status(400)
+			.json({ success: false, msg: 'unable to authenticate this user' });
+	}
+
 	if (req.query.skip === undefined || req.query.limit === undefined) {
 		res.status(400).json({ success: false, msg: 'missing some parameters' });
 	}
 
 	const favoriteOrders = await orderService.getFavorites(
-		req.params.userID,
+		userID,
 		req.query
 	);
 

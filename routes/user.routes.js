@@ -63,12 +63,12 @@ router.get('/login', auth, getLoggedInUser);
 // @desc    Update User Details
 // @access  Private
 
-router.put('/:id', auth, updateUser);
+router.put('/', auth, updateUser);
 
 // @route   GET /cart/:id
-// @desc    Get all User's cart item
+// @desc    adds a product tp User's cart
 // @access  Public
-router.put('/cart/:id', auth, addItemToCart);
+router.put('/cart/', auth, addItemToCart);
 
 
 export default router;

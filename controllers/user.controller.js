@@ -72,7 +72,16 @@ const updateUser = async (req, res) => {
 		return res.status(400).json({ errors: errors.array() });
 	}
 
-	const user = await userService.updateUser(req.body, req.params.id);
+  let userID;
+	if (req.user === undefined && req.query.userID === undefined) {
+		res
+			.status(400)
+			.json({ success: false, msg: 'unable to authenticate this user' });
+	}
+	if (req.user) userID = req.user.id;
+	if (req.query.userID && req.admin) userID = req.query.userID;
+
+	const user = await userService.updateUser(req.body, userID);
 
 	if (user.err) {
 		res.status(500).json({ success: false, msg: user.err });
@@ -85,7 +94,7 @@ const updateUser = async (req, res) => {
 };
 
 const addItemToCart = async (req, res) => {
-  const action = await userService.addItemToCart(req.params.id, req.body)
+  const action = await userService.addItemToCart(req.user.id, req.body)
 
   if (action.err) {
 		res.status(404).json({ success: false, msg: action.err });

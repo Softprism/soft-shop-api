@@ -42,12 +42,12 @@ router.get('/user-order-history', auth, getOrderHistory);
 // @route   GET /store-order-history/:storeID
 // @desc    get all orders owned by a store
 // @access  Private
-router.get('/store-order-history/:storeID', auth, getStoreOrderHistory);
+router.get('/store-order-history', auth, getStoreOrderHistory);
 
-// @route   GET /user-cart/:userID
+// @route   GET /user-cart?userID=
 // @desc    get all products in user's cart
 // @access  Private
-router.get('/user-cart/:userID', auth, getCartItems);
+router.get('/user-cart', auth, getCartItems);
 
 // @route   PUT /edit-user-order/:orderID
 // @desc    modify fields in an order
@@ -77,7 +77,7 @@ router.put('/complete-order/:orderID', auth, completeOrder);
 // @route   PUT /favorites/:userID
 // @desc    get user favorite orders
 // @access  Private
-router.get('/favorites/:userID', auth, getFavorites);
+router.get('/favorites/', auth, getFavorites);
 
 
 export default router;

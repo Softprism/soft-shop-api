@@ -10,11 +10,6 @@ const getStores = async (req, res, next) => {
 	stores && stores.length > 0
 		? res.status(200).json({ success: true, result: stores })
 		: res.status(404).json({ success: false, msg: 'No Store found' });
-
-	res.json({
-		success: true,
-		stores: stores,
-	});
 };
 
 const createStore = async (req, res, next) => {
@@ -33,13 +28,12 @@ const createStore = async (req, res, next) => {
 
 	const store = await storeService.createStore(req.body);
 
-	console.log(store);
-
 	if (store.err) {
 		res.status(500).json({ success: false, msg: store.err });
-	}
+	} else {
+    res.status(200).json({ success: true, result: store });
+  }
 
-	res.status(200).json({ success: true, result: store });
 };
 
 const loginStore = async (req, res, next) => {
@@ -56,25 +50,24 @@ const loginStore = async (req, res, next) => {
 
 	if (store.err) {
 		res.status(500).json({ success: false, msg: store.err });
-	}
+	} else {
+    res.status(200).json({ success: true, result: store });
+  }
 
-	res.status(200).json({ success: true, result: store });
 };
 
 const getLoggedInStore = async (req, res, next) => {
 	// Call Get Logged in User function from userService
 	const store = await storeService.getLoggedInStore(req.store.id);
 
-	console.log(store);
-
 	if (store.err) {
 		res.status(500).json({ success: false, msg: store.err });
-	}
-
-	res.status(200).json({
-		success: true,
-		result: store,
-	});
+	} else {
+    res.status(200).json({
+      success: true,
+      result: store,
+    });
+  }
 };
 
 const updateStore = async (req, res, next) => {
@@ -91,9 +84,10 @@ const updateStore = async (req, res, next) => {
 
 	if (store.err) {
 		res.status(500).json({ success: false, msg: store.err });
-	}
+	} else {
+    res.status(200).json({ success: true, result: store });
+  }
 
-	res.status(200).json({ success: true, result: store });
 };
 
 export { getStores, createStore, loginStore, getLoggedInStore, updateStore };

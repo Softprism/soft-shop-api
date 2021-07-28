@@ -27,9 +27,10 @@ const registerAdmin = async (req, res, next) => {
 
 	if (token.err) {
 		res.status(500).json({ success: false, msg: token.err });
-	}
+	} else {
+    res.status(201).json({ success: true, result: token });
+  }
 
-	res.status(201).json({ success: true, result: token });
 };
 
 const loginAdmin = async (req, res, next) => {
@@ -47,9 +48,10 @@ const loginAdmin = async (req, res, next) => {
 
 	if (token.err) {
 		res.status(500).json({ success: false, msg: token.err });
-	}
+	} else {
+    res.status(201).json({ success: true, result: token });
+  }
 
-	res.status(201).json({ success: true, result: token });
 };
 
 const getLoggedInAdmin = async (req, res, next) => {
@@ -59,9 +61,9 @@ const getLoggedInAdmin = async (req, res, next) => {
 
 	if (admin.err) {
 		res.status(500).json({ success: false, msg: token.err });
-	}
-
-	res.status(201).json({ success: true, result: admin });
+	} else {
+    res.status(201).json({ success: true, result: admin });
+  }
 };
 
 const updateAdmin = async (req, res, next) => {
@@ -71,15 +73,16 @@ const updateAdmin = async (req, res, next) => {
 		return res.status(400).json({ errors: errors.array() });
 	}
 
-	const admin = await adminService.updateAdmin(req.body, req.params.id);
+	const admin = await adminService.updateAdmin(req.body, req.admin.id);
 
 	console.log(admin);
 
 	if (admin.msg) {
 		res.status(500).json({ success: false, msg: admin.msg });
-	}
+	} else {
+    res.status(201).json({ success: true, result: admin });
+  }
 
-	res.status(201).json({ success: true, result: admin });
 };
 
 export { getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin };

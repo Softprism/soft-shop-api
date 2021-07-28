@@ -213,7 +213,7 @@ const getCartItems = async (userID) => {
 		//get user cart items
 		return await User.findById(userID)
 			.select('cart')
-			.populate('cart.product_id');
+			.populate('cart.product_id')
 	} catch (error) {
 		return { err: 'error getting user cart items' };
 	}

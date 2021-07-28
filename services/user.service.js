@@ -7,7 +7,8 @@ import Product from '../models/product.model.js';
 // Get all Users
 const getUsers = async () => {
 	try {
-		const users = await User.find();
+		const users = await User.find()
+    .select('-password')
 
 		return users;
 	} catch (err) {

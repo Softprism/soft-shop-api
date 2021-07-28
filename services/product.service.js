@@ -46,6 +46,7 @@ const findProduct = async (searchParam, opts) => {
 	}
 };
 
+
 const getStoreProducts = async (storeId, getParam) => {
 	try {
 		// get limit and skip from url parameters
@@ -105,7 +106,7 @@ const updateProduct = async (productParam, productId, storeId) => {
 	try {
 		// validate store, we have to make sure the product belongs to a store
 		const store = await Store.findById(storeId);
-
+    console.log(store,storeId)
 		if (!store) {
 			throw {
 				err: 'Unable to edit product in this store',
@@ -122,7 +123,7 @@ const updateProduct = async (productParam, productId, storeId) => {
 		}
 
 		//apply changes to the product
-		await Product.findByIdAndUpdate(
+		return await Product.findByIdAndUpdate(
 			productId,
 			{ $set: productParam },
 			{ new: true, useFindAndModify: true }
