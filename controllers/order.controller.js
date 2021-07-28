@@ -198,6 +198,9 @@ const getFavorites = async (req, res, next) => {
 			.json({ success: false, msg: 'unable to authenticate this user' });
 	}
 
+  if (req.user) userID = req.user.id;
+	if (req.query.userID && req.admin) userID = req.query.userID;
+
 	if (req.query.skip === undefined || req.query.limit === undefined) {
 		res.status(400).json({ success: false, msg: 'missing some parameters' });
 	}

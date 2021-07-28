@@ -29,7 +29,7 @@ const getStoreProducts = async (req, res, next) => {
 	}
 
 	if (req.store) storeID = req.store.id;
-	if (req.query.storeID) storeID = req.query.storeID;
+	if (req.query.storeID && req.admin) storeID = req.query.storeID;
 
 	const storeProducts = await productService.getStoreProducts(
 		storeID,
@@ -54,7 +54,7 @@ const createProduct = async (req, res, next) => {
 	}
 
 	if (req.store) storeID = req.store.id;
-	if (req.query.storeID) storeID = req.query.storeID;
+	if (req.query.storeID && req.admin) storeID = req.query.storeID;
 
 	const errors = validationResult(req);
 
@@ -120,7 +120,7 @@ const deleteProduct =async (req, res, next) => {
 
 	if (req.store) storeID = req.store.id;
 
-	if (req.query.storeID) storeID = req.query.storeID;
+	if (req.query.storeID && req.admin) storeID = req.query.storeID;
 
 	const product = await productService.deleteProduct(req.params.id, storeID);
 
