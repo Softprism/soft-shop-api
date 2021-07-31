@@ -147,6 +147,13 @@ const updateUser = async (updateParam, id) => {
 
 		if (!user) throw { msg: 'User not found' };
 
+    // ====== - AMBIGUOUS - =========== //
+    // We don't need to check for address, the DB
+    // Should be replaced by the new address in the body
+    // Request should contain existing address, so that
+    // we can easily scale this function.
+
+    
 		// Check if address field is not empty
 		if (address !== '' && address !== undefined) {
 			// Check if address array is not empty

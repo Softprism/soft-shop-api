@@ -5,7 +5,7 @@ import { check, validationResult } from 'express-validator';
 
 const getProducts = async (req, res, next) => {
 	if (req.query.skip === undefined || req.query.limit === undefined) {
-		res.status(400).json({ success: false, msg: 'missing some parameters' });
+		res.status(400).json({ success: false, msg: 'filtering parameters are missing' });
 	}
 
 	const allProducts = await productService.getProducts(req.query);
@@ -132,7 +132,7 @@ const deleteProduct =async (req, res, next) => {
 
 const findProduct = async (req, res, next) => {
 	if (req.query.skip === undefined || req.query.limit === undefined) {
-		res.status(400).json({ success: false, msg: 'missing some parameters' });
+		res.status(400).json({ success: false, msg: 'filtering parameters are missing' });
 	}
 
 	const allProducts = await productService.findProduct(req.body, req.query);

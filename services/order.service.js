@@ -234,3 +234,8 @@ export {
 	deliverOrder,
 	receiveOrder,
 };
+
+// Updates
+// Make getOrders able to fetch history for both stores and users by adding the parameters in the url query.
+//scrap the toggleFavorite, cancel, deliver, edit, receive and complete order functions, operations can be carried out within the editOrder function.
+// Get favorites can also be added as a parameter to the getOrders function.

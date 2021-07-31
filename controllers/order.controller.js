@@ -1,11 +1,11 @@
 import * as orderService from '../services/order.service.js';
-import { check, validationResult } from 'express-validator';
+import { validationResult } from 'express-validator';
 
 //======================================================================
 
 const getOrders = async (req, res, next) => {
 	if (req.query.skip === undefined || req.query.limit === undefined) {
-		res.status(400).json({ success: false, msg: 'missing some parameters' });
+		res.status(400).json({ success: false, msg: 'filtering parameters are missing' });
 	}
 
 	const allOrders = await orderService.getOrders(req.query);
@@ -49,7 +49,7 @@ const toggleFavorite = async (req, res, next) => {
 
 };
 
-//======================================================================
+//===============- Deprecated -=============================
 
 const getOrderDetails = async (req, res, next) => {
 	const orderDetails = await orderService.getOrderDetails(req.params.orderID);
@@ -89,6 +89,7 @@ const getOrderHistory = async (req, res, next) => {
 //======================================================================
 
 const getStoreOrderHistory = async (req, res, next) => {
+  console.log(2)
   let storeID;
 	if (req.store === undefined && req.query.storeID === undefined) {
 		res
@@ -97,6 +98,9 @@ const getStoreOrderHistory = async (req, res, next) => {
 	}
 	if (req.store) storeID = req.store.id;
 	if (req.query.storeID && req.admin) storeID = req.query.storeID;
+
+  console.log(storeID)
+
 	const storeOrderHistory = await orderService.getStoreOrderHistory(
 		storeID,
 		req.query
@@ -202,7 +206,7 @@ const getFavorites = async (req, res, next) => {
 	if (req.query.userID && req.admin) userID = req.query.userID;
 
 	if (req.query.skip === undefined || req.query.limit === undefined) {
-		res.status(400).json({ success: false, msg: 'missing some parameters' });
+		res.status(400).json({ success: false, msg: 'filtering parameters are missing' });
 	}
 
 	const favoriteOrders = await orderService.getFavorites(

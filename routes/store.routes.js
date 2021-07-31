@@ -61,6 +61,6 @@ router.get('/login', auth, getLoggedInStore);
 // @route   PUT /store/
 // @desc    Update a store
 // @access  Private
-router.put('/:id', auth, updateStore);
+router.put('/', auth, updateStore);
 
 export default router;

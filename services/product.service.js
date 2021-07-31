@@ -169,3 +169,7 @@ export {
 	deleteProduct,
 	findProduct,
 };
+
+//UPDATES
+// getProducts should provide for getStoreProducts, by adding storeid to the url parameter.
+

@@ -104,14 +104,14 @@ const getLoggedInStore = async (userParam) => {
 	}
 };
 
-const updateStore = async (req) => {
-	const { email, password, address, phone_number, images } = req.body;
+const updateStore = async (storeID, updateParam) => {
+	const { email, password, address, phone_number, images } = updateParam;
 
 	const storeUpdate = {};
 
 	// Check for fields
 	if (address) storeUpdate.address = address;
-	if (images) storeUpdate.address = images;
+	if (images) storeUpdate.images = images;
 	if (email) storeUpdate.email = email;
 	if (phone_number) storeUpdate.email = phone_number;
 	if (password) {
@@ -119,22 +119,17 @@ const updateStore = async (req) => {
 		storeUpdate.password = await bcrypt.hash(password, salt);
 	}
 
-	let store = await Store.findById(req.params.id);
+	let store = await Store.findById(storeID);
 
-	if (!store) {
-		throw {
-			code: 400,
-			msg: 'Store not found',
-		};
-	}
+	if (!store) throw { err: 'Store not found' }
 
 	store = await Store.findByIdAndUpdate(
-		req.params.id,
+		storeID,
 		{ $set: storeUpdate },
 		{ new: true, useFindAndModify: true }
 	);
 
-	let storeRes = await Store.findById(req.params.id).select('-password, -__v');
+	let storeRes = await Store.findById(storeID).select('-password, -__v');
 
 	return storeRes;
 };
