@@ -5,7 +5,12 @@ import { auth } from '../middleware/auth.js';
 import { check, validationResult } from 'express-validator';
 
 const getStores = async (req, res, next) => {
-	const stores = await storeService.getStores();
+  
+  if (req.query.skip === undefined || req.query.limit === undefined) {
+		return res.status(400).json({ success: false, msg: 'filtering parameters are missing' });
+	}
+
+	const stores = await storeService.getStores(req.query);
 
 	stores && stores.length > 0
 		? res.status(200).json({ success: true, result: stores })
@@ -13,8 +18,7 @@ const getStores = async (req, res, next) => {
 };
 
 const createStore = async (req, res, next) => {
-  // verifiy permission
-  if(req.admin === undefined && req.store === undefined) return res.status(403).json({ success: false, msg: 'you\'re not permiited to carry out this action' })
+  
 	const errors = validationResult(req);
 
 	if (!errors.isEmpty()) {
@@ -31,9 +35,9 @@ const createStore = async (req, res, next) => {
 	const store = await storeService.createStore(req.body);
 
 	if (store.err) {
-		res.status(500).json({ success: false, msg: store.err });
+		res.status(409).json({ success: false, msg: store.err });
 	} else {
-    res.status(200).json({ success: true, result: store });
+    res.status(201).json({ success: true, result: store });
   }
 
 };
@@ -51,7 +55,7 @@ const loginStore = async (req, res, next) => {
 	const store = await storeService.loginStore(req.body);
 
 	if (store.err) {
-		res.status(500).json({ success: false, msg: store.err });
+		return res.status(403).json({ success: false, msg: store.err });
 	} else {
     res.status(200).json({ success: true, result: store });
   }

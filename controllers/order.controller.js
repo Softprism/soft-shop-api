@@ -35,7 +35,7 @@ const createOrder = async (req, res, next) => {
 
   newOrder.err 
   ? res.status(500).json({ success: false, msg: newOrder.err })
-  : res.status(200).json({ success: true, result: newOrder });
+  : res.status(201).json({ success: true, result: newOrder });
 };
 
 //======================================================================
@@ -43,7 +43,7 @@ const createOrder = async (req, res, next) => {
 const toggleFavorite = async (req, res, next) => {
 	let favoriteOrder = await orderService.toggleFavorite(req.params.orderID);
 
-  newOrder.err 
+  favoriteOrder.err 
   ? res.status(500).json({ success: false, msg: favoriteOrder.err })
   : res.status(200).json({ success: true, result: favoriteOrder.msg });
 
@@ -78,7 +78,7 @@ const getOrderHistory = async (req, res, next) => {
 	);
 
   if (userOrderHistory.err) {
-		res.status(500).json({ success: false, msg: userOrderHistory.err });
+		return res.status(500).json({ success: false, msg: userOrderHistory.err });
 	}
 
 	userOrderHistory && userOrderHistory.length > 0

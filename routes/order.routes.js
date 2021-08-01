@@ -18,8 +18,7 @@ router.post(
 	auth,
 	[
 		check('product_meta', 'error with product data ').isLength({ min: 1 }),
-		check('store', 'Please select a store').not().isEmpty(),
-		check('status', 'status field missing').not().isEmpty(),
+		check('store', 'Please select a store').not().isEmpty()
 	],
 	createOrder
 );
@@ -27,7 +26,7 @@ router.post(
 // @route   PUT /toggle-favorite/:orderID
 // @desc    toggles favorite option in a order
 // @access  Private
-router.put('/toggle-favorite/:orderID', auth, toggleFavorite);
+router.patch('/toggle-favorite/:orderID', auth, toggleFavorite);
 
 // @route   GET /:orderID
 // @desc    toggles an order's detail
@@ -77,7 +76,7 @@ router.put('/complete-order/:orderID', auth, completeOrder);
 // @route   PUT /favorites/:userID
 // @desc    get user favorite orders
 // @access  Private
-router.get('/favorites/', auth, getFavorites);
+router.get('/favorites', auth, getFavorites);
 
 
 export default router;

@@ -72,7 +72,7 @@ const loginAdmin = async (loginParam) => {
 		const isMatch = await bcrypt.compare(password, admin.password);
 
 		if (!isMatch) {
-			throw { err: 'Invalid Credentials' };
+			throw { err: 'Wrong password' };
 		}
 
 		// Define payload for token

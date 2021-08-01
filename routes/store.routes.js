@@ -22,7 +22,7 @@ router.get('/', auth, getStores);
 // @desc    Register a store
 // @access  Public
 router.post(
-	'/create',
+	'/',
 	[
 		check('name', 'Please Enter Store Name').not().isEmpty(),
 		// check('images', 'Please add images for your store').not().isEmpty(),

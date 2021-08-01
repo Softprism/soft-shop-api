@@ -44,33 +44,35 @@ const createCategory = async (categoryParams) => {
 
 // Edit a category
 const editCategory = async (editParams, id) => {
-	const { name, image } = editParams;
+	// const { name, image } = editParams;
 
-	// Build Category Object
-	const categoryFields = {};
+	// // Build Category Object
+	// const categoryFields = {};
 
-	// Check for fields
-	if (image) categoryFields.name = image;
-	if (name) categoryFields.name = name;
-
+	// // Check for fields
+	// if (image) categoryFields.name = image;
+	// if (name) categoryFields.name = name;
+  
 	try {
 		let category = await Category.findById(id);
 
 		if (!category) throw { err: 'Category not found' };
 
+    // Images should be replaced
+
 		// Check if image field is not empty
-		if (image !== '' || null) {
-			// Check if image array is not empty
-			if (!category.image.length < 1) {
-				// Set the image string value in category object to image found from db, then append new image string
-				categoryFields.image = [...category.image, image];
-			}
-		}
+		// if (image !== '' || null) {
+		// 	// Check if image array is not empty
+		// 	if (!category.image.length < 1) {
+		// 		// Set the image string value in category object to image found from db, then append new image string
+		// 		categoryFields.image = [...category.image, image];
+		// 	}
+		// }
 
 		// Updates the user Object with the changed values
 		category = await Category.findByIdAndUpdate(
 			id,
-			{ $set: categoryFields },
+			{ $set: editParams },
 			{ new: true, useFindAndModify: true }
 		);
 

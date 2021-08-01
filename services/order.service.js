@@ -108,13 +108,28 @@ const getOrderHistory = async (userID, urlParams) => {
 		const limit = Number(urlParams.limit);
 		const skip = Number(urlParams.skip);
 		//gets user order history
-		return await Order.find({ user: userID })
+    if(urlParams.favorite === true) {
+      console.log(urlParams.favorite)
+      let orders = await Order.find({ user: userID, favorite: true})
 			.sort({ createdDate: -1 }) // -1 for descending sort
 			.limit(limit)
 			.skip(skip)
 			.populate('product_meta.product_id')
 			.populate({ path: 'store', select: '-password' })
 			.populate({ path: 'user', select: '-password' });
+
+      return orders;
+    } else {
+      let orders = await Order.find({ user: userID })
+			.sort({ createdDate: -1 }) // -1 for descending sort
+			.limit(limit)
+			.skip(skip)
+			.populate('product_meta.product_id')
+			.populate({ path: 'store', select: '-password' })
+			.populate({ path: 'user', select: '-password' });
+
+      return orders
+    }      
 	} catch (error) {
 		return { err: 'error getting the order history' };
 	}
@@ -140,13 +155,19 @@ const getStoreOrderHistory = async (storeID, urlParams) => {
 };
 
 const editOrder = async (orderID, orderParam) => {
+  const {product_meta, status} = orderParam
+
+  let orderModifier = {}
+  if(product_meta) orderModifier.product_meta = product_meta;
+  if(status) orderModifier.status = status;
 	try {
 		//can be used by both stores and users
 		const newOrder = await Order.findByIdAndUpdate(
 			orderID,
-			{ $set: orderParam },
+			{ $set: orderModifier },
 			{ omitUndefined: true, new: true }
 		);
+    console.log(newOrder)
 		return newOrder;
 	} catch (error) {
 		console.log(error);
@@ -211,9 +232,10 @@ const deliverOrder = async (orderID) => {
 const getCartItems = async (userID) => {
 	try {
 		//get user cart items
-		return await User.findById(userID)
+		let user = await User.findById(userID)
 			.select('cart')
 			.populate('cart.product_id')
+      return user
 	} catch (error) {
 		return { err: 'error getting user cart items' };
 	}

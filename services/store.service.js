@@ -3,11 +3,31 @@ import bcrypt from 'bcryptjs';
 
 import Store from '../models/store.model.js';
 
-const getStores = async () => {
+const getStores = async (urlParams) => {
 	try {
-		const stores = await Store.find().select('-password, -__v');
+    let storesWithRating = []
+    const limit = Number(urlParams.limit);
+		const skip = Number(urlParams.skip);
+    const rating = Number(urlParams.rating)
+    delete urlParams.limit
+    delete urlParams.skip
+    delete urlParams.rating
+		const stores = await Store.find(urlParams)
+    .select('-password, -__v')
+    .sort({ createdDate: -1 }) // -1 for descending sort
+    .limit(limit)
+    .skip(skip);
 
-		return stores;
+    if(rating >= 0) {
+      stores.forEach(store => {
+        if(store.rating == rating) {
+          storesWithRating.push(store)
+        }
+      })
+      return storesWithRating;
+    } else {
+      return stores;
+    }
 	} catch (err) {
 		return err;
 	}
@@ -17,10 +37,10 @@ const createStore = async (StoreParam) => {
 	try {
 		const { name, address, email, phone_number, password } = StoreParam;
 
-		let store = await Store.findOne({ name });
+		let store = await Store.findOne({ email });
 
 		if (store) {
-			throw { err: 'Store with this name already exists' };
+			throw { err: 'A store with this email already exists' };
 		}
 
 		const newStore = new Store(StoreParam);
@@ -69,10 +89,7 @@ const loginStore = async (StoreParam) => {
 		const isMatch = await bcrypt.compare(password, store.password);
 
 		if (!isMatch) {
-			throw {
-				code: 400,
-				msg: 'Invalid Credentials',
-			};
+			throw {	err: 'Invalid Credentials'};
 		}
 
 		const payload = {
@@ -89,7 +106,7 @@ const loginStore = async (StoreParam) => {
 		return token;
 	} catch (error) {
 		console.log(error);
-		throw error;
+		return error;
 	}
 };
 

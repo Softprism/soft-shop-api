@@ -11,7 +11,7 @@ const getProducts = async (req, res, next) => {
 	const allProducts = await productService.getProducts(req.query);
 
   if (allProducts.err) {
-		res.status(500).json({ success: false, msg: allProducts.err });
+		res.status(400).json({ success: false, msg: allProducts.err });
 	}
 
 	allProducts && allProducts.length > 0
@@ -37,7 +37,7 @@ const getStoreProducts = async (req, res, next) => {
 	);
 
 	if (storeProducts.err)
-		res.status(500).json({ success: false, msg: storeProducts.err });
+		res.status(400).json({ success: false, msg: storeProducts.err });
 
 	storeProducts && storeProducts.length > 0
 		? res.status(200).json({ success: true, result: storeProducts })
@@ -70,8 +70,8 @@ const createProduct = async (req, res, next) => {
 	const product = await productService.createProduct(req.body, storeID);
 
   product.err 
-  ? res.status(500).json({ success: false, msg: product.err })
-  : res.status(200).json({ success: true, result: product })
+  ? res.status(409).json({ success: false, msg: product.err })
+  : res.status(201).json({ success: true, result: product })
 	
 };
 
@@ -88,7 +88,6 @@ const updateProduct = async (req, res, next) => {
 	}
 
 	let storeID; // container to store the store's ID, be it a store request or an admin request
-  console.log(req.store)
 	if (req.store === undefined && req.query.storeID === undefined) {
 		res
 			.status(400)
@@ -103,11 +102,11 @@ const updateProduct = async (req, res, next) => {
 		req.params.id,
 		storeID
 	);
-
-  request.err 
-  ? res.status(500).json({ success: false, msg: request.err })
+  request
+  ? res.status(400).json({ success: false, msg: request.err })
   : res.status(200).json({ success: true, result: request })
 	
+  
 };
 
 const deleteProduct =async (req, res, next) => {
@@ -125,8 +124,8 @@ const deleteProduct =async (req, res, next) => {
 	const product = await productService.deleteProduct(req.params.id, storeID);
 
   product.err 
-  ? res.status(500).json({ success: false, msg: product.err })
-  : res.status(200).json({ success: true, result: product.msg })
+  ? res.status(404).json({ success: false, msg: product.err })
+  : res.status(201).json({ success: true, result: product.msg })
 	
 };
 
@@ -138,7 +137,7 @@ const findProduct = async (req, res, next) => {
 	const allProducts = await productService.findProduct(req.body, req.query);
 
   if (allProducts.err) {
-		res.status(500).json({ success: false, msg: allProducts.err });
+		res.status(400).json({ success: false, msg: allProducts.err });
 	}
   
 	allProducts && allProducts.length > 0
