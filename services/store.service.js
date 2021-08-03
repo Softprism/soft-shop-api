@@ -12,8 +12,9 @@ const getStores = async (urlParams) => {
 		delete urlParams.limit;
 		delete urlParams.skip;
 		delete urlParams.rating;
+
 		const stores = await Store.find(urlParams)
-			.select('-password, -__v')
+			.select('-password')
 			.sort({ createdDate: -1 }) // -1 for descending sort
 			.limit(limit)
 			.skip(skip);
@@ -91,11 +92,7 @@ const loginStore = async (StoreParam) => {
 		let store = await Store.findOne({ email });
 		let storeRes = await Store.findOne({ email }).select('-password');
 
-		if (!store) {
-			throw {
-				msg: 'Invalid Credentials',
-			};
-		}
+		if (!store) throw { err: 'Invalid Credentials' };
 
 		// Check if password matches with stored hash
 		const isMatch = await bcrypt.compare(password, store.password);
@@ -116,9 +113,9 @@ const loginStore = async (StoreParam) => {
 		});
 
 		return token;
-	} catch (error) {
-		console.log(error);
-		return error;
+	} catch (err) {
+		console.log(err);
+		return err;
 	}
 };
 
