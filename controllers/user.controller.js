@@ -7,11 +7,15 @@ import * as userService from '../services/user.service.js';
 const router = express.Router();
 
 const getUsers = async (req, res) => {
-	const users = await userService.getUsers();
+  if (req.query.skip === undefined || req.query.limit === undefined) {
+		return res.status(400).json({ success: false, msg: 'filtering parameters are missing' });
+	}
+
+	const users = await userService.getUsers(req.query);
 
 	users && users.length > 0
 		? res.status(200).json(users)
-		: res.status(404).json({ msg: 'No Users found' });
+		: res.status(404).json({ success:false, msg: 'No Users found' });
 };
 
 const registerUser = async (req, res, next) => {
@@ -23,7 +27,7 @@ const registerUser = async (req, res, next) => {
 	const token = await userService.registerUser(req.body);
 
 	if (token.err) {
-		res.status(500).json({ success: false, msg: token.err });
+		res.status(409).json({ success: false, msg: token.err });
 	}
 
 	res.status(201).json({ success: true, result: token });
@@ -40,7 +44,7 @@ const loginUser = async (req, res, next) => {
 	const token = await userService.loginUser(req.body);
 
 	if (token.err) {
-		res.status(500).json({ success: false, msg: token.err });
+		res.status(403).json({ success: false, msg: token.err });
 	}
 
 	res.status(200).json({
@@ -84,7 +88,7 @@ const updateUser = async (req, res) => {
 	const user = await userService.updateUser(req.body, userID);
 
 	if (user.err) {
-		res.status(500).json({ success: false, msg: user.err });
+		return res.status(500).json({ success: false, msg: user.err });
 	}
 
 	res.status(200).json({
@@ -97,7 +101,7 @@ const addItemToCart = async (req, res) => {
   const action = await userService.addItemToCart(req.user.id, req.body)
 
   if (action.err) {
-		res.status(404).json({ success: false, msg: action.err });
+		return es.status(404).json({ success: false, msg: action.err });
 	}
 
 	res.status(200).json({ success: true, result: action.msg });

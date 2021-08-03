@@ -1,82 +1,72 @@
-const express = require('express');
-const router = express.Router();
-const categoryService = require('../services/category.service');
-
-const { check, validationResult } = require('express-validator');
-
-// @route   GET /category
-// @desc    Get all Categories
-// @access  Public
-router.get('/', getCategories);
-
-// @route   POST /category/new
-// @desc    Create New Category
-// @access  Public
-router.post(
-	'/new',
-	[
-		check('name', 'Please enter valid category name').isString(),
-		check('image', 'Please upload Image').exists(),
-	],
-	createCategory
-);
-
-// @route   PUT /category/edit/:id
-// @desc    Edit Category Category
-// @access  Public
-router.put('/edit/:id', editCategory);
-
-// @route   DELETE /category/delete/:id
-// @desc    Create New Category
-// @access  Public
-router.delete('/delete/:id', deleteCategory);
+import * as categoryService from '../services/category.service.js'
+import { validationResult } from 'express-validator';
 
 // FUNCTIONS
 // Get Categories
-function getCategories(req, res, next) {
+const getCategories = async (req, res, next) => {
+  if (req.query.skip === undefined || req.query.limit === undefined) {
+		res.status(400).json({ success: false, msg: 'filtering parameters are missing' });
+	}
 	// Call getCategories function from category service
-	categoryService.getCategories().then((categories) =>
-		categories && categories.length > 0
-			? res.json({ categories })
-			: res
-					.status(400)
-					.json({ msg: 'No Categories found' })
-					.catch((err) => next(err))
-	);
+	const categories = await categoryService.getCategories(req.query)
+
+  if(categories.err) {
+		res.status(400).json({ success: false, msg: categories.err });
+	}
+  categories && categories.length > 0
+  ? res.status(200).json({ success: true, result: categories })
+  : res.status(404).json({ success: false, msg: 'No categories found' });
 }
 
 // Create Category
-function createCategory(req, res, next) {
+const createCategory = async (req, res, next) => {
+  // verifiy permission
+  if(req.admin === undefined) return res.status(403).json({ success: false, msg: 'you\'re not permiited to carry out this action' })
+
 	const errors = validationResult(req);
 	if (!errors.isEmpty()) {
 		return res.status(400).json({ errors: errors.array() });
 	}
 
-	categoryService
-		.createCategory(req.body)
-		.then((result) => res.json(result))
-		.catch((err) => next(err));
+	const request = await categoryService.createCategory(req.body)
+	
+  if(request.err) {
+		res.status(500).json({ success: false, msg: request.err })
+  } else {
+    res.status(201).json({ success: true, result: request.msg })
+  }
 }
 
 // Edit Category
-function editCategory(req, res, next) {
+const editCategory = async (req, res, next) => {
+  // verifiy permission
+  if(req.admin === undefined) return res.status(403).json({ success: false, msg: 'you\'re not permiited to carry out this action' })
 	const errors = validationResult(req);
 
 	if (!errors.isEmpty()) {
 		return res.status(400).json({ errors: errors.array() });
 	}
 
-	categoryService
-		.editCategory(req.body, req.params.id)
-		.then((result) => res.json(result))
-		.catch((err) => next(err));
+	const request = await categoryService.editCategory(req.body, req.params.id)
+
+	if(request.err) {
+		res.status(500).json({ success: false, msg: request.err })
+  } else {
+    res.status(200).json({ success: true, result: request }) //request returns the modified category
+  }
+
 }
 
-function deleteCategory(req, res, next) {
-	categoryService
-		.deleteCategory(req.params.id)
-		.then((result) => res.json(result))
-		.catch((err) => next(err));
+const deleteCategory = async (req, res, next) => {
+  // verifiy permission
+  if(req.admin === undefined) return res.status(403).json({ success: false, msg: 'you\'re not permiited to carry out this action' })
+	const request = await categoryService.deleteCategory(req.params.id)
+	
+  if(request.err) {
+		res.status(404).json({ success: false, msg: request.err })
+  } else {
+    res.status(200).json({ success: true, result: request.msg })
+  }
 }
 
-module.exports = router;
+export {getCategories, editCategory, createCategory, deleteCategory}

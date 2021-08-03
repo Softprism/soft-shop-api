@@ -11,7 +11,9 @@ const getOrders = async (urlParams) => {
 			.limit(limit)
 			.skip(skip)
 			.populate('product_meta.product_id')
-			.populate({ path: 'store', select: '-password' })
+			.populate(
+        { path: 'store', select: '-password -phone_number -email -createdDate' }
+      )
 			.populate({ path: 'user', select: '-password' });
 	} catch (error) {
 		return { err: 'error loading products' };
@@ -30,10 +32,27 @@ const createOrder = async (orderParam) => {
     const vStore = await Store.findById(store)
     if(!vStore) throw {err: 'store not found'}
 
+    //generates random id;
+    let orderId = () => {
+      let s4 = () => {
+          return Math.floor((1 + Math.random()) * 0x10000)
+              .toString(16)
+              .substring(1);
+      }
+      //return id of format 'aaaaaaaa'-'aaaa'
+      return 'soft - ' + s4() + s4() + '-' + s4()
+    }
+    console.log(orderId())
+
 		//creates an order for user after all validation passes
 		const order = new Order(orderParam);
-		return order.save();
+    order.orderId = orderId();
+		return (await order.save()).populate(
+      {path: 'store', select: 'name,address,deliveryTime,location'},
+      {path: '-user'}
+    )
 	} catch (error) {
+    console.log(error)
 		return { err: 'error creating order' };
 	}
 };
@@ -72,7 +91,9 @@ const getFavorites = async (userID, urlParams) => {
 			.limit(limit)
 			.skip(skip)
 			.populate('product_meta.product_id')
-			.populate({ path: 'Store', select: '-password' })
+			.populate(
+        { path: 'store', select: '-password -phone_number -email -createdDate' }
+      )
 			.populate({ path: 'User', select: '-password' });
 
 		return favoriteOrders;
@@ -93,7 +114,7 @@ const getOrderDetails = async (orderID) => {
 		//can be used by users, stores and admin
 		const orderDetails = await Order.findById(orderID)
 			.populate('product_meta.product_id')
-			.populate({ path: 'Store', select: '-password' })
+			.populate({ path: 'Store', select: '-password -phone_number -email -createdDate' })
 			.populate({ path: 'User', select: '-password' });
 
 		return orderDetails;
@@ -108,13 +129,28 @@ const getOrderHistory = async (userID, urlParams) => {
 		const limit = Number(urlParams.limit);
 		const skip = Number(urlParams.skip);
 		//gets user order history
-		return await Order.find({ user: userID })
+    if(urlParams.favorite === true) {
+      console.log(urlParams.favorite)
+      let orders = await Order.find({ user: userID, favorite: true})
 			.sort({ createdDate: -1 }) // -1 for descending sort
 			.limit(limit)
 			.skip(skip)
 			.populate('product_meta.product_id')
 			.populate({ path: 'store', select: '-password' })
 			.populate({ path: 'user', select: '-password' });
+
+      return orders;
+    } else {
+      let orders = await Order.find({ user: userID })
+			.sort({ createdDate: -1 }) // -1 for descending sort
+			.limit(limit)
+			.skip(skip)
+			.populate('product_meta.product_id')
+			.populate({ path: 'store', select: '-password' })
+			.populate({ path: 'user', select: '-password' });
+
+      return orders
+    }      
 	} catch (error) {
 		return { err: 'error getting the order history' };
 	}
@@ -140,13 +176,19 @@ const getStoreOrderHistory = async (storeID, urlParams) => {
 };
 
 const editOrder = async (orderID, orderParam) => {
+  const {product_meta, status} = orderParam
+
+  let orderModifier = {}
+  if(product_meta) orderModifier.product_meta = product_meta;
+  if(status) orderModifier.status = status;
 	try {
 		//can be used by both stores and users
 		const newOrder = await Order.findByIdAndUpdate(
 			orderID,
-			{ $set: orderParam },
+			{ $set: orderModifier },
 			{ omitUndefined: true, new: true }
 		);
+    console.log(newOrder)
 		return newOrder;
 	} catch (error) {
 		console.log(error);
@@ -211,9 +253,10 @@ const deliverOrder = async (orderID) => {
 const getCartItems = async (userID) => {
 	try {
 		//get user cart items
-		return await User.findById(userID)
+		let user = await User.findById(userID)
 			.select('cart')
 			.populate('cart.product_id')
+      return user
 	} catch (error) {
 		return { err: 'error getting user cart items' };
 	}
@@ -234,3 +277,8 @@ export {
 	deliverOrder,
 	receiveOrder,
 };
+
+// Updates
+// Make getOrders able to fetch history for both stores and users by adding the parameters in the url query.
+//scrap the toggleFavorite, cancel, deliver, edit, receive and complete order functions, operations can be carried out within the editOrder function.
+// Get favorites can also be added as a parameter to the getOrders function.

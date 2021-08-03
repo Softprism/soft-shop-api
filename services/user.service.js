@@ -5,12 +5,33 @@ import User from '../models/user.model.js';
 import Product from '../models/product.model.js';
 
 // Get all Users
-const getUsers = async () => {
+const getUsers = async (urlParams) => {
 	try {
-		const users = await User.find()
+    let userWithCartItems = []
+    const limit = Number(urlParams.limit);
+		const skip = Number(urlParams.skip);
+    const cartLength = Number(urlParams.cart)
+    delete urlParams.limit
+    delete urlParams.skip
+    delete urlParams.cart
+		const users = await User.find(urlParams)
     .select('-password')
-
-		return users;
+    .sort({ createdDate: -1 }) // -1 for descending sort
+    .populate('cart.product_id orders')
+    .limit(limit)
+    .skip(skip)
+    
+    if(cartLength >= 0) {
+      users.forEach(user => {
+        if(user.cart.length == cartLength) {
+          userWithCartItems.push(user)
+        }
+      })
+      return userWithCartItems;
+    } else {
+      return users;
+    }
+    // return users;
 	} catch (err) {
 		return err;
 	}
@@ -85,7 +106,7 @@ const loginUser = async (loginParam) => {
 		const isMatch = await bcrypt.compare(password, user.password);
 
 		if (!isMatch) {
-			throw { err: 'Invalid Credentials' };
+			throw { err: 'Wrong password' };
 		}
 
 		// Define payload for token
@@ -125,7 +146,7 @@ const getLoggedInUser = async (userParam) => {
 const updateUser = async (updateParam, id) => {
 	console.log(updateParam, id);
 	const { address, password, email, phone_number } = updateParam;
-
+  console.log(password)
 	// Build User Object
 	const userFields = {};
 
@@ -145,24 +166,33 @@ const updateUser = async (updateParam, id) => {
 		// Find use from DB Collection
 		let user = await User.findById(id);
 
-		if (!user) throw { msg: 'User not found' };
+		if (!user) throw { err: 'User not found' };
 
+    // ====== - AMBIGUOUS - =========== //
+    // We don't need to check for address, the DB
+    // Should be replaced by the new address in the body
+    // Request should contain existing address, so that
+    // we can easily scale this function.
+
+    
 		// Check if address field is not empty
-		if (address !== '' && address !== undefined) {
-			// Check if address array is not empty
-			if (!user.address.length < 1) {
-				// Set the address value in user object to address found from db, then append new address
-				userFields.address = [...user.address, address];
-			}
-		}
+		// if (address !== '' && address !== undefined) {
+		// 	// Check if address array is not empty
+		// 	if (!user.address.length < 1) {
+		// 		// Set the address value in user object to address found from db, then append new address
+		// 		userFields.address = [...user.address, address];
+		// 	}
+		// }
 		// Updates the user Object with the changed values
 		user = await User.findByIdAndUpdate(
 			id,
 			{ $set: userFields },
 			{ new: true, useFindAndModify: true }
 		);
+		user = await User.findById(id)
+    .select('-cart -password, -orders, -cart');
 
-		return user;
+    return user
 	} catch (err) {
 		return err;
 	}

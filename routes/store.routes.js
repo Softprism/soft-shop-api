@@ -9,6 +9,7 @@ import {
 	loginStore,
 	getLoggedInStore,
 	updateStore,
+  addLabel
 } from '../controllers/store.controller.js';
 
 import { auth } from '../middleware/auth.js';
@@ -22,11 +23,13 @@ router.get('/', auth, getStores);
 // @desc    Register a store
 // @access  Public
 router.post(
-	'/create',
+	'/',
 	[
 		check('name', 'Please Enter Store Name').not().isEmpty(),
 		// check('images', 'Please add images for your store').not().isEmpty(),
 		check('address', 'Please Enter Stores Address').not().isEmpty(),
+		check('openingTime', 'Please Enter Opening Time').not().isEmpty(),
+		check('closingTime', 'Please Enter Closing Time').not().isEmpty(),
 		check('email', 'Please Enter Valid Email').isEmail(),
 		check('phone_number', 'Please Enter Valid Phone Number').isMobilePhone(),
 		check(
@@ -61,6 +64,11 @@ router.get('/login', auth, getLoggedInStore);
 // @route   PUT /store/
 // @desc    Update a store
 // @access  Private
-router.put('/:id', auth, updateStore);
+router.put('/', auth, updateStore);
+
+// @route   PUT /stores/label
+// @desc    add label to store
+// @access  Private
+router.put('/label', auth, addLabel);
 
 export default router;

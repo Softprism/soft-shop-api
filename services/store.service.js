@@ -3,11 +3,32 @@ import bcrypt from 'bcryptjs';
 
 import Store from '../models/store.model.js';
 
-const getStores = async () => {
+const getStores = async (urlParams) => {
 	try {
-		const stores = await Store.find().select('-password, -__v');
+		let storesWithRating = [];
+		const limit = Number(urlParams.limit);
+		const skip = Number(urlParams.skip);
+		const rating = Number(urlParams.rating);
+		delete urlParams.limit;
+		delete urlParams.skip;
+		delete urlParams.rating;
 
-		return stores;
+		const stores = await Store.find(urlParams)
+			.select('-password')
+			.sort({ createdDate: -1 }) // -1 for descending sort
+			.limit(limit)
+			.skip(skip);
+
+		if (rating >= 0) {
+			stores.forEach((store) => {
+				if (store.rating == rating) {
+					storesWithRating.push(store);
+				}
+			});
+			return storesWithRating;
+		} else {
+			return stores;
+		}
 	} catch (err) {
 		return err;
 	}
@@ -15,12 +36,25 @@ const getStores = async () => {
 
 const createStore = async (StoreParam) => {
 	try {
-		const { name, address, email, phone_number, password } = StoreParam;
+		const {
+			name,
+			address,
+			email,
+			phone_number,
+			password,
+			openingTime,
+			closingTime,
+      labels
+		} = StoreParam;
 
-		let store = await Store.findOne({ name });
+		let store = await Store.findOne({ email });
 
 		if (store) {
-			throw { err: 'Store with this name already exists' };
+			throw { err: 'A store with this email already exists' };
+		}
+
+		if (!openingTime.includes(':') || !closingTime.includes(':')) {
+			throw { err: 'Invalid time format' };
 		}
 
 		const newStore = new Store(StoreParam);
@@ -59,20 +93,13 @@ const loginStore = async (StoreParam) => {
 		let store = await Store.findOne({ email });
 		let storeRes = await Store.findOne({ email }).select('-password');
 
-		if (!store) {
-			throw {
-				msg: 'Invalid Credentials',
-			};
-		}
+		if (!store) throw { err: 'Invalid Credentials' };
 
 		// Check if password matches with stored hash
 		const isMatch = await bcrypt.compare(password, store.password);
 
 		if (!isMatch) {
-			throw {
-				code: 400,
-				msg: 'Invalid Credentials',
-			};
+			throw { err: 'Invalid Credentials' };
 		}
 
 		const payload = {
@@ -87,9 +114,9 @@ const loginStore = async (StoreParam) => {
 		});
 
 		return token;
-	} catch (error) {
-		console.log(error);
-		throw error;
+	} catch (err) {
+		console.log(err);
+		return err;
 	}
 };
 
@@ -104,39 +131,67 @@ const getLoggedInStore = async (userParam) => {
 	}
 };
 
-const updateStore = async (req) => {
-	const { email, password, address, phone_number, images } = req.body;
+const updateStore = async (storeID, updateParam) => {
+	try {
+		const {
+			email,
+			password,
+			address,
+			phone_number,
+			images,
+			openingTime,
+			closingTime
+		} = updateParam;
 
-	const storeUpdate = {};
+		const storeUpdate = {};
 
-	// Check for fields
-	if (address) storeUpdate.address = address;
-	if (images) storeUpdate.address = images;
-	if (email) storeUpdate.email = email;
-	if (phone_number) storeUpdate.email = phone_number;
-	if (password) {
-		const salt = await bcrypt.genSalt(10);
-		storeUpdate.password = await bcrypt.hash(password, salt);
+		// Check for fields
+		if (address) storeUpdate.address = address;
+		if (images) storeUpdate.images = images;
+		if (email) storeUpdate.email = email;
+		if (openingTime) storeUpdate.openingTime = openingTime;
+		if (closingTime) storeUpdate.closingTime = closingTime;
+		if (phone_number) storeUpdate.email = phone_number;
+		if (password) {
+			const salt = await bcrypt.genSalt(10);
+			storeUpdate.password = await bcrypt.hash(password, salt);
+		}
+
+		if (!storeUpdate.openingTime.includes(':')) {
+			delete storeUpdate.openingTime;
+			throw { err: 'Invalid time' };
+		}
+
+		if (!storeUpdate.closingTime.includes(':')) {
+			delete storeUpdate.closingTime;
+			throw { err: 'Invalid time' };
+		}
+
+		let store = await Store.findById(storeID);
+
+		if (!store) throw { err: 'Store not found' };
+
+		store = await Store.findByIdAndUpdate(
+			storeID,
+			{ $set: storeUpdate },
+			{ new: true, useFindAndModify: true }
+		);
+
+		let storeRes = await Store.findById(storeID).select('-password, -__v');
+
+		return storeRes;
+	} catch (err) {
+		return err;
 	}
-
-	let store = await Store.findById(req.params.id);
-
-	if (!store) {
-		throw {
-			code: 400,
-			msg: 'Store not found',
-		};
-	}
-
-	store = await Store.findByIdAndUpdate(
-		req.params.id,
-		{ $set: storeUpdate },
-		{ new: true, useFindAndModify: true }
-	);
-
-	let storeRes = await Store.findById(req.params.id).select('-password, -__v');
-
-	return storeRes;
 };
 
-export { getStores, createStore, loginStore, getLoggedInStore, updateStore };
+const addLabel = async (storeId, labelParam) => {
+  let store = await Store.findById(storeId);
+
+  if (!store) throw { err: 'Store not found' };
+
+  store.labels.push(labelParam)
+  await store.save()
+  return await Store.findById(storeId).select('-password, -__v');
+}
+export { getStores, createStore, loginStore, getLoggedInStore, updateStore, addLabel };

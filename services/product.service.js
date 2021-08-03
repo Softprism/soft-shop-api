@@ -11,8 +11,11 @@ const getProducts = async (getParam) => {
 		const allProducts = await Product.find()
 			.sort({ createdDate: -1 }) // -1 for descending sort
 			.limit(limit)
-			.skip(skip);
-		// .populate('store category');
+			.skip(skip)
+		  .populate(
+        { path: 'store', select: '-password -phone_number -email -createdDate' },
+        {path: 'category'}
+      );
 
 		return allProducts;
 	} catch (error) {
@@ -28,14 +31,16 @@ const findProduct = async (searchParam, opts) => {
 		if (searchParam.product_name)
 			searchParam.product_name = new RegExp(searchParam.product_name, 'i');
 		// i for case insensitive
-
+		console.log(searchParam);
 		const searchedProducts = await Product.find(searchParam)
 			.sort({ createdDate: -1 }) // -1 for descending sort
 			.limit(limit) //number of records to return
-			.skip(skip); //number of records to skip
-		// .populate('store category')
+			.skip(skip) //number of records to skip
+		  .populate(
+        { path: 'store', select: '-password -phone_number -email -createdDate' },
+        {path: 'category'}
+      )
 		// we'll prioritize results to be the ones closer to the users
-
 		if (searchedProducts.length < 1) {
 			throw { msg: 'match not found' };
 		}
@@ -46,20 +51,21 @@ const findProduct = async (searchParam, opts) => {
 	}
 };
 
-
 const getStoreProducts = async (storeId, getParam) => {
 	try {
 		// get limit and skip from url parameters
 		let limit = Number(getParam.limit);
 		let skip = Number(getParam.skip);
-
+		console.log(storeId);
 		//find store products
 		const storeProduct = await Product.find({ store: storeId })
 			.sort({ createdDate: -1 }) // -1 for descending sort
 			.limit(limit)
 			.skip(skip)
-			.populate('store category');
-
+			.populate(
+        { path: 'store', select: '-password -phone_number -email -createdDate' },
+        {path: 'category'}
+      )
 		return storeProduct;
 	} catch (error) {
 		return error;
@@ -67,20 +73,18 @@ const getStoreProducts = async (storeId, getParam) => {
 };
 
 const createProduct = async (productParam, storeId) => {
+	console.log(storeId);
 	try {
-		const {
-			product_name,
-			category,
-			availability,
-			price,
-			rating,
-			product_image,
-		} = productParam;
+		const { product_name, category, availability, price, product_image } =
+			productParam;
 
 		// validate store, we have to make sure we're assigning a product to a store
-		const store = await Store.findById(storeId);
-		if (store == null) {
-			throw { err: 'unable to add product to this store' };
+		const store = await Store.findById(storeId).catch((err) => {
+			throw { err: 'store not found' };
+		});
+		console.log(store);
+		if (!store) {
+			throw 'unable to add product to this store';
 		}
 
 		//create new product
@@ -90,10 +94,8 @@ const createProduct = async (productParam, storeId) => {
 			category,
 			availability,
 			price,
-			rating,
 			product_image,
 		});
-
 		await newProduct.save(); // save new product
 
 		return newProduct;
@@ -104,23 +106,29 @@ const createProduct = async (productParam, storeId) => {
 
 const updateProduct = async (productParam, productId, storeId) => {
 	try {
+		console.log(storeId);
 		// validate store, we have to make sure the product belongs to a store
-		const store = await Store.findById(storeId);
-    console.log(store,storeId)
-		if (!store) {
-			throw {
-				err: 'Unable to edit product in this store',
-			};
-		}
+		// const store = await Store.findById(storeId);
+		// console.log(store)
+		// if (!store) {
+		// 	throw {
+		// 		err: 'Unable to edit product in this store',
+		// 	};
+		// }
 
 		//check if product exists
-		const product = await Product.findById(productId);
+		const product = await Product.findOnea({
+			_id: productId,
+			store: storeId,
+		}).catch((err) => {
+			throw { err: 'product not found' };
+		});
 
-		if (!product) {
-			throw {
-				err: 'Product not found',
-			};
-		}
+		// if (!product) {
+		// 	throw {
+		// 		err: 'Product not found',
+		// 	};
+		// }
 
 		//apply changes to the product
 		return await Product.findByIdAndUpdate(
@@ -169,3 +177,6 @@ export {
 	deleteProduct,
 	findProduct,
 };
+
+//UPDATES
+// getProducts should provide for getStoreProducts, by adding storeid to the url parameter.

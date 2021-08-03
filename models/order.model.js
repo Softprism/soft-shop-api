@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 
 const OrderSchema = mongoose.Schema({
+  orderId: {type: String},
 	product_meta: [
 		{
 			product_id: {
@@ -11,10 +12,16 @@ const OrderSchema = mongoose.Schema({
 			quantity: { type: String, required: true },
 		},
 	],
+  paymentMethod: {type: String},
+  deliveryMethod: {type: String},
+  customFees: [{
+    feeType: {type: String},
+    amount: {type: Number}
+  }],
 	store: { type: mongoose.Schema.Types.ObjectId, ref: 'Store', required: true },
 	user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-	status: { type: String, required: true }, // "sent","received","delivered","canceled", "complete"
-	favorite: { type: Boolean },
+	status: { type: String, required: true, default: 'sent' }, // "sent","received","delivered","canceled", "complete"
+	favorite: { type: Boolean, default: false },
 	createdDate: { type: Date, default: Date.now },
 });
 

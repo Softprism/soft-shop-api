@@ -16,7 +16,7 @@ import { auth } from '../middleware/auth.js';
 // @route   GET /admin
 // @desc    Get all Admin Users
 // @access  Public
-router.get('/', getAdmins);
+router.get('/', auth, getAdmins);
 
 // @route   POST admin/register
 // @desc    Register an Admin account

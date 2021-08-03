@@ -1,12 +1,14 @@
-const db = require('middlewares/db');
-
-const Category = db.Category;
+import Category from '../models/category.model.js'
 
 //  Get all Categories
-const getCategories = async () => {
+const getCategories = async (urlParams) => {
 	try {
-		const categories = await Category.find();
-
+    const limit = Number(urlParams.limit);
+		const skip = Number(urlParams.skip);
+		const categories = await Category.find()
+    .sort({ createdDate: -1 }) // -1 for descending sort
+    .limit(limit)
+    .skip(skip)
 		return categories;
 	} catch (err) {
 		return err;
@@ -22,7 +24,7 @@ const createCategory = async (categoryParams) => {
 		let category = await Category.findOne({ name });
 
 		if (category) {
-			throw { err: `Category ${category.name} Exists` };
+			throw { err: `${category.name} already Exists` };
 		}
 
 		// Create Category Object
@@ -34,7 +36,7 @@ const createCategory = async (categoryParams) => {
 		// Save Category to db
 		await category.save();
 
-		return `Category ${category.name} successfully created`;
+		return {msg: `${category.name} category successfully created`};
 	} catch (err) {
 		return err;
 	}
@@ -42,33 +44,35 @@ const createCategory = async (categoryParams) => {
 
 // Edit a category
 const editCategory = async (editParams, id) => {
-	const { name, image } = editParams;
+	// const { name, image } = editParams;
 
-	// Build Category Object
-	const categoryFields = {};
+	// // Build Category Object
+	// const categoryFields = {};
 
-	// Check for fields
-	if (image) categoryFields.name = image;
-	if (name) categoryFields.name = name;
-
+	// // Check for fields
+	// if (image) categoryFields.name = image;
+	// if (name) categoryFields.name = name;
+  
 	try {
 		let category = await Category.findById(id);
 
 		if (!category) throw { err: 'Category not found' };
 
+    // Images should be replaced
+
 		// Check if image field is not empty
-		if (image !== '' || null) {
-			// Check if image array is not empty
-			if (!category.image.length < 1) {
-				// Set the image string value in category object to image found from db, then append new image string
-				categoryFields.image = [...category.image, image];
-			}
-		}
+		// if (image !== '' || null) {
+		// 	// Check if image array is not empty
+		// 	if (!category.image.length < 1) {
+		// 		// Set the image string value in category object to image found from db, then append new image string
+		// 		categoryFields.image = [...category.image, image];
+		// 	}
+		// }
 
 		// Updates the user Object with the changed values
 		category = await Category.findByIdAndUpdate(
 			id,
-			{ $set: categoryFields },
+			{ $set: editParams },
 			{ new: true, useFindAndModify: true }
 		);
 
@@ -95,7 +99,7 @@ const deleteCategory = async (id) => {
 	}
 };
 
-module.exports = {
+export {
 	getCategories,
 	createCategory,
 	editCategory,

@@ -23,10 +23,8 @@ const registerAdmin = async (req, res, next) => {
 
 	const token = await adminService.registerAdmin(req.body);
 
-	console.log(token);
-
 	if (token.err) {
-		res.status(500).json({ success: false, msg: token.err });
+		res.status(409).json({ success: false, msg: token.err });
 	} else {
     res.status(201).json({ success: true, result: token });
   }
@@ -47,9 +45,9 @@ const loginAdmin = async (req, res, next) => {
 	const token = await adminService.loginAdmin(req.body);
 
 	if (token.err) {
-		res.status(500).json({ success: false, msg: token.err });
+		res.status(403).json({ success: false, msg: token.err });
 	} else {
-    res.status(201).json({ success: true, result: token });
+    res.status(200).json({ success: true, result: token });
   }
 
 };
@@ -62,7 +60,7 @@ const getLoggedInAdmin = async (req, res, next) => {
 	if (admin.err) {
 		res.status(500).json({ success: false, msg: token.err });
 	} else {
-    res.status(201).json({ success: true, result: admin });
+    res.status(200).json({ success: true, result: admin });
   }
 };
 
@@ -80,7 +78,7 @@ const updateAdmin = async (req, res, next) => {
 	if (admin.msg) {
 		res.status(500).json({ success: false, msg: admin.msg });
 	} else {
-    res.status(201).json({ success: true, result: admin });
+    res.status(200).json({ success: true, result: admin });
   }
 
 };
