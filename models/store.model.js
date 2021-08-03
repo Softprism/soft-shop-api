@@ -11,6 +11,10 @@ const StoreSchema = mongoose.Schema({
 	openingTime: { type: String, required: true },
 	closingTime: { type: String, required: true },
 	deliveryTime: { type: String },
+	location: {
+		longitude: { type: String },
+		latitude: { type: String },
+	},
 	rating: { type: Number },
 	createdDate: { type: Date, default: Date.now },
 });
