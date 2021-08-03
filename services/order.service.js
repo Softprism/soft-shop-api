@@ -11,7 +11,9 @@ const getOrders = async (urlParams) => {
 			.limit(limit)
 			.skip(skip)
 			.populate('product_meta.product_id')
-			.populate({ path: 'store', select: '-password' })
+			.populate(
+        { path: 'store', select: '-password -phone_number -email -createdDate' }
+      )
 			.populate({ path: 'user', select: '-password' });
 	} catch (error) {
 		return { err: 'error loading products' };
@@ -30,10 +32,27 @@ const createOrder = async (orderParam) => {
     const vStore = await Store.findById(store)
     if(!vStore) throw {err: 'store not found'}
 
+    //generates random id;
+    let orderId = () => {
+      let s4 = () => {
+          return Math.floor((1 + Math.random()) * 0x10000)
+              .toString(16)
+              .substring(1);
+      }
+      //return id of format 'aaaaaaaa'-'aaaa'
+      return 'soft - ' + s4() + s4() + '-' + s4()
+    }
+    console.log(orderId())
+
 		//creates an order for user after all validation passes
 		const order = new Order(orderParam);
-		return order.save();
+    order.orderId = orderId();
+		return (await order.save()).populate(
+      {path: 'store', select: 'name,address,deliveryTime,location'},
+      {path: '-user'}
+    )
 	} catch (error) {
+    console.log(error)
 		return { err: 'error creating order' };
 	}
 };
@@ -72,7 +91,9 @@ const getFavorites = async (userID, urlParams) => {
 			.limit(limit)
 			.skip(skip)
 			.populate('product_meta.product_id')
-			.populate({ path: 'Store', select: '-password' })
+			.populate(
+        { path: 'store', select: '-password -phone_number -email -createdDate' }
+      )
 			.populate({ path: 'User', select: '-password' });
 
 		return favoriteOrders;
@@ -93,7 +114,7 @@ const getOrderDetails = async (orderID) => {
 		//can be used by users, stores and admin
 		const orderDetails = await Order.findById(orderID)
 			.populate('product_meta.product_id')
-			.populate({ path: 'Store', select: '-password' })
+			.populate({ path: 'Store', select: '-password -phone_number -email -createdDate' })
 			.populate({ path: 'User', select: '-password' });
 
 		return orderDetails;

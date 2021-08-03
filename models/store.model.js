@@ -15,6 +15,10 @@ const StoreSchema = mongoose.Schema({
 		longitude: { type: String },
 		latitude: { type: String },
 	},
+  labels: [{
+    labelTitle: {type: String},
+    labelThumb: {type: String} //Label thumbnail
+  }],
 	rating: { type: Number },
 	createdDate: { type: Date, default: Date.now },
 });

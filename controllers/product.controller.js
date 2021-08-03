@@ -23,13 +23,13 @@ const getProducts = async (req, res, next) => {
 const getStoreProducts = async (req, res, next) => {
 	let storeID; // container to store the store's ID, be it a store request or an admin request
 	if (req.store === undefined && req.query.storeID === undefined) {
-		res
+		return res
 			.status(400)
 			.json({ success: false, msg: 'unable to authenticate this store' });
 	}
 
 	if (req.store) storeID = req.store.id;
-	if (req.query.storeID && req.admin) storeID = req.query.storeID;
+	if (req.query.storeID) storeID = req.query.storeID;
 
 	const storeProducts = await productService.getStoreProducts(
 		storeID,

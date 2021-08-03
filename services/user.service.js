@@ -22,7 +22,6 @@ const getUsers = async (urlParams) => {
     .skip(skip)
     
     if(cartLength >= 0) {
-      console.log('cartlength')
       users.forEach(user => {
         if(user.cart.length == cartLength) {
           userWithCartItems.push(user)
@@ -190,8 +189,10 @@ const updateUser = async (updateParam, id) => {
 			{ $set: userFields },
 			{ new: true, useFindAndModify: true }
 		);
+		user = await User.findById(id)
+    .select('-cart -password, -orders, -cart');
 
-		return user;
+    return user
 	} catch (err) {
 		return err;
 	}

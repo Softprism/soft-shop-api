@@ -9,6 +9,7 @@ import {
 	loginStore,
 	getLoggedInStore,
 	updateStore,
+  addLabel
 } from '../controllers/store.controller.js';
 
 import { auth } from '../middleware/auth.js';
@@ -64,5 +65,10 @@ router.get('/login', auth, getLoggedInStore);
 // @desc    Update a store
 // @access  Private
 router.put('/', auth, updateStore);
+
+// @route   PUT /stores/label
+// @desc    add label to store
+// @access  Private
+router.put('/label', auth, addLabel);
 
 export default router;
