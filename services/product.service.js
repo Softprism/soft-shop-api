@@ -12,7 +12,10 @@ const getProducts = async (getParam) => {
 			.sort({ createdDate: -1 }) // -1 for descending sort
 			.limit(limit)
 			.skip(skip)
-		  .populate('store category');
+		  .populate(
+        { path: 'store', select: '-password' },
+        {path: 'category'}
+      );
 
 		return allProducts;
 	} catch (error) {
