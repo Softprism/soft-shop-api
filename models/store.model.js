@@ -8,9 +8,11 @@ const StoreSchema = mongoose.Schema({
 	email: { type: String, unique: true, required: true },
 	password: { type: String, required: true },
 	rating: { type: Number, required: false },
+	openingTime: { type: String, required: true },
+	closingTime: { type: String, required: true },
 	createdDate: { type: Date, default: Date.now },
 });
 
 const Store = mongoose.model('Store', StoreSchema);
 
-export default Store
+export default Store;

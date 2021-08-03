@@ -5,29 +5,29 @@ import Store from '../models/store.model.js';
 
 const getStores = async (urlParams) => {
 	try {
-    let storesWithRating = []
-    const limit = Number(urlParams.limit);
+		let storesWithRating = [];
+		const limit = Number(urlParams.limit);
 		const skip = Number(urlParams.skip);
-    const rating = Number(urlParams.rating)
-    delete urlParams.limit
-    delete urlParams.skip
-    delete urlParams.rating
+		const rating = Number(urlParams.rating);
+		delete urlParams.limit;
+		delete urlParams.skip;
+		delete urlParams.rating;
 		const stores = await Store.find(urlParams)
-    .select('-password, -__v')
-    .sort({ createdDate: -1 }) // -1 for descending sort
-    .limit(limit)
-    .skip(skip);
+			.select('-password, -__v')
+			.sort({ createdDate: -1 }) // -1 for descending sort
+			.limit(limit)
+			.skip(skip);
 
-    if(rating >= 0) {
-      stores.forEach(store => {
-        if(store.rating == rating) {
-          storesWithRating.push(store)
-        }
-      })
-      return storesWithRating;
-    } else {
-      return stores;
-    }
+		if (rating >= 0) {
+			stores.forEach((store) => {
+				if (store.rating == rating) {
+					storesWithRating.push(store);
+				}
+			});
+			return storesWithRating;
+		} else {
+			return stores;
+		}
 	} catch (err) {
 		return err;
 	}
@@ -35,12 +35,24 @@ const getStores = async (urlParams) => {
 
 const createStore = async (StoreParam) => {
 	try {
-		const { name, address, email, phone_number, password } = StoreParam;
+		const {
+			name,
+			address,
+			email,
+			phone_number,
+			password,
+			openingTime,
+			closingTime,
+		} = StoreParam;
 
 		let store = await Store.findOne({ email });
 
 		if (store) {
 			throw { err: 'A store with this email already exists' };
+		}
+
+		if (!openingTime.includes(':') || !closingTime.includes(':')) {
+			throw { err: 'Invalid time format' };
 		}
 
 		const newStore = new Store(StoreParam);
@@ -89,7 +101,7 @@ const loginStore = async (StoreParam) => {
 		const isMatch = await bcrypt.compare(password, store.password);
 
 		if (!isMatch) {
-			throw {	err: 'Invalid Credentials'};
+			throw { err: 'Invalid Credentials' };
 		}
 
 		const payload = {
@@ -122,33 +134,57 @@ const getLoggedInStore = async (userParam) => {
 };
 
 const updateStore = async (storeID, updateParam) => {
-	const { email, password, address, phone_number, images } = updateParam;
+	try {
+		const {
+			email,
+			password,
+			address,
+			phone_number,
+			images,
+			openingTime,
+			closingTime,
+		} = updateParam;
 
-	const storeUpdate = {};
+		const storeUpdate = {};
 
-	// Check for fields
-	if (address) storeUpdate.address = address;
-	if (images) storeUpdate.images = images;
-	if (email) storeUpdate.email = email;
-	if (phone_number) storeUpdate.email = phone_number;
-	if (password) {
-		const salt = await bcrypt.genSalt(10);
-		storeUpdate.password = await bcrypt.hash(password, salt);
+		// Check for fields
+		if (address) storeUpdate.address = address;
+		if (images) storeUpdate.images = images;
+		if (email) storeUpdate.email = email;
+		if (openingTime) storeUpdate.openingTime = openingTime;
+		if (closingTime) storeUpdate.closingTime = closingTime;
+		if (phone_number) storeUpdate.email = phone_number;
+		if (password) {
+			const salt = await bcrypt.genSalt(10);
+			storeUpdate.password = await bcrypt.hash(password, salt);
+		}
+
+		if (!storeUpdate.openingTime.includes(':')) {
+			delete storeUpdate.openingTime;
+			throw { err: 'Invalid time' };
+		}
+
+		if (!storeUpdate.closingTime.includes(':')) {
+			delete storeUpdate.closingTime;
+			throw { err: 'Invalid time' };
+		}
+
+		let store = await Store.findById(storeID);
+
+		if (!store) throw { err: 'Store not found' };
+
+		store = await Store.findByIdAndUpdate(
+			storeID,
+			{ $set: storeUpdate },
+			{ new: true, useFindAndModify: true }
+		);
+
+		let storeRes = await Store.findById(storeID).select('-password, -__v');
+
+		return storeRes;
+	} catch (err) {
+		return err;
 	}
-
-	let store = await Store.findById(storeID);
-
-	if (!store) throw { err: 'Store not found' }
-
-	store = await Store.findByIdAndUpdate(
-		storeID,
-		{ $set: storeUpdate },
-		{ new: true, useFindAndModify: true }
-	);
-
-	let storeRes = await Store.findById(storeID).select('-password, -__v');
-
-	return storeRes;
 };
 
 export { getStores, createStore, loginStore, getLoggedInStore, updateStore };

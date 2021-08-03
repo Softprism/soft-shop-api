@@ -27,6 +27,8 @@ router.post(
 		check('name', 'Please Enter Store Name').not().isEmpty(),
 		// check('images', 'Please add images for your store').not().isEmpty(),
 		check('address', 'Please Enter Stores Address').not().isEmpty(),
+		check('openingTime', 'Please Enter Opening Time').not().isEmpty(),
+		check('closingTime', 'Please Enter Closing Time').not().isEmpty(),
 		check('email', 'Please Enter Valid Email').isEmail(),
 		check('phone_number', 'Please Enter Valid Phone Number').isMobilePhone(),
 		check(
