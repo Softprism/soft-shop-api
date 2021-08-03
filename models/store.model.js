@@ -10,6 +10,8 @@ const StoreSchema = mongoose.Schema({
 	rating: { type: Number, required: false },
 	openingTime: { type: String, required: true },
 	closingTime: { type: String, required: true },
+	deliveryTime: { type: String },
+	rating: { type: Number },
 	createdDate: { type: Date, default: Date.now },
 });
 
