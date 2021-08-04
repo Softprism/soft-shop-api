@@ -104,7 +104,7 @@ const addItemToCart = async (req, res) => {
 		return es.status(404).json({ success: false, msg: action.err });
 	}
 
-	res.status(200).json({ success: true, result: action.msg });
+	res.status(200).json({ success: true, result: action });
 }
 
 export { getUsers, registerUser, loginUser, getLoggedInUser, updateUser, addItemToCart };
