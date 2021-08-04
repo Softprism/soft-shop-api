@@ -17,7 +17,8 @@ const getUsers = async (urlParams) => {
 		const users = await User.find(urlParams)
     .select('-password')
     .sort({ createdDate: -1 }) // -1 for descending sort
-    .populate('cart.product_id orders')
+    .populate({path: 'cart.product_id', select: 'product_name price availability'})
+    .populate({path: 'orders', select: 'orderId status'})
     .limit(limit)
     .skip(skip)
     
@@ -44,8 +45,6 @@ const registerUser = async (userParam) => {
 	try {
 		let user = await User.findOne({ email });
 
-		console.log(user);
-
 		if (user) {
 			// return res
 			// 	.status(400)
@@ -68,7 +67,7 @@ const registerUser = async (userParam) => {
 		user.password = await bcrypt.hash(password, salt);
 
 		// Save user to db
-		await user.save();
+		await user.save()
 
 		// Define payload for token
 		const payload = {
@@ -82,7 +81,13 @@ const registerUser = async (userParam) => {
 			expiresIn: 36000,
 		});
 
-		return token;
+    user.populate({path: 'cart.product_id', select: 'product_name price availability'}).exec()
+    // .populate({path: 'orders', select: 'orderId status'})
+    
+    // unset user pass****d
+    user.password = undefined
+
+		return {user, token};
 		// return res.status(200).json({ user });
 	} catch (err) {
 		// console.error(err);
@@ -96,7 +101,9 @@ const loginUser = async (loginParam) => {
 
 	try {
 		// Find user with email
-		let user = await User.findOne({ email });
+		let user = await User.findOne({ email })
+    .populate({path: 'cart.product_id', select: 'product_name price availability'})
+    .populate({path: 'orders', select: 'orderId status'})
 
 		if (!user) {
 			throw { err: 'User not found' };
@@ -108,6 +115,9 @@ const loginUser = async (loginParam) => {
 		if (!isMatch) {
 			throw { err: 'Wrong password' };
 		}
+
+    // unset user pass***d
+    user.password = undefined
 
 		// Define payload for token
 		const payload = {
@@ -123,9 +133,8 @@ const loginUser = async (loginParam) => {
 		if (!token) {
 			throw { err: 'Missing Token' };
 		}
-		return token;
+    return {user, token:token}
 	} catch (err) {
-		console.log(err);
 		return err;
 	}
 };
@@ -146,7 +155,6 @@ const getLoggedInUser = async (userParam) => {
 const updateUser = async (updateParam, id) => {
 	console.log(updateParam, id);
 	const { address, password, email, phone_number } = updateParam;
-  console.log(password)
 	// Build User Object
 	const userFields = {};
 
@@ -163,7 +171,7 @@ const updateUser = async (updateParam, id) => {
 	}
 
 	try {
-		// Find use from DB Collection
+		// Find user from DB Collection
 		let user = await User.findById(id);
 
 		if (!user) throw { err: 'User not found' };
@@ -189,8 +197,10 @@ const updateUser = async (updateParam, id) => {
 			{ $set: userFields },
 			{ new: true, useFindAndModify: true }
 		);
-		user = await User.findById(id)
-    .select('-cart -password, -orders, -cart');
+
+    user.cart = undefined;
+    user.password = undefined;
+    user.orders = undefined;
 
     return user
 	} catch (err) {
@@ -204,15 +214,17 @@ const addItemToCart = async (userID,product) => {
 
     if(!productFinder) throw { err: 'can\'t find this product' }
 
-    const user = await User.findByIdAndUpdate(
+    let user = await User.findByIdAndUpdate(
       userID,
       {$push: {cart: product}},
 			{ new: true, useFindAndModify: true }
-    );
+    )
+    .populate(
+      {path: 'cart.product_id', select: 'product_name price availability'}
+      )
 
-    return {msg: 'product added to cart'}
+    return user.cart
   } catch (error) {
-    console.log(error)
     return {err: 'error adding product to cart'}
   }
 }

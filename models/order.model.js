@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 const OrderSchema = mongoose.Schema({
-  orderId: {type: String},
+  orderId: {type: String, unique: true},
 	product_meta: [
 		{
 			product_id: {

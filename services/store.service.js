@@ -14,7 +14,7 @@ const getStores = async (urlParams) => {
 		delete urlParams.rating;
 
 		const stores = await Store.find(urlParams)
-			.select('-password')
+			.select('images name rating openingTime closingTime deliveryTime')
 			.sort({ createdDate: -1 }) // -1 for descending sort
 			.limit(limit)
 			.skip(skip);
@@ -44,7 +44,7 @@ const createStore = async (StoreParam) => {
 			password,
 			openingTime,
 			closingTime,
-      labels
+      location
 		} = StoreParam;
 
 		let store = await Store.findOne({ email });
@@ -178,6 +178,7 @@ const updateStore = async (storeID, updateParam) => {
 		);
 
 		let storeRes = await Store.findById(storeID).select('-password, -__v');
+
 
 		return storeRes;
 	} catch (err) {
