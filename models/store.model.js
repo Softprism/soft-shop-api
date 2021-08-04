@@ -19,7 +19,6 @@ const StoreSchema = mongoose.Schema({
     labelTitle: {type: String},
     labelThumb: {type: String} //Label thumbnail
   }],
-	rating: { type: Number },
 	createdDate: { type: Date, default: Date.now },
 });
 
