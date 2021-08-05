@@ -7,32 +7,35 @@ import Product from '../models/product.model.js';
 // Get all Users
 const getUsers = async (urlParams) => {
 	try {
-    let userWithCartItems = []
-    const limit = Number(urlParams.limit);
+		let userWithCartItems = [];
+		const limit = Number(urlParams.limit);
 		const skip = Number(urlParams.skip);
-    const cartLength = Number(urlParams.cart)
-    delete urlParams.limit
-    delete urlParams.skip
-    delete urlParams.cart
+		const cartLength = Number(urlParams.cart);
+		delete urlParams.limit;
+		delete urlParams.skip;
+		delete urlParams.cart;
 		const users = await User.find(urlParams)
-    .select('-password')
-    .sort({ createdDate: -1 }) // -1 for descending sort
-    .populate({path: 'cart.product_id', select: 'product_name price availability'})
-    .populate({path: 'orders', select: 'orderId status'})
-    .limit(limit)
-    .skip(skip)
-    
-    if(cartLength >= 0) {
-      users.forEach(user => {
-        if(user.cart.length == cartLength) {
-          userWithCartItems.push(user)
-        }
-      })
-      return userWithCartItems;
-    } else {
-      return users;
-    }
-    // return users;
+			.select('-password')
+			.sort({ createdDate: -1 }) // -1 for descending sort
+			.populate({
+				path: 'cart.product_id',
+				select: 'product_name price availability',
+			})
+			.populate({ path: 'orders', select: 'orderId status' })
+			.limit(limit)
+			.skip(skip);
+
+		if (cartLength >= 0) {
+			users.forEach((user) => {
+				if (user.cart.length == cartLength) {
+					userWithCartItems.push(user);
+				}
+			});
+			return userWithCartItems;
+		} else {
+			return users;
+		}
+		// return users;
 	} catch (err) {
 		return err;
 	}
@@ -67,7 +70,7 @@ const registerUser = async (userParam) => {
 		user.password = await bcrypt.hash(password, salt);
 
 		// Save user to db
-		await user.save()
+		await user.save();
 
 		// Define payload for token
 		const payload = {
@@ -81,14 +84,17 @@ const registerUser = async (userParam) => {
 			expiresIn: 36000,
 		});
 
-    user.populate({path: 'cart.product_id', select: 'product_name price availability'}).exec()
-    // .populate({path: 'orders', select: 'orderId status'})
-    
-    // unset user pass****d
-    user.password = undefined
+		user.populate({
+			path: 'cart.product_id',
+			select: 'product_name price availability',
+		});
 
-		return {user, token};
-		// return res.status(200).json({ user });
+		// .populate({path: 'orders', select: 'orderId status'})
+
+		// unset user pass****d
+		user.password = undefined;
+
+		return { user, token };
 	} catch (err) {
 		// console.error(err);
 		return err;
@@ -102,8 +108,11 @@ const loginUser = async (loginParam) => {
 	try {
 		// Find user with email
 		let user = await User.findOne({ email })
-    .populate({path: 'cart.product_id', select: 'product_name price availability'})
-    .populate({path: 'orders', select: 'orderId status'})
+			.populate({
+				path: 'cart.product_id',
+				select: 'product_name price availability',
+			})
+			.populate({ path: 'orders', select: 'orderId status' });
 
 		if (!user) {
 			throw { err: 'User not found' };
@@ -116,8 +125,8 @@ const loginUser = async (loginParam) => {
 			throw { err: 'Wrong password' };
 		}
 
-    // unset user pass***d
-    user.password = undefined
+		// unset user pass***d
+		user.password = undefined;
 
 		// Define payload for token
 		const payload = {
@@ -130,10 +139,12 @@ const loginUser = async (loginParam) => {
 		const token = jwt.sign(payload, process.env.JWT_SECRET, {
 			expiresIn: 36000,
 		});
+
 		if (!token) {
 			throw { err: 'Missing Token' };
 		}
-    return {user, token:token}
+
+		return { user, token };
 	} catch (err) {
 		return err;
 	}
@@ -176,13 +187,12 @@ const updateUser = async (updateParam, id) => {
 
 		if (!user) throw { err: 'User not found' };
 
-    // ====== - AMBIGUOUS - =========== //
-    // We don't need to check for address, the DB
-    // Should be replaced by the new address in the body
-    // Request should contain existing address, so that
-    // we can easily scale this function.
+		// ====== - AMBIGUOUS - =========== //
+		// We don't need to check for address, the DB
+		// Should be replaced by the new address in the body
+		// Request should contain existing address, so that
+		// we can easily scale this function.
 
-    
 		// Check if address field is not empty
 		// if (address !== '' && address !== undefined) {
 		// 	// Check if address array is not empty
@@ -198,35 +208,42 @@ const updateUser = async (updateParam, id) => {
 			{ new: true, useFindAndModify: true }
 		);
 
-    user.cart = undefined;
-    user.password = undefined;
-    user.orders = undefined;
+		user.cart = undefined;
+		user.password = undefined;
+		user.orders = undefined;
 
-    return user
+		return user;
 	} catch (err) {
 		return err;
 	}
 };
 
-const addItemToCart = async (userID,product) => {
-  try {
-    const productFinder = await Product.findById(product.product_id)
+const addItemToCart = async (userID, product) => {
+	try {
+		const productFinder = await Product.findById(product.product_id);
 
-    if(!productFinder) throw { err: 'can\'t find this product' }
+		if (!productFinder) throw { err: "can't find this product" };
 
-    let user = await User.findByIdAndUpdate(
-      userID,
-      {$push: {cart: product}},
+		let user = await User.findByIdAndUpdate(
+			userID,
+			{ $push: { cart: product } },
 			{ new: true, useFindAndModify: true }
-    )
-    .populate(
-      {path: 'cart.product_id', select: 'product_name price availability'}
-      )
+		).populate({
+			path: 'cart.product_id',
+			select: 'product_name price availability',
+		});
 
-    return user.cart
-  } catch (error) {
-    return {err: 'error adding product to cart'}
-  }
-}
+		return user.cart;
+	} catch (error) {
+		return { err: 'error adding product to cart' };
+	}
+};
 
-export { getUsers, registerUser, loginUser, getLoggedInUser, updateUser, addItemToCart };
+export {
+	getUsers,
+	registerUser,
+	loginUser,
+	getLoggedInUser,
+	updateUser,
+	addItemToCart,
+};

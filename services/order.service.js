@@ -1,6 +1,6 @@
 import Order from '../models/order.model.js';
 import User from '../models/user.model.js';
-import Store from '../models/store.model.js'
+import Store from '../models/store.model.js';
 
 const getOrders = async (urlParams) => {
 	try {
@@ -10,11 +10,18 @@ const getOrders = async (urlParams) => {
 			.sort({ createdDate: -1 }) // -1 for descending sort
 			.limit(limit)
 			.skip(skip)
-			.populate({path: 'product_meta.product_id', select: 'product_name product_image price'})
-			.populate(
-        { path: 'store', select: 'name address openingTime closingTime deliveryTime' }
-      )
-			.populate({ path: 'user', select: 'first_name last_name phone_number email' });
+			.populate({
+				path: 'product_meta.product_id',
+				select: 'product_name product_image price',
+			})
+			.populate({
+				path: 'store',
+				select: 'name address openingTime closingTime deliveryTime',
+			})
+			.populate({
+				path: 'user',
+				select: 'first_name last_name phone_number email',
+			});
 	} catch (error) {
 		return { err: 'error loading products' };
 	}
@@ -22,47 +29,54 @@ const getOrders = async (urlParams) => {
 
 const createOrder = async (orderParam) => {
 	try {
-    const {store, user} = orderParam
+		const { store, user } = orderParam;
 
-    //validate user
-    const vUser = await User.findById(user)
-    if(!vUser) throw {err: 'user not found'}
+		//validate user
+		const vUser = await User.findById(user);
+		if (!vUser) throw { err: 'User not found' };
 
-    //validate store
-    const vStore = await Store.findById(store)
-    if(!vStore) throw {err: 'store not found'}
+		//validate store
+		const vStore = await Store.findById(store);
+		if (!vStore) throw { err: 'Store not found' };
 
-    //generates random unique id;
-    let orderId = () => {
-      let s4 = () => {
-          return Math.floor((1 + Math.random()) * 0x10000)
-            .toString(16)
-            .substring(1);
-      }
-      //return id of format 'soft - aaaaaaaa'-'aaaa'
-      return 'soft - ' + s4()
-    }
+		//generates random unique id;
+		let orderId = () => {
+			let s4 = () => {
+				return Math.floor((1 + Math.random()) * 0x10000)
+					.toString(16)
+					.substring(1);
+			};
+			//return id of format 'soft - aaaaaaaa'-'aaaa'
+			return 'soft-' + s4();
+		};
 
 		//creates an order for user after all validation passes
 		const order = new Order(orderParam);
-    order.orderId = orderId();
+		order.orderId = orderId();
 
-		let newOrder = await order.save()
+		let newOrder = await order.save();
 
-    // Adds new order to user model
-    vUser.orders.push(newOrder._id)
-    await vUser.save()
+		// Adds new order to user model
+		vUser.orders.push(newOrder._id);
+		await vUser.save();
 
-    // Returns new order to response
-    return Order.findById(newOrder._id)
-    .populate({path: 'product_meta.product_id', select: 'product_name product_image price'})
-			.populate(
-        { path: 'store', select: 'name address openingTime closingTime deliveryTime' }
-      )
-			.populate({ path: 'user', select: 'first_name last_name phone_number email' });
-	} catch (error) {
-    console.log(error)
-		return { err: 'error creating order' };
+		// Returns new order to response
+		return Order.findById(newOrder._id)
+			.populate({
+				path: 'product_meta.product_id',
+				select: 'product_name product_image price',
+			})
+			.populate({
+				path: 'store',
+				select: 'name address openingTime closingTime deliveryTime',
+			})
+			.populate({
+				path: 'user',
+				select: 'first_name last_name phone_number email',
+			});
+	} catch (err) {
+		console.log(err);
+		return err;
 	}
 };
 
@@ -99,11 +113,18 @@ const getFavorites = async (userID, urlParams) => {
 			.sort({ createdDate: -1 }) // -1 for descending sort
 			.limit(limit)
 			.skip(skip)
-			.populate({path: 'product_meta.product_id', select: 'product_name product_image price'})
-			.populate(
-        { path: 'store', select: 'name address openingTime closingTime deliveryTime' }
-      )
-			.populate({ path: 'user', select: 'first_name last_name phone_number email' });
+			.populate({
+				path: 'product_meta.product_id',
+				select: 'product_name product_image price',
+			})
+			.populate({
+				path: 'store',
+				select: 'name address openingTime closingTime deliveryTime',
+			})
+			.populate({
+				path: 'user',
+				select: 'first_name last_name phone_number email',
+			});
 
 		return favoriteOrders;
 	} catch (err) {
@@ -122,11 +143,18 @@ const getOrderDetails = async (orderID) => {
 		//get users order details
 		//can be used by users, stores and admin
 		const orderDetails = await Order.findById(orderID)
-    .populate({path: 'product_meta.product_id', select: 'product_name product_image price'})
-    .populate(
-      { path: 'store', select: 'name address openingTime closingTime deliveryTime' }
-    )
-    .populate({ path: 'user', select: 'first_name last_name phone_number email' });
+			.populate({
+				path: 'product_meta.product_id',
+				select: 'product_name product_image price',
+			})
+			.populate({
+				path: 'store',
+				select: 'name address openingTime closingTime deliveryTime',
+			})
+			.populate({
+				path: 'user',
+				select: 'first_name last_name phone_number email',
+			});
 
 		return orderDetails;
 	} catch (err) {
@@ -140,32 +168,46 @@ const getOrderHistory = async (userID, urlParams) => {
 		const limit = Number(urlParams.limit);
 		const skip = Number(urlParams.skip);
 		//gets user order history
-    if(urlParams.favorite === true) {
-      console.log(urlParams.favorite)
-      let orders = await Order.find({ user: userID, favorite: true})
-			.sort({ createdDate: -1 }) // -1 for descending sort
-			.limit(limit)
-			.skip(skip)
-			.populate({path: 'product_meta.product_id', select: 'product_name product_image price'})
-			.populate(
-        { path: 'store', select: 'name address openingTime closingTime deliveryTime' }
-      )
-			.populate({ path: 'user', select: 'first_name last_name phone_number email' });
+		if (urlParams.favorite === true) {
+			console.log(urlParams.favorite);
+			let orders = await Order.find({ user: userID, favorite: true })
+				.sort({ createdDate: -1 }) // -1 for descending sort
+				.limit(limit)
+				.skip(skip)
+				.populate({
+					path: 'product_meta.product_id',
+					select: 'product_name product_image price',
+				})
+				.populate({
+					path: 'store',
+					select: 'name address openingTime closingTime deliveryTime',
+				})
+				.populate({
+					path: 'user',
+					select: 'first_name last_name phone_number email',
+				});
 
-      return orders;
-    } else {
-      let orders = await Order.find({ user: userID })
-			.sort({ createdDate: -1 }) // -1 for descending sort
-			.limit(limit)
-			.skip(skip)
-			.populate({path: 'product_meta.product_id', select: 'product_name product_image price'})
-			.populate(
-        { path: 'store', select: 'name address openingTime closingTime deliveryTime' }
-      )
-			.populate({ path: 'user', select: 'first_name last_name phone_number email' });
+			return orders;
+		} else {
+			let orders = await Order.find({ user: userID })
+				.sort({ createdDate: -1 }) // -1 for descending sort
+				.limit(limit)
+				.skip(skip)
+				.populate({
+					path: 'product_meta.product_id',
+					select: 'product_name product_image price',
+				})
+				.populate({
+					path: 'store',
+					select: 'name address openingTime closingTime deliveryTime',
+				})
+				.populate({
+					path: 'user',
+					select: 'first_name last_name phone_number email',
+				});
 
-      return orders
-    }      
+			return orders;
+		}
 	} catch (error) {
 		return { err: 'error getting the order history' };
 	}
@@ -182,22 +224,29 @@ const getStoreOrderHistory = async (storeID, urlParams) => {
 			.sort({ createdDate: -1 }) // -1 for descending sort
 			.limit(limit)
 			.skip(skip)
-			.populate({path: 'product_meta.product_id', select: 'product_name product_image price'})
-			.populate(
-        { path: 'store', select: 'name address openingTime closingTime deliveryTime' }
-      )
-			.populate({ path: 'user', select: 'first_name last_name phone_number email' });
+			.populate({
+				path: 'product_meta.product_id',
+				select: 'product_name product_image price',
+			})
+			.populate({
+				path: 'store',
+				select: 'name address openingTime closingTime deliveryTime',
+			})
+			.populate({
+				path: 'user',
+				select: 'first_name last_name phone_number email',
+			});
 	} catch (error) {
 		return { err: 'error getting the order history' };
 	}
 };
 
 const editOrder = async (orderID, orderParam) => {
-  const {product_meta, status} = orderParam
+	const { product_meta, status } = orderParam;
 
-  let orderModifier = {}
-  if(product_meta) orderModifier.product_meta = product_meta;
-  if(status) orderModifier.status = status;
+	let orderModifier = {};
+	if (product_meta) orderModifier.product_meta = product_meta;
+	if (status) orderModifier.status = status;
 	try {
 		//can be used by both stores and users
 		const newOrder = await Order.findByIdAndUpdate(
@@ -205,11 +254,18 @@ const editOrder = async (orderID, orderParam) => {
 			{ $set: orderModifier },
 			{ omitUndefined: true, new: true }
 		)
-    .populate({path: 'product_meta.product_id', select: 'product_name product_image price'})
-    .populate(
-      { path: 'store', select: 'name address openingTime closingTime deliveryTime' }
-    )
-    .populate({ path: 'user', select: 'first_name last_name phone_number email' });
+			.populate({
+				path: 'product_meta.product_id',
+				select: 'product_name product_image price',
+			})
+			.populate({
+				path: 'store',
+				select: 'name address openingTime closingTime deliveryTime',
+			})
+			.populate({
+				path: 'user',
+				select: 'first_name last_name phone_number email',
+			});
 
 		return newOrder;
 	} catch (error) {
@@ -277,8 +333,8 @@ const getCartItems = async (userID) => {
 		//get user cart items
 		let user = await User.findById(userID)
 			.select('cart')
-			.populate('cart.product_id')
-      return user
+			.populate('cart.product_id');
+		return user;
 	} catch (error) {
 		return { err: 'error getting user cart items' };
 	}

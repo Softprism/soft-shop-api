@@ -1,9 +1,23 @@
 import express from 'express';
 import { check, validationResult } from 'express-validator';
-import { auth } from '../middleware/auth.js'
+import { auth } from '../middleware/auth.js';
 const router = express.Router();
 
-import { getOrders, createOrder, toggleFavorite, getOrderDetails, getOrderHistory,getStoreOrderHistory, getCartItems,editOrder, cancelOrder,completeOrder, receiveOrder, deliverOrder, getFavorites } from '../controllers/order.controller.js';
+import {
+	getOrders,
+	createOrder,
+	toggleFavorite,
+	getOrderDetails,
+	getOrderHistory,
+	getStoreOrderHistory,
+	getCartItems,
+	editOrder,
+	cancelOrder,
+	completeOrder,
+	receiveOrder,
+	deliverOrder,
+	getFavorites,
+} from '../controllers/order.controller.js';
 
 // @route   GET /
 // @desc    Get all orders from all stores.
@@ -18,7 +32,7 @@ router.post(
 	auth,
 	[
 		check('product_meta', 'error with product data ').isLength({ min: 1 }),
-		check('store', 'Please select a store').not().isEmpty()
+		check('store', 'Please select a store').not().isEmpty(),
 	],
 	createOrder
 );
@@ -31,7 +45,7 @@ router.patch('/toggle-favorite/:orderID', auth, toggleFavorite);
 // @route   GET /:orderID
 // @desc    toggles an order's detail
 // @access  Private
-// router.get('/:orderID', auth, getOrderDetails);
+router.get('/:orderID', auth, getOrderDetails);
 
 // @route   GET /user
 // @desc    get all orders created by a user, uses req.user.id or req.query.userID to validate user
@@ -77,6 +91,5 @@ router.put('/complete-order/:orderID', auth, completeOrder);
 // @desc    get user favorite orders
 // @access  Private
 router.get('/favorites', auth, getFavorites);
-
 
 export default router;
