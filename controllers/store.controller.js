@@ -148,4 +148,15 @@ const addLabel = async (req, res, next) => {
 	}
 };
 
-export { getStores, createStore, loginStore, getLoggedInStore, updateStore, addLabel };
+const getStore = async (req, res, next) => {
+  console.log(1,req.params)
+	const storeDetails = await storeService.getStore(req.params.storeId);
+  console.log(storeDetails)
+	if (storeDetails.err) {
+		return res.status(403).json({ success: false, msg: storeDetails.err });
+	} else {
+		res.status(200).json({ success: true, result: storeDetails });
+	}
+};
+
+export { getStores, createStore, loginStore, getLoggedInStore, updateStore, addLabel, getStore };

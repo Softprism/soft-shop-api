@@ -1,27 +1,73 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import mongoose from 'mongoose';
 
 import Store from '../models/store.model.js';
 
 const getStores = async (urlParams) => {
 	try {
-		let storesWithRating = [];
+
+    // declare fields to exclude from response
+    const pipeline = [{ $unset: ['products', 'productReview', 'password', 'email', 'address', 'phone_number', 'labels']} ];
+
+		let storesWithRating = []; // container to hold stores based on rating search
+
+    // setting pagination params
 		const limit = Number(urlParams.limit);
 		const skip = Number(urlParams.skip);
+
+    // validating rating param
 		const rating = Number(urlParams.rating);
+
+    // initializing matchParam
+    const matchParam = {}
+
+    if(urlParams.name) {
+      matchParam.name = new RegExp(urlParams.name,'i')
+    }
+    
+    // cleaning up the urlParams
 		delete urlParams.limit;
 		delete urlParams.skip;
 		delete urlParams.rating;
 
-		const stores = await Store.find(urlParams)
-			.select('images name rating openingTime closingTime deliveryTime')
-			.sort({ createdDate: -1 }) // -1 for descending sort
-			.limit(limit)
-			.skip(skip);
+    // aggregating stores
+    const stores = Store.aggregate()
+    // matching stores with matchParam
+    .match(matchParam)
+    //looking up the product collection for each stores
+    .lookup({
+      from: 'products',
+      localField: '_id', 
+      foreignField: 'store', 
+      as: 'products' 
+    })
+    // looking up each product on the review collection
+    .lookup({
+      from: 'reviews',
+      localField: 'products._id', 
+      foreignField: 'product', 
+      as: 'productReview'
+    })
+    // adding metrics to the response
+    .addFields({
+      "totalRates": {$sum:'$productReview.star' },
+      "ratingAmount": {$size: "$productReview"},
+      "averageRating": {$ceil: {$avg: '$productReview.star'}},
+      "productCount": {$size: "$products"}
+    })
+    // appending excludes
+    .append(pipeline)
+    // sorting and pagination
+    .sort('-createdDate')
+    .limit(limit)
+    .skip(skip)
+      
+    
 
 		if (rating >= 0) {
-			stores.forEach((store) => {
-				if (store.rating == rating) {
+			(await stores).forEach((store) => {
+				if (store.averageRating == rating) {
 					storesWithRating.push(store);
 				}
 			});
@@ -33,6 +79,44 @@ const getStores = async (urlParams) => {
 		return err;
 	}
 };
+
+const getStore = async (storeId) => {
+
+    // declare fields to exclude from response
+  const pipeline = [{ $unset: ['products.store', 'products.rating', 'products.category', 'productReview', 'password', 'email', 'address', 'phone_number']} ];
+
+  // aggregating stores
+  const store = await Store.aggregate()
+  // matching with requested store
+  .match({
+    _id: mongoose.Types.ObjectId(storeId)
+  })
+  // looking up the store in the product collection
+  .lookup({
+    from: 'products',
+    localField: '_id', 
+    foreignField: 'store', 
+    as: 'products' 
+  })
+  // looking up the store's products in the review collection
+  .lookup({
+    from: 'reviews',
+    localField: 'products._id', 
+    foreignField: 'product', 
+    as: 'productReview'
+  })
+  // adding metrics to the response
+  .addFields({
+    "totalRates": {$sum:'$productReview.star' },
+    "ratingAmount": {$size: "$productReview"},
+    "averageRating": {$ceil: {$avg: '$productReview.star'}},
+    "productCount": {$size: "$products"}
+  })
+  // appending excludes
+  .append(pipeline)
+  
+  return store[0]
+}
 
 const createStore = async (StoreParam) => {
 	try {
@@ -195,4 +279,4 @@ const addLabel = async (storeId, labelParam) => {
   await store.save()
   return await Store.findById(storeId).select('-password, -__v');
 }
-export { getStores, createStore, loginStore, getLoggedInStore, updateStore, addLabel };
+export { getStores, createStore, loginStore, getLoggedInStore, updateStore, addLabel, getStore };
