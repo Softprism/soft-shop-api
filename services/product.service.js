@@ -1,5 +1,6 @@
 import Product from '../models/product.model.js';
 import Store from '../models/store.model.js';
+import Review from '../models/review.model.js';
 
 const getProducts = async (getParam) => {
 	try {
@@ -13,9 +14,8 @@ const getProducts = async (getParam) => {
 			.limit(limit)
 			.skip(skip)
 		  .populate(
-        { path: 'store', select: '-password -phone_number -email -createdDate' },
-        {path: 'category'}
-      );
+        { path: 'store', select: 'location name openingTime closingTime'})
+      .populate('category')
 
 		return allProducts;
 	} catch (error) {
@@ -37,9 +37,8 @@ const findProduct = async (searchParam, opts) => {
 			.limit(limit) //number of records to return
 			.skip(skip) //number of records to skip
 		  .populate(
-        { path: 'store', select: '-password -phone_number -email -createdDate' },
-        {path: 'category'}
-      )
+        { path: 'store', select: 'location name openingTime closingTime'})
+      .populate('category')
 		// we'll prioritize results to be the ones closer to the users
 		if (searchedProducts.length < 1) {
 			throw { msg: 'match not found' };
@@ -63,9 +62,8 @@ const getStoreProducts = async (storeId, getParam) => {
 			.limit(limit)
 			.skip(skip)
 			.populate(
-        { path: 'store', select: '-password -phone_number -email -createdDate' },
-        {path: 'category'}
-      )
+        { path: 'store', select: 'location name openingTime closingTime'})
+      .populate('category')
 		return storeProduct;
 	} catch (error) {
 		return error;
@@ -169,6 +167,34 @@ const deleteProduct = async (productId, storeId) => {
 	}
 };
 
+const reviewProduct = async (review) => {
+  try {
+    const product = await Product.findById(review.product);
+
+    if(!product) throw {err: 'product could not be found'}
+
+    const newReview = new Review(review)
+    newReview.save()
+
+    return newReview
+  } catch (error) {
+    console.log(error)
+    return error
+  }
+}
+  const countReviews = async () => {
+    return Review.aggregate([
+      {
+        $group: {
+          // Each `_id` must be unique, so if there are multiple
+          // documents with the same age, MongoDB will increment `count`.
+          _id: null,
+          count: { $sum: 1 }
+        }
+      }
+    ])
+  }
+
 export {
 	getProducts,
 	getStoreProducts,
@@ -176,6 +202,8 @@ export {
 	updateProduct,
 	deleteProduct,
 	findProduct,
+  reviewProduct,
+  countReviews
 };
 
 //UPDATES
