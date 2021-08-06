@@ -7,15 +7,17 @@ import * as userService from '../services/user.service.js';
 const router = express.Router();
 
 const getUsers = async (req, res) => {
-  if (req.query.skip === undefined || req.query.limit === undefined) {
-		return res.status(400).json({ success: false, msg: 'filtering parameters are missing' });
+	if (req.query.skip === undefined || req.query.limit === undefined) {
+		return res
+			.status(400)
+			.json({ success: false, msg: 'filtering parameters are missing' });
 	}
 
 	const users = await userService.getUsers(req.query);
 
 	users && users.length > 0
 		? res.status(200).json(users)
-		: res.status(404).json({ success:false, msg: 'No Users found' });
+		: res.status(404).json({ success: false, msg: 'No Users found' });
 };
 
 const registerUser = async (req, res, next) => {
@@ -24,13 +26,15 @@ const registerUser = async (req, res, next) => {
 		res.status(400).json({ errors: errors.array() });
 	}
 
-	const token = await userService.registerUser(req.body);
+	const result = await userService.registerUser(req.body);
 
-	if (token.err) {
-		res.status(409).json({ success: false, msg: token.err });
+	if (result.err) {
+		res.status(409).json({ success: false, msg: result.err });
 	}
 
-	res.status(201).json({ success: true, result: token });
+	console.log(result);
+
+	res.status(201).json({ success: true, result: result });
 };
 
 const loginUser = async (req, res, next) => {
@@ -76,7 +80,8 @@ const updateUser = async (req, res) => {
 		return res.status(400).json({ errors: errors.array() });
 	}
 
-  let userID;
+	let userID;
+
 	if (req.user === undefined && req.query.userID === undefined) {
 		res
 			.status(400)
@@ -98,13 +103,20 @@ const updateUser = async (req, res) => {
 };
 
 const addItemToCart = async (req, res) => {
-  const action = await userService.addItemToCart(req.user.id, req.body)
+	const action = await userService.addItemToCart(req.user.id, req.body);
 
-  if (action.err) {
+	if (action.err) {
 		return es.status(404).json({ success: false, msg: action.err });
 	}
 
 	res.status(200).json({ success: true, result: action });
-}
+};
 
-export { getUsers, registerUser, loginUser, getLoggedInUser, updateUser, addItemToCart };
+export {
+	getUsers,
+	registerUser,
+	loginUser,
+	getLoggedInUser,
+	updateUser,
+	addItemToCart,
+};
