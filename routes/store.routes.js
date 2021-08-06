@@ -9,7 +9,8 @@ import {
 	loginStore,
 	getLoggedInStore,
 	updateStore,
-  addLabel
+  addLabel,
+  getStore
 } from '../controllers/store.controller.js';
 
 import { auth } from '../middleware/auth.js';
@@ -18,6 +19,11 @@ import { auth } from '../middleware/auth.js';
 // @desc    Get all stores
 // @access  Private
 router.get('/', auth, getStores);
+
+// @route   GET /store
+// @desc    Get a store
+// @access  Private
+router.get('/:storeId', auth, getStore);
 
 // @route   POST /store/create
 // @desc    Register a store
@@ -70,5 +76,7 @@ router.put('/', auth, updateStore);
 // @desc    add label to store
 // @access  Private
 router.put('/label', auth, addLabel);
+
+
 
 export default router;

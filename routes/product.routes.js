@@ -3,7 +3,7 @@ import { check, validationResult } from 'express-validator';
 import { auth } from '../middleware/auth.js'
 const router = express.Router();
 
-import { findProduct, deleteProduct, getStoreProducts, updateProduct, createProduct, getProducts } from '../controllers/product.controller.js'
+import { findProduct, deleteProduct, getStoreProducts, updateProduct, createProduct, getProducts, reviewProduct} from '../controllers/product.controller.js'
 
 // @route   GET /
 // @desc    Get all products from all stores.
@@ -37,6 +37,11 @@ router.get('/store-products', auth, getStoreProducts);
 // @access  Private
 router.post('/find', auth, findProduct);
 
+// @route   PUT /review
+// @desc    user adds review to a product
+// @access  Private
+router.put('/review', auth, reviewProduct)
+
 // @route   PUT /:id
 // @desc    update a store product, can be used by admin and stores
 // @access  Private
@@ -46,5 +51,7 @@ router.put('/:id', auth, updateProduct);
 // @desc    delete a store product, can be used by admin and stores
 // @access  Private
 router.delete('/:id', auth, deleteProduct);
+
+
 
 export default router;

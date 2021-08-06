@@ -84,6 +84,7 @@ const registerUser = async (userParam) => {
 			expiresIn: 36000,
 		});
 
+
 		user.populate({
 			path: 'cart.product_id',
 			select: 'product_name price availability',
@@ -93,6 +94,13 @@ const registerUser = async (userParam) => {
 
 		// unset user pass****d
 		user.password = undefined;
+
+    user.populate({path: 'cart.product_id', select: 'product_name price availability'})
+    // .populate({path: 'orders', select: 'orderId status'})
+    
+    // unset user pass****d
+    user.password = undefined
+
 
 		return { user, token };
 	} catch (err) {
