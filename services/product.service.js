@@ -1,29 +1,96 @@
 import Product from '../models/product.model.js';
 import Store from '../models/store.model.js';
 import Review from '../models/review.model.js';
+import mongoose from 'mongoose';
+import { get } from 'http';
+
 
 const getProducts = async (getParam) => {
 	try {
 		// get limit and skip from url parameters
 		const limit = Number(getParam.limit);
 		const skip = Number(getParam.skip);
+    const matchParam = {}
+    if(getParam.product_name) {
+      getParam.product_name = new RegExp(getParam.product_name,'i')
+      matchParam.product_name = getParam.product_name
+    }
+    if(getParam.category) {
+      getParam.category = mongoose.Types.ObjectId(getParam.category)
+      matchParam.category = getParam.category
+    }
+    if(getParam.store) {
+      getParam.store = mongoose.Types.ObjectId(getParam.store)
+      matchParam.store = getParam.store
+    }
+    if(getParam.price) {
+      getParam.price = getParam.price
+      matchParam.price = getParam.price
+    }
+    if(getParam.availability) {
+      getParam.availability =  (getParam.availability === 'true')
+      matchParam.availability = getParam.availability
+      console.log(getParam.availability,matchParam.availability,matchParam)
+    }
+    if(getParam.rating) {
+      getParam.rating = getParam.rating
+      matchParam.rating = getParam.rating
+    }
 
-		//find all products in the db
-		const allProducts = await Product.find()
-			.sort({ createdDate: -1 }) // -1 for descending sort
-			.limit(limit)
-			.skip(skip)
-		  .populate(
-        { path: 'store', select: 'location name openingTime closingTime'})
-      .populate('category')
+       const pipeline = [{ 
+         $unset: ['store.password','store.email','store.labels','store.phone_number','category.image','productReview.user','productReview.product,productReview.text','store.address']
+        }];
+
+    
+      let allProducts = Product.aggregate()
+      .match(matchParam)
+      // Get data from review collection for each product
+      .lookup({
+        from: 'reviews',
+        localField: '_id', 
+        foreignField: 'product', 
+        as: 'productReview'
+      })
+      // Populate store field
+      .lookup({
+        from: 'stores',
+        localField: 'store', 
+        foreignField: '_id', 
+        as: 'store'
+      })
+      // populat category field
+      .lookup({
+        from: 'categories',
+        localField: 'category', 
+        foreignField: '_id', 
+        as: 'category'
+      })
+      // add the averageRating field for each product
+      .addFields({
+        "totalRates": {$sum:'$productReview.star' },
+        "ratingAmount": {$size: "$productReview"},
+        "averageRating": {$ceil: {$avg: '$productReview.star'}},
+      })
+      // $lookup produces array, $unwind go destructure everything to object
+      .unwind('$store')
+      .unwind("$category")
+      // removing fields we don't need
+      .append(pipeline)
+      // Sorting and pagination
+      .sort('-createdDate')
+      .limit(limit)
+      .skip(skip)
+      
 
 		return allProducts;
 	} catch (error) {
+    console.log(error)
 		return error;
 	}
 };
 
 const findProduct = async (searchParam, opts) => {
+  // Refactored for in-store search
 	try {
 		opts.skip = Number(opts.skip);
 		opts.limit = Number(opts.limit);
@@ -31,17 +98,17 @@ const findProduct = async (searchParam, opts) => {
 		if (searchParam.product_name)
 			searchParam.product_name = new RegExp(searchParam.product_name, 'i');
 		// i for case insensitive
-		console.log(searchParam);
 		const searchedProducts = await Product.find(searchParam)
 			.sort({ createdDate: -1 }) // -1 for descending sort
 			.limit(limit) //number of records to return
 			.skip(skip) //number of records to skip
-		  .populate(
-        { path: 'store', select: 'location name openingTime closingTime'})
-      .populate('category')
-		// we'll prioritize results to be the ones closer to the users
+      .select('-store')
+		  // .populate(
+      //   { path: 'store', select: 'location name openingTime closingTime'})
+      // .populate('category')
+
 		if (searchedProducts.length < 1) {
-			throw { msg: 'match not found' };
+			throw { msg: 'product not found' };
 		}
 
 		return searchedProducts;
@@ -115,7 +182,7 @@ const updateProduct = async (productParam, productId, storeId) => {
 		// }
 
 		//check if product exists
-		const product = await Product.findOnea({
+		const product = await Product.findOneAndUpdate({
 			_id: productId,
 			store: storeId,
 		}).catch((err) => {
@@ -174,26 +241,14 @@ const reviewProduct = async (review) => {
     if(!product) throw {err: 'product could not be found'}
 
     const newReview = new Review(review)
-    newReview.save()
+    await newReview.save()
 
     return newReview
   } catch (error) {
-    console.log(error)
     return error
   }
 }
-  const countReviews = async () => {
-    return Review.aggregate([
-      {
-        $group: {
-          // Each `_id` must be unique, so if there are multiple
-          // documents with the same age, MongoDB will increment `count`.
-          _id: null,
-          count: { $sum: 1 }
-        }
-      }
-    ])
-  }
+
 
 export {
 	getProducts,
@@ -202,8 +257,7 @@ export {
 	updateProduct,
 	deleteProduct,
 	findProduct,
-  reviewProduct,
-  countReviews
+  reviewProduct
 };
 
 //UPDATES
