@@ -28,9 +28,12 @@ const getStoreProducts = async (req, res, next) => {
 			.json({ success: false, msg: 'unable to authenticate this store' });
 	}
 
-	if (req.store) storeID = req.store.id;
-	if (req.query.storeID) storeID = req.query.storeID;
-
+	if (req.store) {
+    storeID = req.store.id;
+  } else if (req.query.storeID) {
+    storeID = req.query.storeID;
+  }
+	
 	const storeProducts = await productService.getStoreProducts(
 		storeID,
 		req.query
@@ -137,12 +140,26 @@ const findProduct = async (req, res, next) => {
 	const allProducts = await productService.findProduct(req.body, req.query);
 
   if (allProducts.err) {
-		res.status(400).json({ success: false, msg: allProducts.err });
+		return res.status(400).json({ success: false, msg: allProducts.err });
 	}
   
 	allProducts && allProducts.length > 0
 		? res.status(200).json({ success: true, result: allProducts })
 		: res.status(404).json({ success: false, msg: 'No product found' });
+
+};
+
+const reviewProduct = async (req, res, next) => {
+  if(req.store) {
+    return res.status(400).json({ success: false, msg: 'action not allowed by store' });
+  }
+	const newReview = await productService.reviewProduct(req.body);
+
+  if (newReview.err) {
+		return res.status(400).json({ success: false, msg: newReview.err });
+	}
+  
+	res.status(200).json({ success: true, result: newReview })
 
 };
 
@@ -153,4 +170,5 @@ export {
 	createProduct,
 	getProducts,
 	getStoreProducts,
+  reviewProduct,
 };
