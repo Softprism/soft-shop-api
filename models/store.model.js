@@ -7,6 +7,7 @@ const StoreSchema = mongoose.Schema({
 	phone_number: { type: String, required: true },
 	email: { type: String, unique: true, required: true },
 	password: { type: String, required: true },
+  category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category'},
 	openingTime: { type: String, required: true },
 	closingTime: { type: String, required: true },
 	deliveryTime: { type: String },
