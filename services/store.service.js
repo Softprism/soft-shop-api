@@ -239,7 +239,7 @@ const updateStore = async (storeID, updateParam) => {
 		if (openingTime) storeUpdate.openingTime = openingTime;
 		if (closingTime) storeUpdate.closingTime = closingTime;
 		if (phone_number) storeUpdate.email = phone_number;
-    if(category) storeUpdate.category = category
+    if (category) storeUpdate.category = category
 		if (password) {
 			const salt = await bcrypt.genSalt(10);
 			storeUpdate.password = await bcrypt.hash(password, salt);
