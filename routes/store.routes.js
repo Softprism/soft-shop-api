@@ -20,6 +20,11 @@ import { auth } from '../middleware/auth.js';
 // @access  Private
 router.get('/', auth, getStores);
 
+// @route   GET /stores/login
+// @desc    Get logged in Store
+// @access  Private
+router.get('/login', auth, getLoggedInStore);
+
 // @route   GET /store
 // @desc    Get a store
 // @access  Private
@@ -61,11 +66,6 @@ router.post(
 	],
 	loginStore
 );
-
-// @route   GET /stores/login
-// @desc    Get logged in Store
-// @access  Private
-router.get('/login', auth, getLoggedInStore);
 
 // @route   PUT /store/
 // @desc    Update a store
