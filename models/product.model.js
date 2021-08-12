@@ -10,15 +10,19 @@ const ProductSchema = mongoose.Schema({
 		required: true,
 	},
 	availability: { type: Boolean, required: true, default: true },
-  variants: [
+  variants:
     {
-      variantTitle: {type: String}, // eg Toppings
-      variantItem: [{
-        itemName: {type: String},
-        itemThumbnail: {type: String}
-      }] 
-    }
-  ],
+      status: {type: String, default: "active"}, // active||deleted
+      data: [
+        {
+          variantTitle: {type: String}, // eg Toppings
+          variantItem: [{
+            itemName: {type: String},
+            itemThumbnail: {type: String}
+          }]
+        }
+      ]
+    },
   label: {type: mongoose.Schema.Types.ObjectId},
   status: {type: String, default: "active"}, // deleted||active
 	price: { type: String, required: true },
