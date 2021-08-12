@@ -25,6 +25,10 @@ const getStores = async (urlParams) => {
     if(urlParams.name) {
       matchParam.name = new RegExp(urlParams.name,'i')
     }
+    if(urlParams.category) {
+      urlParams.category = mongoose.Types.ObjectId(urlParams.category)
+      matchParam.category = urlParams.category
+    }
     
     // cleaning up the urlParams
 		delete urlParams.limit;
@@ -63,8 +67,6 @@ const getStores = async (urlParams) => {
     .limit(limit)
     .skip(skip)
       
-    
-
 		if (rating >= 0) {
 			(await stores).forEach((store) => {
 				if (store.averageRating == rating) {
@@ -224,7 +226,8 @@ const updateStore = async (storeID, updateParam) => {
 			phone_number,
 			images,
 			openingTime,
-			closingTime
+			closingTime,
+      category
 		} = updateParam;
 
 		const storeUpdate = {};
@@ -233,28 +236,31 @@ const updateStore = async (storeID, updateParam) => {
 		if (address) storeUpdate.address = address;
 		if (images) storeUpdate.images = images;
 		if (email) storeUpdate.email = email;
-		if (openingTime) storeUpdate.openingTime = openingTime;
-		if (closingTime) storeUpdate.closingTime = closingTime;
+		if (openingTime) {
+      if (!storeUpdate.openingTime.includes(':')) {
+        delete storeUpdate.openingTime;
+        throw { err: 'Invalid time' };
+      }
+      storeUpdate.openingTime = openingTime;
+    } 
+		if (closingTime) {
+      if (!storeUpdate.closingTime.includes(':')) {
+        delete storeUpdate.closingTime;
+        throw { err: 'Invalid time' };
+      }
+      storeUpdate.closingTime = closingTime;
+    } 
 		if (phone_number) storeUpdate.email = phone_number;
+    if (category) storeUpdate.category = category;
 		if (password) {
 			const salt = await bcrypt.genSalt(10);
 			storeUpdate.password = await bcrypt.hash(password, salt);
 		}
-
-		if (!storeUpdate.openingTime.includes(':')) {
-			delete storeUpdate.openingTime;
-			throw { err: 'Invalid time' };
-		}
-
-		if (!storeUpdate.closingTime.includes(':')) {
-			delete storeUpdate.closingTime;
-			throw { err: 'Invalid time' };
-		}
-
+    
 		let store = await Store.findById(storeID);
 
 		if (!store) throw { err: 'Store not found' };
-
+    console.log(storeID,storeUpdate)
 		store = await Store.findByIdAndUpdate(
 			storeID,
 			{ $set: storeUpdate },
@@ -266,6 +272,7 @@ const updateStore = async (storeID, updateParam) => {
 
 		return storeRes;
 	} catch (err) {
+    console.log(err)
 		return err;
 	}
 };

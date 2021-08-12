@@ -25,31 +25,6 @@ const OrderSchema = mongoose.Schema({
 	createdDate: { type: Date, default: Date.now },
 });
 
-OrderSchema.methods.favoriteAction = function () {
-	//change the previous status of favorite
-	this.favorite = !this.favorite;
-};
-
-OrderSchema.methods.CancelOrder = function () {
-	//change the previous status of favorite
-	this.status = 'canceled';
-};
-
-OrderSchema.methods.completeOrder = function () {
-	//change the previous status of favorite
-	this.status = 'completed';
-};
-
-OrderSchema.methods.receiveOrder = function () {
-	//change the previous status of favorite
-	this.status = 'received';
-};
-
-OrderSchema.methods.deliverOrder = function () {
-	//change the previous status of favorite
-	this.status = 'delivered';
-};
-
 const Order = mongoose.model('Order', OrderSchema);
 
 export default Order
