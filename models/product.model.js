@@ -9,6 +9,7 @@ const ProductSchema = mongoose.Schema({
 		ref: 'Category',
 		required: true,
 	},
+
 	availability: { type: Boolean, required: true },
 	price: { type: String, required: true },
 	rating: { type: String, required: false },
@@ -17,4 +18,4 @@ const ProductSchema = mongoose.Schema({
 
 const Product = mongoose.model('Product', ProductSchema);
 
-export default Product
+export default Product;
