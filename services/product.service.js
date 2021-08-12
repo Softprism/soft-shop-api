@@ -12,29 +12,26 @@ const getProducts = async (getParam) => {
 		const skip = Number(getParam.skip);
     const matchParam = {}
     if(getParam.product_name) {
-      getParam.product_name = new RegExp(getParam.product_name,'i')
-      matchParam.product_name = getParam.product_name
+      matchParam.product_name = new RegExp(getParam.product_name,'i')
     }
     if(getParam.category) {
-      getParam.category = mongoose.Types.ObjectId(getParam.category)
-      matchParam.category = getParam.category
+      matchParam.category = mongoose.Types.ObjectId(getParam.category)
     }
     if(getParam.store) {
-      getParam.store = mongoose.Types.ObjectId(getParam.store)
-      matchParam.store = getParam.store
+      matchParam.store = mongoose.Types.ObjectId(getParam.store)
     }
     if(getParam.price) {
-      getParam.price = getParam.price
       matchParam.price = getParam.price
     }
     if(getParam.availability) {
       getParam.availability =  (getParam.availability === 'true')
       matchParam.availability = getParam.availability
-      console.log(getParam.availability,matchParam.availability,matchParam)
     }
     if(getParam.rating) {
-      getParam.rating = getParam.rating
       matchParam.rating = getParam.rating
+    }
+    if(getParam.status) {
+      matchParam.status = getParam.status
     }
 
        const pipeline = [{ 
@@ -140,7 +137,7 @@ const getStoreProducts = async (storeId, getParam) => {
 const createProduct = async (productParam, storeId) => {
 	console.log(storeId);
 	try {
-		const { product_name, category, availability, price, product_image } =
+		const { product_name, category, label, price, product_image } =
 			productParam;
 
 		// validate store, we have to make sure we're assigning a product to a store
@@ -157,7 +154,7 @@ const createProduct = async (productParam, storeId) => {
 			store: storeId,
 			product_name,
 			category,
-			availability,
+			label,
 			price,
 			product_image,
 		});
@@ -171,7 +168,6 @@ const createProduct = async (productParam, storeId) => {
 
 const updateProduct = async (productParam, productId, storeId) => {
 	try {
-		console.log(storeId);
 		// validate store, we have to make sure the product belongs to a store
 		// const store = await Store.findById(storeId);
 		// console.log(store)
@@ -182,25 +178,21 @@ const updateProduct = async (productParam, productId, storeId) => {
 		// }
 
 		//check if product exists
-		const product = await Product.findOneAndUpdate({
-			_id: productId,
-			store: storeId,
-		}).catch((err) => {
-			throw { err: 'product not found' };
-		});
-
-		// if (!product) {
-		// 	throw {
-		// 		err: 'Product not found',
-		// 	};
-		// }
+		const product = await Product.findById(productId)
+		if (!product) {
+			throw {
+				err: 'Product not found',
+			};
+		}
 
 		//apply changes to the product
-		return await Product.findByIdAndUpdate(
+		let updateProduct =  await Product.findByIdAndUpdate(
 			productId,
 			{ $set: productParam },
-			{ new: true, useFindAndModify: true }
+			{ omitUndefined: true, new: true, useFindAndModify: false }
 		);
+    console.log(updateProduct)
+    return updateProduct;
 	} catch (error) {
 		return error;
 	}

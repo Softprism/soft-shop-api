@@ -252,7 +252,7 @@ const editOrder = async (orderID, orderParam) => {
 		const newOrder = await Order.findByIdAndUpdate(
 			orderID,
 			{ $set: orderModifier },
-			{ omitUndefined: true, new: true }
+			{ omitUndefined: true, new: true, useFindAndModify: false }
 		)
 			.populate({
 				path: 'product_meta.product_id',

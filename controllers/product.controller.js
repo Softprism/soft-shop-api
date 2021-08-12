@@ -103,7 +103,7 @@ const updateProduct = async (req, res, next) => {
 		req.params.id,
 		storeID
 	);
-	request
+	request.err
 		? res.status(400).json({ success: false, msg: request.err })
 		: res.status(200).json({ success: true, result: request });
 };

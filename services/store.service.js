@@ -264,7 +264,7 @@ const updateStore = async (storeID, updateParam) => {
 		store = await Store.findByIdAndUpdate(
 			storeID,
 			{ $set: storeUpdate },
-			{ new: true, useFindAndModify: true }
+			{ omitUndefined: true, new: true, useFindAndModify: false }
 		);
 
 		let storeRes = await Store.findById(storeID).select('-password, -__v');

@@ -133,7 +133,7 @@ const updateAdmin = async (updateParam, id) => {
 		admin = await Admin.findByIdAndUpdate(
 			id,
 			{ $set: adminFields },
-			{ new: true, useFindAndModify: true }
+			{ omitUndefined: true, new: true, useFindAndModify: false }
 		);
 
 		return admin;
