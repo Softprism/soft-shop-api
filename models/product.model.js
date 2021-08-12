@@ -9,8 +9,18 @@ const ProductSchema = mongoose.Schema({
 		ref: 'Category',
 		required: true,
 	},
-
-	availability: { type: Boolean, required: true },
+	availability: { type: Boolean, required: true, default: true },
+  variants: [
+    {
+      variantTitle: {type: String}, // eg Toppings
+      variantItem: [{
+        itemName: {type: String},
+        itemThumbnail: {type: String}
+      }] 
+    }
+  ],
+  label: {type: mongoose.Schema.Types.ObjectId},
+  status: {type: String, default: "active"}, // deleted||active
 	price: { type: String, required: true },
 	rating: { type: String, required: false },
 	createdDate: { type: Date, default: Date.now },
