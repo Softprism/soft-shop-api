@@ -84,23 +84,8 @@ const registerUser = async (userParam) => {
 			expiresIn: 36000,
 		});
 
-
-		user.populate({
-			path: 'cart.product_id',
-			select: 'product_name price availability',
-		});
-
-		// .populate({path: 'orders', select: 'orderId status'})
-
 		// unset user pass****d
 		user.password = undefined;
-
-    user.populate({path: 'cart.product_id', select: 'product_name price availability'})
-    // .populate({path: 'orders', select: 'orderId status'})
-    
-    // unset user pass****d
-    user.password = undefined
-
 
 		return { user, token };
 	} catch (err) {
@@ -160,12 +145,37 @@ const loginUser = async (loginParam) => {
 
 // Get Logged in User info
 const getLoggedInUser = async (userParam) => {
-	console.log('running');
 	try {
-		const user = await User.findById(userParam).select('-password');
+		const user = await User.findById(userParam).select('-password')
 		return user;
 	} catch (err) {
 		// console.error(err.message);
+		return err;
+	}
+};
+
+const getUserOrders = async (urlParams,userId) => {
+	try {
+    console.log(urlParams)
+    const limit = Number(urlParams.limit);
+		const skip = Number(urlParams.skip);
+		const userOrders = await User.findById(userId)
+    .select('orders')
+    .populate(
+      {path: 'orders', select: 'orderId, status, product_meta createdDate',     populate: {
+        path: 'product_meta.product_id',
+        select: 'variants.status product_name price'
+      },
+      }
+    )
+    .populate(
+      {path: 'store', select: 'name'}
+    )
+    .limit(limit)
+    .skip(skip)
+		return userOrders;
+	} catch (err) {
+		console.error(err);
 		return err;
 	}
 };
@@ -255,4 +265,5 @@ export {
 	getLoggedInUser,
 	updateUser,
 	addItemToCart,
+  getUserOrders
 };
