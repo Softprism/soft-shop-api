@@ -33,11 +33,13 @@ const getProducts = async (getParam) => {
     if(getParam.status) {
       matchParam.status = getParam.status
     }
+    if(getParam.label) {
+      matchParam.label = mongoose.Types.ObjectId(getParam.label)
+    }
 
-       const pipeline = [{ 
-         $unset: ['store.password','store.email','store.labels','store.phone_number','category.image','productReview.user','productReview.product,productReview.text','store.address']
-        }];
-
+    const pipeline = [{ 
+      $unset: ['store.password','store.email','store.labels','store.phone_number','category.image','productReview','store.address', 'variants.data']
+    }];
     
       let allProducts = Product.aggregate()
       .match(matchParam)
@@ -86,58 +88,30 @@ const getProducts = async (getParam) => {
 	}
 };
 
-const findProduct = async (searchParam, opts) => {
-  // Refactored for in-store search
-	try {
-		opts.skip = Number(opts.skip);
-		opts.limit = Number(opts.limit);
-		const { skip, limit } = opts;
-		if (searchParam.product_name)
-			searchParam.product_name = new RegExp(searchParam.product_name, 'i');
-		// i for case insensitive
-		const searchedProducts = await Product.find(searchParam)
-			.sort({ createdDate: -1 }) // -1 for descending sort
-			.limit(limit) //number of records to return
-			.skip(skip) //number of records to skip
-      .select('-store')
-		  // .populate(
-      //   { path: 'store', select: 'location name openingTime closingTime'})
-      // .populate('category')
+const getProductDetails = async (productId) =>{
+  console.log(productId)
+  try {
 
-		if (searchedProducts.length < 1) {
-			throw { msg: 'product not found' };
-		}
+    let product = await Product.findById(productId)
+    .populate(
+      { path: 'store', select: 'location name openingTime closingTime'}
+    )
+    .populate('category')
+    console.log(product)
+    if(!product) throw {err: 'error finding product'};
 
-		return searchedProducts;
-	} catch (error) {
-		return error;
-	}
-};
+    return product;
 
-const getStoreProducts = async (storeId, getParam) => {
-	try {
-		// get limit and skip from url parameters
-		let limit = Number(getParam.limit);
-		let skip = Number(getParam.skip);
-		console.log(storeId);
-		//find store products
-		const storeProduct = await Product.find({ store: storeId })
-			.sort({ createdDate: -1 }) // -1 for descending sort
-			.limit(limit)
-			.skip(skip)
-			.populate(
-        { path: 'store', select: 'location name openingTime closingTime'})
-      .populate('category')
-		return storeProduct;
-	} catch (error) {
-		return error;
-	}
-};
+  } catch (error) {
+    console.log(error)
+    return error
+  }
+}
 
 const createProduct = async (productParam, storeId) => {
 	console.log(storeId);
 	try {
-		const { product_name, category, label, price, product_image } =
+		const { product_name,product_description, category, label, price, product_image, variants } =
 			productParam;
 
 		// validate store, we have to make sure we're assigning a product to a store
@@ -153,10 +127,12 @@ const createProduct = async (productParam, storeId) => {
 		const newProduct = new Product({
 			store: storeId,
 			product_name,
+      product_description,
 			category,
 			label,
 			price,
 			product_image,
+      variants
 		});
 		await newProduct.save(); // save new product
 
@@ -168,15 +144,6 @@ const createProduct = async (productParam, storeId) => {
 
 const updateProduct = async (productParam, productId, storeId) => {
 	try {
-		// validate store, we have to make sure the product belongs to a store
-		// const store = await Store.findById(storeId);
-		// console.log(store)
-		// if (!store) {
-		// 	throw {
-		// 		err: 'Unable to edit product in this store',
-		// 	};
-		// }
-
 		//check if product exists
 		const product = await Product.findById(productId)
 		if (!product) {
@@ -191,7 +158,7 @@ const updateProduct = async (productParam, productId, storeId) => {
 			{ $set: productParam },
 			{ omitUndefined: true, new: true, useFindAndModify: false }
 		);
-    console.log(updateProduct)
+
     return updateProduct;
 	} catch (error) {
 		return error;
@@ -244,11 +211,10 @@ const reviewProduct = async (review) => {
 
 export {
 	getProducts,
-	getStoreProducts,
 	createProduct,
 	updateProduct,
 	deleteProduct,
-	findProduct,
+  getProductDetails,
   reviewProduct
 };
 
