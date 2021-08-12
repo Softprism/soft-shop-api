@@ -25,4 +25,6 @@ const OrderSchema = mongoose.Schema({
 	createdDate: { type: Date, default: Date.now },
 });
 
+const Order = mongoose.model('Order', OrderSchema);
+
 export default Order
