@@ -4,6 +4,7 @@ import { auth } from '../middleware/auth.js';
 import { check, validationResult } from 'express-validator';
 
 const getProducts = async (req, res, next) => {
+  console.log(1234)
 	if (req.query.skip === undefined || req.query.limit === undefined) {
 		res
 			.status(400)
@@ -18,33 +19,6 @@ const getProducts = async (req, res, next) => {
 
 	allProducts && allProducts.length > 0
 		? res.status(200).json({ success: true, result: allProducts })
-		: res.status(404).json({ success: false, msg: 'No product found' });
-};
-
-const getStoreProducts = async (req, res, next) => {
-	let storeID; // container to store the store's ID, be it a store request or an admin request
-	if (req.store === undefined && req.query.storeID === undefined) {
-		return res
-			.status(400)
-			.json({ success: false, msg: 'unable to authenticate this store' });
-	}
-
-	if (req.store) {
-    storeID = req.store.id;
-  } else if (req.query.storeID) {
-    storeID = req.query.storeID;
-  }
-	
-	const storeProducts = await productService.getStoreProducts(
-		storeID,
-		req.query
-	);
-
-	if (storeProducts.err)
-		res.status(400).json({ success: false, msg: storeProducts.err });
-
-	storeProducts && storeProducts.length > 0
-		? res.status(200).json({ success: true, result: storeProducts })
 		: res.status(404).json({ success: false, msg: 'No product found' });
 };
 
@@ -127,26 +101,6 @@ const deleteProduct = async (req, res, next) => {
 		: res.status(201).json({ success: true, result: product.msg });
 };
 
-const findProduct = async (req, res, next) => {
-	if (req.query.skip === undefined || req.query.limit === undefined) {
-		res
-			.status(400)
-			.json({ success: false, msg: 'filtering parameters are missing' });
-	}
-
-	const allProducts = await productService.findProduct(req.body, req.query);
-
-
-  if (allProducts.err) {
-		return res.status(400).json({ success: false, msg: allProducts.err });
-
-	}
-
-	allProducts && allProducts.length > 0
-		? res.status(200).json({ success: true, result: allProducts })
-		: res.status(404).json({ success: false, msg: 'No product found' });
-};
-
 const reviewProduct = async (req, res, next) => {
   if(req.store) {
     return res.status(400).json({ success: false, msg: 'action not allowed by store' });
@@ -161,12 +115,22 @@ const reviewProduct = async (req, res, next) => {
 
 };
 
+const getProductDetails = async (req, res, next) => {
+  console.log(req.params)
+	const productDetails = await productService.getProductDetails(req.params.productId);
+
+  if (productDetails.err) {
+		return res.status(400).json({ success: false, msg: productDetails.err });
+	}
+  
+	res.status(200).json({ success: true, result: productDetails })
+
+};
 export {
-	findProduct,
 	deleteProduct,
 	updateProduct,
 	createProduct,
 	getProducts,
-	getStoreProducts,
+  getProductDetails,
   reviewProduct,
 };
