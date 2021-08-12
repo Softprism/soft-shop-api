@@ -213,7 +213,7 @@ const updateUser = async (updateParam, id) => {
 		user = await User.findByIdAndUpdate(
 			id,
 			{ $set: userFields },
-			{ new: true, useFindAndModify: true }
+			{ omitUndefined: true, new: true, useFindAndModify: false }
 		);
 
 		user.cart = undefined;
@@ -222,6 +222,7 @@ const updateUser = async (updateParam, id) => {
 
 		return user;
 	} catch (err) {
+    console.log(error)
 		return err;
 	}
 };
@@ -235,7 +236,7 @@ const addItemToCart = async (userID, product) => {
 		let user = await User.findByIdAndUpdate(
 			userID,
 			{ $push: { cart: product } },
-			{ new: true, useFindAndModify: true }
+			{ omitUndefined: true, new: true, useFindAndModify: false }
 		).populate({
 			path: 'cart.product_id',
 			select: 'product_name price availability',

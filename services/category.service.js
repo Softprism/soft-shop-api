@@ -73,7 +73,7 @@ const editCategory = async (editParams, id) => {
 		category = await Category.findByIdAndUpdate(
 			id,
 			{ $set: editParams },
-			{ new: true, useFindAndModify: true }
+			{ omitUndefined: true, new: true, useFindAndModify: false }
 		);
 
 		return category;
