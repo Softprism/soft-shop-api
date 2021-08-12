@@ -85,7 +85,7 @@ const getStores = async (urlParams) => {
 const getStore = async (storeId) => {
 
     // declare fields to exclude from response
-  const pipeline = [{ $unset: ['products.store', 'products.rating', 'products.category', 'productReview', 'password', 'email', 'address', 'phone_number']} ];
+  const pipeline = [{ $unset: ['products.store', 'products.rating', 'products.category', 'products.variants.data', 'productReview', 'password', 'email', 'address', 'phone_number']} ];
 
   // aggregating stores
   const store = await Store.aggregate()
