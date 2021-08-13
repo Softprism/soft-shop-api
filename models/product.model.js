@@ -14,11 +14,12 @@ const ProductSchema = mongoose.Schema({
   variants: {
     status: {type: String, default: "active"}, // active||deleted
     data: [{
-        variantTitle: {type: String}, // eg Toppings
-        variantItem: [{
-          itemName: {type: String},
-          itemThumbnail: {type: String}
-        }]
+      variantTitle: {type: String}, // eg Toppings
+      variantItem: [{
+        itemName: {type: String},
+        itemThumbnail: {type: String},
+        itemPrice: {type: Number}
+      }]
     }]
   },
   customFees: {

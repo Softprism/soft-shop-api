@@ -227,7 +227,9 @@ const updateStore = async (storeID, updateParam) => {
 			images,
 			openingTime,
 			closingTime,
-      category
+      category,
+      labels,
+      tax
 		} = updateParam;
 
 		const storeUpdate = {};
@@ -252,6 +254,7 @@ const updateStore = async (storeID, updateParam) => {
     } 
 		if (phone_number) storeUpdate.email = phone_number;
     if (category) storeUpdate.category = category;
+    if (labels) storeUpdate.labels = labels;
 		if (password) {
 			const salt = await bcrypt.genSalt(10);
 			storeUpdate.password = await bcrypt.hash(password, salt);
