@@ -14,10 +14,6 @@ const OrderSchema = mongoose.Schema({
 	],
   paymentMethod: {type: String},
   deliveryMethod: {type: String},
-  customFees: [{
-    feeType: {type: String},
-    amount: {type: Number}
-  }],
 	store: { type: mongoose.Schema.Types.ObjectId, ref: 'Store', required: true },
 	user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 	status: { type: String, required: true, default: 'sent' }, // "sent","received","delivered","canceled", "complete"
