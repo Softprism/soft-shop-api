@@ -73,16 +73,6 @@ const getLoggedInUser = async (req, res, next) => {
 	});
 };
 
-const getUserOrders = async (req, res, next) => {
-	// Call Get Logged in User function from userService
-	const userOrders = await userService.getUserOrders(req.query,req.user.id);
-
-  console.log(userOrders)
-	userOrders && userOrders.orders.length > 0
-		? res.status(200).json(userOrders)
-		: res.status(404).json({ success: false, msg: 'No Orders found' });
-};
-
 const updateUser = async (req, res) => {
 	const errors = validationResult(req);
 
@@ -128,6 +118,5 @@ export {
 	loginUser,
 	getLoggedInUser,
 	updateUser,
-	addItemToCart,
-  getUserOrders
+	addItemToCart
 };

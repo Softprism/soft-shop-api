@@ -154,32 +154,6 @@ const getLoggedInUser = async (userParam) => {
 	}
 };
 
-const getUserOrders = async (urlParams,userId) => {
-	try {
-    console.log(urlParams)
-    const limit = Number(urlParams.limit);
-		const skip = Number(urlParams.skip);
-		const userOrders = await User.findById(userId)
-    .select('orders')
-    .populate(
-      {path: 'orders', select: 'orderId, status, product_meta createdDate',     populate: {
-        path: 'product_meta.product_id',
-        select: 'variants.status product_name price'
-      },
-      }
-    )
-    .populate(
-      {path: 'store', select: 'name'}
-    )
-    .limit(limit)
-    .skip(skip)
-		return userOrders;
-	} catch (err) {
-		console.error(err);
-		return err;
-	}
-};
-
 // Update User Details
 const updateUser = async (updateParam, id) => {
 	console.log(updateParam, id);
@@ -264,6 +238,5 @@ export {
 	loginUser,
 	getLoggedInUser,
 	updateUser,
-	addItemToCart,
-  getUserOrders
+	addItemToCart
 };

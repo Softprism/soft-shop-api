@@ -9,8 +9,7 @@ import {
 	loginUser,
 	getLoggedInUser,
 	updateUser,
-  addItemToCart,
-  getUserOrders
+  addItemToCart
 } from '../controllers/user.controller.js';
 
 import { auth } from '../middleware/auth.js';
@@ -70,11 +69,5 @@ router.put('/', auth, updateUser);
 // @desc    adds a product tp User's cart
 // @access  Public
 router.put('/cart/', auth, addItemToCart);
-
-// @route   GET /orders
-// @desc    Get all User's orders
-// @access  Public
-router.get('/orders', auth, getUserOrders);
-
 
 export default router;
