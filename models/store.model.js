@@ -20,6 +20,7 @@ const StoreSchema = mongoose.Schema({
     labelThumb: {type: String} //Label thumbnail
   }],
 	createdDate: { type: Date, default: Date.now },
+  tax: { type: String },
 });
 
 const Store = mongoose.model('Store', StoreSchema);
