@@ -9,7 +9,15 @@ const OrderSchema = mongoose.Schema({
 				ref: 'Product',
 				required: true,
 			},
-			quantity: { type: String, required: true },
+      selectedVariants: [{
+        variantTitle: {type: String}, // eg Toppings
+        variantItem: [{
+          itemName: {type: String},
+          itemThumbnail: {type: String},
+          itemPrice: {type: Number}
+        }]
+      }],
+			quantity: { type: Number, required: true },
 		},
 	],
   paymentMethod: {type: String},
