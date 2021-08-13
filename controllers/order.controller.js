@@ -233,9 +233,5 @@ export {
 	getStoreOrderHistory,
 	getCartItems,
 	editOrder,
-	cancelOrder,
-	completeOrder,
-	receiveOrder,
-	deliverOrder,
 	getFavorites,
 };

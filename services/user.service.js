@@ -156,7 +156,6 @@ const getLoggedInUser = async (userParam) => {
 
 // Update User Details
 const updateUser = async (updateParam, id) => {
-	console.log(updateParam, id);
 	const { address, password, email, phone_number } = updateParam;
 	// Build User Object
 	const userFields = {};

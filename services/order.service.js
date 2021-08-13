@@ -12,11 +12,11 @@ const getOrders = async (urlParams) => {
 			.skip(skip)
 			.populate({
 				path: 'product_meta.product_id',
-				select: 'product_name product_image price',
+				select: 'product_name product_image price customFees',
 			})
 			.populate({
 				path: 'store',
-				select: 'name address openingTime closingTime deliveryTime',
+				select: 'name address openingTime closingTime deliveryTime tax',
 			})
 			.populate({
 				path: 'user',
@@ -47,7 +47,7 @@ const createOrder = async (orderParam) => {
 					.substring(1);
 			};
 			//return id of format 'soft - aaaaaaaa'-'aaaa'
-			return 'soft-' + s4();
+			return 'soft - ' + s4();
 		};
 
 		//creates an order for user after all validation passes
@@ -64,11 +64,11 @@ const createOrder = async (orderParam) => {
 		return Order.findById(newOrder._id)
 			.populate({
 				path: 'product_meta.product_id',
-				select: 'product_name product_image price',
+				select: 'product_name product_image price customFees',
 			})
 			.populate({
 				path: 'store',
-				select: 'name address openingTime closingTime deliveryTime',
+				select: 'name address openingTime closingTime deliveryTime tax',
 			})
 			.populate({
 				path: 'user',
@@ -115,11 +115,11 @@ const getFavorites = async (userID, urlParams) => {
 			.skip(skip)
 			.populate({
 				path: 'product_meta.product_id',
-				select: 'product_name product_image price',
+				select: 'product_name product_image price customFees',
 			})
 			.populate({
 				path: 'store',
-				select: 'name address openingTime closingTime deliveryTime',
+				select: 'name address openingTime closingTime deliveryTime tax',
 			})
 			.populate({
 				path: 'user',
@@ -145,11 +145,11 @@ const getOrderDetails = async (orderID) => {
 		const orderDetails = await Order.findById(orderID)
 			.populate({
 				path: 'product_meta.product_id',
-				select: 'product_name product_image price',
+				select: 'product_name product_image price customFees',
 			})
 			.populate({
 				path: 'store',
-				select: 'name address openingTime closingTime deliveryTime',
+				select: 'name address openingTime closingTime deliveryTime tax',
 			})
 			.populate({
 				path: 'user',
@@ -176,11 +176,11 @@ const getOrderHistory = async (userID, urlParams) => {
 				.skip(skip)
 				.populate({
 					path: 'product_meta.product_id',
-					select: 'product_name product_image price',
+					select: 'product_name product_image price customFees',
 				})
 				.populate({
 					path: 'store',
-					select: 'name address openingTime closingTime deliveryTime',
+					select: 'name address openingTime closingTime deliveryTime tax',
 				})
 				.populate({
 					path: 'user',
@@ -195,11 +195,11 @@ const getOrderHistory = async (userID, urlParams) => {
 				.skip(skip)
 				.populate({
 					path: 'product_meta.product_id',
-					select: 'product_name product_image price',
+					select: 'product_name product_image price customFees',
 				})
 				.populate({
 					path: 'store',
-					select: 'name address openingTime closingTime deliveryTime',
+					select: 'name address openingTime closingTime deliveryTime tax',
 				})
 				.populate({
 					path: 'user',
@@ -226,11 +226,11 @@ const getStoreOrderHistory = async (storeID, urlParams) => {
 			.skip(skip)
 			.populate({
 				path: 'product_meta.product_id',
-				select: 'product_name product_image price',
+				select: 'product_name product_image price customFees',
 			})
 			.populate({
 				path: 'store',
-				select: 'name address openingTime closingTime deliveryTime',
+				select: 'name address openingTime closingTime deliveryTime tax',
 			})
 			.populate({
 				path: 'user',
@@ -256,11 +256,11 @@ const editOrder = async (orderID, orderParam) => {
 		)
 			.populate({
 				path: 'product_meta.product_id',
-				select: 'product_name product_image price',
+				select: 'product_name product_image price customFees',
 			})
 			.populate({
 				path: 'store',
-				select: 'name address openingTime closingTime deliveryTime',
+				select: 'name address openingTime closingTime deliveryTime tax',
 			})
 			.populate({
 				path: 'user',
@@ -271,60 +271,6 @@ const editOrder = async (orderID, orderParam) => {
 	} catch (error) {
 		console.log(error);
 		return { err: 'error editing this order' };
-	}
-};
-
-const cancelOrder = async (orderID) => {
-	try {
-		//user/store cancel order
-		let order = await Order.findById(orderID);
-		if (!order) throw { err: 'unable to cancel order' };
-		order.CancelOrder();
-		order.save();
-		return order;
-	} catch (error) {
-		console.log(error);
-		return { err: 'error canceling order' };
-	}
-};
-
-const completeOrder = async (orderID) => {
-	try {
-		//fires after payment is confirmed
-		let order = await Order.findById(orderID);
-		if (!order) throw { err: 'unable to complete order' };
-		order.completeOrder();
-		order.save();
-		return order;
-	} catch (error) {
-		console.log(error);
-		return { err: 'error completing this order' };
-	}
-};
-
-const receiveOrder = async (orderID) => {
-	try {
-		//store acknoledges order
-		let order = await Order.findById(orderID);
-		if (!order) throw { err: 'unable to receive order' };
-		order.receiveOrder();
-		order.save();
-		return order;
-	} catch (error) {
-		return { err: 'error receiving this order' };
-	}
-};
-
-const deliverOrder = async (orderID) => {
-	try {
-		//store delivers order
-		let order = await Order.findById(orderID);
-		if (!order) throw { err: 'unable to deliver order' };
-		order.deliverOrder();
-		order.save();
-		return order;
-	} catch (error) {
-		return { err: 'error delivering this order' };
 	}
 };
 
@@ -349,11 +295,7 @@ export {
 	getOrderHistory,
 	getCartItems,
 	editOrder,
-	cancelOrder,
 	getStoreOrderHistory,
-	completeOrder,
-	deliverOrder,
-	receiveOrder,
 };
 
 // Updates

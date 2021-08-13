@@ -12,10 +12,6 @@ import {
 	getStoreOrderHistory,
 	getCartItems,
 	editOrder,
-	cancelOrder,
-	completeOrder,
-	receiveOrder,
-	deliverOrder,
 	getFavorites,
 } from '../controllers/order.controller.js';
 
@@ -66,26 +62,6 @@ router.get('/user/cart', auth, getCartItems);
 // @desc    modify fields in an order
 // @access  Private
 router.put('/user/edit/:orderID', auth, editOrder);
-
-// @route   PUT /user/cancel/
-// @desc    cancels an order
-// @access  Private
-router.put('/user/cancel/:orderID', auth, cancelOrder);
-
-// @route   PUT /deliver-order/:orderID
-// @desc    delivers an order
-// @access  Private
-router.put('/deliver-order/:orderID', auth, deliverOrder);
-
-// @route   PUT /receive-order/:orderID
-// @desc    receive an order
-// @access  Private
-router.put('/receive-order/:orderID', auth, receiveOrder);
-
-// @route   PUT /complete-order/:orderID
-// @desc    cancels an order
-// @access  Private
-router.put('/complete-order/:orderID', auth, completeOrder);
 
 // @route   PUT /favorites/:userID
 // @desc    get user favorite orders
