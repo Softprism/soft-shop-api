@@ -111,7 +111,7 @@ const getProductDetails = async (productId) =>{
 const createProduct = async (productParam, storeId) => {
 	console.log(storeId);
 	try {
-		const { product_name,product_description, category, label, price, product_image, variants } =
+		const { product_name,product_description, category, label, price, product_image, variants, customFees } =
 			productParam;
 
 		// validate store, we have to make sure we're assigning a product to a store
@@ -132,7 +132,8 @@ const createProduct = async (productParam, storeId) => {
 			label,
 			price,
 			product_image,
-      variants
+      variants,
+      customFees
 		});
 		await newProduct.save(); // save new product
 
