@@ -3,6 +3,8 @@ import bcrypt from 'bcryptjs';
 import mongoose from 'mongoose';
 
 import Store from '../models/store.model.js';
+import Variant from '../models/variant.model.js';
+import Product from '../models/product.model.js';
 
 const getStores = async (urlParams) => {
 	try {
@@ -289,4 +291,22 @@ const addLabel = async (storeId, labelParam) => {
   await store.save()
   return await Store.findById(storeId).select('-password, -__v');
 }
-export { getStores, createStore, loginStore, getLoggedInStore, updateStore, addLabel, getStore };
+const addVariant = async (storeId, variantParam) => {
+  let store = await Store.findById(storeId);
+  let product = await Product.findById(variantParam.product)
+
+  if (!store) throw { err: 'Store not found' };
+  if (!product) throw {err: 'product not found'}
+
+  let newVariant = new Variant(variantParam)
+  await newVariant.save()
+
+  if(newVariant.save()) {
+    product.variant.availability = true
+    await product.save()
+    console.log('updated products')
+  }
+
+  return await Variant.find({product: newVariant.product});
+}
+export { getStores, createStore, loginStore, getLoggedInStore, updateStore, addLabel, getStore, addVariant };
