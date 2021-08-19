@@ -159,4 +159,29 @@ const getStore = async (req, res, next) => {
 	}
 };
 
-export { getStores, createStore, loginStore, getLoggedInStore, updateStore, addLabel, getStore };
+const addCustomFee = async (req, res, next) => {
+	// verifiy permission
+	if (req.admin === undefined && req.store === undefined)
+		return res.status(403).json({
+			success: false,
+			msg: "You're not permitted to carry out this action",
+		});
+
+	let storeID;
+
+	if (req.store === undefined && req.query.storeID === undefined) {
+		res
+			.status(400)
+			.json({ success: false, msg: 'unable to authenticate this store' });
+	}
+	if (req.store) storeID = req.store.id;
+	if (req.query.storeID && req.admin) storeID = req.query.storeID;
+
+	const addCustomFee = await storeService.addCustomFee(storeID, req.body);
+	if (addCustomFee.err || addCustomFee.reason) {
+		res.status(500).json({ success: false, msg: 'operation failed' });
+	} else {
+		res.status(200).json({ success: true, result: addCustomFee });
+	}
+};
+export { getStores, createStore, loginStore, getLoggedInStore, updateStore, addLabel, getStore, addCustomFee };
