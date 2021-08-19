@@ -91,22 +91,6 @@ const getProducts = async (getParam) => {
 	}
 };
 
-<<<<<<< HEAD
-const getProductDetails = async (productId) =>{
-  console.log(productId)
-  try {
-
-    let product = await Product.findById(productId)
-    .populate(
-      { path: 'store', select: 'location name openingTime closingTime'}
-    )
-    .populate('category')
-    console.log(product)
-    if(!product) throw {err: 'error finding product'};
-
-    return product;
-
-=======
 const getProductDetails = async (productId) => {
   console.log(productId)
   try {
@@ -121,7 +105,6 @@ const getProductDetails = async (productId) => {
 
     return product;
 
->>>>>>> feature
   } catch (error) {
     console.log(error)
     return error
@@ -131,11 +114,7 @@ const getProductDetails = async (productId) => {
 const createProduct = async (productParam, storeId) => {
 	console.log(storeId);
 	try {
-<<<<<<< HEAD
-		const { product_name,product_description, category, label, price, product_image, variants, customFees } =
-=======
 		const { product_name,product_description, category, label, price, product_image } =
->>>>>>> feature
 			productParam;
 
 		// validate store, we have to make sure we're assigning a product to a store
@@ -155,13 +134,7 @@ const createProduct = async (productParam, storeId) => {
 			category,
 			label,
 			price,
-<<<<<<< HEAD
-			product_image,
-      variants,
-      customFees
-=======
 			product_image
->>>>>>> feature
 		});
 		await newProduct.save(); // save new product
 
@@ -334,16 +307,12 @@ export {
 	updateProduct,
 	deleteProduct,
   getProductDetails,
-<<<<<<< HEAD
-  reviewProduct
-=======
   reviewProduct,
   addVariant,
   updateVariant,
   addVariantItem,
   addCustomFee,
   deleteCustomFee
->>>>>>> feature
 };
 
 //UPDATES
