@@ -1,8 +1,10 @@
 import Product from '../models/product.model.js';
 import Store from '../models/store.model.js';
 import Review from '../models/review.model.js';
+import Variant from '../models/variant.model.js';
+
 import mongoose from 'mongoose';
-import { get } from 'http';
+
 
 
 const getProducts = async (getParam) => {
@@ -10,7 +12,7 @@ const getProducts = async (getParam) => {
 		// get limit and skip from url parameters
 		const limit = Number(getParam.limit);
 		const skip = Number(getParam.skip);
-    const matchParam = {}
+    let matchParam = {}
     if(getParam.product_name) {
       matchParam.product_name = new RegExp(getParam.product_name,'i')
     }
@@ -88,7 +90,7 @@ const getProducts = async (getParam) => {
 	}
 };
 
-const getProductDetails = async (productId) =>{
+const getProductDetails = async (productId) => {
   console.log(productId)
   try {
 
@@ -97,7 +99,7 @@ const getProductDetails = async (productId) =>{
       { path: 'store', select: 'location name openingTime closingTime'}
     )
     .populate('category')
-    console.log(product)
+
     if(!product) throw {err: 'error finding product'};
 
     return product;
@@ -111,7 +113,7 @@ const getProductDetails = async (productId) =>{
 const createProduct = async (productParam, storeId) => {
 	console.log(storeId);
 	try {
-		const { product_name,product_description, category, label, price, product_image, variants, customFees } =
+		const { product_name,product_description, category, label, price, product_image } =
 			productParam;
 
 		// validate store, we have to make sure we're assigning a product to a store
@@ -131,9 +133,7 @@ const createProduct = async (productParam, storeId) => {
 			category,
 			label,
 			price,
-			product_image,
-      variants,
-      customFees
+			product_image
 		});
 		await newProduct.save(); // save new product
 
@@ -209,6 +209,31 @@ const reviewProduct = async (review) => {
   }
 }
 
+const addVariant = async (storeId, variantParam) => {
+  try {
+  let store = await Store.findById(storeId);
+  let product = await Product.findById(variantParam.product)
+
+  if (!store._id) throw { err: 'Store not found' }; // this ain't working
+  if (!product._id) throw {err: 'product not found'}; // this ain't working
+
+  let newVariant = new Variant(variantParam)
+  await newVariant.save()
+
+  if(newVariant.save()) {
+    product.variant.availability = true
+    product.variant.items.push(newVariant._id)
+    
+    await product.save()
+    console.log('updated products')
+  }
+
+  return await Variant.find({product: newVariant.product});
+  } catch (error) {
+    console.log(error)
+    return error
+  }
+}
 
 export {
 	getProducts,
@@ -216,7 +241,8 @@ export {
 	updateProduct,
 	deleteProduct,
   getProductDetails,
-  reviewProduct
+  reviewProduct,
+  addVariant
 };
 
 //UPDATES
