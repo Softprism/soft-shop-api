@@ -3,7 +3,6 @@ import bcrypt from 'bcryptjs';
 import mongoose from 'mongoose';
 
 import Store from '../models/store.model.js';
-import Variant from '../models/variant.model.js';
 import Product from '../models/product.model.js';
 import CustomFee from '../models/customFees.model.js';
 
@@ -11,7 +10,7 @@ const getStores = async (urlParams) => {
 	try {
 
     // declare fields to exclude from response
-    const pipeline = [{ $unset: ['products', 'productReview', 'password', 'email', 'address', 'phone_number', 'labels']} ];
+    const pipeline = [{ $unset: ['products', 'productReview', 'password', 'email', 'phone_number', 'labels']} ];
 
 		let storesWithRating = []; // container to hold stores based on rating search
 
@@ -88,7 +87,7 @@ const getStores = async (urlParams) => {
 const getStore = async (storeId) => {
 
     // declare fields to exclude from response
-  const pipeline = [{ $unset: ['products.store', 'products.rating', 'products.category', 'products.variants.data', 'productReview', 'password', 'email', 'address', 'phone_number']} ];
+  const pipeline = [{ $unset: ['products.store', 'products.rating', 'products.category', 'products.variants.data', 'productReview', 'password', 'email', 'phone_number']} ];
 
   // aggregating stores
   const store = await Store.aggregate()
@@ -292,28 +291,6 @@ const addLabel = async (storeId, labelParam) => {
   await store.save()
   return await Store.findById(storeId).select('-password, -__v');
 }
-const addVariant = async (storeId, variantParam) => {
-  try {
-  let store = await Store.findById(storeId);
-  let product = await Product.findById(variantParam.product)
-
-  if (!store._id) throw { err: 'Store not found' }; // this ain't working
-  if (!product._id) throw {err: 'product not found'}; // this ain't working
-
-  let newVariant = new Variant(variantParam)
-  await newVariant.save()
-
-  if(newVariant.save()) {
-    product.variant.availability = true
-    await product.save()
-    console.log('updated products')
-  }
-
-  return await Variant.find({product: newVariant.product});
-  } catch (error) {
-    return error
-  }
-}
 
 const addCustomFee = async (storeId, customrFeeParam) => {
   try {
@@ -328,6 +305,7 @@ const addCustomFee = async (storeId, customrFeeParam) => {
 
   if(newCustomFee.save()) {
     product.customFee.availability = true
+    product.customFee.items.push(newCustomFee._id)
     await product.save()
     console.log('updated products')
   }
@@ -338,4 +316,4 @@ const addCustomFee = async (storeId, customrFeeParam) => {
     return error
   }
 }
-export { getStores, createStore, loginStore, getLoggedInStore, updateStore, addLabel, getStore, addVariant, addCustomFee };
+export { getStores, createStore, loginStore, getLoggedInStore, updateStore, addLabel, getStore, addCustomFee };
