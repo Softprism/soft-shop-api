@@ -126,6 +126,32 @@ const getProductDetails = async (req, res, next) => {
 	res.status(200).json({ success: true, result: productDetails })
 
 };
+
+const addVariant = async (req, res, next) => {
+	// verifiy permission
+	if (req.admin === undefined && req.store === undefined)
+		return res.status(403).json({
+			success: false,
+			msg: "You're not permitted to carry out this action",
+		});
+
+	let storeID;
+
+	if (req.store === undefined && req.query.storeID === undefined) {
+		res
+			.status(400)
+			.json({ success: false, msg: 'unable to authenticate this store' });
+	}
+	if (req.store) storeID = req.store.id;
+	if (req.query.storeID && req.admin) storeID = req.query.storeID;
+
+	const addVariant = await productService.addVariant(storeID, req.body);
+	if (addVariant.err || addVariant.reason) {
+		res.status(500).json({ success: false, msg: 'operation failed' });
+	} else {
+		res.status(200).json({ success: true, result: addVariant });
+	}
+};
 export {
 	deleteProduct,
 	updateProduct,
@@ -133,4 +159,5 @@ export {
 	getProducts,
   getProductDetails,
   reviewProduct,
+  addVariant
 };
