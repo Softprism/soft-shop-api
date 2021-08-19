@@ -1,29 +1,52 @@
 import Order from '../models/order.model.js';
 import User from '../models/user.model.js';
 import Store from '../models/store.model.js';
+import mongoose from 'mongoose';
+
 
 const getOrders = async (urlParams) => {
 	try {
 		const limit = Number(urlParams.limit);
 		const skip = Number(urlParams.skip);
-		return await Order.find()
-			.sort({ createdDate: -1 }) // -1 for descending sort
-			.limit(limit)
-			.skip(skip)
-			.populate({
-				path: 'product_meta.product_id',
-				select: 'product_name product_image price customFees',
-			})
-			.populate({
-				path: 'store',
-				select: 'name address openingTime closingTime deliveryTime tax',
-			})
-			.populate({
-				path: 'user',
-				select: 'first_name last_name phone_number email',
-			});
+    let matchParam = {}
+
+    const pipeline = [{ 
+      $unset: ['store.password','store.email','store.labels','store.phone_number', 'store.images', 'store.category', 'store.openingTime', 'store.closingTime',  'product_meta.details.variants', 'product_meta.details.store', 'product_meta.details.category','product_meta.details.label','productData']
+    }];
+
+    let orders = Order.aggregate()
+    .match(matchParam)
+    .lookup({
+      from: 'products',
+      localField: "product_meta.product_id",
+      foreignField: "_id",
+      as: "productData"
+    })
+    .lookup({
+      from: "stores",
+      localField: "store",
+      foreignField: "_id",
+      as: "store"
+    })
+    .lookup({
+      from: "customfees",
+      localField: "product_meta.product_id",
+      foreignField: "product",
+      as: "productFees"
+    })
+    .addFields({
+      "product_meta.productDetails": '$productData',
+      // "product_meta.details": {$arrayElemAt:["$productData",0]}
+    })
+    .unwind('$store')
+    .append(pipeline)
+    .sort('-createdDate')
+    .limit(limit)
+    .skip(skip)
+    return orders
 	} catch (error) {
-		return { err: 'error loading products' };
+    console.log(error)
+		return { err: 'error loading orders' };
 	}
 };
 
@@ -46,7 +69,7 @@ const createOrder = async (orderParam) => {
 					.toString(16)
 					.substring(1);
 			};
-			//return id of format 'soft - aaaaaaaa'-'aaaa'
+			//return id of format 'soft - aaaaa'
 			return 'soft - ' + s4();
 		};
 
@@ -58,22 +81,61 @@ const createOrder = async (orderParam) => {
 
 		// Adds new order to user model
 		vUser.orders.push(newOrder._id);
-		await vUser.save();
+		// await vUser.save();
 
 		// Returns new order to response
-		return Order.findById(newOrder._id)
-			.populate({
-				path: 'product_meta.product_id',
-				select: 'product_name product_image price customFees',
-			})
-			.populate({
-				path: 'store',
-				select: 'name address openingTime closingTime deliveryTime tax',
-			})
-			.populate({
-				path: 'user',
-				select: 'first_name last_name phone_number email',
-			});
+    const pipeline = [{ 
+      $unset: ['store.password','store.email','store.labels','store.phone_number', 'store.images', 'store.category', 'store.openingTime', 'store.closingTime',  'productData.variants', 'productData.store', 'productData.category','productData.label']
+    }];
+    const neworder = await Order.aggregate()
+    .match({
+      orderId: newOrder.orderId
+    })
+    .lookup({
+      from: 'products',
+      localField: "product_meta.product_id",
+      foreignField: "_id",
+      as: "productData"
+    })
+    .lookup({
+      from: 'products',
+      localField: "product_meta.selectedVariants",
+      foreignField: "variant.items",
+      as: "productData2"
+    })
+    .lookup({
+      from: "stores",
+      localField: "store",
+      foreignField: "_id",
+      as: "store"
+    })
+    .lookup({
+      from: "customfees",
+      localField: "product_meta.product_id",
+      foreignField: "product",
+      as: "productFees"
+    })
+    .lookup({
+      from: "variants",
+      localField: "product_meta.selectedVariants",
+      foreignField: "_id",
+      as: "selectedProductVariants"
+    })
+    .addFields({
+      "product_meta.productData": "$productData",
+      "product_meta.selectedVariants": "$selectedProductVariants"
+    })
+    .append(pipeline);
+
+    // neworder[0].product_meta.forEach(product => {
+
+    //   product.productData = product.productData.filter(data => {
+    //     // console.log("product data", data)
+    //     console.log( "filtering ", data._id, product.product_id, product.product_id.equals(data._id))
+    //     return product.product_id.equals(data._id) 
+    //   })
+    // });
+    return neworder
 	} catch (err) {
 		console.log(err);
 		return err;

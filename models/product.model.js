@@ -11,8 +11,14 @@ const ProductSchema = mongoose.Schema({
 		required: true,
 	},
 	availability: { type: Boolean, required: true, default: true },
-  variant: {availability: {type: Boolean, default: false}},
-  customFee: {availability: {type: Boolean, default: false}}, // active||deleted,
+  variant: {
+    availability: {type: Boolean, default: false},
+    items: [{type: mongoose.Schema.Types.ObjectId, ref: 'Variant'}]
+  },
+  customFee: {
+    availability: {type: Boolean, default: false},  // active||deleted,
+    items: [{type: mongoose.Schema.Types.ObjectId, ref: 'CustomFees'}]
+  },
 
   label: {type: mongoose.Schema.Types.ObjectId},
   status: {type: String, default: "active"}, // deleted||active

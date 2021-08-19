@@ -9,17 +9,14 @@ const OrderSchema = mongoose.Schema({
 				ref: 'Product',
 				required: true,
 			},
-      selectedVariants: [{
-        variantTitle: {type: String}, // eg Toppings
-        variantItem: [{
-          itemName: {type: String},
-          itemThumbnail: {type: String},
-          itemPrice: {type: Number}
-        }]
-      }],
 			quantity: { type: Number, required: true },
+      selectedVariants: [{type: mongoose.Schema.Types.ObjectId}],
+
 		},
 	],
+  subTotalAmount: {type: Number, default: 0},
+  customFees: {type: Number, default: 0},
+  totalAmount: {type: Number, default: 0},
   paymentMethod: {type: String},
   deliveryMethod: {type: String},
 	store: { type: mongoose.Schema.Types.ObjectId, ref: 'Store', required: true },
