@@ -146,10 +146,120 @@ const addVariant = async (req, res, next) => {
 	if (req.query.storeID && req.admin) storeID = req.query.storeID;
 
 	const addVariant = await productService.addVariant(storeID, req.body);
-	if (addVariant.err || addVariant.reason) {
-		res.status(500).json({ success: false, msg: 'operation failed' });
+	if (addVariant.err) {
+		res.status(500).json({ success: false, msg: addVariant.err });
 	} else {
 		res.status(200).json({ success: true, result: addVariant });
+	}
+};
+
+const updateVariant = async (req, res, next) => {
+	// verifiy permission
+	if (req.admin === undefined && req.store === undefined)
+		return res.status(403).json({
+			success: false,
+			msg: "You're not permitted to carry out this action",
+		});
+
+	let storeID;
+
+	if (req.store === undefined && req.query.storeID === undefined) {
+		res
+			.status(400)
+			.json({ success: false, msg: 'unable to authenticate this store' });
+	}
+	if (req.store) storeID = req.store.id;
+	if (req.query.storeID && req.admin) storeID = req.query.storeID;
+
+	const updateVariant = await productService.updateVariant(req.params.variantId,req.body);
+
+	if (updateVariant.err) {
+    console.log('error')
+		res.status(500).json({ success: false, msg: updateVariant.err });
+	} else {
+    console.log('no error')
+		res.status(200).json({ success: true, result: updateVariant });
+	}
+};
+
+const addVariantItem = async (req, res, next) => {
+	// verifiy permission
+	if (req.admin === undefined && req.store === undefined)
+		return res.status(403).json({
+			success: false,
+			msg: "You're not permitted to carry out this action",
+		});
+
+	let storeID;
+
+	if (req.store === undefined && req.query.storeID === undefined) {
+		res
+			.status(400)
+			.json({ success: false, msg: 'unable to authenticate this store' });
+	}
+	if (req.store) storeID = req.store.id;
+	if (req.query.storeID && req.admin) storeID = req.query.storeID;
+
+	const addVariantItem = await productService.addVariantItem(req.params.variantId,req.body);
+
+	if (addVariantItem.err) {
+    console.log('error')
+		res.status(500).json({ success: false, msg: addVariantItem.err });
+	} else {
+    console.log('no error')
+		res.status(200).json({ success: true, result: addVariantItem });
+	}
+};
+
+const addCustomFee = async (req, res, next) => {
+	// verifiy permission
+	if (req.admin === undefined && req.store === undefined)
+		return res.status(403).json({
+			success: false,
+			msg: "You're not permitted to carry out this action",
+		});
+
+	let storeID;
+
+	if (req.store === undefined && req.query.storeID === undefined) {
+		res
+			.status(400)
+			.json({ success: false, msg: 'unable to authenticate this store' });
+	}
+	if (req.store) storeID = req.store.id;
+	if (req.query.storeID && req.admin) storeID = req.query.storeID;
+
+	const addCustomFee = await productService.addCustomFee(storeID, req.body);
+	if (addCustomFee.err) {
+		res.status(500).json({ success: false, msg: addCustomFee.err });
+	} else {
+		res.status(200).json({ success: true, result: addCustomFee });
+	}
+};
+
+const deleteCustomFee = async (req, res, next) => {
+	// verifiy permission
+	if (req.admin === undefined && req.store === undefined)
+		return res.status(403).json({
+			success: false,
+			msg: "You're not permitted to carry out this action",
+		});
+
+	let storeID;
+
+	if (req.store === undefined && req.query.storeID === undefined) {
+		res
+			.status(400)
+			.json({ success: false, msg: 'unable to authenticate this store' });
+	}
+	if (req.store) storeID = req.store.id;
+	if (req.query.storeID && req.admin) storeID = req.query.storeID;
+
+	const deleteCustomFee = await productService.deleteCustomFee(req.params.customFeeId);
+	if (deleteCustomFee.err) {
+		res.status(500).json({ success: false, msg: deleteCustomFee.err });
+	} else {
+		res.status(200).json({ success: true, result: deleteCustomFee });
 	}
 };
 export {
@@ -159,5 +269,9 @@ export {
 	getProducts,
   getProductDetails,
   reviewProduct,
-  addVariant
+  addVariant,
+  updateVariant,
+  addVariantItem,
+  addCustomFee,
+  deleteCustomFee
 };

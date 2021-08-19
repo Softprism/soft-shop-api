@@ -7,15 +7,20 @@ const OrderSchema = mongoose.Schema(
 			required: true,
 			ref: 'User',
 		},
+    store: {
+			type: mongoose.Schema.Types.ObjectId,
+			required: true,
+			ref: 'Store',
+		},
 		orderId: {
 			type: String,
 			unique: true,
 		},
 		orderItems: [
 			{
-				name: { type: String, required: true },
+				productName: { type: String, required: true },
 				qty: { type: Number, required: true },
-				image: { type: String, required: true },
+        productImage: { type: String, required: true },
 				price: { type: Number, required: true },
 				product: {
 					type: mongoose.Schema.Types.ObjectId,
@@ -56,6 +61,16 @@ const OrderSchema = mongoose.Schema(
 			type: Boolean,
 			required: true,
 			default: false,
+		},
+    isFavorite: {
+			type: Boolean,
+			required: true,
+			default: false,
+		},
+    status: {
+			type: String,
+			required: true,
+			default: "sent",
 		}
 	},
 	{ timestamps: true }

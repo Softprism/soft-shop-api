@@ -10,8 +10,7 @@ import {
 	getLoggedInStore,
 	updateStore,
   addLabel,
-  getStore,
-  addCustomFee
+  getStore
 } from '../controllers/store.controller.js';
 
 import { auth } from '../middleware/auth.js';
@@ -77,12 +76,5 @@ router.put('/', auth, updateStore);
 // @desc    add label to store
 // @access  Private
 router.put('/label', auth, addLabel);
-
-// @route   POST /stores/custom-fees
-// @desc    add variant to store
-// @access  Private
-router.post('/custom-fees', auth, addCustomFee);
-
-
 
 export default router;

@@ -5,11 +5,21 @@ const getCategories = async (urlParams) => {
 	try {
     const limit = Number(urlParams.limit);
 		const skip = Number(urlParams.skip);
-		const categories = await Category.find()
-    .sort({ createdDate: -1 }) // -1 for descending sort
-    .limit(limit)
-    .skip(skip)
-		return categories;
+    const pipeline = [{ 
+      $unset: ['products']
+    }];
+    return Category.aggregate()
+    .lookup({
+      from: 'products',
+      localField: '_id',
+      foreignField: 'category',
+      as: 'products'
+    })
+    .addFields({
+      productCount: {$size: '$products'}
+    })
+    .append(pipeline);
+
 	} catch (err) {
 		return err;
 	}

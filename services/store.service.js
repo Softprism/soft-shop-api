@@ -4,7 +4,6 @@ import mongoose from 'mongoose';
 
 import Store from '../models/store.model.js';
 import Product from '../models/product.model.js';
-import CustomFee from '../models/customFees.model.js';
 
 const getStores = async (urlParams) => {
 	try {
@@ -292,28 +291,5 @@ const addLabel = async (storeId, labelParam) => {
   return await Store.findById(storeId).select('-password, -__v');
 }
 
-const addCustomFee = async (storeId, customrFeeParam) => {
-  try {
-  let store = await Store.findById(storeId);
-  let product = await Product.findById(customrFeeParam.product)
 
-  if (!store._id) throw { err: 'Store not found' };
-  if (!product._id) throw {err: 'product not found'}
-
-  let newCustomFee = new CustomFee(customrFeeParam)
-  await newCustomFee.save()
-
-  if(newCustomFee.save()) {
-    product.customFee.availability = true
-    product.customFee.items.push(newCustomFee._id)
-    await product.save()
-    console.log('updated products')
-  }
-
-  return await CustomFee.find({product: newCustomFee.product});
-  } catch (error) {
-    console.log(error)
-    return error
-  }
-}
-export { getStores, createStore, loginStore, getLoggedInStore, updateStore, addLabel, getStore, addCustomFee };
+export { getStores, createStore, loginStore, getLoggedInStore, updateStore, addLabel, getStore };
