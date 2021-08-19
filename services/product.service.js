@@ -1,8 +1,11 @@
 import Product from '../models/product.model.js';
 import Store from '../models/store.model.js';
 import Review from '../models/review.model.js';
+import Variant from '../models/variant.model.js';
+import CustomFee from '../models/customFees.model.js';
+
 import mongoose from 'mongoose';
-import { get } from 'http';
+
 
 
 const getProducts = async (getParam) => {
@@ -10,7 +13,7 @@ const getProducts = async (getParam) => {
 		// get limit and skip from url parameters
 		const limit = Number(getParam.limit);
 		const skip = Number(getParam.skip);
-    const matchParam = {}
+    let matchParam = {}
     if(getParam.product_name) {
       matchParam.product_name = new RegExp(getParam.product_name,'i')
     }
@@ -88,6 +91,7 @@ const getProducts = async (getParam) => {
 	}
 };
 
+<<<<<<< HEAD
 const getProductDetails = async (productId) =>{
   console.log(productId)
   try {
@@ -102,6 +106,22 @@ const getProductDetails = async (productId) =>{
 
     return product;
 
+=======
+const getProductDetails = async (productId) => {
+  console.log(productId)
+  try {
+
+    let product = await Product.findById(productId)
+    .populate(
+      { path: 'store', select: 'location name openingTime closingTime'}
+    )
+    .populate('category')
+
+    if(!product) throw {err: 'error finding product'};
+
+    return product;
+
+>>>>>>> feature
   } catch (error) {
     console.log(error)
     return error
@@ -111,7 +131,11 @@ const getProductDetails = async (productId) =>{
 const createProduct = async (productParam, storeId) => {
 	console.log(storeId);
 	try {
+<<<<<<< HEAD
 		const { product_name,product_description, category, label, price, product_image, variants, customFees } =
+=======
+		const { product_name,product_description, category, label, price, product_image } =
+>>>>>>> feature
 			productParam;
 
 		// validate store, we have to make sure we're assigning a product to a store
@@ -131,9 +155,13 @@ const createProduct = async (productParam, storeId) => {
 			category,
 			label,
 			price,
+<<<<<<< HEAD
 			product_image,
       variants,
       customFees
+=======
+			product_image
+>>>>>>> feature
 		});
 		await newProduct.save(); // save new product
 
@@ -209,6 +237,96 @@ const reviewProduct = async (review) => {
   }
 }
 
+const addVariant = async (storeId, variantParam) => {
+  try {
+  let store = await Store.findById(storeId);
+  let product = await Product.findById(variantParam.product)
+
+  if (!store) throw { err: 'Store not found' }; // this ain't working
+  if (!product) throw {err: 'product not found'}; // this ain't working
+
+  let newVariant = new Variant(variantParam)
+  await newVariant.save()
+
+  if(newVariant.save()) {
+    product.variant.availability = true
+    product.variant.items.push(newVariant._id)
+    
+    await product.save()
+    console.log('updated products')
+  }
+
+  return await Variant.find({product: newVariant.product});
+  } catch (error) {
+    console.log(error)
+    return error
+  }
+}
+
+const updateVariant = async (variantId,updateParam) => {
+  try {
+    let variant = await Variant.findById(variantId)
+    if(!variant) throw {err: 'variant not found'}
+    // find a way to validate if variant exists
+
+    let updateVariant =  await Variant.findByIdAndUpdate(
+			variantId,
+			{ $set: updateParam },
+			{ omitUndefined: true, new: true, useFindAndModify: false }
+		);
+
+    return updateVariant
+  } catch (error) {
+    return error
+  }
+}
+
+const addVariantItem = async (variantId,variantParam) => {
+  try {
+    let variant = await Variant.findById(variantId)
+    if(!variant) throw {err: 'variant not found'}
+    variant.variantItems.push(variantParam)
+    variant.save()
+    return variant
+  } catch (error) {
+    return error
+  }
+}
+
+const addCustomFee = async (storeId, customrFeeParam) => {
+  try {
+  let store = await Store.findById(storeId);
+  let product = await Product.findById(customrFeeParam.product)
+
+  if (!store) throw { err: 'Store not found' };
+  if (!product) throw {err: 'product not found'}
+
+  let newCustomFee = new CustomFee(customrFeeParam)
+  await newCustomFee.save()
+
+  if(newCustomFee.save()) {
+    product.customFee.availability = true
+    product.customFee.items.push(newCustomFee._id)
+    await product.save()
+  }
+
+  return await CustomFee.find({product: newCustomFee.product});
+  } catch (error) {
+    return error
+  }
+}
+
+const deleteCustomFee = async(customFeeId) => {
+  try {
+    console.log(customFeeId)
+    let customFee = await CustomFee.findByIdAndDelete(customFeeId)
+    console.log(customFee)
+    if(!customFee) throw {err: 'custom fee not found'}
+    return "fee removed from product"
+  } catch (error) {
+    return error
+  }
+}
 
 export {
 	getProducts,
@@ -216,7 +334,16 @@ export {
 	updateProduct,
 	deleteProduct,
   getProductDetails,
+<<<<<<< HEAD
   reviewProduct
+=======
+  reviewProduct,
+  addVariant,
+  updateVariant,
+  addVariantItem,
+  addCustomFee,
+  deleteCustomFee
+>>>>>>> feature
 };
 
 //UPDATES

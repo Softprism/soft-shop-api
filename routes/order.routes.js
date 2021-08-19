@@ -8,11 +8,8 @@ import {
 	createOrder,
 	toggleFavorite,
 	getOrderDetails,
-	getOrderHistory,
-	getStoreOrderHistory,
 	getCartItems,
 	editOrder,
-	getFavorites,
 } from '../controllers/order.controller.js';
 
 // @route   GET /
@@ -43,16 +40,6 @@ router.patch('/toggle-favorite/:orderID', auth, toggleFavorite);
 // @access  Private
 router.get('/:orderID', auth, getOrderDetails);
 
-// @route   GET /user
-// @desc    get all orders created by a user, uses req.user.id or req.query.userID to validate user
-// @access  Private
-router.get('/user', auth, getOrderHistory);
-
-// @route   GET /store
-// @desc    get all orders owned by a store
-// @access  Private
-router.get('/store', auth, getStoreOrderHistory);
-
 // @route   GET /user/cart
 // @desc    get all products in user's cart
 // @access  Private
@@ -62,10 +49,5 @@ router.get('/user/cart', auth, getCartItems);
 // @desc    modify fields in an order
 // @access  Private
 router.put('/user/edit/:orderID', auth, editOrder);
-
-// @route   PUT /favorites/:userID
-// @desc    get user favorite orders
-// @access  Private
-router.get('/favorites', auth, getFavorites);
 
 export default router;

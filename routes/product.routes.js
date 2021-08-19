@@ -3,7 +3,7 @@ import { check, validationResult } from 'express-validator';
 import { auth } from '../middleware/auth.js'
 const router = express.Router();
 
-import { deleteProduct, updateProduct, createProduct, getProducts, reviewProduct,getProductDetails} from '../controllers/product.controller.js'
+import { deleteProduct, updateProduct, createProduct, getProducts, reviewProduct,getProductDetails, addVariant, updateVariant, addVariantItem, addCustomFee, deleteCustomFee} from '../controllers/product.controller.js'
 
 // @route   GET /
 // @desc    Get all products from all stores.
@@ -31,6 +31,16 @@ router.post(
 // @access  Private
 router.put('/review', auth, reviewProduct)
 
+// @route   PUT /stores/variants
+// @desc    add variant to store
+// @access  Private
+router.put('/variants/:variantId/item', auth, addVariantItem);
+
+// @route   PUT /stores/variants
+// @desc    add variant to store
+// @access  Private
+router.put('/variants/:variantId', auth, updateVariant);
+
 // @route   PUT /:id
 // @desc    update a store product, can be used by admin and stores
 // @access  Private
@@ -46,6 +56,19 @@ router.get('/:productId', auth, getProductDetails);
 // @access  Private
 router.delete('/:id', auth, deleteProduct);
 
+// @route   POST /stores/variants
+// @desc    add variant to store
+// @access  Private
+router.post('/variants', auth, addVariant);
 
+// @route   POST /stores/custom-fees
+// @desc    add custom fee to product
+// @access  Private
+router.post('/custom-fees', auth, addCustomFee);
+
+// @route   DELETE /stores/custom-fees
+// @desc    delete custom fee
+// @access  Private
+router.delete('/custom-fees/:customFeeId', auth, deleteCustomFee);
 
 export default router;

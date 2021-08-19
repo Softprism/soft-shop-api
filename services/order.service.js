@@ -1,29 +1,72 @@
 import Order from '../models/order.model.js';
 import User from '../models/user.model.js';
 import Store from '../models/store.model.js';
+import mongoose from 'mongoose';
+
 
 const getOrders = async (urlParams) => {
 	try {
+    let matchParam = {}
 		const limit = Number(urlParams.limit);
 		const skip = Number(urlParams.skip);
-		return await Order.find()
-			.sort({ createdDate: -1 }) // -1 for descending sort
-			.limit(limit)
-			.skip(skip)
-			.populate({
-				path: 'product_meta.product_id',
-				select: 'product_name product_image price customFees',
-			})
-			.populate({
-				path: 'store',
-				select: 'name address openingTime closingTime deliveryTime tax',
-			})
-			.populate({
-				path: 'user',
-				select: 'first_name last_name phone_number email',
-			});
+    if(urlParams.store) matchParam.store = mongoose.Types.ObjectId(urlParams.store)
+    if(urlParams.user) matchParam.user = mongoose.Types.ObjectId(urlParams.user)
+    if(urlParams.isFavorite) matchParam.isFavorite = urlParams.isFavorite
+
+    
+
+
+    const pipeline = [{ 
+      $unset: ['store.password','store.email','store.labels','store.phone_number', 'store.images', 'store.category', 'store.openingTime', 'store.closingTime',  'product_meta.details.variants', 'product_meta.details.store', 'product_meta.details.category','product_meta.details.label','productData', 'user.password', 'user.cart']
+    }];
+
+    let orders = Order.aggregate()
+    .match(matchParam)
+    .lookup({
+      from: 'products',
+      localField: "orderItems.product",
+      foreignField: "_id",
+      as: "productData"
+    })
+    .lookup({
+      from: "stores",
+      localField: "store",
+      foreignField: "_id",
+      as: "store"
+    })
+    .lookup({
+      from: "users",
+      localField: "user",
+      foreignField: "_id",
+      as: "user"
+    })
+    .lookup({
+      from: "customfees",
+      localField: "orderItems.product",
+      foreignField: "product",
+      as: "productFees"
+    })
+    .addFields({
+      customFees: {$sum:'$productFees.amount' },
+      "user": { $arrayElemAt: [ "$user", 0 ] },
+      "store": { $arrayElemAt: [ "$store", 0 ] }
+    })
+    .project({
+      isDelivered: 1,
+      isPaid: 1,
+      totalPrice: 1,
+      orderItems: 1,
+      paymentMethod: 1
+    })
+    .append(pipeline)
+    .sort('-createdDate')
+    .limit(limit)
+    .skip(skip)
+
+    return orders
 	} catch (error) {
-		return { err: 'error loading products' };
+    console.log(error)
+		return { err: 'error loading orders' };
 	}
 };
 
@@ -46,7 +89,7 @@ const createOrder = async (orderParam) => {
 					.toString(16)
 					.substring(1);
 			};
-			//return id of format 'soft - aaaaaaaa'-'aaaa'
+			//return id of format 'soft - aaaaa'
 			return 'soft - ' + s4();
 		};
 
@@ -61,19 +104,45 @@ const createOrder = async (orderParam) => {
 		await vUser.save();
 
 		// Returns new order to response
-		return Order.findById(newOrder._id)
-			.populate({
-				path: 'product_meta.product_id',
-				select: 'product_name product_image price customFees',
-			})
-			.populate({
-				path: 'store',
-				select: 'name address openingTime closingTime deliveryTime tax',
-			})
-			.populate({
-				path: 'user',
-				select: 'first_name last_name phone_number email',
-			});
+    const pipeline = [{ 
+      $unset: ['store.password','store.email','store.labels','store.phone_number', 'store.images', 'store.category', 'store.openingTime', 'store.closingTime',  'productData','user.password', 'user.cart']
+    }];
+    const neworder = await Order.aggregate()
+    .match({
+      orderId: newOrder.orderId
+    })
+    .lookup({
+      from: 'products',
+      localField: "orderItems.product",
+      foreignField: "_id",
+      as: "productData"
+    })
+    .lookup({
+      from: "stores",
+      localField: "store",
+      foreignField: "_id",
+      as: "store"
+    })
+    .lookup({
+      from: "users",
+      localField: "user",
+      foreignField: "_id",
+      as: "user"
+    })
+    .lookup({
+      from: "customfees",
+      localField: "orderItems.product",
+      foreignField: "product",
+      as: "productFees"
+    })
+    .addFields({
+      customFees: {$sum:'$productFees.amount' },
+      "user": { $arrayElemAt: [ "$user", 0 ] },
+      "store": { $arrayElemAt: [ "$store", 0 ] }
+    })
+    .append(pipeline)
+
+    return neworder
 	} catch (err) {
 		console.log(err);
 		return err;
@@ -89,10 +158,10 @@ const toggleFavorite = async (orderID) => {
 			throw { err: 'Invalid Order' };
 		}
 
-		order.favoriteAction(); //calls an instance method
+		order.isFavorite = !order.isFavorite;
 		order.save();
 
-		if (order.favorite) {
+		if (order.isFavorite) {
 			return { msg: 'Order marked as favorite' };
 		} else {
 			return { msg: 'Order removed from favorites' };
@@ -101,34 +170,6 @@ const toggleFavorite = async (orderID) => {
 		// return order;
 	} catch (err) {
 		return { err: 'Error marking order as favorite' };
-	}
-};
-
-const getFavorites = async (userID, urlParams) => {
-	try {
-		const limit = Number(urlParams.limit);
-		const skip = Number(urlParams.skip);
-		//get users favorite orders
-		let favoriteOrders = await Order.find({ user: userID, favorite: true })
-			.sort({ createdDate: -1 }) // -1 for descending sort
-			.limit(limit)
-			.skip(skip)
-			.populate({
-				path: 'product_meta.product_id',
-				select: 'product_name product_image price customFees',
-			})
-			.populate({
-				path: 'store',
-				select: 'name address openingTime closingTime deliveryTime tax',
-			})
-			.populate({
-				path: 'user',
-				select: 'first_name last_name phone_number email',
-			});
-
-		return favoriteOrders;
-	} catch (err) {
-		return { err: 'Error getting your favorite orders' };
 	}
 };
 
@@ -142,130 +183,96 @@ const getOrderDetails = async (orderID) => {
 		}
 		//get users order details
 		//can be used by users, stores and admin
-		const orderDetails = await Order.findById(orderID)
-			.populate({
-				path: 'product_meta.product_id',
-				select: 'product_name product_image price customFees',
-			})
-			.populate({
-				path: 'store',
-				select: 'name address openingTime closingTime deliveryTime tax',
-			})
-			.populate({
-				path: 'user',
-				select: 'first_name last_name phone_number email',
-			});
+	
+    const pipeline = [{ 
+      $unset: ['store.password','store.email','store.labels','store.phone_number', 'store.images', 'store.category', 'store.openingTime', 'store.closingTime',  'productData','user.password', 'user.cart']
+    }];
+    const orderDetails = await Order.aggregate()
+    .match({
+      orderId: order.orderId
+    })
+    .lookup({
+      from: 'products',
+      localField: "orderItems.product",
+      foreignField: "_id",
+      as: "productData"
+    })
+    .lookup({
+      from: "stores",
+      localField: "store",
+      foreignField: "_id",
+      as: "store"
+    })
+    .lookup({
+      from: "users",
+      localField: "user",
+      foreignField: "_id",
+      as: "user"
+    })
+    .lookup({
+      from: "customfees",
+      localField: "orderItems.product",
+      foreignField: "product",
+      as: "productFees"
+    })
+    .addFields({
+      customFees: {$sum:'$productFees.amount' },
+      "user": { $arrayElemAt: [ "$user", 0 ] },
+      "store": { $arrayElemAt: [ "$store", 0 ] }
+    })
+    .append(pipeline)
 
 		return orderDetails;
 	} catch (err) {
-		// return { err: 'error getting this order details' };
 		return err;
 	}
 };
 
-const getOrderHistory = async (userID, urlParams) => {
-	try {
-		const limit = Number(urlParams.limit);
-		const skip = Number(urlParams.skip);
-		//gets user order history
-		if (urlParams.favorite === true) {
-			console.log(urlParams.favorite);
-			let orders = await Order.find({ user: userID, favorite: true })
-				.sort({ createdDate: -1 }) // -1 for descending sort
-				.limit(limit)
-				.skip(skip)
-				.populate({
-					path: 'product_meta.product_id',
-					select: 'product_name product_image price customFees',
-				})
-				.populate({
-					path: 'store',
-					select: 'name address openingTime closingTime deliveryTime tax',
-				})
-				.populate({
-					path: 'user',
-					select: 'first_name last_name phone_number email',
-				});
-
-			return orders;
-		} else {
-			let orders = await Order.find({ user: userID })
-				.sort({ createdDate: -1 }) // -1 for descending sort
-				.limit(limit)
-				.skip(skip)
-				.populate({
-					path: 'product_meta.product_id',
-					select: 'product_name product_image price customFees',
-				})
-				.populate({
-					path: 'store',
-					select: 'name address openingTime closingTime deliveryTime tax',
-				})
-				.populate({
-					path: 'user',
-					select: 'first_name last_name phone_number email',
-				});
-
-			return orders;
-		}
-	} catch (error) {
-		return { err: 'error getting the order history' };
-	}
-};
-
-const getStoreOrderHistory = async (storeID, urlParams) => {
-	console.log(storeID, urlParams);
-	try {
-		const limit = Number(urlParams.limit);
-		const skip = Number(urlParams.skip);
-
-		//gets store order history
-		return await Order.find({ store: storeID })
-			.sort({ createdDate: -1 }) // -1 for descending sort
-			.limit(limit)
-			.skip(skip)
-			.populate({
-				path: 'product_meta.product_id',
-				select: 'product_name product_image price customFees',
-			})
-			.populate({
-				path: 'store',
-				select: 'name address openingTime closingTime deliveryTime tax',
-			})
-			.populate({
-				path: 'user',
-				select: 'first_name last_name phone_number email',
-			});
-	} catch (error) {
-		return { err: 'error getting the order history' };
-	}
-};
-
 const editOrder = async (orderID, orderParam) => {
-	const { product_meta, status } = orderParam;
-
-	let orderModifier = {};
-	if (product_meta) orderModifier.product_meta = product_meta;
-	if (status) orderModifier.status = status;
 	try {
 		//can be used by both stores and users
-		const newOrder = await Order.findByIdAndUpdate(
+		await Order.findByIdAndUpdate(
 			orderID,
-			{ $set: orderModifier },
+			{ $set: orderParam },
 			{ omitUndefined: true, new: true, useFindAndModify: false }
-		)
-			.populate({
-				path: 'product_meta.product_id',
-				select: 'product_name product_image price customFees',
-			})
-			.populate({
-				path: 'store',
-				select: 'name address openingTime closingTime deliveryTime tax',
-			})
-			.populate({
-				path: 'user',
-				select: 'first_name last_name phone_number email',
-			});
+		);
+    const pipeline = [{ 
+      $unset: ['store.password','store.email','store.labels','store.phone_number', 'store.images', 'store.category', 'store.openingTime', 'store.closingTime',  'productData','user.password', 'user.cart']
+    }];
+    const newOrder = await Order.aggregate()
+    .match({
+      _id: mongoose.Types.ObjectId(orderID)
+    })
+    .lookup({
+      from: 'products',
+      localField: "orderItems.product",
+      foreignField: "_id",
+      as: "productData"
+    })
+    .lookup({
+      from: "stores",
+      localField: "store",
+      foreignField: "_id",
+      as: "store"
+    })
+    .lookup({
+      from: "users",
+      localField: "user",
+      foreignField: "_id",
+      as: "user"
+    })
+    .lookup({
+      from: "customfees",
+      localField: "orderItems.product",
+      foreignField: "product",
+      as: "productFees"
+    })
+    .addFields({
+      customFees: {$sum:'$productFees.amount' },
+      "user": { $arrayElemAt: [ "$user", 0 ] },
+      "store": { $arrayElemAt: [ "$store", 0 ] }
+    })
+    .append(pipeline)
 
 		return newOrder;
 	} catch (error) {
@@ -291,11 +298,8 @@ export {
 	createOrder,
 	toggleFavorite,
 	getOrderDetails,
-	getFavorites,
-	getOrderHistory,
 	getCartItems,
 	editOrder,
-	getStoreOrderHistory,
 };
 
 // Updates

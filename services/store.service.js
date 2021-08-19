@@ -3,12 +3,13 @@ import bcrypt from 'bcryptjs';
 import mongoose from 'mongoose';
 
 import Store from '../models/store.model.js';
+import Product from '../models/product.model.js';
 
 const getStores = async (urlParams) => {
 	try {
 
     // declare fields to exclude from response
-    const pipeline = [{ $unset: ['products', 'productReview', 'password', 'email', 'address', 'phone_number', 'labels']} ];
+    const pipeline = [{ $unset: ['products', 'productReview', 'password', 'email', 'phone_number', 'labels']} ];
 
 		let storesWithRating = []; // container to hold stores based on rating search
 
@@ -85,7 +86,7 @@ const getStores = async (urlParams) => {
 const getStore = async (storeId) => {
 
     // declare fields to exclude from response
-  const pipeline = [{ $unset: ['products.store', 'products.rating', 'products.category', 'products.variants.data', 'productReview', 'password', 'email', 'address', 'phone_number']} ];
+  const pipeline = [{ $unset: ['products.store', 'products.rating', 'products.category', 'products.variants.data', 'productReview', 'password', 'email', 'phone_number']} ];
 
   // aggregating stores
   const store = await Store.aggregate()
@@ -289,4 +290,6 @@ const addLabel = async (storeId, labelParam) => {
   await store.save()
   return await Store.findById(storeId).select('-password, -__v');
 }
+
+
 export { getStores, createStore, loginStore, getLoggedInStore, updateStore, addLabel, getStore };

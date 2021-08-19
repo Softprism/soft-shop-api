@@ -11,28 +11,18 @@ const ProductSchema = mongoose.Schema({
 		required: true,
 	},
 	availability: { type: Boolean, required: true, default: true },
-  variants: {
-    status: {type: String, default: "active"}, // active||deleted
-    data: [{
-      variantTitle: {type: String}, // eg Toppings
-      variantItem: [{
-        itemName: {type: String},
-        itemThumbnail: {type: String},
-        itemPrice: {type: Number}
-      }]
-    }]
+  variant: {
+    availability: {type: Boolean, default: false},
+    items: [{type: mongoose.Schema.Types.ObjectId, ref: 'Variant'}]
   },
-  customFees: {
-    status: {type: String, default: "active"}, // active||deleted
-    data: [{
-        feeTitle: {type: String}, // eg container fee
-        amount: {type: Number}
-    }]
+  customFee: {
+    availability: {type: Boolean, default: false},  // active||deleted,
+    items: [{type: mongoose.Schema.Types.ObjectId, ref: 'CustomFees'}]
   },
 
   label: {type: mongoose.Schema.Types.ObjectId},
   status: {type: String, default: "active"}, // deleted||active
-	price: { type: String, required: true },
+	price: { type: Number, required: true },
 	rating: { type: String, required: false },
 	createdDate: { type: Date, default: Date.now },
 });

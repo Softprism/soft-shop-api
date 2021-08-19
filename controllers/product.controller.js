@@ -107,12 +107,51 @@ const reviewProduct = async (req, res, next) => {
   }
 	const newReview = await productService.reviewProduct(req.body);
 
-  if (newReview.err) {
-		return res.status(400).json({ success: false, msg: newReview.err });
-	}
-  
-	res.status(200).json({ success: true, result: newReview })
+	let storeID;
 
+	if (req.store === undefined && req.query.storeID === undefined) {
+		res
+			.status(400)
+			.json({ success: false, msg: 'unable to authenticate this store' });
+	}
+	if (req.store) storeID = req.store.id;
+	if (req.query.storeID && req.admin) storeID = req.query.storeID;
+
+	const addVariantItem = await productService.addVariantItem(req.params.variantId,req.body);
+
+	if (addVariantItem.err) {
+    console.log('error')
+		res.status(500).json({ success: false, msg: addVariantItem.err });
+	} else {
+    console.log('no error')
+		res.status(200).json({ success: true, result: addVariantItem });
+	}
+};
+
+const addCustomFee = async (req, res, next) => {
+	// verifiy permission
+	if (req.admin === undefined && req.store === undefined)
+		return res.status(403).json({
+			success: false,
+			msg: "You're not permitted to carry out this action",
+		});
+
+	let storeID;
+
+	if (req.store === undefined && req.query.storeID === undefined) {
+		res
+			.status(400)
+			.json({ success: false, msg: 'unable to authenticate this store' });
+	}
+	if (req.store) storeID = req.store.id;
+	if (req.query.storeID && req.admin) storeID = req.query.storeID;
+
+	const addCustomFee = await productService.addCustomFee(storeID, req.body);
+	if (addCustomFee.err) {
+		res.status(500).json({ success: false, msg: addCustomFee.err });
+	} else {
+		res.status(200).json({ success: true, result: addCustomFee });
+	}
 };
 
 const getProductDetails = async (req, res, next) => {
@@ -125,6 +164,30 @@ const getProductDetails = async (req, res, next) => {
   
 	res.status(200).json({ success: true, result: productDetails })
 
+const deleteCustomFee = async (req, res, next) => {
+	// verifiy permission
+	if (req.admin === undefined && req.store === undefined)
+		return res.status(403).json({
+			success: false,
+			msg: "You're not permitted to carry out this action",
+		});
+
+	let storeID;
+
+	if (req.store === undefined && req.query.storeID === undefined) {
+		res
+			.status(400)
+			.json({ success: false, msg: 'unable to authenticate this store' });
+	}
+	if (req.store) storeID = req.store.id;
+	if (req.query.storeID && req.admin) storeID = req.query.storeID;
+
+	const deleteCustomFee = await productService.deleteCustomFee(req.params.customFeeId);
+	if (deleteCustomFee.err) {
+		res.status(500).json({ success: false, msg: deleteCustomFee.err });
+	} else {
+		res.status(200).json({ success: true, result: deleteCustomFee });
+	}
 };
 export {
 	deleteProduct,
@@ -133,4 +196,9 @@ export {
 	getProducts,
   getProductDetails,
   reviewProduct,
+  addVariant,
+  updateVariant,
+  addVariantItem,
+  addCustomFee,
+  deleteCustomFee
 };
