@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import mongoose from 'mongoose';
 
 import User from '../models/user.model.js';
 import Product from '../models/product.model.js';
@@ -146,7 +147,29 @@ const loginUser = async (loginParam) => {
 // Get Logged in User info
 const getLoggedInUser = async (userParam) => {
 	try {
-		const user = await User.findById(userParam).select('-password')
+    const pipeline = [ { $unset: ['userReviews', 'userOrders', 'cart', 'password']} ];
+    const user = User.aggregate()
+    .match({
+      _id: mongoose.Types.ObjectId(userParam)
+    })
+    .lookup({
+      from: "reviews",
+      localField: "_id",
+      foreignField: "user",
+      as: "userReviews"
+    })
+    .lookup({
+      from: "orders",
+      localField: "_id",
+      foreignField: "user",
+      as: "userOrders"
+    })
+    .addFields({
+      totalReviews: {$size: '$userReviews'},
+      totalOrders: {$size: "$userOrders"}
+    })
+    .append(pipeline)
+
 		return user;
 	} catch (err) {
 		// console.error(err.message);
