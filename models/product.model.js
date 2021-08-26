@@ -17,7 +17,7 @@ const ProductSchema = mongoose.Schema({
   },
   customFee: {
     availability: {type: Boolean, default: false},  // active||deleted,
-    items: [{type: mongoose.Schema.Types.ObjectId, ref: 'CustomFees'}]
+    items: [{type: mongoose.Schema.Types.ObjectId, ref: 'CustomFee'}]
   },
 
   label: {type: mongoose.Schema.Types.ObjectId},

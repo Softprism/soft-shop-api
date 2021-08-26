@@ -92,18 +92,62 @@ const getProducts = async (getParam) => {
 };
 
 const getProductDetails = async (productId) => {
-  console.log(productId)
+  console.log(1, productId)
   try {
 
-    let product = await Product.findById(productId)
-    .populate(
-      { path: 'store', select: 'location name openingTime closingTime'}
-    )
-    .populate('category')
+    const pipeline = [{ 
+      $unset: ['store.password','store.email','store.labels','store.phone_number','category.image','productReview','store.address', 'variants.data']
+    }];
+    
+      let productDetails = Product.aggregate()
+      .match({_id: mongoose.Types.ObjectId(productId)})
+      // Get data from review collection for each product
+      .lookup({
+        from: 'reviews',
+        localField: '_id', 
+        foreignField: 'product', 
+        as: 'productReview'
+      })
+      // Populate store field
+      .lookup({
+        from: 'stores',
+        localField: 'store', 
+        foreignField: '_id', 
+        as: 'store'
+      })
+      // populat category field
+      .lookup({
+        from: 'categories',
+        localField: 'category', 
+        foreignField: '_id', 
+        as: 'category'
+      })
+      .lookup({
+        from: 'variants',
+        localField: 'variant.items', 
+        foreignField: '_id', 
+        as: 'variant'
+      })
+      .lookup({
+        from: 'customfees',
+        localField: '_id', 
+        foreignField: 'product', 
+        as: 'customFee'
+      })
+      // add the averageRating field for each product
+      .addFields({
+        "totalRates": {$sum:'$productReview.star' },
+        "ratingAmount": {$size: "$productReview"},
+        "averageRating": {$ceil: {$avg: '$productReview.star'}},
+      })
+      // $lookup produces array, $unwind go destructure everything to object
+      .unwind('$store')
+      .unwind("$category")
+      // removing fields we don't need
+      .append(pipeline)
+      
 
-    if(!product) throw {err: 'error finding product'};
-
-    return product;
+		return productDetails;
 
   } catch (error) {
     console.log(error)
