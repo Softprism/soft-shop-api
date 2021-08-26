@@ -15,8 +15,17 @@ const getCategories = async (urlParams) => {
       foreignField: 'category',
       as: 'products'
     })
+    .lookup({
+      from: 'stores',
+      localField: '_id',
+      foreignField: 'category',
+      as: 'stores'
+    })
     .addFields({
       productCount: {$size: '$products'}
+    })
+    .addFields({
+      storeCount: {$size: '$stores'}
     })
     .append(pipeline);
 
