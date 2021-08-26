@@ -41,7 +41,7 @@ const getProducts = async (getParam) => {
     }
 
     const pipeline = [{ 
-      $unset: ['store.password','store.email','store.labels','store.phone_number','category.image','productReview','store.address', 'variants.data']
+      $unset: ['store.password','store.email','store.labels','store.phone_number','category.image','productReview','store.address', 'variants.data', 'variant.items', 'customFee.items']
     }];
     
       let allProducts = Product.aggregate()
