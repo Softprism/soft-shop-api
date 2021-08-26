@@ -6,7 +6,7 @@ const getCategories = async (urlParams) => {
     const limit = Number(urlParams.limit);
 		const skip = Number(urlParams.skip);
     const pipeline = [{ 
-      $unset: ['products']
+      $unset: ['products', 'stores']
     }];
     return Category.aggregate()
     .lookup({
