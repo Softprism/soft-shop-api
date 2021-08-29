@@ -89,6 +89,20 @@ const editOrder = async (req, res, next) => {
 };
 //======================================================================
 
+const reviewOrder = async (req, res, next) => {
+  if(req.store) {
+    return res.status(400).json({ success: false, msg: 'action not allowed by store' });
+  }
+	const newReview = await orderService.reviewOrder(req.body);
+
+  if (newReview.err) {
+		return res.status(400).json({ success: false, msg: newReview.err });
+	}
+  
+	res.status(200).json({ success: true, result: newReview })
+
+};
+
 export {
 	getOrders,
 	createOrder,
@@ -96,4 +110,5 @@ export {
 	getOrderDetails,
 	getCartItems,
 	editOrder,
+  reviewOrder
 };

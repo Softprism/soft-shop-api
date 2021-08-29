@@ -68,7 +68,7 @@ const OrderSchema = mongoose.Schema(
 			default: false,
 		},
     status: {
-			type: String,
+			type: String, // "sent", "delivered", "canceled"
 			required: true,
 			default: "sent",
 		}

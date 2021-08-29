@@ -6,7 +6,10 @@ const ReviewSchema = mongoose.Schema({
 	product: {
 		type: mongoose.Schema.Types.ObjectId,
 		ref: 'Product',
-		required: true,
+	},
+  order: {
+		type: mongoose.Schema.Types.ObjectId,
+		ref: 'Order',
 	},
 	text: { type: String },
 });

@@ -10,6 +10,7 @@ import {
 	getOrderDetails,
 	getCartItems,
 	editOrder,
+  reviewOrder,
 } from '../controllers/order.controller.js';
 
 // @route   GET /
@@ -50,4 +51,8 @@ router.get('/user/cart', auth, getCartItems);
 // @access  Private
 router.put('/user/edit/:orderID', auth, editOrder);
 
+// @route   PUT /review
+// @desc    user adds review to their order
+// @access  Private
+router.put('/review', auth, reviewOrder)
 export default router;
