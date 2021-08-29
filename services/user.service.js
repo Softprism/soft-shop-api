@@ -147,7 +147,7 @@ const loginUser = async (loginParam) => {
 // Get Logged in User info
 const getLoggedInUser = async (userParam) => {
 	try {
-    const pipeline = [ { $unset: ['userReviews', 'userOrders', 'cart', 'password']} ];
+    const pipeline = [ { $unset: ['userReviews', 'userOrders', 'cart', 'password', 'orders']} ];
     const user = User.aggregate()
     .match({
       _id: mongoose.Types.ObjectId(userParam)
