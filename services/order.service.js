@@ -2,6 +2,8 @@ import Order from '../models/order.model.js';
 import User from '../models/user.model.js';
 import Store from '../models/store.model.js';
 import mongoose from 'mongoose';
+import Review from '../models/review.model.js';
+
 
 
 const getOrders = async (urlParams) => {
@@ -12,9 +14,6 @@ const getOrders = async (urlParams) => {
     if(urlParams.store) matchParam.store = mongoose.Types.ObjectId(urlParams.store)
     if(urlParams.user) matchParam.user = mongoose.Types.ObjectId(urlParams.user)
     if(urlParams.isFavorite) matchParam.isFavorite = urlParams.isFavorite
-
-    
-
 
     const pipeline = [{ 
       $unset: ['store.password','store.email','store.labels','store.phone_number', 'store.images', 'store.category', 'store.openingTime', 'store.closingTime',  'product_meta.details.variants', 'product_meta.details.store', 'product_meta.details.category','product_meta.details.label','productData', 'user.password', 'user.cart']
@@ -28,35 +27,11 @@ const getOrders = async (urlParams) => {
       foreignField: "_id",
       as: "productData"
     })
-    .lookup({
-      from: "stores",
-      localField: "store",
-      foreignField: "_id",
-      as: "store"
-    })
-    .lookup({
-      from: "users",
-      localField: "user",
-      foreignField: "_id",
-      as: "user"
-    })
-    .lookup({
-      from: "customfees",
-      localField: "orderItems.product",
-      foreignField: "product",
-      as: "productFees"
-    })
-    .addFields({
-      customFees: {$sum:'$productFees.amount' },
-      "user": { $arrayElemAt: [ "$user", 0 ] },
-      "store": { $arrayElemAt: [ "$store", 0 ] }
-    })
     .project({
-      isDelivered: 1,
-      isPaid: 1,
+      status: 1,
       totalPrice: 1,
-      orderItems: 1,
-      paymentMethod: 1
+      "orderItems.productName": 1,
+      orderId: 1
     })
     .append(pipeline)
     .sort('-createdDate')
@@ -293,6 +268,21 @@ const getCartItems = async (userID) => {
 	}
 };
 
+const reviewOrder = async (review) => {
+  try {
+    const product = await Order.findById(review.order);
+
+    if(!product) throw {err: 'order could not be found'}
+
+    const newReview = new Review(review)
+    await newReview.save()
+
+    return newReview
+  } catch (error) {
+    return error
+  }
+}
+
 export {
 	getOrders,
 	createOrder,
@@ -300,6 +290,7 @@ export {
 	getOrderDetails,
 	getCartItems,
 	editOrder,
+  reviewOrder
 };
 
 // Updates
