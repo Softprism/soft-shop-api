@@ -102,11 +102,6 @@ const loginUser = async (loginParam) => {
 	try {
 		// Find user with email
 		let user = await User.findOne({ email })
-			.populate({
-				path: 'cart.product_id',
-				select: 'product_name price availability',
-			})
-			.populate({ path: 'orders', select: 'orderId status' });
 
 		if (!user) {
 			throw { err: 'User not found' };
@@ -127,7 +122,7 @@ const loginUser = async (loginParam) => {
 			user: {
 				id: user.id,
 			},
-		};
+		}; 
 
 		// Generate and return token to server
 		const token = jwt.sign(payload, process.env.JWT_SECRET, {
@@ -138,7 +133,32 @@ const loginUser = async (loginParam) => {
 			throw { err: 'Missing Token' };
 		}
 
-		return { user, token };
+    const pipeline = [ { $unset: ['userReviews', 'userOrders', 'cart', 'password', 'orders']} ];
+
+    const userDetails = User.aggregate()
+    .match({
+      _id: mongoose.Types.ObjectId(user._id)
+    })
+    .lookup({
+      from: "reviews",
+      localField: "_id",
+      foreignField: "user",
+      as: "userReviews"
+    })
+    .lookup({
+      from: "orders",
+      localField: "_id",
+      foreignField: "user",
+      as: "userOrders"
+    })
+    .addFields({
+      totalReviews: {$size: '$userReviews'},
+      totalOrders: {$size: "$userOrders"},
+      token: token
+    })
+    .append(pipeline)
+
+		return userDetails;
 	} catch (err) {
 		return err;
 	}
