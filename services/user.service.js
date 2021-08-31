@@ -122,7 +122,7 @@ const loginUser = async (loginParam) => {
 			user: {
 				id: user.id,
 			},
-		};
+		}; 
 
 		// Generate and return token to server
 		const token = jwt.sign(payload, process.env.JWT_SECRET, {
@@ -134,7 +134,7 @@ const loginUser = async (loginParam) => {
 		}
 
     const pipeline = [ { $unset: ['userReviews', 'userOrders', 'cart', 'password', 'orders']} ];
-    
+
     const userDetails = User.aggregate()
     .match({
       _id: mongoose.Types.ObjectId(user._id)
