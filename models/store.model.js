@@ -19,6 +19,8 @@ const StoreSchema = mongoose.Schema({
     labelTitle: {type: String},
     labelThumb: {type: String} //Label thumbnail
   }],
+  isVerified: {type: Boolean, default: false}, // this validates a store on the platform
+  isActive: {type: Boolean, default: true},  // this shows if a store is available to receive orders
 	createdDate: { type: Date, default: Date.now },
   tax: { type: String },
 });

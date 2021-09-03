@@ -3,11 +3,10 @@ import bcrypt from 'bcryptjs';
 import mongoose from 'mongoose';
 
 import Store from '../models/store.model.js';
-import Product from '../models/product.model.js';
+
 
 const getStores = async (urlParams) => {
 	try {
-
     // declare fields to exclude from response
     const pipeline = [{ $unset: ['products', 'orderReview', 'password', 'email', 'phone_number', 'labels', 'orders']} ];
 
@@ -23,9 +22,20 @@ const getStores = async (urlParams) => {
     // initializing matchParam
     const matchParam = {}
 
+    if(urlParams.isOpen === "true" && urlParams.currentTime) {
+      matchParam.closingTime = { $gte: urlParams.currentTime }
+      matchParam.isActive = true
+    } // checking opened stores
+    
+    if(urlParams.isOpen === "false" && urlParams.currentTime) {
+      matchParam.closingTime = { $lte: urlParams.currentTime }
+      matchParam.isActive = false
+    } // checking closed stores
+
     if(urlParams.name) {
       matchParam.name = new RegExp(urlParams.name,'i')
     }
+
     if(urlParams.category) {
       urlParams.category = mongoose.Types.ObjectId(urlParams.category)
       matchParam.category = urlParams.category
@@ -88,6 +98,7 @@ const getStores = async (urlParams) => {
 			return stores;
 		}
 	} catch (err) {
+    console.log(err)
 		return err;
 	}
 };
