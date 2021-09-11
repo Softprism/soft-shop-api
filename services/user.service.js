@@ -88,9 +88,12 @@ const registerUser = async (userParam) => {
 		// unset user pass****d
 		user.password = undefined;
 
-		return { user, token };
+    // set user token
+    user.set( "token",token, { strict: false });
+
+		return user
 	} catch (err) {
-		// console.error(err);
+		console.log(12,err)
 		return err;
 	}
 };
