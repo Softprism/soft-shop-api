@@ -41,18 +41,11 @@ const getProducts = async (getParam) => {
     }
 
     const pipeline = [{ 
-      $unset: ['store.password','store.email','store.labels','store.phone_number','category.image','productReview','store.address', 'variants.data', 'variant.items', 'customFee.items']
+      $unset: ['store.password','store.email','store.labels','store.phone_number','category.image','store.address', 'variants.data', 'variant.items', 'customFee.items']
     }];
     
       let allProducts = Product.aggregate()
       .match(matchParam)
-      // Get data from review collection for each product
-      .lookup({
-        from: 'reviews',
-        localField: '_id', 
-        foreignField: 'product', 
-        as: 'productReview'
-      })
       // Populate store field
       .lookup({
         from: 'stores',
@@ -66,12 +59,6 @@ const getProducts = async (getParam) => {
         localField: 'category', 
         foreignField: '_id', 
         as: 'category'
-      })
-      // add the averageRating field for each product
-      .addFields({
-        "totalRates": {$sum:'$productReview.star' },
-        "ratingAmount": {$size: "$productReview"},
-        "averageRating": {$ceil: {$avg: '$productReview.star'}},
       })
       // $lookup produces array, $unwind go destructure everything to object
       .unwind('$store')
