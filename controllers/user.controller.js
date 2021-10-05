@@ -21,39 +21,39 @@ const getUsers = async (req, res) => {
 };
 
 const registerUser = async (req, res, next) => {
+  console.log(1)
 	const errors = validationResult(req);
+  console.log(errors)
 	if (!errors.isEmpty()) {
-		res.status(400).json({ errors: errors.array() });
+		return res.status(400).json({ success: false, msg: errors.array() });
 	}
 
 	const result = await userService.registerUser(req.body);
 
 	if (result.err) {
-		res.status(409).json({ success: false, msg: result.err });
+		return res.status(409).json({ success: false, msg: result.err });
 	}
 
-	console.log(result);
-
-	res.status(201).json({ success: true, result: result });
+	return res.status(201).json({ success: true, result: result });
 };
 
 const loginUser = async (req, res, next) => {
 	const errors = validationResult(req);
-	console.log(req.body);
+	console.log(errors);
 	if (!errors.isEmpty()) {
-		return res.status(400).json({ errors: errors.array() });
+		return res.status(400).json({ success: false, msg: errors });
 	}
 
 	// Call Login function from userService
 	const token = await userService.loginUser(req.body);
-
+  console.log(token)
 	if (token.err) {
 		res.status(403).json({ success: false, msg: token.err });
 	}
 
 	res.status(200).json({
 		success: true,
-		result: token,
+		result: token[0],
 	});
 };
 
@@ -69,7 +69,7 @@ const getLoggedInUser = async (req, res, next) => {
 
 	res.status(200).json({
 		success: true,
-		result: user,
+		result: user[0],
 	});
 };
 
@@ -118,5 +118,5 @@ export {
 	loginUser,
 	getLoggedInUser,
 	updateUser,
-	addItemToCart,
+	addItemToCart
 };

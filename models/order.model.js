@@ -1,30 +1,81 @@
 import mongoose from 'mongoose';
 
-const OrderSchema = mongoose.Schema({
-  orderId: {type: String, unique: true},
-	product_meta: [
-		{
-			product_id: {
-				type: mongoose.Schema.Types.ObjectId,
-				ref: 'Product',
-				required: true,
-			},
-			quantity: { type: String, required: true },
+const OrderSchema = mongoose.Schema(
+	{
+		user: {
+			type: mongoose.Schema.Types.ObjectId,
+			required: true,
+			ref: 'User',
 		},
-	],
-  paymentMethod: {type: String},
-  deliveryMethod: {type: String},
-  customFees: [{
-    feeType: {type: String},
-    amount: {type: Number}
-  }],
-	store: { type: mongoose.Schema.Types.ObjectId, ref: 'Store', required: true },
-	user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-	status: { type: String, required: true, default: 'sent' }, // "sent","received","delivered","canceled", "complete"
-	favorite: { type: Boolean, default: false },
-	createdDate: { type: Date, default: Date.now },
-});
+    store: {
+			type: mongoose.Schema.Types.ObjectId,
+			required: true,
+			ref: 'Store',
+		},
+		orderId: {
+			type: String,
+			unique: true,
+		},
+		orderItems: [
+			{
+				productName: { type: String, required: true },
+				qty: { type: Number, required: true },
+        productImage: { type: String, required: true },
+				price: { type: Number, required: true },
+				product: {
+					type: mongoose.Schema.Types.ObjectId,
+					required: true,
+					ref: 'Product',
+				},
+			},
+		],
+		deliveryAddress: {
+			type: String,
+			required: true,
+		},
+		paymentMethod: {
+			type: String,
+			required: true,
+		},
+		paymentResult: { type: String },
+		taxPrice: {
+			type: Number,
+			required: true,
+			default: 0.0,
+		},
+		deliveryPrice: {
+			type: Number,
+			required: true,
+			default: 0.0,
+		},
+		totalPrice: {
+			type: Number,
+			required: true,
+			default: 0.0,
+		},
+		isPaid: {
+			type: Boolean,
+			default: false,
+		},
+		isDelivered: {
+			type: Boolean,
+			required: true,
+			default: false,
+		},
+    isFavorite: {
+			type: Boolean,
+			required: true,
+			default: false,
+		},
+    status: {
+			type: String, // "sent", "delivered", "canceled" "enroute"
+			required: true,
+			default: "sent",
+		}
+	},
+	{ timestamps: true }
+);
 
 const Order = mongoose.model('Order', OrderSchema);
 
-export default Order
+export default Order;

@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import mongoose from 'mongoose';
 
 import User from '../models/user.model.js';
 import Product from '../models/product.model.js';
@@ -84,27 +85,15 @@ const registerUser = async (userParam) => {
 			expiresIn: 36000,
 		});
 
-
-		user.populate({
-			path: 'cart.product_id',
-			select: 'product_name price availability',
-		});
-
-		// .populate({path: 'orders', select: 'orderId status'})
-
 		// unset user pass****d
 		user.password = undefined;
 
-    user.populate({path: 'cart.product_id', select: 'product_name price availability'})
-    // .populate({path: 'orders', select: 'orderId status'})
-    
-    // unset user pass****d
-    user.password = undefined
+    // set user token
+    user.set( "token",token, { strict: false });
 
-
-		return { user, token };
+		return user
 	} catch (err) {
-		// console.error(err);
+		console.log(12,err)
 		return err;
 	}
 };
@@ -116,11 +105,6 @@ const loginUser = async (loginParam) => {
 	try {
 		// Find user with email
 		let user = await User.findOne({ email })
-			.populate({
-				path: 'cart.product_id',
-				select: 'product_name price availability',
-			})
-			.populate({ path: 'orders', select: 'orderId status' });
 
 		if (!user) {
 			throw { err: 'User not found' };
@@ -141,7 +125,7 @@ const loginUser = async (loginParam) => {
 			user: {
 				id: user.id,
 			},
-		};
+		}; 
 
 		// Generate and return token to server
 		const token = jwt.sign(payload, process.env.JWT_SECRET, {
@@ -152,7 +136,32 @@ const loginUser = async (loginParam) => {
 			throw { err: 'Missing Token' };
 		}
 
-		return { user, token };
+    const pipeline = [ { $unset: ['userReviews', 'userOrders', 'cart', 'password', 'orders']} ];
+
+    const userDetails = User.aggregate()
+    .match({
+      _id: mongoose.Types.ObjectId(user._id)
+    })
+    .lookup({
+      from: "reviews",
+      localField: "_id",
+      foreignField: "user",
+      as: "userReviews"
+    })
+    .lookup({
+      from: "orders",
+      localField: "_id",
+      foreignField: "user",
+      as: "userOrders"
+    })
+    .addFields({
+      totalReviews: {$size: '$userReviews'},
+      totalOrders: {$size: "$userOrders"},
+      token: token
+    })
+    .append(pipeline)
+
+		return userDetails;
 	} catch (err) {
 		return err;
 	}
@@ -160,9 +169,30 @@ const loginUser = async (loginParam) => {
 
 // Get Logged in User info
 const getLoggedInUser = async (userParam) => {
-	console.log('running');
 	try {
-		const user = await User.findById(userParam).select('-password');
+    const pipeline = [ { $unset: ['userReviews', 'userOrders', 'cart', 'password', 'orders']} ];
+    const user = User.aggregate()
+    .match({
+      _id: mongoose.Types.ObjectId(userParam)
+    })
+    .lookup({
+      from: "reviews",
+      localField: "_id",
+      foreignField: "user",
+      as: "userReviews"
+    })
+    .lookup({
+      from: "orders",
+      localField: "_id",
+      foreignField: "user",
+      as: "userOrders"
+    })
+    .addFields({
+      totalReviews: {$size: '$userReviews'},
+      totalOrders: {$size: "$userOrders"}
+    })
+    .append(pipeline)
+
 		return user;
 	} catch (err) {
 		// console.error(err.message);
@@ -172,7 +202,6 @@ const getLoggedInUser = async (userParam) => {
 
 // Update User Details
 const updateUser = async (updateParam, id) => {
-	console.log(updateParam, id);
 	const { address, password, email, phone_number } = updateParam;
 	// Build User Object
 	const userFields = {};
@@ -213,7 +242,7 @@ const updateUser = async (updateParam, id) => {
 		user = await User.findByIdAndUpdate(
 			id,
 			{ $set: userFields },
-			{ new: true, useFindAndModify: true }
+			{ omitUndefined: true, new: true, useFindAndModify: false }
 		);
 
 		user.cart = undefined;
@@ -222,6 +251,7 @@ const updateUser = async (updateParam, id) => {
 
 		return user;
 	} catch (err) {
+    console.log(error)
 		return err;
 	}
 };
@@ -235,7 +265,7 @@ const addItemToCart = async (userID, product) => {
 		let user = await User.findByIdAndUpdate(
 			userID,
 			{ $push: { cart: product } },
-			{ new: true, useFindAndModify: true }
+			{ omitUndefined: true, new: true, useFindAndModify: false }
 		).populate({
 			path: 'cart.product_id',
 			select: 'product_name price availability',
@@ -253,5 +283,5 @@ export {
 	loginUser,
 	getLoggedInUser,
 	updateUser,
-	addItemToCart,
+	addItemToCart
 };

@@ -70,5 +70,4 @@ router.put('/', auth, updateUser);
 // @access  Public
 router.put('/cart/', auth, addItemToCart);
 
-
 export default router;

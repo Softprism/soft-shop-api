@@ -77,6 +77,4 @@ router.put('/', auth, updateStore);
 // @access  Private
 router.put('/label', auth, addLabel);
 
-
-
 export default router;

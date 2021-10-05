@@ -5,11 +5,30 @@ const getCategories = async (urlParams) => {
 	try {
     const limit = Number(urlParams.limit);
 		const skip = Number(urlParams.skip);
-		const categories = await Category.find()
-    .sort({ createdDate: -1 }) // -1 for descending sort
-    .limit(limit)
-    .skip(skip)
-		return categories;
+    const pipeline = [{ 
+      $unset: ['products', 'stores']
+    }];
+    return Category.aggregate()
+    .lookup({
+      from: 'products',
+      localField: '_id',
+      foreignField: 'category',
+      as: 'products'
+    })
+    .lookup({
+      from: 'stores',
+      localField: '_id',
+      foreignField: 'category',
+      as: 'stores'
+    })
+    .addFields({
+      productCount: {$size: '$products'}
+    })
+    .addFields({
+      storeCount: {$size: '$stores'}
+    })
+    .append(pipeline);
+
 	} catch (err) {
 		return err;
 	}
@@ -73,7 +92,7 @@ const editCategory = async (editParams, id) => {
 		category = await Category.findByIdAndUpdate(
 			id,
 			{ $set: editParams },
-			{ new: true, useFindAndModify: true }
+			{ omitUndefined: true, new: true, useFindAndModify: false }
 		);
 
 		return category;

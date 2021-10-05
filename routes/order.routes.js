@@ -8,15 +8,9 @@ import {
 	createOrder,
 	toggleFavorite,
 	getOrderDetails,
-	getOrderHistory,
-	getStoreOrderHistory,
 	getCartItems,
 	editOrder,
-	cancelOrder,
-	completeOrder,
-	receiveOrder,
-	deliverOrder,
-	getFavorites,
+  reviewOrder,
 } from '../controllers/order.controller.js';
 
 // @route   GET /
@@ -47,16 +41,6 @@ router.patch('/toggle-favorite/:orderID', auth, toggleFavorite);
 // @access  Private
 router.get('/:orderID', auth, getOrderDetails);
 
-// @route   GET /user
-// @desc    get all orders created by a user, uses req.user.id or req.query.userID to validate user
-// @access  Private
-router.get('/user', auth, getOrderHistory);
-
-// @route   GET /store
-// @desc    get all orders owned by a store
-// @access  Private
-router.get('/store', auth, getStoreOrderHistory);
-
 // @route   GET /user/cart
 // @desc    get all products in user's cart
 // @access  Private
@@ -67,29 +51,8 @@ router.get('/user/cart', auth, getCartItems);
 // @access  Private
 router.put('/user/edit/:orderID', auth, editOrder);
 
-// @route   PUT /user/cancel/
-// @desc    cancels an order
+// @route   PUT /review
+// @desc    user adds review to their order
 // @access  Private
-router.put('/user/cancel/:orderID', auth, cancelOrder);
-
-// @route   PUT /deliver-order/:orderID
-// @desc    delivers an order
-// @access  Private
-router.put('/deliver-order/:orderID', auth, deliverOrder);
-
-// @route   PUT /receive-order/:orderID
-// @desc    receive an order
-// @access  Private
-router.put('/receive-order/:orderID', auth, receiveOrder);
-
-// @route   PUT /complete-order/:orderID
-// @desc    cancels an order
-// @access  Private
-router.put('/complete-order/:orderID', auth, completeOrder);
-
-// @route   PUT /favorites/:userID
-// @desc    get user favorite orders
-// @access  Private
-router.get('/favorites', auth, getFavorites);
-
+router.put('/review', auth, reviewOrder)
 export default router;

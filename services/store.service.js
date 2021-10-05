@@ -4,11 +4,11 @@ import mongoose from 'mongoose';
 
 import Store from '../models/store.model.js';
 
+
 const getStores = async (urlParams) => {
 	try {
-
     // declare fields to exclude from response
-    const pipeline = [{ $unset: ['products', 'productReview', 'password', 'email', 'address', 'phone_number', 'labels']} ];
+    const pipeline = [{ $unset: ['products', 'orderReview', 'password', 'email', 'phone_number', 'labels', 'orders']} ];
 
 		let storesWithRating = []; // container to hold stores based on rating search
 
@@ -22,9 +22,20 @@ const getStores = async (urlParams) => {
     // initializing matchParam
     const matchParam = {}
 
+    if(urlParams.isOpen === "true" && urlParams.currentTime) {
+      matchParam.closingTime = { $gte: urlParams.currentTime }
+      matchParam.isActive = true
+    } // checking opened stores
+    
+    if(urlParams.isOpen === "false" && urlParams.currentTime) {
+      matchParam.closingTime = { $lte: urlParams.currentTime }
+      matchParam.isActive = false
+    } // checking closed stores
+
     if(urlParams.name) {
       matchParam.name = new RegExp(urlParams.name,'i')
     }
+
     if(urlParams.category) {
       urlParams.category = mongoose.Types.ObjectId(urlParams.category)
       matchParam.category = urlParams.category
@@ -46,19 +57,28 @@ const getStores = async (urlParams) => {
       foreignField: 'store', 
       as: 'products' 
     })
+    //looking up the order collection for each stores
+    .lookup({
+      from: 'orders',
+      localField: '_id', 
+      foreignField: 'store', 
+      as: 'orders' 
+    })
     // looking up each product on the review collection
     .lookup({
       from: 'reviews',
-      localField: 'products._id', 
-      foreignField: 'product', 
-      as: 'productReview'
+      localField: 'orders._id', 
+      foreignField: 'order', 
+      as: 'orderReview'
     })
     // adding metrics to the response
     .addFields({
-      "totalRates": {$sum:'$productReview.star' },
-      "ratingAmount": {$size: "$productReview"},
-      "averageRating": {$ceil: {$avg: '$productReview.star'}},
-      "productCount": {$size: "$products"}
+      "sumOfStars": {$sum:'$orderReview.star' },
+      "numOfReviews": {$size: "$orderReview"},
+      "averageRating": {$ceil: {$avg: '$orderReview.star'}},
+      "productCount": {$size: "$products"},
+      "orderCount": {$size: "$orders"},
+
     })
     // appending excludes
     .append(pipeline)
@@ -78,6 +98,7 @@ const getStores = async (urlParams) => {
 			return stores;
 		}
 	} catch (err) {
+    console.log(err)
 		return err;
 	}
 };
@@ -85,7 +106,7 @@ const getStores = async (urlParams) => {
 const getStore = async (storeId) => {
 
     // declare fields to exclude from response
-  const pipeline = [{ $unset: ['products.store', 'products.rating', 'products.category', 'productReview', 'password', 'email', 'address', 'phone_number']} ];
+  const pipeline = [{ $unset: ['products.store', 'products.rating', 'products.category', 'products.variant.items', 'products.customFee.items', 'productReview', 'password', 'email', 'phone_number', 'orders', 'orderReview']} ];
 
   // aggregating stores
   const store = await Store.aggregate()
@@ -100,19 +121,28 @@ const getStore = async (storeId) => {
     foreignField: 'store', 
     as: 'products' 
   })
-  // looking up the store's products in the review collection
+  //looking up the order collection for each stores
+  .lookup({
+    from: 'orders',
+    localField: '_id', 
+    foreignField: 'store', 
+    as: 'orders' 
+  })
+  // looking up each product on the review collection
   .lookup({
     from: 'reviews',
-    localField: 'products._id', 
-    foreignField: 'product', 
-    as: 'productReview'
+    localField: 'orders._id', 
+    foreignField: 'order', 
+    as: 'orderReview'
   })
   // adding metrics to the response
   .addFields({
-    "totalRates": {$sum:'$productReview.star' },
-    "ratingAmount": {$size: "$productReview"},
-    "averageRating": {$ceil: {$avg: '$productReview.star'}},
-    "productCount": {$size: "$products"}
+    "sumOfStars": {$sum:'$orderReview.star' },
+    "numOfReviews": {$size: "$orderReview"},
+    "averageRating": {$ceil: {$avg: '$orderReview.star'}},
+    "productCount": {$size: "$products"},
+    "orderCount": {$size: "$orders"}
+
   })
   // appending excludes
   .append(pipeline)
@@ -227,7 +257,9 @@ const updateStore = async (storeID, updateParam) => {
 			images,
 			openingTime,
 			closingTime,
-      category
+      category,
+      labels,
+      tax
 		} = updateParam;
 
 		const storeUpdate = {};
@@ -252,6 +284,7 @@ const updateStore = async (storeID, updateParam) => {
     } 
 		if (phone_number) storeUpdate.email = phone_number;
     if (category) storeUpdate.category = category;
+    if (labels) storeUpdate.labels = labels;
 		if (password) {
 			const salt = await bcrypt.genSalt(10);
 			storeUpdate.password = await bcrypt.hash(password, salt);
@@ -264,7 +297,7 @@ const updateStore = async (storeID, updateParam) => {
 		store = await Store.findByIdAndUpdate(
 			storeID,
 			{ $set: storeUpdate },
-			{ new: true, useFindAndModify: true }
+			{ omitUndefined: true, new: true, useFindAndModify: false }
 		);
 
 		let storeRes = await Store.findById(storeID).select('-password, -__v');
@@ -286,4 +319,6 @@ const addLabel = async (storeId, labelParam) => {
   await store.save()
   return await Store.findById(storeId).select('-password, -__v');
 }
+
+
 export { getStores, createStore, loginStore, getLoggedInStore, updateStore, addLabel, getStore };

@@ -1,8 +1,11 @@
 import Product from '../models/product.model.js';
 import Store from '../models/store.model.js';
 import Review from '../models/review.model.js';
+import Variant from '../models/variant.model.js';
+import CustomFee from '../models/customFees.model.js';
+
 import mongoose from 'mongoose';
-import { get } from 'http';
+
 
 
 const getProducts = async (getParam) => {
@@ -10,37 +13,36 @@ const getProducts = async (getParam) => {
 		// get limit and skip from url parameters
 		const limit = Number(getParam.limit);
 		const skip = Number(getParam.skip);
-    const matchParam = {}
+    let matchParam = {}
     if(getParam.product_name) {
-      getParam.product_name = new RegExp(getParam.product_name,'i')
-      matchParam.product_name = getParam.product_name
+      matchParam.product_name = new RegExp(getParam.product_name,'i')
     }
     if(getParam.category) {
-      getParam.category = mongoose.Types.ObjectId(getParam.category)
-      matchParam.category = getParam.category
+      matchParam.category = mongoose.Types.ObjectId(getParam.category)
     }
     if(getParam.store) {
-      getParam.store = mongoose.Types.ObjectId(getParam.store)
-      matchParam.store = getParam.store
+      matchParam.store = mongoose.Types.ObjectId(getParam.store)
     }
     if(getParam.price) {
-      getParam.price = getParam.price
       matchParam.price = getParam.price
     }
     if(getParam.availability) {
       getParam.availability =  (getParam.availability === 'true')
       matchParam.availability = getParam.availability
-      console.log(getParam.availability,matchParam.availability,matchParam)
     }
     if(getParam.rating) {
-      getParam.rating = getParam.rating
       matchParam.rating = getParam.rating
     }
+    if(getParam.status) {
+      matchParam.status = getParam.status
+    }
+    if(getParam.label) {
+      matchParam.label = mongoose.Types.ObjectId(getParam.label)
+    }
 
-       const pipeline = [{ 
-         $unset: ['store.password','store.email','store.labels','store.phone_number','category.image','productReview.user','productReview.product,productReview.text','store.address']
-        }];
-
+    const pipeline = [{ 
+      $unset: ['store.password','store.email','store.labels','store.phone_number','category.image','productReview','store.address', 'variants.data', 'variant.items', 'customFee.items']
+    }];
     
       let allProducts = Product.aggregate()
       .match(matchParam)
@@ -89,58 +91,74 @@ const getProducts = async (getParam) => {
 	}
 };
 
-const findProduct = async (searchParam, opts) => {
-  // Refactored for in-store search
-	try {
-		opts.skip = Number(opts.skip);
-		opts.limit = Number(opts.limit);
-		const { skip, limit } = opts;
-		if (searchParam.product_name)
-			searchParam.product_name = new RegExp(searchParam.product_name, 'i');
-		// i for case insensitive
-		const searchedProducts = await Product.find(searchParam)
-			.sort({ createdDate: -1 }) // -1 for descending sort
-			.limit(limit) //number of records to return
-			.skip(skip) //number of records to skip
-      .select('-store')
-		  // .populate(
-      //   { path: 'store', select: 'location name openingTime closingTime'})
-      // .populate('category')
+const getProductDetails = async (productId) => {
+  console.log(1, productId)
+  try {
 
-		if (searchedProducts.length < 1) {
-			throw { msg: 'product not found' };
-		}
+    const pipeline = [{ 
+      $unset: ['store.password','store.email','store.labels','store.phone_number','category.image','productReview','store.address', 'variants.data']
+    }];
+    
+      let productDetails = Product.aggregate()
+      .match({_id: mongoose.Types.ObjectId(productId)})
+      // Get data from review collection for each product
+      .lookup({
+        from: 'reviews',
+        localField: '_id', 
+        foreignField: 'product', 
+        as: 'productReview'
+      })
+      // Populate store field
+      .lookup({
+        from: 'stores',
+        localField: 'store', 
+        foreignField: '_id', 
+        as: 'store'
+      })
+      // populat category field
+      .lookup({
+        from: 'categories',
+        localField: 'category', 
+        foreignField: '_id', 
+        as: 'category'
+      })
+      .lookup({
+        from: 'variants',
+        localField: 'variant.items', 
+        foreignField: '_id', 
+        as: 'variant'
+      })
+      .lookup({
+        from: 'customfees',
+        localField: '_id', 
+        foreignField: 'product', 
+        as: 'customFee'
+      })
+      // add the averageRating field for each product
+      .addFields({
+        "totalRates": {$sum:'$productReview.star' },
+        "ratingAmount": {$size: "$productReview"},
+        "averageRating": {$ceil: {$avg: '$productReview.star'}},
+      })
+      // $lookup produces array, $unwind go destructure everything to object
+      .unwind('$store')
+      .unwind("$category")
+      // removing fields we don't need
+      .append(pipeline)
+      
 
-		return searchedProducts;
-	} catch (error) {
-		return error;
-	}
-};
+		return productDetails;
 
-const getStoreProducts = async (storeId, getParam) => {
-	try {
-		// get limit and skip from url parameters
-		let limit = Number(getParam.limit);
-		let skip = Number(getParam.skip);
-		console.log(storeId);
-		//find store products
-		const storeProduct = await Product.find({ store: storeId })
-			.sort({ createdDate: -1 }) // -1 for descending sort
-			.limit(limit)
-			.skip(skip)
-			.populate(
-        { path: 'store', select: 'location name openingTime closingTime'})
-      .populate('category')
-		return storeProduct;
-	} catch (error) {
-		return error;
-	}
-};
+  } catch (error) {
+    console.log(error)
+    return error
+  }
+}
 
 const createProduct = async (productParam, storeId) => {
 	console.log(storeId);
 	try {
-		const { product_name, category, availability, price, product_image } =
+		const { product_name,product_description, category, label, price, product_image } =
 			productParam;
 
 		// validate store, we have to make sure we're assigning a product to a store
@@ -156,10 +174,11 @@ const createProduct = async (productParam, storeId) => {
 		const newProduct = new Product({
 			store: storeId,
 			product_name,
+      product_description,
 			category,
-			availability,
+			label,
 			price,
-			product_image,
+			product_image
 		});
 		await newProduct.save(); // save new product
 
@@ -171,36 +190,22 @@ const createProduct = async (productParam, storeId) => {
 
 const updateProduct = async (productParam, productId, storeId) => {
 	try {
-		console.log(storeId);
-		// validate store, we have to make sure the product belongs to a store
-		// const store = await Store.findById(storeId);
-		// console.log(store)
-		// if (!store) {
-		// 	throw {
-		// 		err: 'Unable to edit product in this store',
-		// 	};
-		// }
-
 		//check if product exists
-		const product = await Product.findOneAndUpdate({
-			_id: productId,
-			store: storeId,
-		}).catch((err) => {
-			throw { err: 'product not found' };
-		});
-
-		// if (!product) {
-		// 	throw {
-		// 		err: 'Product not found',
-		// 	};
-		// }
+		const product = await Product.findById(productId)
+		if (!product) {
+			throw {
+				err: 'Product not found',
+			};
+		}
 
 		//apply changes to the product
-		return await Product.findByIdAndUpdate(
+		let updateProduct =  await Product.findByIdAndUpdate(
 			productId,
 			{ $set: productParam },
-			{ new: true, useFindAndModify: true }
+			{ omitUndefined: true, new: true, useFindAndModify: false }
 		);
+
+    return updateProduct;
 	} catch (error) {
 		return error;
 	}
@@ -249,15 +254,109 @@ const reviewProduct = async (review) => {
   }
 }
 
+const addVariant = async (storeId, variantParam) => {
+  try {
+  let store = await Store.findById(storeId);
+  let product = await Product.findById(variantParam.product)
+
+  if (!store) throw { err: 'Store not found' }; // this ain't working
+  if (!product) throw {err: 'product not found'}; // this ain't working
+
+  let newVariant = new Variant(variantParam)
+  await newVariant.save()
+
+  if(newVariant.save()) {
+    product.variant.availability = true
+    product.variant.items.push(newVariant._id)
+    
+    await product.save()
+    console.log('updated products')
+  }
+
+  return await Variant.find({product: newVariant.product});
+  } catch (error) {
+    console.log(error)
+    return error
+  }
+}
+
+const updateVariant = async (variantId,updateParam) => {
+  try {
+    let variant = await Variant.findById(variantId)
+    if(!variant) throw {err: 'variant not found'}
+    // find a way to validate if variant exists
+
+    let updateVariant =  await Variant.findByIdAndUpdate(
+			variantId,
+			{ $set: updateParam },
+			{ omitUndefined: true, new: true, useFindAndModify: false }
+		);
+
+    return updateVariant
+  } catch (error) {
+    return error
+  }
+}
+
+const addVariantItem = async (variantId,variantParam) => {
+  try {
+    let variant = await Variant.findById(variantId)
+    if(!variant) throw {err: 'variant not found'}
+    variant.variantItems.push(variantParam)
+    variant.save()
+    return variant
+  } catch (error) {
+    return error
+  }
+}
+
+const addCustomFee = async (storeId, customrFeeParam) => {
+  try {
+  let store = await Store.findById(storeId);
+  let product = await Product.findById(customrFeeParam.product)
+
+  if (!store) throw { err: 'Store not found' };
+  if (!product) throw {err: 'product not found'}
+
+  let newCustomFee = new CustomFee(customrFeeParam)
+  await newCustomFee.save()
+
+  if(newCustomFee.save()) {
+    product.customFee.availability = true
+    product.customFee.items.push(newCustomFee._id)
+    await product.save()
+  }
+
+  return await CustomFee.find({product: newCustomFee.product});
+  } catch (error) {
+    return error
+  }
+}
+
+const deleteCustomFee = async(customFeeId) => {
+  try {
+    console.log(customFeeId)
+    let customFee = await CustomFee.findByIdAndDelete(customFeeId)
+    console.log(customFee)
+    if(!customFee) throw {err: 'custom fee not found'}
+    return "fee removed from product"
+  } catch (error) {
+    return error
+  }
+}
 
 export {
 	getProducts,
-	getStoreProducts,
 	createProduct,
 	updateProduct,
 	deleteProduct,
-	findProduct,
-  reviewProduct
+  getProductDetails,
+  reviewProduct,
+  addVariant,
+  updateVariant,
+  addVariantItem,
+  addCustomFee,
+  deleteCustomFee
 };
 
 //UPDATES

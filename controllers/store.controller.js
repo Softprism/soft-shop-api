@@ -159,4 +159,5 @@ const getStore = async (req, res, next) => {
 	}
 };
 
-export { getStores, createStore, loginStore, getLoggedInStore, updateStore, addLabel, getStore };
+
+export { getStores, createStore, loginStore, getLoggedInStore, updateStore, addLabel, getStore, };
