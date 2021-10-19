@@ -9,7 +9,10 @@ import {
 	loginUser,
 	getLoggedInUser,
 	updateUser,
-  addItemToCart
+  addItemToCart,
+  forgetPassword,
+  validateToken,
+  createNewPassword
 } from '../controllers/user.controller.js';
 
 import { auth } from '../middleware/auth.js';
@@ -59,15 +62,30 @@ router.post(
 
 router.get('/login', auth, getLoggedInUser);
 
-// @route   PUT user/:id
+// @route   PUT user/
 // @desc    Update User Details
 // @access  Private
 
 router.put('/', auth, updateUser);
 
-// @route   GET /cart/:id
+// @route   Put /cart
 // @desc    adds a product tp User's cart
 // @access  Public
-router.put('/cart/', auth, addItemToCart);
+router.put('/cart', auth, addItemToCart);
+
+// @route   PUT /password
+// @desc    reset a forget password
+// @access  Public
+router.put('/forget-password', forgetPassword);
+
+// @route   GET /token
+// @desc    validates a token
+// @access  Public
+router.get('/token', validateToken);
+
+// @route   PATCH /password
+// @desc    creates new password for user after forget password
+// @access  Public
+router.patch('/password', createNewPassword);
 
 export default router;

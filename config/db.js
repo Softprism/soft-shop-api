@@ -1,37 +1,5 @@
-// const mongoose = require('mongoose');
-
-// const connectionOptions = {
-// 	useCreateIndex: true,
-// 	useNewUrlParser: true,
-// 	useUnifiedTopology: true,
-// 	useFindAndModify: false,
-// 	useNewUrlParser: true,
-// 	useCreateIndex: true,
-// 	useFindAndModify: true,
-// };
-
-// try {
-// 	mongoose.connect(process.env.MONGO_URI, connectionOptions).then(() => {
-// 		console.log('Database Connected');
-// 	});
-// } catch (err) {
-// 	console.error(err.message);
-// 	process.exit(1);
-// }
-
-// mongoose.pluralize(null);
-// mongoose.Promise = global.Promise;
-
-// module.exports = {
-// 	User: require('../models/user.model'),
-// 	Store: require('../models/store.model'),
-// 	Product: require('../models/product.model'),
-// 	Category: require('../models/category.model'),
-// 	Order: require('../models/order.model'),
-// 	Admin: require('../models/admin.model'),
-// };
-
 import mongoose from 'mongoose';
+import nodemailer from 'nodemailer';
 
 const connectDB = async () => {
 	try {
@@ -48,4 +16,45 @@ const connectDB = async () => {
 	}
 };
 
-export default connectDB;
+const sendEmail = async (toEmail,mailSubj, mailBody) => {
+  console.log(1, toEmail)
+  let transporter = nodemailer.createTransport({
+    host: "mail.soft-shop.app",
+    port: 465,
+    secure: true,
+    auth: {
+      user: "nduka@soft-shop.app",
+      pass: "2021@Softprism",
+    },
+  });
+  
+  // verify connection configuration
+  transporter.verify(function (error, success) {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("Server is ready to take our messages");
+    }
+  });
+  
+  // set mail options
+  let mailOptions = {
+    from: '"Nduka from Softprism" <nduka@soft-shop.app>',
+    to: toEmail,
+    subject: mailSubj,
+    text: mailBody,
+  };
+  // send email
+  transporter.sendMail(mailOptions, function(err, data) {
+    if (err) {
+      console.log("Error " + err);
+    } else {
+      console.log("Email sent successfully");
+    }
+  });
+}
+
+export {
+  sendEmail,
+  connectDB
+}
