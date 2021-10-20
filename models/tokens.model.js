@@ -12,7 +12,7 @@ const tokenSchema = mongoose.Schema(
       required: true,
     },
     type: {
-      type: String,
+      type: String, // user-forget-password, user-signup
       required: true,
     },
     createdAt: {
