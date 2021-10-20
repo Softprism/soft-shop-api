@@ -104,6 +104,9 @@ const registerUser = async (userParam) => {
     let user = await User.findOne({ email });
 
     if (user) {
+      // return res
+      // 	.status(400)
+      // 	.json({ msg: 'User with this email already exists' });
       throw { err: "User with this email already exists" };
     }
 
@@ -324,7 +327,7 @@ const forgotPassword = async ({ email }) => {
     //Check if request has been made before, can be used for resend token
     let oldTokenRequest = await Token.findOne({
       email,
-      type: "forget-password",
+      type: "forgot-password",
     });
 
     if (oldTokenRequest) {
@@ -345,7 +348,7 @@ const forgotPassword = async ({ email }) => {
     // add token to DB
     let tokenData = {
       email,
-      token: otp,
+      otp,
       type: "forgot-password",
     };
 
@@ -362,11 +365,11 @@ const forgotPassword = async ({ email }) => {
   }
 };
 
-const validateToken = async ({ type, token, email }) => {
+const validateToken = async ({ type, otp, email }) => {
   try {
     // find token
     let userToken = await Token.findOne({
-      token,
+      otp,
       email,
       type,
     });
@@ -375,19 +378,18 @@ const validateToken = async ({ type, token, email }) => {
 
     return userToken;
   } catch (err) {
+    console.log(err);
     return err;
   }
 };
 
-const createNewPassword = async ({ email, password }) => {
+const createNewPassword = async ({ token, email, password }) => {
   try {
     // validates token
-    let userToken = await Token.findOne({
-      email,
-      type: "forgot-password",
-    });
+    let requestToken = await Token.findById(token);
 
-    if (!userToken) throw { err: "invalid token" };
+    // cancel operation if new password request doesn't have a token
+    if (!requestToken) throw { err: "invalid token" };
 
     // encrypting password
     const salt = await bcrypt.genSalt(10);
@@ -400,7 +402,7 @@ const createNewPassword = async ({ email, password }) => {
       { omitUndefined: true, new: true, useFindAndModify: false }
     );
 
-    await Token.findByIdAndDelete(userToken._id);
+    await Token.findByIdAndDelete(token);
 
     // Unsetting unneeded fields
     user.cart = undefined;
