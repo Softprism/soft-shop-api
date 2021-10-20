@@ -9,10 +9,10 @@ import {
 	loginUser,
 	getLoggedInUser,
 	updateUser,
-  addItemToCart,
-  forgetPassword,
-  validateToken,
-  createNewPassword
+	addItemToCart,
+	forgotPassword,
+	validateToken,
+	createNewPassword,
 } from '../controllers/user.controller.js';
 
 import { auth } from '../middleware/auth.js';
@@ -76,7 +76,7 @@ router.put('/cart', auth, addItemToCart);
 // @route   PUT /password
 // @desc    reset a forget password
 // @access  Public
-router.put('/forget-password', forgetPassword);
+router.put('/forgot-password', forgotPassword);
 
 // @route   GET /token
 // @desc    validates a token

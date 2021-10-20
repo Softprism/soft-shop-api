@@ -21,9 +21,9 @@ const getUsers = async (req, res) => {
 };
 
 const registerUser = async (req, res, next) => {
-  console.log(1)
+	console.log(1);
 	const errors = validationResult(req);
-  console.log(errors)
+	console.log(errors);
 	if (!errors.isEmpty()) {
 		return res.status(400).json({ success: false, msg: errors.array() });
 	}
@@ -45,7 +45,7 @@ const loginUser = async (req, res, next) => {
 
 	// Call Login function from userService
 	const token = await userService.loginUser(req.body);
-  console.log(token)
+	console.log(token);
 	if (token.err) {
 		return res.status(403).json({ success: false, msg: token.err });
 	}
@@ -111,33 +111,34 @@ const addItemToCart = async (req, res) => {
 	res.status(200).json({ success: true, result: action });
 };
 
-const forgetPassword = async (req, res) => {
-  const action = await userService.forgotPassword(req.body);
+const forgotPassword = async (req, res) => {
+	const action = await userService.forgotPassword(req.body);
 
-  if (action.err) {
+	if (action.err) {
 		return res.status(404).json({ success: false, msg: action.err });
 	}
 
 	return res.status(200).json({ success: true, result: action });
-}
+};
 
 const validateToken = async (req, res) => {
-  const action = await userService.validateToken(req.query)
-  if (action.err) {
+	const action = await userService.validateToken(req.query);
+
+	if (action.err) {
 		return res.status(404).json({ success: false, msg: action.err });
 	}
 
 	return res.status(200).json({ success: true, result: action });
-}
+};
 
 const createNewPassword = async (req, res) => {
-  const action = await userService.createNewPassword(req.body)
-  if (action.err) {
+	const action = await userService.createNewPassword(req.body);
+	if (action.err) {
 		return res.status(404).json({ success: false, msg: action.err });
 	}
 
 	return res.status(200).json({ success: true, result: action });
-}
+};
 export {
 	getUsers,
 	registerUser,
@@ -145,7 +146,7 @@ export {
 	getLoggedInUser,
 	updateUser,
 	addItemToCart,
-  forgetPassword,
-  validateToken,
-  createNewPassword
+	forgotPassword,
+	validateToken,
+	createNewPassword,
 };
