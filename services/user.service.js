@@ -4,6 +4,10 @@ import mongoose from 'mongoose';
 
 import User from '../models/user.model.js';
 import Product from '../models/product.model.js';
+import Token from '../models/tokens.model.js';
+
+import { sendEmail } from '../utils/sendMail.js';
+import otpGenerator from 'otp-generator';
 
 // Get all Users
 const getUsers = async (urlParams) => {
@@ -88,12 +92,11 @@ const registerUser = async (userParam) => {
 		// unset user pass****d
 		user.password = undefined;
 
-    // set user token
-    user.set( "token",token, { strict: false });
+		// set user token
+		user.set('token', token, { strict: false });
 
-		return user
+		return user;
 	} catch (err) {
-		console.log(12,err)
 		return err;
 	}
 };
@@ -104,7 +107,7 @@ const loginUser = async (loginParam) => {
 
 	try {
 		// Find user with email
-		let user = await User.findOne({ email })
+		let user = await User.findOne({ email });
 
 		if (!user) {
 			throw { err: 'User not found' };
@@ -125,7 +128,7 @@ const loginUser = async (loginParam) => {
 			user: {
 				id: user.id,
 			},
-		}; 
+		};
 
 		// Generate and return token to server
 		const token = jwt.sign(payload, process.env.JWT_SECRET, {
@@ -136,30 +139,32 @@ const loginUser = async (loginParam) => {
 			throw { err: 'Missing Token' };
 		}
 
-    const pipeline = [ { $unset: ['userReviews', 'userOrders', 'cart', 'password', 'orders']} ];
+		const pipeline = [
+			{ $unset: ['userReviews', 'userOrders', 'cart', 'password', 'orders'] },
+		];
 
-    const userDetails = User.aggregate()
-    .match({
-      _id: mongoose.Types.ObjectId(user._id)
-    })
-    .lookup({
-      from: "reviews",
-      localField: "_id",
-      foreignField: "user",
-      as: "userReviews"
-    })
-    .lookup({
-      from: "orders",
-      localField: "_id",
-      foreignField: "user",
-      as: "userOrders"
-    })
-    .addFields({
-      totalReviews: {$size: '$userReviews'},
-      totalOrders: {$size: "$userOrders"},
-      token: token
-    })
-    .append(pipeline)
+		const userDetails = User.aggregate()
+			.match({
+				_id: mongoose.Types.ObjectId(user._id),
+			})
+			.lookup({
+				from: 'reviews',
+				localField: '_id',
+				foreignField: 'user',
+				as: 'userReviews',
+			})
+			.lookup({
+				from: 'orders',
+				localField: '_id',
+				foreignField: 'user',
+				as: 'userOrders',
+			})
+			.addFields({
+				totalReviews: { $size: '$userReviews' },
+				totalOrders: { $size: '$userOrders' },
+				token: token,
+			})
+			.append(pipeline);
 
 		return userDetails;
 	} catch (err) {
@@ -170,32 +175,33 @@ const loginUser = async (loginParam) => {
 // Get Logged in User info
 const getLoggedInUser = async (userParam) => {
 	try {
-    const pipeline = [ { $unset: ['userReviews', 'userOrders', 'cart', 'password', 'orders']} ];
-    const user = User.aggregate()
-    .match({
-      _id: mongoose.Types.ObjectId(userParam)
-    })
-    .lookup({
-      from: "reviews",
-      localField: "_id",
-      foreignField: "user",
-      as: "userReviews"
-    })
-    .lookup({
-      from: "orders",
-      localField: "_id",
-      foreignField: "user",
-      as: "userOrders"
-    })
-    .addFields({
-      totalReviews: {$size: '$userReviews'},
-      totalOrders: {$size: "$userOrders"}
-    })
-    .append(pipeline)
+		const pipeline = [
+			{ $unset: ['userReviews', 'userOrders', 'cart', 'password', 'orders'] },
+		];
+		const user = User.aggregate()
+			.match({
+				_id: mongoose.Types.ObjectId(userParam),
+			})
+			.lookup({
+				from: 'reviews',
+				localField: '_id',
+				foreignField: 'user',
+				as: 'userReviews',
+			})
+			.lookup({
+				from: 'orders',
+				localField: '_id',
+				foreignField: 'user',
+				as: 'userOrders',
+			})
+			.addFields({
+				totalReviews: { $size: '$userReviews' },
+				totalOrders: { $size: '$userOrders' },
+			})
+			.append(pipeline);
 
 		return user;
 	} catch (err) {
-		// console.error(err.message);
 		return err;
 	}
 };
@@ -224,20 +230,6 @@ const updateUser = async (updateParam, id) => {
 
 		if (!user) throw { err: 'User not found' };
 
-		// ====== - AMBIGUOUS - =========== //
-		// We don't need to check for address, the DB
-		// Should be replaced by the new address in the body
-		// Request should contain existing address, so that
-		// we can easily scale this function.
-
-		// Check if address field is not empty
-		// if (address !== '' && address !== undefined) {
-		// 	// Check if address array is not empty
-		// 	if (!user.address.length < 1) {
-		// 		// Set the address value in user object to address found from db, then append new address
-		// 		userFields.address = [...user.address, address];
-		// 	}
-		// }
 		// Updates the user Object with the changed values
 		user = await User.findByIdAndUpdate(
 			id,
@@ -251,7 +243,6 @@ const updateUser = async (updateParam, id) => {
 
 		return user;
 	} catch (err) {
-    console.log(error)
 		return err;
 	}
 };
@@ -277,11 +268,117 @@ const addItemToCart = async (userID, product) => {
 	}
 };
 
+const forgotPassword = async ({ email }) => {
+	try {
+		// verify if user exists, throws error if not
+		let findUser = await User.findOne({ email });
+		if (!findUser) throw { err: 'email is not registered' };
+
+		//Check if request has been made before, can be used for resend token
+		let oldTokenRequest = await Token.findOne({
+			email,
+			type: 'forget-password',
+		});
+
+		if (oldTokenRequest) {
+			// resend old token
+			let email_subject = 'Password Reset Request';
+			await sendEmail(email, email_subject, oldTokenRequest.token);
+
+			return 0;
+		}
+
+		// generate OTP
+		let otp = otpGenerator.generate(4, {
+			alphabets: false,
+			upperCase: false,
+			specialChars: false,
+		});
+
+		// add token to DB
+		let tokenData = {
+			email,
+			token: otp,
+			type: 'forgot-password',
+		};
+
+		await new Token(tokenData).save();
+
+		// send otp
+		let email_subject = 'Password Reset Request';
+		let email_message = otp;
+		await sendEmail(email, email_subject, email_message);
+
+		return 1;
+	} catch (err) {
+		return err;
+	}
+};
+
+const validateToken = async ({ type, token, email }) => {
+	try {
+		// find token
+		let userToken = await Token.findOne({
+			token,
+			email,
+			type,
+		});
+
+		if (!userToken) throw { err: 'invalid token' };
+
+		return userToken;
+	} catch (err) {
+		return err;
+	}
+};
+
+const createNewPassword = async ({ email, password }) => {
+	try {
+		// validates token
+		let userToken = await Token.findOne({
+			email,
+			type: 'forgot-password',
+		});
+
+		if (!userToken) throw { err: 'invalid token' };
+
+		// encrypting password
+		const salt = await bcrypt.genSalt(10);
+		password = await bcrypt.hash(password, salt);
+
+		// update new password
+		let user = await User.findOneAndUpdate(
+			{ email },
+			{ $set: { password } },
+			{ omitUndefined: true, new: true, useFindAndModify: false }
+		);
+
+		await Token.findByIdAndDelete(userToken._id);
+
+		// Unsetting unneeded fields
+		user.cart = undefined;
+		user.password = undefined;
+		user.orders = undefined;
+
+		//send confirmation email
+		let email_subject = 'Password Reset Successful';
+		let email_message = 'Password has been reset successfully';
+		await sendEmail(email, email_subject, email_message);
+
+		return user;
+	} catch (err) {
+		return err;
+	}
+};
+
 export {
 	getUsers,
 	registerUser,
 	loginUser,
 	getLoggedInUser,
 	updateUser,
-	addItemToCart
+	addItemToCart,
+	forgotPassword,
+	validateToken,
+	createNewPassword,
 };

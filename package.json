@@ -2,9 +2,9 @@
 	"name": "soft-shop-api",
 	"version": "1.0.0",
 	"description": "api endpoint for the soft shop app",
-  "engines": {
-    "node": "14.x"
-  },
+	"engines": {
+		"node": "14.x"
+	},
 	"type": "module",
 	"scripts": {
 		"start": "node ./server.js",
@@ -21,6 +21,8 @@
 		"jsonwebtoken": "^8.5.1",
 		"mongodb": "^3.5.9",
 		"mongoose": "^5.9.21",
+		"nodemailer": "^6.7.0",
+		"otp-generator": "^3.0.0",
 		"rootpath": "^0.1.2"
 	},
 	"devDependencies": {

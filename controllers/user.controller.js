@@ -21,9 +21,9 @@ const getUsers = async (req, res) => {
 };
 
 const registerUser = async (req, res, next) => {
-  console.log(1)
+	console.log(1);
 	const errors = validationResult(req);
-  console.log(errors)
+	console.log(errors);
 	if (!errors.isEmpty()) {
 		return res.status(400).json({ success: false, msg: errors.array() });
 	}
@@ -39,16 +39,15 @@ const registerUser = async (req, res, next) => {
 
 const loginUser = async (req, res, next) => {
 	const errors = validationResult(req);
-	console.log(errors);
 	if (!errors.isEmpty()) {
 		return res.status(400).json({ success: false, msg: errors });
 	}
 
 	// Call Login function from userService
 	const token = await userService.loginUser(req.body);
-  console.log(token)
+	console.log(token);
 	if (token.err) {
-		res.status(403).json({ success: false, msg: token.err });
+		return res.status(403).json({ success: false, msg: token.err });
 	}
 
 	res.status(200).json({
@@ -112,11 +111,42 @@ const addItemToCart = async (req, res) => {
 	res.status(200).json({ success: true, result: action });
 };
 
+const forgotPassword = async (req, res) => {
+	const action = await userService.forgotPassword(req.body);
+
+	if (action.err) {
+		return res.status(404).json({ success: false, msg: action.err });
+	}
+
+	return res.status(200).json({ success: true, result: action });
+};
+
+const validateToken = async (req, res) => {
+	const action = await userService.validateToken(req.query);
+
+	if (action.err) {
+		return res.status(404).json({ success: false, msg: action.err });
+	}
+
+	return res.status(200).json({ success: true, result: action });
+};
+
+const createNewPassword = async (req, res) => {
+	const action = await userService.createNewPassword(req.body);
+	if (action.err) {
+		return res.status(404).json({ success: false, msg: action.err });
+	}
+
+	return res.status(200).json({ success: true, result: action });
+};
 export {
 	getUsers,
 	registerUser,
 	loginUser,
 	getLoggedInUser,
 	updateUser,
-	addItemToCart
+	addItemToCart,
+	forgotPassword,
+	validateToken,
+	createNewPassword,
 };
