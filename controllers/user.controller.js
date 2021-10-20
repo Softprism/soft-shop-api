@@ -33,7 +33,6 @@ const verifyEmailAddress = async (req, res) => {
 const registerUser = async (req, res, next) => {
   console.log(1);
   const errors = validationResult(req);
-  console.log(errors);
   if (!errors.isEmpty()) {
     return res.status(400).json({ success: false, msg: errors.array() });
   }
