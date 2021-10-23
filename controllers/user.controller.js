@@ -24,14 +24,13 @@ const verifyEmailAddress = async (req, res) => {
   const action = await userService.verifyEmailAddress(req.body);
 
   if (action.err) {
-    return res.status(404).json({ success: false, msg: action.err });
+    return res.status(403).json({ success: false, msg: action.err });
   }
 
-  return res.status(200).json({ success: true, result: action });
+  return res.status(202).json({ success: true, result: action });
 };
 
 const registerUser = async (req, res, next) => {
-  console.log(1);
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ success: false, msg: errors.array() });
@@ -72,7 +71,7 @@ const getLoggedInUser = async (req, res, next) => {
   console.log(user);
 
   if (user.err) {
-    res.status(500).json({ success: false, msg: user.err });
+    res.status(400).json({ success: false, msg: user.err });
   }
 
   res.status(200).json({
@@ -134,7 +133,7 @@ const validateToken = async (req, res) => {
   const action = await userService.validateToken(req.query);
 
   if (action.err) {
-    return res.status(404).json({ success: false, msg: action.err });
+    return res.status(403).json({ success: false, msg: action.err });
   }
 
   return res.status(200).json({ success: true, result: action });
@@ -143,7 +142,7 @@ const validateToken = async (req, res) => {
 const createNewPassword = async (req, res) => {
   const action = await userService.createNewPassword(req.body);
   if (action.err) {
-    return res.status(404).json({ success: false, msg: action.err });
+    return res.status(403).json({ success: false, msg: action.err });
   }
 
   return res.status(200).json({ success: true, result: action });

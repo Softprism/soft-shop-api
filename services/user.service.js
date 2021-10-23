@@ -46,7 +46,7 @@ const getUsers = async (urlParams) => {
   }
 };
 
-// Verify user email before sign up
+// send otp to Verify user email before sign up
 const verifyEmailAddress = async ({ email }) => {
   try {
     // check if user exists
