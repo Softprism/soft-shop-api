@@ -7,7 +7,7 @@ import Product from "../models/product.model.js";
 import Token from "../models/tokens.model.js";
 
 import { sendEmail } from "../utils/sendMail.js";
-import otpGenerator from "otp-generator";
+import { getOTP } from "../utils/sendOTP.js";
 
 // Get all Users
 const getUsers = async (urlParams) => {
@@ -46,11 +46,32 @@ const getUsers = async (urlParams) => {
   }
 };
 
+// Verify user email before sign up
+const verifyEmailAddress = async ({ email }) => {
+  try {
+    // check if user exists
+    let user = await User.findOne({ email });
+    if (user) {
+      throw { err: "User with this email already exists" };
+    }
+
+    let token = await getOTP("user-signup", email);
+
+    // send otp
+    let email_subject = "OTP For Account Creation";
+    let email_message = token.otp;
+    await sendEmail(email, email_subject, email_message);
+
+    return token;
+  } catch (err) {
+    return err;
+  }
+};
+
 // Register User
 const registerUser = async (userParam) => {
-  const { first_name, last_name, email, phone_number, password } = userParam;
-
   try {
+    const { first_name, last_name, email, phone_number, password } = userParam;
     let user = await User.findOne({ email });
 
     if (user) {
@@ -75,7 +96,10 @@ const registerUser = async (userParam) => {
     user.password = await bcrypt.hash(password, salt);
 
     // Save user to db
-    await user.save();
+    let newUser = await user.save();
+
+    // delete sign up token
+    if (newUser._id) await Token.findByIdAndDelete(userParam.token);
 
     // Define payload for token
     const payload = {
@@ -274,42 +298,14 @@ const forgotPassword = async ({ email }) => {
     let findUser = await User.findOne({ email });
     if (!findUser) throw { err: "email is not registered" };
 
-    //Check if request has been made before, can be used for resend token
-    let oldTokenRequest = await Token.findOne({
-      email,
-      type: "forgot-password",
-    });
-
-    if (oldTokenRequest) {
-      // resend old token
-      let email_subject = "Password Reset Request";
-      await sendEmail(email, email_subject, oldTokenRequest.token);
-
-      return 0;
-    }
-
-    // generate OTP
-    let otp = otpGenerator.generate(4, {
-      alphabets: false,
-      upperCase: false,
-      specialChars: false,
-    });
-
-    // add token to DB
-    let tokenData = {
-      email,
-      otp,
-      type: "forgot-password",
-    };
-
-    await new Token(tokenData).save();
+    let token = await getOTP("user-forgot-password", email);
 
     // send otp
-    let email_subject = "Password Reset Request";
-    let email_message = otp;
+    let email_subject = "forgot password";
+    let email_message = token.otp;
     await sendEmail(email, email_subject, email_message);
 
-    return 1;
+    return token;
   } catch (err) {
     return err;
   }
@@ -372,6 +368,7 @@ const createNewPassword = async ({ token, email, password }) => {
 
 export {
   getUsers,
+  verifyEmailAddress,
   registerUser,
   loginUser,
   getLoggedInUser,
