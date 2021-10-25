@@ -9,11 +9,12 @@ import {
   loginUser,
   getLoggedInUser,
   updateUser,
-  addItemToCart,
+  addItemToBasket,
   forgotPassword,
   validateToken,
   createNewPassword,
   verifyEmailAddress,
+  createUserBasket,
 } from "../controllers/user.controller.js";
 
 import { auth } from "../middleware/auth.js";
@@ -74,10 +75,15 @@ router.get("/login", auth, getLoggedInUser);
 
 router.put("/", auth, updateUser);
 
-// @route   Put /cart
+// @route   POST /cart
+// @desc    creates a basket for the user
+// @access  Public
+router.post("/basket", auth, createUserBasket);
+
+// @route   PUT /cart
 // @desc    adds a product tp User's cart
 // @access  Public
-router.put("/cart", auth, addItemToCart);
+router.put("/basket", auth, addItemToBasket);
 
 // @route   PUT /password
 // @desc    reset a forget password

@@ -108,12 +108,25 @@ const updateUser = async (req, res) => {
     user: user,
   });
 };
+const createUserBasket = async (req, res) => {
+  if (!req.body.store) {
+    return res
+      .status(400)
+      .json({ success: false, msg: "basket details required" });
+  }
+  const action = await userService.createUserBasket(req.user.id, req.body);
+  if (action.err) {
+    return res.status(403).json({ success: false, msg: action.err });
+  }
 
-const addItemToCart = async (req, res) => {
-  const action = await userService.addItemToCart(req.user.id, req.body);
+  res.status(200).json({ success: true, result: action });
+};
+
+const addItemToBasket = async (req, res) => {
+  const action = await userService.addItemToBasket(req.body);
 
   if (action.err) {
-    return es.status(404).json({ success: false, msg: action.err });
+    return res.status(400).json({ success: false, msg: action.err });
   }
 
   res.status(200).json({ success: true, result: action });
@@ -154,8 +167,9 @@ export {
   loginUser,
   getLoggedInUser,
   updateUser,
-  addItemToCart,
+  addItemToBasket,
   forgotPassword,
   validateToken,
   createNewPassword,
+  createUserBasket,
 };

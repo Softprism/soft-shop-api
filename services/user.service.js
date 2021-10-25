@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import User from "../models/user.model.js";
 import Product from "../models/product.model.js";
 import Token from "../models/tokens.model.js";
+import Basket from "../models/user-cart.model.js";
 
 import { sendEmail } from "../utils/sendMail.js";
 import { getOTP } from "../utils/sendOTP.js";
@@ -270,25 +271,52 @@ const updateUser = async (updateParam, id) => {
     return err;
   }
 };
+const createUserBasket = async (userId, basketMeta) => {
+  // baskets should be initialized for users
+  // basket is created per store
 
-const addItemToCart = async (userID, product) => {
+  // add user ID to basketMeta
+  basketMeta.user = userId;
   try {
-    const productFinder = await Product.findById(product.product_id);
+    // first verify if user already has a basket for the store
+    let existingBasket = await Basket.findOne(basketMeta);
+    if (existingBasket) throw { err: "user has a basket for this store!" };
 
-    if (!productFinder) throw { err: "can't find this product" };
+    // create basket if none exists
+    let newBasket = new Basket(basketMeta);
+    newBasket.save();
+    return newBasket;
+  } catch (err) {
+    return err;
+  }
+};
+const addItemToBasket = async (basketItemMeta) => {
+  try {
+    const { user, store, orderItem, basketId } = basketItemMeta;
+    // verify if basket exisits - extra security reasons
+    let existingBasket = await Basket.findById(basketId);
+    if (!existingBasket) throw { err: "user has no basket for this store" };
 
-    let user = await User.findByIdAndUpdate(
-      userID,
-      { $push: { cart: product } },
+    // check and increase quantity if item exists in basket
+    let exisitingItem = await Basket.findOneAndUpdate(
+      {
+        user: existingBasket.user,
+        store: existingBasket.store,
+        "orderItems.product": orderItem.product,
+      },
+      { $inc: { "orderItems.$.qty": 1 } },
       { omitUndefined: true, new: true, useFindAndModify: false }
-    ).populate({
-      path: "cart.product_id",
-      select: "product_name price availability",
-    });
-
-    return user.cart;
-  } catch (error) {
-    return { err: "error adding product to cart" };
+    );
+    if (exisitingItem) {
+      return exisitingItem;
+    } else {
+      // push a new item to the orderItems array
+      existingBasket.orderItems.push(basketItemMeta.orderItem);
+      await existingBasket.save();
+      return existingBasket;
+    }
+  } catch (err) {
+    return err;
   }
 };
 
@@ -324,7 +352,6 @@ const validateToken = async ({ type, otp, email }) => {
 
     return userToken;
   } catch (err) {
-    console.log(err);
     return err;
   }
 };
@@ -373,8 +400,9 @@ export {
   loginUser,
   getLoggedInUser,
   updateUser,
-  addItemToCart,
+  addItemToBasket,
   forgotPassword,
   validateToken,
   createNewPassword,
+  createUserBasket,
 };
