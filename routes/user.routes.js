@@ -16,6 +16,7 @@ import {
   verifyEmailAddress,
   getUserBasketItems,
   // createUserBasket,
+  editBasketItems,
 } from "../controllers/user.controller.js";
 
 import { auth } from "../middleware/auth.js";
@@ -81,10 +82,15 @@ router.put("/", auth, updateUser);
 // @access  Public
 router.get("/basket", auth, getUserBasketItems);
 
-// @route   PUT /cart
+// @route   PUT /basket
 // @desc    adds a product tp User's cart
 // @access  Public
-router.put("/basket", auth, addItemToBasket);
+router.post("/basket", auth, addItemToBasket);
+
+// @route   PUT /basket
+// @desc    adds a product tp User's cart
+// @access  Public
+router.put("/basket", auth, editBasketItems);
 
 // @route   PUT /password
 // @desc    reset a forget password
