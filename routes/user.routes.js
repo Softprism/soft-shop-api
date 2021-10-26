@@ -14,7 +14,7 @@ import {
   validateToken,
   createNewPassword,
   verifyEmailAddress,
-  createUserBasket,
+  // createUserBasket,
 } from "../controllers/user.controller.js";
 
 import { auth } from "../middleware/auth.js";
@@ -75,10 +75,10 @@ router.get("/login", auth, getLoggedInUser);
 
 router.put("/", auth, updateUser);
 
-// @route   POST /cart
-// @desc    creates a basket for the user
-// @access  Public
-router.post("/basket", auth, createUserBasket);
+// // @route   POST /cart
+// // @desc    creates a basket for the user
+// // @access  Public
+// router.post("/basket", auth, createUserBasket);
 
 // @route   PUT /cart
 // @desc    adds a product tp User's cart

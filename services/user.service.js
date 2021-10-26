@@ -271,27 +271,29 @@ const updateUser = async (updateParam, id) => {
     return err;
   }
 };
-const createUserBasket = async (userId, basketMeta) => {
-  // baskets should be initialized for users
-  // basket is created per store
+// const createUserBasket = async (userId, basketMeta) => { DEPRECATED
+//   // baskets should be initialized for users
+//   // basket is created per store
 
-  // add user ID to basketMeta
-  basketMeta.user = userId;
-  try {
-    // first verify if user already has a basket for the store
-    let existingBasket = await Basket.findOne(basketMeta);
-    if (existingBasket) throw { err: "user has a basket for this store!" };
+//   // add user ID to basketMeta
+//   basketMeta.user = userId;
+//   try {
+//     // first verify if user already has a basket for the store
+//     let existingBasket = await Basket.findOne(basketMeta);
+//     if (existingBasket) throw { err: "user has a basket for this store!" };
 
-    // create basket if none exists
-    let newBasket = new Basket(basketMeta);
-    newBasket.save();
-    return newBasket;
-  } catch (err) {
-    return err;
-  }
-};
+//     // create basket if none exists
+//     let newBasket = new Basket(basketMeta);
+//     newBasket.save();
+//     return newBasket;
+//   } catch (err) {
+//     return err;
+//   }
+// };
 const addItemToBasket = async (basketItemMeta) => {
   try {
+    // add user ID to basketMeta
+    basketMeta.user = userId;
     const { user, store, orderItem, basketId } = basketItemMeta;
     // verify if basket exisits - extra security reasons
     let existingBasket = await Basket.findById(basketId);
@@ -404,5 +406,5 @@ export {
   forgotPassword,
   validateToken,
   createNewPassword,
-  createUserBasket,
+  // createUserBasket,
 };
