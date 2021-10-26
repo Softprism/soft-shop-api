@@ -123,7 +123,7 @@ const updateUser = async (req, res) => {
 // };
 
 const addItemToBasket = async (req, res) => {
-  const action = await userService.addItemToBasket(req.body);
+  const action = await userService.addItemToBasket(req.user.id, req.body);
 
   if (action.err) {
     return res.status(400).json({ success: false, msg: action.err });

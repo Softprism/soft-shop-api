@@ -8,9 +8,15 @@ const BasketSchema = mongoose.Schema(
       ref: "User",
     },
     product: {
-      type: mongoose.Schema.Types.ObjectId,
-      required: true,
-      ref: "Product",
+      productName: { type: String, required: true },
+      qty: { type: Number, required: true, default: 1 },
+      productImage: { type: String, required: true },
+      price: { type: Number, required: true },
+      productId: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: "Product",
+      },
     },
   },
   { timestamps: true }

@@ -290,33 +290,32 @@ const updateUser = async (updateParam, id) => {
 //     return err;
 //   }
 // };
-const addItemToBasket = async (basketItemMeta) => {
+const addItemToBasket = async (userId, basketItemMeta) => {
   try {
     // add user ID to basketMeta
-    basketMeta.user = userId;
-    const { user, store, orderItem, basketId } = basketItemMeta;
-    // verify if basket exisits - extra security reasons
-    let existingBasket = await Basket.findById(basketId);
-    if (!existingBasket) throw { err: "user has no basket for this store" };
+    basketItemMeta.user = userId;
 
-    // check and increase quantity if item exists in basket
-    let exisitingItem = await Basket.findOneAndUpdate(
-      {
-        user: existingBasket.user,
-        store: existingBasket.store,
-        "orderItems.product": orderItem.product,
-      },
-      { $inc: { "orderItems.$.qty": 1 } },
-      { omitUndefined: true, new: true, useFindAndModify: false }
-    );
-    if (exisitingItem) {
-      return exisitingItem;
-    } else {
-      // push a new item to the orderItems array
-      existingBasket.orderItems.push(basketItemMeta.orderItem);
-      await existingBasket.save();
-      return existingBasket;
-    }
+    // add item to basket
+    let newBasketItem = new Basket(basketItemMeta);
+    await newBasketItem.save();
+
+    // get total price in basket
+    const totalProductPriceInBasket = await Basket.aggregate()
+      .match({
+        user: mongoose.Types.ObjectId(userId),
+      })
+      .group({
+        _id: "$user",
+        total: { $sum: "$product.price" },
+      });
+
+    // add 'total' field to user basket
+    let userBasket = await Basket.aggregate().match({
+      user: mongoose.Types.ObjectId(userId),
+    });
+    userBasket.push({ total: totalProductPriceInBasket[0].total });
+
+    return userBasket;
   } catch (err) {
     return err;
   }
