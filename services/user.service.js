@@ -328,7 +328,6 @@ const editBasketItems = async (userId, basketMeta) => {
   try {
     // check if basket exists
     let userBasket = await Basket.findById(basketMeta.basketId);
-    console.log(userBasket);
     if (!userBasket) throw { err: "basket not found" };
 
     // update basket with new data
@@ -337,6 +336,38 @@ const editBasketItems = async (userId, basketMeta) => {
       { $set: basketMeta },
       { omitUndefined: true, new: true, useFindAndModify: false }
     );
+
+    // return user basket items
+    return await getUserBasketItems(userId);
+  } catch (err) {
+    return err;
+  }
+};
+
+const deleteBasketItem = async (userId, { basketId }) => {
+  try {
+    // check if basket exists
+    let userBasket = await Basket.findById(basketId);
+    if (!userBasket) throw { err: "basket not found" };
+
+    // update basket with new data
+    await Basket.findByIdAndDelete(basketId);
+
+    // return user basket items
+    return await getUserBasketItems(userId);
+  } catch (err) {
+    return err;
+  }
+};
+
+const deleteAllBasketItems = async (userId) => {
+  try {
+    // check if basket exists
+    let userBasket = await Basket.find({ user: userId });
+    if (!userBasket) throw { err: "user basket not found" };
+
+    // update basket with new data
+    await Basket.deleteMany({ user: userId });
 
     // return user basket items
     return await getUserBasketItems(userId);
@@ -432,4 +463,6 @@ export {
   // createUserBasket,
   getUserBasketItems,
   editBasketItems,
+  deleteBasketItem,
+  deleteAllBasketItems,
 };
