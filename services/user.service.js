@@ -290,35 +290,38 @@ const updateUser = async (updateParam, id) => {
 //     return err;
 //   }
 // };
+
 const addItemToBasket = async (userId, basketItemMeta) => {
-  try {
-    // add user ID to basketMeta
-    basketItemMeta.user = userId;
+  // add user ID to basketMeta
+  basketItemMeta.user = userId;
 
-    // add item to basket
-    let newBasketItem = new Basket(basketItemMeta);
-    await newBasketItem.save();
+  // add item to basket
+  let newBasketItem = new Basket(basketItemMeta);
+  await newBasketItem.save();
 
-    // get total price in basket
-    const totalProductPriceInBasket = await Basket.aggregate()
-      .match({
-        user: mongoose.Types.ObjectId(userId),
-      })
-      .group({
-        _id: "$user",
-        total: { $sum: "$product.price" },
-      });
+  // return user basket items
+  return await getUserBasketItems(userId);
+};
 
-    // add 'total' field to user basket
-    let userBasket = await Basket.aggregate().match({
+const getUserBasketItems = async (userId) => {
+  // get total price in basket
+  const totalProductPriceInBasket = await Basket.aggregate()
+    .match({
       user: mongoose.Types.ObjectId(userId),
+    })
+    .group({
+      _id: "$user",
+      total: { $sum: "$product.price" },
     });
-    userBasket.push({ total: totalProductPriceInBasket[0].total });
-
-    return userBasket;
-  } catch (err) {
-    return err;
-  }
+  // get user basket items
+  let userBasket = await Basket.aggregate().match({
+    user: mongoose.Types.ObjectId(userId),
+  });
+  return {
+    userBasket,
+    total: totalProductPriceInBasket[0].total,
+    count: userBasket.length,
+  };
 };
 
 const forgotPassword = async ({ email }) => {
@@ -406,4 +409,5 @@ export {
   validateToken,
   createNewPassword,
   // createUserBasket,
+  getUserBasketItems,
 };

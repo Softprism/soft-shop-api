@@ -122,14 +122,34 @@ const updateUser = async (req, res) => {
 //   res.status(200).json({ success: true, result: action });
 // };
 
-const addItemToBasket = async (req, res) => {
-  const action = await userService.addItemToBasket(req.user.id, req.body);
+const addItemToBasket = async (req, res, next) => {
+  try {
+    const action = await userService.addItemToBasket(req.user.id, req.body);
+    if (!action) {
+      return res
+        .status(400)
+        .json({ success: false, msg: "error adding item to basket" });
+    }
 
-  if (action.err) {
-    return res.status(400).json({ success: false, msg: action.err });
+    res.status(200).json({ success: true, result: action });
+  } catch (error) {
+    next(error);
   }
+};
 
-  res.status(200).json({ success: true, result: action });
+const getUserBasketItems = async (req, res, next) => {
+  try {
+    const action = await userService.getUserBasketItems(req.user.id);
+    if (!action) {
+      return res
+        .status(400)
+        .json({ success: false, msg: "error adding item to basket" });
+    }
+
+    res.status(200).json({ success: true, result: action });
+  } catch (error) {
+    next(error);
+  }
 };
 
 const forgotPassword = async (req, res) => {
@@ -172,4 +192,5 @@ export {
   validateToken,
   createNewPassword,
   // createUserBasket,
+  getUserBasketItems,
 };
