@@ -324,6 +324,27 @@ const getUserBasketItems = async (userId) => {
   };
 };
 
+const editBasketItems = async (userId, basketMeta) => {
+  try {
+    // check if basket exists
+    let userBasket = await Basket.findById(basketMeta.basketId);
+    console.log(userBasket);
+    if (!userBasket) throw { err: "basket not found" };
+
+    // update basket with new data
+    let updateBasket = await Basket.findByIdAndUpdate(
+      basketMeta.basketId,
+      { $set: basketMeta },
+      { omitUndefined: true, new: true, useFindAndModify: false }
+    );
+
+    // return user basket items
+    return await getUserBasketItems(userId);
+  } catch (err) {
+    return err;
+  }
+};
+
 const forgotPassword = async ({ email }) => {
   try {
     // verify if user exists, throws error if not
@@ -410,4 +431,5 @@ export {
   createNewPassword,
   // createUserBasket,
   getUserBasketItems,
+  editBasketItems,
 };

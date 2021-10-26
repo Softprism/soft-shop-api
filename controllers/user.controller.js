@@ -152,6 +152,19 @@ const getUserBasketItems = async (req, res, next) => {
   }
 };
 
+const editBasketItems = async (req, res, next) => {
+  try {
+    const action = await userService.editBasketItems(req.user.id, req.body);
+    if (action.err) {
+      return res.status(400).json({ success: false, msg: action.err });
+    }
+
+    res.status(200).json({ success: true, result: action });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const forgotPassword = async (req, res) => {
   const action = await userService.forgotPassword(req.body);
 
@@ -193,4 +206,5 @@ export {
   createNewPassword,
   // createUserBasket,
   getUserBasketItems,
+  editBasketItems,
 };
