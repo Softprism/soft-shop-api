@@ -185,9 +185,8 @@ const getLabels = async (req, res, next) => {
 };
 
 const getStore = async (req, res, next) => {
-  console.log(1, req.params);
-  const storeDetails = await storeService.getStore(req.store.storeId);
-  console.log(2, storeDetails);
+  const storeDetails = await storeService.getStore(req.params.storeId);
+
   if (storeDetails.err) {
     return res.status(403).json({ success: false, msg: storeDetails.err });
   } else {
