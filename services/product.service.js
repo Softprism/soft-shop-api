@@ -314,6 +314,19 @@ const addVariantItem = async (variantId, variantParam) => {
   }
 };
 
+const getVariantItem = async (variantId) => {
+  // add items to a variant label
+  try {
+    // find variant
+    let variant = await Variant.findById(variantId);
+    if (!variant) throw { err: "variant not found" };
+
+    return variant.variantItems;
+  } catch (error) {
+    return error;
+  }
+};
+
 const addCustomFee = async (storeId, customrFeeParam) => {
   try {
     let store = await Store.findById(storeId);
@@ -359,6 +372,7 @@ export {
   createVariant,
   updateVariant,
   addVariantItem,
+  getVariantItem,
   addCustomFee,
   deleteCustomFee,
 };

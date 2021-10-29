@@ -13,6 +13,7 @@ import {
   createVariant,
   updateVariant,
   addVariantItem,
+  getVariantItem,
   addCustomFee,
   deleteCustomFee,
 } from "../controllers/product.controller.js";
@@ -52,6 +53,11 @@ router.put("/variants/:variantId/item", auth, addVariantItem);
 // @desc    add variant to store
 // @access  Private
 router.put("/variants/:variantId", auth, updateVariant);
+
+// @route   GET /stores/variants
+// @desc   gets variant items
+// @access  Private
+router.get("/variants/:variantId", auth, getVariantItem);
 
 // @route   PUT /:id
 // @desc    update a store product, can be used by admin and stores

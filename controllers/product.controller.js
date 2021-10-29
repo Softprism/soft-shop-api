@@ -219,6 +219,35 @@ const addVariantItem = async (req, res, next) => {
   }
 };
 
+const getVariantItem = async (req, res, next) => {
+  // verifiy permission
+  if (req.admin === undefined && req.store === undefined)
+    return res.status(403).json({
+      success: false,
+      msg: "You're not permitted to carry out this action",
+    });
+
+  if (req.store === undefined && req.query.storeID === undefined) {
+    res
+      .status(400)
+      .json({ success: false, msg: "unable to authenticate this store" });
+  }
+
+  let storeID;
+  if (req.store) storeID = req.store.id;
+  if (req.query.storeID && req.admin) storeID = req.query.storeID;
+
+  const getVariantItem = await productService.getVariantItem(
+    req.params.variantId
+  );
+
+  if (getVariantItem.err) {
+    res.status(500).json({ success: false, msg: getVariantItem.err });
+  } else {
+    res.status(200).json({ success: true, result: getVariantItem });
+  }
+};
+
 const addCustomFee = async (req, res, next) => {
   // verifiy permission
   if (req.admin === undefined && req.store === undefined)
@@ -282,6 +311,7 @@ export {
   createVariant,
   updateVariant,
   addVariantItem,
+  getVariantItem,
   addCustomFee,
   deleteCustomFee,
 };
