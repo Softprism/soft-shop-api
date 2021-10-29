@@ -148,9 +148,45 @@ const addLabel = async (req, res, next) => {
   }
 };
 
+const getLabels = async (req, res, next) => {
+  // verifiy permission
+  if (req.admin === undefined && req.store === undefined)
+    return res.status(403).json({
+      success: false,
+      msg: "You're not permitted to carry out this action",
+    });
+
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    res.status(400).json({
+      success: false,
+      errors: errors.array()["msg"],
+    });
+  }
+
+  let storeID;
+
+  if (req.store === undefined && req.query.storeID === undefined) {
+    res
+      .status(400)
+      .json({ success: false, msg: "unable to authenticate this user" });
+  }
+  if (req.store) storeID = req.store.id;
+  if (req.query.storeID && req.admin) storeID = req.query.storeID;
+
+  console.log(storeID);
+  const store = await storeService.getLabels(storeID);
+  if (store.err) {
+    res.status(500).json({ success: false, msg: store.err });
+  } else {
+    res.status(200).json({ success: true, result: store });
+  }
+};
+
 const getStore = async (req, res, next) => {
   console.log(1, req.params);
-  const storeDetails = await storeService.getStore(req.params.storeId);
+  const storeDetails = await storeService.getStore(req.store.storeId);
   console.log(2, storeDetails);
   if (storeDetails.err) {
     return res.status(403).json({ success: false, msg: storeDetails.err });
@@ -166,5 +202,6 @@ export {
   getLoggedInStore,
   updateStore,
   addLabel,
+  getLabels,
   getStore,
 };
