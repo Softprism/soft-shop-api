@@ -17,7 +17,7 @@ import {
 import { auth } from "../middleware/auth.js";
 
 // @route   GET /store
-// @desc    Get all stores
+// @desc    Get all registered stores
 // @access  Private
 router.get("/", auth, getStores);
 
@@ -32,7 +32,7 @@ router.get("/login", auth, getLoggedInStore);
 router.get("/labels", auth, getLabels);
 
 // @route   GET /store
-// @desc    Get a store
+// @desc    Get store data, used when a store is being checked, produces store data like name, rating/reviews, menu labels, address, delivery time, and products
 // @access  Private
 router.get("/:storeId", auth, getStore);
 
