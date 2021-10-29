@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import User from "../models/user.model.js";
 import Product from "../models/product.model.js";
 import Token from "../models/tokens.model.js";
+import Basket from "../models/user-cart.model.js";
 
 import { sendEmail } from "../utils/sendMail.js";
 import { getOTP } from "../utils/sendOTP.js";
@@ -270,25 +271,108 @@ const updateUser = async (updateParam, id) => {
     return err;
   }
 };
+// const createUserBasket = async (userId, basketMeta) => { DEPRECATED
+//   // baskets should be initialized for users
+//   // basket is created per store
 
-const addItemToCart = async (userID, product) => {
-  try {
-    const productFinder = await Product.findById(product.product_id);
+//   // add user ID to basketMeta
+//   basketMeta.user = userId;
+//   try {
+//     // first verify if user already has a basket for the store
+//     let existingBasket = await Basket.findOne(basketMeta);
+//     if (existingBasket) throw { err: "user has a basket for this store!" };
 
-    if (!productFinder) throw { err: "can't find this product" };
+//     // create basket if none exists
+//     let newBasket = new Basket(basketMeta);
+//     newBasket.save();
+//     return newBasket;
+//   } catch (err) {
+//     return err;
+//   }
+// };
 
-    let user = await User.findByIdAndUpdate(
-      userID,
-      { $push: { cart: product } },
-      { omitUndefined: true, new: true, useFindAndModify: false }
-    ).populate({
-      path: "cart.product_id",
-      select: "product_name price availability",
+const addItemToBasket = async (userId, basketItemMeta) => {
+  // add user ID to basketMeta
+  basketItemMeta.user = userId;
+
+  // add item to basket
+  let newBasketItem = new Basket(basketItemMeta);
+  await newBasketItem.save();
+
+  // return user basket items
+  return await getUserBasketItems(userId);
+};
+
+const getUserBasketItems = async (userId) => {
+  // get total price in basket
+  const totalProductPriceInBasket = await Basket.aggregate()
+    .match({
+      user: mongoose.Types.ObjectId(userId),
+    })
+    .group({
+      _id: "$user",
+      total: { $sum: "$product.price" },
     });
+  // get user basket items
+  let userBasket = await Basket.aggregate().match({
+    user: mongoose.Types.ObjectId(userId),
+  });
+  return {
+    userBasket,
+    total: totalProductPriceInBasket[0].total,
+    count: userBasket.length,
+  };
+};
 
-    return user.cart;
-  } catch (error) {
-    return { err: "error adding product to cart" };
+const editBasketItems = async (userId, basketMeta) => {
+  try {
+    // check if basket exists
+    let userBasket = await Basket.findById(basketMeta.basketId);
+    if (!userBasket) throw { err: "basket not found" };
+
+    // update basket with new data
+    let updateBasket = await Basket.findByIdAndUpdate(
+      basketMeta.basketId,
+      { $set: basketMeta },
+      { omitUndefined: true, new: true, useFindAndModify: false }
+    );
+
+    // return user basket items
+    return await getUserBasketItems(userId);
+  } catch (err) {
+    return err;
+  }
+};
+
+const deleteBasketItem = async (userId, { basketId }) => {
+  try {
+    // check if basket exists
+    let userBasket = await Basket.findById(basketId);
+    if (!userBasket) throw { err: "basket not found" };
+
+    // update basket with new data
+    await Basket.findByIdAndDelete(basketId);
+
+    // return user basket items
+    return await getUserBasketItems(userId);
+  } catch (err) {
+    return err;
+  }
+};
+
+const deleteAllBasketItems = async (userId) => {
+  try {
+    // check if basket exists
+    let userBasket = await Basket.find({ user: userId });
+    if (!userBasket) throw { err: "user basket not found" };
+
+    // update basket with new data
+    await Basket.deleteMany({ user: userId });
+
+    // return user basket items
+    return await getUserBasketItems(userId);
+  } catch (err) {
+    return err;
   }
 };
 
@@ -324,7 +408,6 @@ const validateToken = async ({ type, otp, email }) => {
 
     return userToken;
   } catch (err) {
-    console.log(err);
     return err;
   }
 };
@@ -373,8 +456,13 @@ export {
   loginUser,
   getLoggedInUser,
   updateUser,
-  addItemToCart,
+  addItemToBasket,
   forgotPassword,
   validateToken,
   createNewPassword,
+  // createUserBasket,
+  getUserBasketItems,
+  editBasketItems,
+  deleteBasketItem,
+  deleteAllBasketItems,
 };

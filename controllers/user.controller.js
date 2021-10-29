@@ -108,15 +108,88 @@ const updateUser = async (req, res) => {
     user: user,
   });
 };
+// const createUserBasket = async (req, res) => { deprecated
+//   if (!req.body.store) {
+//     return res
+//       .status(400)
+//       .json({ success: false, msg: "basket details required" });
+//   }
+//   const action = await userService.createUserBasket(req.user.id, req.body);
+//   if (action.err) {
+//     return res.status(403).json({ success: false, msg: action.err });
+//   }
 
-const addItemToCart = async (req, res) => {
-  const action = await userService.addItemToCart(req.user.id, req.body);
+//   res.status(200).json({ success: true, result: action });
+// };
 
-  if (action.err) {
-    return es.status(404).json({ success: false, msg: action.err });
+const addItemToBasket = async (req, res, next) => {
+  try {
+    const action = await userService.addItemToBasket(req.user.id, req.body);
+    if (!action) {
+      return res
+        .status(400)
+        .json({ success: false, msg: "error adding item to basket" });
+    }
+
+    res.status(200).json({ success: true, result: action });
+  } catch (error) {
+    next(error);
   }
+};
 
-  res.status(200).json({ success: true, result: action });
+const getUserBasketItems = async (req, res, next) => {
+  try {
+    const action = await userService.getUserBasketItems(req.user.id);
+    if (!action) {
+      return res
+        .status(400)
+        .json({ success: false, msg: "error adding item to basket" });
+    }
+
+    res.status(200).json({ success: true, result: action });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const editBasketItems = async (req, res, next) => {
+  try {
+    const action = await userService.editBasketItems(req.user.id, req.body);
+    if (action.err) {
+      return res.status(400).json({ success: false, msg: action.err });
+    }
+
+    res.status(200).json({ success: true, result: action });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const deleteBasketItem = async (req, res, next) => {
+  try {
+    const action = await userService.deleteBasketItem(req.user.id, req.body);
+    if (action.err) {
+      return res.status(400).json({ success: false, msg: action.err });
+    }
+
+    res.status(200).json({ success: true, result: action });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const deleteAllBasketItems = async (req, res, next) => {
+  console.log(13456);
+  try {
+    const action = await userService.deleteAllBasketItems(req.user.id);
+    if (action.err) {
+      return res.status(400).json({ success: false, msg: action.err });
+    }
+
+    res.status(200).json({ success: true, result: action });
+  } catch (error) {
+    next(error);
+  }
 };
 
 const forgotPassword = async (req, res) => {
@@ -154,8 +227,13 @@ export {
   loginUser,
   getLoggedInUser,
   updateUser,
-  addItemToCart,
+  addItemToBasket,
   forgotPassword,
   validateToken,
   createNewPassword,
+  // createUserBasket,
+  getUserBasketItems,
+  editBasketItems,
+  deleteBasketItem,
+  deleteAllBasketItems,
 };

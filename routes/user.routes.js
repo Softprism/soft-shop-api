@@ -9,11 +9,16 @@ import {
   loginUser,
   getLoggedInUser,
   updateUser,
-  addItemToCart,
+  addItemToBasket,
   forgotPassword,
   validateToken,
   createNewPassword,
   verifyEmailAddress,
+  getUserBasketItems,
+  // createUserBasket,
+  editBasketItems,
+  deleteBasketItem,
+  deleteAllBasketItems,
 } from "../controllers/user.controller.js";
 
 import { auth } from "../middleware/auth.js";
@@ -74,10 +79,30 @@ router.get("/login", auth, getLoggedInUser);
 
 router.put("/", auth, updateUser);
 
-// @route   Put /cart
-// @desc    adds a product tp User's cart
+// @route   POST /cart
+// @desc    creates a basket for the user
 // @access  Public
-router.put("/cart", auth, addItemToCart);
+router.get("/basket", auth, getUserBasketItems);
+
+// @route   POST /basket
+// @desc    adds a product to User's basket
+// @access  Public
+router.post("/basket", auth, addItemToBasket);
+
+// @route   PUT /basket
+// @desc    edit an item in user's basket
+// @access  Public
+router.put("/basket", auth, editBasketItems);
+
+// @route   DELETE /basket
+// @desc    delete one item from user's basket
+// @access  Public
+router.delete("/basket", auth, deleteBasketItem);
+
+// @route   DELETE /basket/all
+// @desc    deletes all item in user's basket
+// @access  Public
+router.delete("/basket/all", auth, deleteAllBasketItems);
 
 // @route   PUT /password
 // @desc    reset a forget password
