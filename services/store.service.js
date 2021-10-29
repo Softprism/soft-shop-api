@@ -343,6 +343,15 @@ const addLabel = async (storeId, labelParam) => {
   return await Store.findById(storeId).select("-password, -__v");
 };
 
+const getLabels = async (storeId) => {
+  // get store labels
+  let store = await Store.findById(storeId);
+
+  if (!store) throw { err: "Store not found" };
+
+  return store.labels;
+};
+
 export {
   getStores,
   createStore,
@@ -351,4 +360,5 @@ export {
   updateStore,
   addLabel,
   getStore,
+  getLabels,
 };
