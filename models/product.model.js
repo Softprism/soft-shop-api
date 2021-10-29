@@ -10,6 +10,10 @@ const ProductSchema = mongoose.Schema({
     ref: "Category",
     required: true,
   },
+  variantOpt: { type: Boolean, required: true },
+  variant: [
+    { type: mongoose.Schema.Types.ObjectId, ref: "Variants", required: true },
+  ],
   availability: { type: Boolean, required: true, default: true },
   status: { type: String, default: "active" }, // deleted||active
   price: { type: Number, required: true },

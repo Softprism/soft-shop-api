@@ -174,36 +174,20 @@ const getProductDetails = async (productId) => {
 };
 
 const createProduct = async (productParam, storeId) => {
-  console.log(storeId);
   try {
-    const {
-      product_name,
-      product_description,
-      category,
-      label,
-      price,
-      product_image,
-    } = productParam;
-
     // validate store, we have to make sure we're assigning a product to a store
     const store = await Store.findById(storeId).catch((err) => {
       throw { err: "store not found" };
     });
-    console.log(store);
     if (!store) {
       throw "unable to add product to this store";
     }
 
+    // add store ID to productParam
+    productParam.store = storeId;
+
     //create new product
-    const newProduct = new Product({
-      store: storeId,
-      product_name,
-      product_description,
-      category,
-      label,
-      price,
-      product_image,
-    });
+    const newProduct = new Product(productParam);
     await newProduct.save(); // save new product
 
     return newProduct;
