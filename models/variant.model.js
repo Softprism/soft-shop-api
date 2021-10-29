@@ -9,7 +9,6 @@ const VariantSchema = mongoose.Schema({
       itemPrice: { type: Number },
       required: { type: Boolean },
       quantityOpt: { type: Boolean },
-      quantity: { type: Number },
     },
   ],
   multiSelect: { type: Boolean, required: true },
