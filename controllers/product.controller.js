@@ -195,13 +195,13 @@ const addVariantItem = async (req, res, next) => {
       msg: "You're not permitted to carry out this action",
     });
 
-  let storeID;
-
   if (req.store === undefined && req.query.storeID === undefined) {
     res
       .status(400)
       .json({ success: false, msg: "unable to authenticate this store" });
   }
+
+  let storeID;
   if (req.store) storeID = req.store.id;
   if (req.query.storeID && req.admin) storeID = req.query.storeID;
 

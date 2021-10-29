@@ -314,11 +314,16 @@ const updateVariant = async (variantId, updateParam) => {
 };
 
 const addVariantItem = async (variantId, variantParam) => {
+  // add items to a variant label
   try {
+    // find variant
     let variant = await Variant.findById(variantId);
     if (!variant) throw { err: "variant not found" };
+
+    // push new variant item and save
     variant.variantItems.push(variantParam);
     variant.save();
+
     return variant;
   } catch (error) {
     return error;
