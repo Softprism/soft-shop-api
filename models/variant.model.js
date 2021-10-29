@@ -1,18 +1,25 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const VariantSchema = mongoose.Schema({
-  variantTitle: {type: String},
+  variantTitle: { type: String },
   variantItems: [
     {
-      itemName: {type: String},
-      itemThumbnail: {type: String},
-      itemPrice: {type: Number},
-    }
+      itemName: { type: String },
+      itemThumbnail: { type: String },
+      itemPrice: { type: Number },
+      required: { type: Boolean },
+      quantityOpt: { type: Boolean },
+      quantity: { type: Number },
+    },
   ],
-  product: {type: mongoose.Schema.Types.ObjectId, ref: 'Product', required:   true
+  multiSelect: { type: Boolean, required: true },
+  product: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Product",
+    required: true,
   },
   createdDate: { type: Date, default: Date.now },
-})
+});
 
-const Variant = mongoose.model('Variant', VariantSchema);
-export default Variant
+const Variant = mongoose.model("Variant", VariantSchema);
+export default Variant;
