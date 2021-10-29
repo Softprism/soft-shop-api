@@ -13,11 +13,6 @@ const VariantSchema = mongoose.Schema({
     },
   ],
   multiSelect: { type: Boolean, required: true },
-  product: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Product",
-    required: true,
-  },
   createdDate: { type: Date, default: Date.now },
 });
 
