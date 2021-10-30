@@ -14,6 +14,7 @@ const ProductSchema = mongoose.Schema({
   variant: [
     { type: mongoose.Schema.Types.ObjectId, ref: "Variants", required: true },
   ],
+  label: [{ type: String, required: true }],
   availability: { type: Boolean, required: true, default: true },
   status: { type: String, default: "active" }, // deleted||active
   price: { type: Number, required: true },
