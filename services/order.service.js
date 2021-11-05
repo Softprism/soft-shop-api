@@ -32,24 +32,19 @@ const getOrders = async (urlParams) => {
           "product_meta.details.label",
           "productData",
           "user.password",
-          "user.cart",
+          "user.orders",
         ],
       },
     ];
 
     let orders = Order.aggregate()
       .match(matchParam)
-      .lookup({
-        from: "products",
-        localField: "orderItems.product",
-        foreignField: "_id",
-        as: "productData",
-      })
       .project({
         status: 1,
         totalPrice: 1,
         "orderItems.productName": 1,
         orderId: 1,
+        "orderItems.selectedVariants.itemName": 1,
       })
       .append(pipeline)
       .sort("-createdDate")
@@ -92,10 +87,6 @@ const createOrder = async (orderParam) => {
 
     let newOrder = await order.save();
 
-    // Adds new order to user model
-    vUser.orders.push(newOrder._id);
-    await vUser.save();
-
     // Returns new order to response
     const pipeline = [
       {
@@ -110,19 +101,13 @@ const createOrder = async (orderParam) => {
           "store.closingTime",
           "productData",
           "user.password",
-          "user.cart",
+          "user.orders",
         ],
       },
     ];
     const neworder = await Order.aggregate()
       .match({
         orderId: newOrder.orderId,
-      })
-      .lookup({
-        from: "products",
-        localField: "orderItems.product",
-        foreignField: "_id",
-        as: "productData",
       })
       .lookup({
         from: "stores",
@@ -136,14 +121,7 @@ const createOrder = async (orderParam) => {
         foreignField: "_id",
         as: "user",
       })
-      .lookup({
-        from: "customfees",
-        localField: "orderItems.product",
-        foreignField: "product",
-        as: "productFees",
-      })
       .addFields({
-        customFees: { $sum: "$productFees.amount" },
         user: { $arrayElemAt: ["$user", 0] },
         store: { $arrayElemAt: ["$store", 0] },
       })
@@ -152,7 +130,7 @@ const createOrder = async (orderParam) => {
     return neworder;
   } catch (err) {
     console.log(err);
-    return err;
+    return { err: "error creating new order" };
   }
 };
 
@@ -169,8 +147,10 @@ const toggleFavorite = async (orderID) => {
     order.save();
 
     if (order.isFavorite) {
+      console.log("Order marked as favorite");
       return { msg: "Order marked as favorite" };
     } else {
+      console.log("Order removed from favorite");
       return { msg: "Order removed from favorites" };
     }
 
@@ -184,7 +164,6 @@ const getOrderDetails = async (orderID) => {
   try {
     const order = await Order.findById(orderID);
 
-    console.log(order);
     if (!order) {
       throw { err: "Error getting this order details" };
     }
@@ -204,19 +183,13 @@ const getOrderDetails = async (orderID) => {
           "store.closingTime",
           "productData",
           "user.password",
-          "user.cart",
+          "user.orders",
         ],
       },
     ];
     const orderDetails = await Order.aggregate()
       .match({
         orderId: order.orderId,
-      })
-      .lookup({
-        from: "products",
-        localField: "orderItems.product",
-        foreignField: "_id",
-        as: "productData",
       })
       .lookup({
         from: "stores",
@@ -230,14 +203,7 @@ const getOrderDetails = async (orderID) => {
         foreignField: "_id",
         as: "user",
       })
-      .lookup({
-        from: "customfees",
-        localField: "orderItems.product",
-        foreignField: "product",
-        as: "productFees",
-      })
       .addFields({
-        customFees: { $sum: "$productFees.amount" },
         user: { $arrayElemAt: ["$user", 0] },
         store: { $arrayElemAt: ["$store", 0] },
       })
@@ -270,19 +236,13 @@ const editOrder = async (orderID, orderParam) => {
           "store.closingTime",
           "productData",
           "user.password",
-          "user.cart",
+          "user.orders",
         ],
       },
     ];
     const newOrder = await Order.aggregate()
       .match({
         _id: mongoose.Types.ObjectId(orderID),
-      })
-      .lookup({
-        from: "products",
-        localField: "orderItems.product",
-        foreignField: "_id",
-        as: "productData",
       })
       .lookup({
         from: "stores",
@@ -296,14 +256,7 @@ const editOrder = async (orderID, orderParam) => {
         foreignField: "_id",
         as: "user",
       })
-      .lookup({
-        from: "customfees",
-        localField: "orderItems.product",
-        foreignField: "product",
-        as: "productFees",
-      })
       .addFields({
-        customFees: { $sum: "$productFees.amount" },
         user: { $arrayElemAt: ["$user", 0] },
         store: { $arrayElemAt: ["$store", 0] },
       })
