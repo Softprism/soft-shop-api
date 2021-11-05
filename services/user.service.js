@@ -96,11 +96,21 @@ const registerUser = async (userParam) => {
     // Replace password from user object with encrypted one
     user.password = await bcrypt.hash(password, salt);
 
+    // verify user's signup token
+    let signupToken = await Token.findById(userParam.token);
+
+    if (signupToken) {
+      user.isVerified = true;
+    }
+
     // Save user to db
     let newUser = await user.save();
 
     // delete sign up token
     if (newUser._id) await Token.findByIdAndDelete(userParam.token);
+
+    // delete user on creation, uncomment to test registration without populating your database
+    // await User.findByIdAndDelete(newUser._id);
 
     // Define payload for token
     const payload = {
@@ -122,6 +132,7 @@ const registerUser = async (userParam) => {
 
     return user;
   } catch (err) {
+    console.log(err);
     return err;
   }
 };
