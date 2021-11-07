@@ -120,15 +120,10 @@ const getProductDetails = async (productId) => {
     ];
 
     let productDetails = Product.aggregate()
-      .match({ _id: mongoose.Types.ObjectId(productId) })
-      // Get data from review collection for each product
-      .lookup({
-        from: "reviews",
-        localField: "_id",
-        foreignField: "product",
-        as: "productReview",
+      .match({
+        _id: mongoose.Types.ObjectId(productId),
       })
-      // Populate store field
+      // // Populate store field
       .lookup({
         from: "stores",
         localField: "store",
@@ -144,23 +139,11 @@ const getProductDetails = async (productId) => {
       })
       .lookup({
         from: "variants",
-        localField: "variant.items",
+        localField: "variant",
         foreignField: "_id",
         as: "variant",
       })
-      .lookup({
-        from: "customfees",
-        localField: "_id",
-        foreignField: "product",
-        as: "customFee",
-      })
-      // add the averageRating field for each product
-      .addFields({
-        totalRates: { $sum: "$productReview.star" },
-        ratingAmount: { $size: "$productReview" },
-        averageRating: { $ceil: { $avg: "$productReview.star" } },
-      })
-      // $lookup produces array, $unwind go destructure everything to object
+      // // $lookup produces array, $unwind go destructure everything to object
       .unwind("$store")
       .unwind("$category")
       // removing fields we don't need
