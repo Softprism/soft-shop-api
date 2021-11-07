@@ -13,10 +13,8 @@ import { getOTP } from "../utils/sendOTP.js";
 // Get all Users
 const getUsers = async (urlParams) => {
   try {
-    let userWithCartItems = [];
     const limit = Number(urlParams.limit);
     const skip = Number(urlParams.skip);
-    const cartLength = Number(urlParams.cart);
     delete urlParams.limit;
     delete urlParams.skip;
     delete urlParams.cart;
@@ -31,17 +29,7 @@ const getUsers = async (urlParams) => {
       .limit(limit)
       .skip(skip);
 
-    if (cartLength >= 0) {
-      users.forEach((user) => {
-        if (user.cart.length == cartLength) {
-          userWithCartItems.push(user);
-        }
-      });
-      return userWithCartItems;
-    } else {
-      return users;
-    }
-    // return users;
+    return users;
   } catch (err) {
     return err;
   }
