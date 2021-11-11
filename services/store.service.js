@@ -52,13 +52,29 @@ const getStores = async (urlParams) => {
       matchParam.category = urlParams.category;
     }
 
+    if (urlParams.long && urlParams.lat && urlParams.radius) {
+      var long = parseFloat(urlParams.long);
+      var lat = parseFloat(urlParams.lat);
+      var radian = parseFloat(urlParams.radius / 3963.2);
+    }
+
     // cleaning up the urlParams
     delete urlParams.limit;
     delete urlParams.skip;
     delete urlParams.rating;
+    delete urlParams.long;
+    delete urlParams.lat;
 
     // aggregating stores
     const stores = Store.aggregate()
+      // matching store with geolocation
+      .match({
+        location: {
+          $geoWithin: {
+            $centerSphere: [[long, lat], radian],
+          },
+        },
+      })
       // matching stores with matchParam
       .match(matchParam)
       //looking up the product collection for each stores
