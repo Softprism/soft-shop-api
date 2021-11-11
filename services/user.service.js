@@ -15,6 +15,7 @@ const getUsers = async (urlParams) => {
   try {
     const limit = Number(urlParams.limit);
     const skip = Number(urlParams.skip);
+
     delete urlParams.limit;
     delete urlParams.skip;
     delete urlParams.cart;
