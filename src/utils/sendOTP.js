@@ -1,4 +1,4 @@
-import Token from "../models/tokens.model.js";
+import Token from "../../models/tokens.model.js";
 
 import otpGenerator from "otp-generator";
 

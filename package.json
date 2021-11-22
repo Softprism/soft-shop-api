@@ -7,10 +7,20 @@
 	},
 	"type": "module",
 	"scripts": {
-		"start": "node ./server.js",
+		"clean": "rm -rf build && npm run build-babel",
+		"build-babel": "babel -d ./build ./src -s --copy-files",
+		"build": "npm run clean && npm run build-babel",
+		"start": " npm run build && node ./build/server.js",
 		"start:dev": "nodemon ./server.js"
 	},
 	"dependencies": {
+		"@babel/cli": "^7.16.0",
+		"@babel/core": "^7.16.0",
+		"@babel/node": "^7.16.0",
+		"@babel/plugin-transform-runtime": "^7.16.4",
+		"@babel/preset-env": "^7.16.4",
+		"@babel/register": "^7.16.0",
+		"@babel/runtime": "^7.16.3",
 		"bcryptjs": "^2.4.3",
 		"body-parser": "^1.19.0",
 		"cors": "^2.8.5",
