@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 
 import User from "../models/user.model.js";
 import Product from "../models/product.model.js";
-import Token from "../models/tokens.model.js";
+import Token from "../models/token.model.js";
 import Basket from "../models/user-cart.model.js";
 
 import { sendEmail } from "../utils/sendMail.js";
