@@ -26,7 +26,7 @@ const StoreSchema = mongoose.Schema({
   createdDate: { type: Date, default: Date.now },
   tax: { type: String },
 });
-StoreSchema.index({ location: "2dsphere" });
+
 const Store = mongoose.model("Store", StoreSchema);
 
 export default Store;
