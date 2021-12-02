@@ -22,11 +22,12 @@ import {
 } from "../controllers/user.controller.js";
 
 import { auth } from "../middleware/auth.js";
+import { checkPagination } from "../middleware/checkPagination.js";
 
 // @route   GET /users
 // @desc    Get all Users
 // @access  Public
-router.get("/", getUsers);
+router.get("/", checkPagination, getUsers);
 
 // @route   POST /verify
 // @desc    send OTP to verify new user signup email
