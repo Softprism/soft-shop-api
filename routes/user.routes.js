@@ -37,7 +37,7 @@ router.post("/verify", verifyEmailAddress);
 // @desc    Register a User
 // @access  Public
 router.post(
-  "/register",
+  "/",
   [
     check("first_name", "Please Enter First Name").not().isEmpty(),
     check("last_name", "Please Enter Last Name").not().isEmpty(),
