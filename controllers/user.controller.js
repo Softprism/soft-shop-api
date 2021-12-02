@@ -1,18 +1,11 @@
 import express from "express";
 import { validationResult } from "express-validator";
-import { auth } from "../middleware/auth.js";
 
 import * as userService from "../services/user.service.js";
 
 const router = express.Router();
 
 const getUsers = async (req, res) => {
-  if (req.query.skip === undefined || req.query.limit === undefined) {
-    return res
-      .status(400)
-      .json({ success: false, msg: "filtering parameters are missing" });
-  }
-
   const users = await userService.getUsers(req.query);
 
   users && users.length > 0
@@ -179,7 +172,6 @@ const deleteBasketItem = async (req, res, next) => {
 };
 
 const deleteAllBasketItems = async (req, res, next) => {
-  console.log(13456);
   try {
     const action = await userService.deleteAllBasketItems(req.user.id);
     if (action.err) {
