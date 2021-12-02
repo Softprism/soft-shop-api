@@ -35,11 +35,6 @@ router.post(
 // @access  Private
 router.patch("/toggle-favorite/:orderID", auth, toggleFavorite);
 
-// @route   GET /:orderID
-// @desc    toggles an order's detail
-// @access  Private
-router.get("/:orderID", auth, getOrderDetails);
-
 // @route   PUT /user/edit/
 // @desc    modify fields in an order
 // @access  Private
@@ -49,4 +44,10 @@ router.put("/user/edit/:orderID", auth, editOrder);
 // @desc    user adds review to their order
 // @access  Private
 router.put("/review", auth, reviewOrder);
+
+// @route   GET /:orderID
+// @desc    toggles an order's detail
+// @access  Private
+router.get("/:orderID", auth, getOrderDetails);
+
 export default router;
