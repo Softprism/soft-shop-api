@@ -61,8 +61,6 @@ const getLoggedInUser = async (req, res, next) => {
   // Call Get Logged in User function from userService
   const user = await userService.getLoggedInUser(req.user.id);
 
-  console.log(user);
-
   if (user.err) {
     res.status(400).json({ success: false, msg: user.err });
   }
