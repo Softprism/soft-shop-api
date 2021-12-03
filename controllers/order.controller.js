@@ -7,11 +7,13 @@ const getOrders = async (req, res, next) => {
   const allOrders = await orderService.getOrders(req.query);
 
   if (allOrders.err) {
-    res.status(500).json({ success: false, msg: allOrders.err });
+    return res.status(500).json({ success: false, msg: allOrders.err });
   }
 
   allOrders && allOrders.length > 0
-    ? res.status(200).json({ success: true, result: allOrders })
+    ? res
+        .status(200)
+        .json({ success: true, result: allOrders, size: allOrders.length })
     : res.status(404).json({ success: false, msg: "No order found" });
 };
 
