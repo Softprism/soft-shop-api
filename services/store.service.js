@@ -255,72 +255,42 @@ const getStoresNoGeo = async (urlParams) => {
 };
 
 const getStore = async (storeId) => {
-  // declare fields to exclude from response
-  const pipeline = [
-    {
-      $unset: [
-        "products.store",
-        "products.rating",
-        "products.category",
-        "products.customFee.items",
-        "productReview",
-        "password",
-        "email",
-        "phone_number",
-        "orders",
-        "orderReview",
-        "products.variant",
-      ],
-    },
-  ];
+  try {
+    // declare fields to exclude from response
+    const pipeline = [
+      {
+        $unset: [
+          "products.store",
+          "products.rating",
+          "products.category",
+          "products.customFee.items",
+          "productReview",
+          "password",
+          "email",
+          "phone_number",
+          "orders",
+          "orderReview",
+          "products.variant",
+        ],
+      },
+    ];
 
-  // aggregating stores
-  let store = await Store.aggregate()
-    // matching with requested store
-    .match({
-      _id: mongoose.Types.ObjectId(storeId),
-    })
-    // looking up the store in the product collection
-    .lookup({
-      from: "products",
-      localField: "_id",
-      foreignField: "store",
-      as: "products",
-    })
-    // returning only active products
-    .match({
-      "products.status": "active",
-    })
-    //looking up the order collection for each stores
-    .lookup({
-      from: "orders",
-      localField: "_id",
-      foreignField: "store",
-      as: "orders",
-    })
-    // looking up each product on the review collection
-    .lookup({
-      from: "reviews",
-      localField: "orders._id",
-      foreignField: "order",
-      as: "orderReview",
-    })
-    // adding metrics to the response
-    .addFields({
-      sumOfStars: { $sum: "$orderReview.star" },
-      numOfReviews: { $size: "$orderReview" },
-      averageRating: { $ceil: { $avg: "$orderReview.star" } },
-      productCount: { $size: "$products" },
-      orderCount: { $size: "$orders" },
-    })
-    // appending excludes
-    .append(pipeline);
-
-  if (store.length < 1) {
-    store = await Store.aggregate()
+    // aggregating stores
+    let store = await Store.aggregate()
       // matching with requested store
       .match({
         _id: mongoose.Types.ObjectId(storeId),
+      })
+      // looking up the store in the product collection
+      .lookup({
+        from: "products",
+        localField: "_id",
+        foreignField: "store",
+        as: "products",
+      })
+      // returning only active products
+      .match({
+        "products.status": "active",
       })
       //looking up the order collection for each stores
       .lookup({
@@ -341,14 +311,51 @@ const getStore = async (storeId) => {
         sumOfStars: { $sum: "$orderReview.star" },
         numOfReviews: { $size: "$orderReview" },
         averageRating: { $ceil: { $avg: "$orderReview.star" } },
+        productCount: { $size: "$products" },
         orderCount: { $size: "$orders" },
       })
+      .addFields({
+        averageRating: { $ifNull: ["$averageRating", 0] },
+      })
+      // appending excludes
       .append(pipeline);
-  }
 
-  // make average rating zero if null
-  if (store[0].averageRating === null) store[0].averageRating = 0;
-  return store[0];
+    if (store.length < 1) {
+      store = await Store.aggregate()
+        // matching with requested store
+        .match({
+          _id: mongoose.Types.ObjectId(storeId),
+        })
+        //looking up the order collection for each stores
+        .lookup({
+          from: "orders",
+          localField: "_id",
+          foreignField: "store",
+          as: "orders",
+        })
+        // looking up each product on the review collection
+        .lookup({
+          from: "reviews",
+          localField: "orders._id",
+          foreignField: "order",
+          as: "orderReview",
+        })
+        // adding metrics to the response
+        .addFields({
+          sumOfStars: { $sum: "$orderReview.star" },
+          numOfReviews: { $size: "$orderReview" },
+          averageRating: { $ceil: { $avg: "$orderReview.star" } },
+          orderCount: { $size: "$orders" },
+        })
+        .addFields({
+          averageRating: { $ifNull: ["$averageRating", 0] },
+        })
+        .append(pipeline);
+    }
+    return store[0];
+  } catch (err) {
+    return { err: "failed to get store data" };
+  }
 };
 
 const createStore = async (StoreParam) => {
