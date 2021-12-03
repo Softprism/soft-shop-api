@@ -5,7 +5,19 @@ const getStores = async (req, res, next) => {
   const stores = await storeService.getStores(req.query);
 
   stores && stores.length > 0
-    ? res.status(200).json({ success: true, result: stores })
+    ? res
+        .status(200)
+        .json({ success: true, result: stores, size: stores.length })
+    : res.status(404).json({ success: false, msg: "No Store found" });
+};
+
+const getStoresNoGeo = async (req, res, next) => {
+  const stores = await storeService.getStoresNoGeo(req.query);
+
+  stores && stores.length > 0
+    ? res
+        .status(200)
+        .json({ success: true, result: stores, size: stores.length })
     : res.status(404).json({ success: false, msg: "No Store found" });
 };
 
@@ -154,4 +166,5 @@ export {
   addLabel,
   getLabels,
   getStore,
+  getStoresNoGeo,
 };
