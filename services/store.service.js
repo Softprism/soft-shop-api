@@ -107,7 +107,7 @@ const getStores = async (urlParams) => {
       .addFields({
         sumOfStars: { $sum: "$orderReview.star" },
         numOfReviews: { $size: "$orderReview" },
-        averageRating: { $avg: "$orderReview.star" },
+        averageRating: { $ceil: { $avg: "$orderReview.star" } },
         productCount: { $size: "$products" },
         orderCount: { $size: "$orders" },
       })
@@ -315,7 +315,7 @@ const getStore = async (storeId) => {
     })
     // appending excludes
     .append(pipeline);
-  console.log(store);
+
   if (store.length < 1) {
     store = await Store.aggregate()
       // matching with requested store
