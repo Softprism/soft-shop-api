@@ -32,19 +32,24 @@ const getOrders = async (urlParams) => {
           "product_meta.details.label",
           "productData",
           "user.password",
-          "user.orders",
+          "user.cart",
         ],
       },
     ];
 
     let orders = Order.aggregate()
       .match(matchParam)
+      .lookup({
+        from: "products",
+        localField: "orderItems.product",
+        foreignField: "_id",
+        as: "productData",
+      })
       .project({
         status: 1,
         totalPrice: 1,
         "orderItems.productName": 1,
         orderId: 1,
-        "orderItems.selectedVariants.itemName": 1,
       })
       .append(pipeline)
       .sort("-createdDate")
@@ -87,6 +92,10 @@ const createOrder = async (orderParam) => {
 
     let newOrder = await order.save();
 
+    // Adds new order to user model
+    vUser.orders.push(newOrder._id);
+    await vUser.save();
+
     // Returns new order to response
     const pipeline = [
       {
@@ -101,6 +110,7 @@ const createOrder = async (orderParam) => {
           "store.closingTime",
           "productData",
           "user.password",
+          "user.cart",
           "user.orders",
         ],
       },
@@ -108,6 +118,12 @@ const createOrder = async (orderParam) => {
     const neworder = await Order.aggregate()
       .match({
         orderId: newOrder.orderId,
+      })
+      .lookup({
+        from: "products",
+        localField: "orderItems.product",
+        foreignField: "_id",
+        as: "productData",
       })
       .lookup({
         from: "stores",
@@ -124,13 +140,106 @@ const createOrder = async (orderParam) => {
       .addFields({
         user: { $arrayElemAt: ["$user", 0] },
         store: { $arrayElemAt: ["$store", 0] },
+        orderItems: {
+          $map: {
+            input: "$orderItems",
+            as: "orderItem",
+            in: {
+              $mergeObjects: [
+                "$$orderItem",
+                {
+                  totalPrice: {
+                    $multiply: ["$$orderItem.qty", "$$orderItem.price"],
+                  },
+                  selectedVariants: {
+                    $map: {
+                      input: "$$orderItem.selectedVariants",
+                      as: "selectedVariant",
+                      in: {
+                        $mergeObjects: [
+                          "$$selectedVariant",
+                          {
+                            totalPrice: {
+                              $multiply: [
+                                "$$selectedVariant.quantity",
+                                "$$selectedVariant.itemPrice",
+                              ],
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      })
+      .addFields({
+        totalProductPrice: {
+          $sum: {
+            $map: {
+              input: "$orderItems",
+              as: "orderItem",
+              in: {
+                $sum: "$$orderItem.totalPrice",
+              },
+            },
+          },
+        },
+        totalVariantPrice: {
+          $sum: {
+            $map: {
+              input: "$orderItems.selectedVariants",
+              as: "selectedVariant",
+              in: {
+                $sum: "$$selectedVariant.totalPrice",
+              },
+            },
+          },
+        },
+      })
+      .addFields({
+        subtotal: { $add: ["$totalProductPrice", "$totalVariantPrice"] },
+      })
+      .addFields({
+        taxPrice: {
+          $multiply: [
+            0.075,
+            { $add: ["$totalProductPrice", "$totalVariantPrice"] },
+          ],
+        },
+      })
+      .addFields({
+        totalPrice: {
+          $add: [
+            "$taxPrice",
+            "$totalProductPrice",
+            "$totalVariantPrice",
+            "$deliveryPrice",
+          ],
+        },
       })
       .append(pipeline);
 
-    return neworder;
+    await Order.findOneAndUpdate(
+      { _id: neworder[0]._id },
+      {
+        $set: {
+          orderItems: neworder[0].orderItems,
+          totalPrice: neworder[0].totalPrice,
+          taxPrice: neworder[0].taxPrice,
+          subtotal: neworder[0].subtotal,
+        },
+      },
+      { omitUndefined: true, new: true, useFindAndModify: false }
+    );
+
+    return neworder[0];
   } catch (err) {
     console.log(err);
-    return { err: "error creating new order" };
+    return err;
   }
 };
 
@@ -147,10 +256,8 @@ const toggleFavorite = async (orderID) => {
     order.save();
 
     if (order.isFavorite) {
-      console.log("Order marked as favorite");
       return { msg: "Order marked as favorite" };
     } else {
-      console.log("Order removed from favorite");
       return { msg: "Order removed from favorites" };
     }
 
@@ -164,6 +271,7 @@ const getOrderDetails = async (orderID) => {
   try {
     const order = await Order.findById(orderID);
 
+    console.log(order);
     if (!order) {
       throw { err: "Error getting this order details" };
     }
@@ -183,13 +291,19 @@ const getOrderDetails = async (orderID) => {
           "store.closingTime",
           "productData",
           "user.password",
-          "user.orders",
+          "user.cart",
         ],
       },
     ];
     const orderDetails = await Order.aggregate()
       .match({
         orderId: order.orderId,
+      })
+      .lookup({
+        from: "products",
+        localField: "orderItems.product",
+        foreignField: "_id",
+        as: "productData",
       })
       .lookup({
         from: "stores",
@@ -203,7 +317,14 @@ const getOrderDetails = async (orderID) => {
         foreignField: "_id",
         as: "user",
       })
+      .lookup({
+        from: "customfees",
+        localField: "orderItems.product",
+        foreignField: "product",
+        as: "productFees",
+      })
       .addFields({
+        customFees: { $sum: "$productFees.amount" },
         user: { $arrayElemAt: ["$user", 0] },
         store: { $arrayElemAt: ["$store", 0] },
       })
@@ -236,6 +357,7 @@ const editOrder = async (orderID, orderParam) => {
           "store.closingTime",
           "productData",
           "user.password",
+          "user.cart",
           "user.orders",
         ],
       },
@@ -243,6 +365,12 @@ const editOrder = async (orderID, orderParam) => {
     const newOrder = await Order.aggregate()
       .match({
         _id: mongoose.Types.ObjectId(orderID),
+      })
+      .lookup({
+        from: "products",
+        localField: "orderItems.product",
+        foreignField: "_id",
+        as: "productData",
       })
       .lookup({
         from: "stores",
@@ -259,13 +387,117 @@ const editOrder = async (orderID, orderParam) => {
       .addFields({
         user: { $arrayElemAt: ["$user", 0] },
         store: { $arrayElemAt: ["$store", 0] },
+        orderItems: {
+          $map: {
+            input: "$orderItems",
+            as: "orderItem",
+            in: {
+              $mergeObjects: [
+                "$$orderItem",
+                {
+                  totalPrice: {
+                    $multiply: ["$$orderItem.qty", "$$orderItem.price"],
+                  },
+                  selectedVariants: {
+                    $map: {
+                      input: "$$orderItem.selectedVariants",
+                      as: "selectedVariant",
+                      in: {
+                        $mergeObjects: [
+                          "$$selectedVariant",
+                          {
+                            totalPrice: {
+                              $multiply: [
+                                "$$selectedVariant.quantity",
+                                "$$selectedVariant.itemPrice",
+                              ],
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
       })
-      .append(pipeline);
+      .addFields({
+        totalProductPrice: {
+          $sum: {
+            $map: {
+              input: "$orderItems",
+              as: "orderItem",
+              in: {
+                $sum: "$$orderItem.totalPrice",
+              },
+            },
+          },
+        },
+        totalVariantPrice: {
+          $sum: {
+            $map: {
+              input: "$orderItems.selectedVariants",
+              as: "selectedVariant",
+              in: {
+                $sum: "$$selectedVariant.totalPrice",
+              },
+            },
+          },
+        },
+      })
+      .addFields({
+        subtotal: { $add: ["$totalProductPrice", "$totalVariantPrice"] },
+      })
+      .addFields({
+        taxPrice: {
+          $multiply: [
+            0.075,
+            { $add: ["$totalProductPrice", "$totalVariantPrice"] },
+          ],
+        },
+      })
+      .addFields({
+        totalPrice: {
+          $add: [
+            "$taxPrice",
+            "$totalProductPrice",
+            "$totalVariantPrice",
+            "$deliveryPrice",
+          ],
+        },
+      })
 
-    return newOrder;
+      .append(pipeline);
+    await Order.findOneAndUpdate(
+      { _id: newOrder[0]._id },
+      {
+        $set: {
+          orderItems: newOrder[0].orderItems,
+          totalPrice: newOrder[0].totalPrice,
+          taxPrice: newOrder[0].taxPrice,
+          subtotal: newOrder[0].subtotal,
+        },
+      },
+      { omitUndefined: true, new: true, useFindAndModify: false }
+    );
+    return newOrder[0];
   } catch (error) {
     console.log(error);
     return { err: "error editing this order" };
+  }
+};
+
+const getCartItems = async (userID) => {
+  try {
+    //get user cart items
+    let user = await User.findById(userID)
+      .select("cart")
+      .populate("cart.product_id");
+    return user;
+  } catch (error) {
+    return { err: "error getting user cart items" };
   }
 };
 
@@ -289,6 +521,7 @@ export {
   createOrder,
   toggleFavorite,
   getOrderDetails,
+  getCartItems,
   editOrder,
   reviewOrder,
 };
