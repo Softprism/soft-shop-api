@@ -229,6 +229,9 @@ const getStoresNoGeo = async (urlParams) => {
         productCount: { $size: "$products" },
         orderCount: { $size: "$orders" },
       })
+      .addFields({
+        averageRating: { $ifNull: ["$averageRating", 0] },
+      })
       // appending excludes
       .append(pipeline)
       // sorting and pagination
