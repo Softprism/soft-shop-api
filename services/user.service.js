@@ -22,12 +22,12 @@ const getUsers = async (urlParams) => {
 
     const users = await User.find(urlParams)
       .select("-password")
-      .sort({ createdDate: -1 }) // -1 for descending sort
       .populate({
         path: "cart.product_id",
         select: "product_name price availability",
       })
       .populate({ path: "orders", select: "orderId status" })
+      .sort({ createdDate: -1 }) // -1 for descending sort
       .skip(skip)
       .limit(limit);
 
