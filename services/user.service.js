@@ -32,6 +32,7 @@ const getUsers = async (urlParams) => {
 
     return users;
   } catch (err) {
+    console.log(err);
     return err;
   }
 };

@@ -4,12 +4,6 @@ import { validationResult } from "express-validator";
 //======================================================================
 
 const getOrders = async (req, res, next) => {
-  if (req.query.skip === undefined || req.query.limit === undefined) {
-    res
-      .status(400)
-      .json({ success: false, msg: "filtering parameters are missing" });
-  }
-
   const allOrders = await orderService.getOrders(req.query);
 
   if (allOrders.err) {
@@ -42,6 +36,8 @@ const toggleFavorite = async (req, res, next) => {
     ? res.status(500).json({ success: false, msg: favoriteOrder.err })
     : res.status(200).json({ success: true, result: favoriteOrder.msg });
 };
+
+//======================================================================
 
 const getOrderDetails = async (req, res, next) => {
   const orderDetails = await orderService.getOrderDetails(req.params.orderID);

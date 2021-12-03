@@ -15,11 +15,13 @@ import {
 } from "../controllers/store.controller.js";
 
 import { auth } from "../middleware/auth.js";
+import { checkPagination } from "../middleware/checkPagination.js";
+import { isStoreAdmin } from "../middleware/verifyStorePermission.js";
 
 // @route   GET /store
 // @desc    Get all registered stores
 // @access  Private
-router.get("/", auth, getStores);
+router.get("/", auth, checkPagination, getStores);
 
 // @route   GET /stores/login
 // @desc    Get logged in Store
@@ -29,7 +31,7 @@ router.get("/login", auth, getLoggedInStore);
 // @route   GET /store/labels
 // @desc    Get a store's labels
 // @access  Private
-router.get("/labels", auth, getLabels);
+router.get("/labels", auth, isStoreAdmin, getLabels);
 
 // @route   GET /store
 // @desc    Get store data, used when a store is being checked, produces store data like name, rating/reviews, menu labels, address, delivery time, and products
@@ -76,11 +78,11 @@ router.post(
 // @route   PUT /store/
 // @desc    Update a store
 // @access  Private
-router.put("/", auth, updateStore);
+router.put("/", auth, isStoreAdmin, updateStore);
 
 // @route   PUT /stores/label
 // @desc    add label to store
 // @access  Private
-router.put("/label", auth, addLabel);
+router.put("/label", auth, isStoreAdmin, addLabel);
 
 export default router;

@@ -1,6 +1,7 @@
 import express from "express";
 import { check, validationResult } from "express-validator";
 import { auth } from "../middleware/auth.js";
+import { checkPagination } from "../middleware/checkPagination.js";
 const router = express.Router();
 
 import {
@@ -15,7 +16,7 @@ import {
 // @route   GET /
 // @desc    Get all orders from all stores.
 // @access  Private
-router.get("/", auth, getOrders);
+router.get("/", auth, checkPagination, getOrders);
 
 // @route   POST /create
 // @desc    create a new order

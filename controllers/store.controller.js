@@ -1,16 +1,7 @@
-import express from "express";
 import * as storeService from "../services/store.service.js";
-import jwt from "jsonwebtoken";
-import { auth } from "../middleware/auth.js";
-import { check, validationResult } from "express-validator";
+import { validationResult } from "express-validator";
 
 const getStores = async (req, res, next) => {
-  if (req.query.skip === undefined || req.query.limit === undefined) {
-    return res
-      .status(400)
-      .json({ success: false, msg: "Filtering parameters are missing" });
-  }
-
   const stores = await storeService.getStores(req.query);
 
   stores && stores.length > 0
@@ -77,13 +68,6 @@ const getLoggedInStore = async (req, res, next) => {
 };
 
 const updateStore = async (req, res, next) => {
-  // verifiy permission
-  if (req.admin === undefined && req.store === undefined)
-    return res.status(403).json({
-      success: false,
-      msg: "You're not permitted to carry out this action",
-    });
-
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
@@ -94,12 +78,6 @@ const updateStore = async (req, res, next) => {
   }
 
   let storeID;
-
-  if (req.store === undefined && req.query.storeID === undefined) {
-    res
-      .status(400)
-      .json({ success: false, msg: "unable to authenticate this user" });
-  }
   if (req.store) storeID = req.store.id;
   if (req.query.storeID && req.admin) storeID = req.query.storeID;
 
@@ -113,13 +91,6 @@ const updateStore = async (req, res, next) => {
 };
 
 const addLabel = async (req, res, next) => {
-  // verifiy permission
-  if (req.admin === undefined && req.store === undefined)
-    return res.status(403).json({
-      success: false,
-      msg: "You're not permitted to carry out this action",
-    });
-
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
@@ -130,12 +101,6 @@ const addLabel = async (req, res, next) => {
   }
 
   let storeID;
-
-  if (req.store === undefined && req.query.storeID === undefined) {
-    res
-      .status(400)
-      .json({ success: false, msg: "unable to authenticate this user" });
-  }
   if (req.store) storeID = req.store.id;
   if (req.query.storeID && req.admin) storeID = req.query.storeID;
 
@@ -149,13 +114,6 @@ const addLabel = async (req, res, next) => {
 };
 
 const getLabels = async (req, res, next) => {
-  // verifiy permission
-  if (req.admin === undefined && req.store === undefined)
-    return res.status(403).json({
-      success: false,
-      msg: "You're not permitted to carry out this action",
-    });
-
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
@@ -166,16 +124,9 @@ const getLabels = async (req, res, next) => {
   }
 
   let storeID;
-
-  if (req.store === undefined && req.query.storeID === undefined) {
-    res
-      .status(400)
-      .json({ success: false, msg: "unable to authenticate this user" });
-  }
   if (req.store) storeID = req.store.id;
   if (req.query.storeID && req.admin) storeID = req.query.storeID;
 
-  console.log(storeID);
   const store = await storeService.getLabels(storeID);
   if (store.err) {
     res.status(500).json({ success: false, msg: store.err });
