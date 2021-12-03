@@ -235,7 +235,7 @@ const getStoresNoGeo = async (urlParams) => {
       // appending excludes
       .append(pipeline)
       // sorting and pagination
-      .sort("-createdDate")
+      .sort(sort)
       .skip(skip)
       .limit(limit);
 
