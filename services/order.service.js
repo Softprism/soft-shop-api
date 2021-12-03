@@ -6,14 +6,39 @@ import Review from "../models/review.model.js";
 
 const getOrders = async (urlParams) => {
   try {
+    //initialize match parameters, get limit, skip & sort values
     let matchParam = {};
     const limit = Number(urlParams.limit);
     const skip = Number(urlParams.skip);
+    let sort = urlParams.sort;
+
+    // check and add to match paramters if request is matching for store, convert string to objectId
     if (urlParams.store)
       matchParam.store = mongoose.Types.ObjectId(urlParams.store);
+
+    // check and add to match paramters if request is matching for user, convert string to objectId
     if (urlParams.user)
       matchParam.user = mongoose.Types.ObjectId(urlParams.user);
+
+    // check and add to match paramters if request is matching for isFavorite
     if (urlParams.isFavorite) matchParam.isFavorite = urlParams.isFavorite;
+
+    // check for sort type
+    if (urlParams.sortType == "desc") sort = "-" + sort;
+    if (!urlParams.sort) sort = "createdAt";
+
+    // check if request is filtering for minTotalPrice & or maxTotalPrice
+    if (urlParams.minTotalPrice) {
+      matchParam.totalPrice = {
+        $gte: parseInt(urlParams.minTotalPrice),
+        $lte: parseInt(urlParams.maxTotalPrice),
+      };
+    } else {
+      matchParam.totalPrice = {
+        $gte: 0,
+        $lte: 999999999,
+      };
+    }
 
     const pipeline = [
       {
@@ -50,11 +75,12 @@ const getOrders = async (urlParams) => {
         totalPrice: 1,
         "orderItems.productName": 1,
         orderId: 1,
+        createdAt: 1,
       })
       .append(pipeline)
-      .sort("-createdDate")
-      .limit(limit)
-      .skip(skip);
+      .sort(sort)
+      .skip(skip)
+      .limit(limit);
 
     return orders;
   } catch (error) {
