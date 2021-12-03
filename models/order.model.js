@@ -16,34 +16,6 @@ const OrderSchema = mongoose.Schema(
       type: String,
       unique: true,
     },
-    orderItems: [
-      {
-        productName: { type: String, required: true },
-        qty: { type: Number, required: true },
-        productImage: { type: String, required: true },
-        price: { type: Number, required: true },
-        totalPrice: { type: Number, required: true },
-        product: {
-          type: mongoose.Schema.Types.ObjectId,
-          required: true,
-          ref: "Product",
-        },
-        selectedVariants: [
-          {
-            variantId: {
-              type: mongoose.Schema.Types.ObjectId,
-              required: true,
-              ref: "Variants",
-            },
-            variantTitle: { type: String, required: true },
-            itemName: { type: String, required: true },
-            itemPrice: { type: Number, required: true },
-            quantity: { type: Number, required: true },
-            totalPrice: { type: Number, required: true },
-          },
-        ],
-      },
-    ],
     deliveryAddress: {
       type: String,
       required: true,
@@ -59,6 +31,11 @@ const OrderSchema = mongoose.Schema(
       default: 0.0,
     },
     deliveryPrice: {
+      type: Number,
+      required: true,
+      default: 0.0,
+    },
+    subtotal: {
       type: Number,
       required: true,
       default: 0.0,
@@ -87,6 +64,34 @@ const OrderSchema = mongoose.Schema(
       required: true,
       default: "sent",
     },
+    orderItems: [
+      {
+        productName: { type: String, required: true },
+        qty: { type: Number, required: true },
+        productImage: { type: String, required: true },
+        price: { type: Number, required: true },
+        totalPrice: { type: Number, required: true, default: 0.0 },
+        product: {
+          type: mongoose.Schema.Types.ObjectId,
+          required: true,
+          ref: "Product",
+        },
+        selectedVariants: [
+          {
+            variantId: {
+              type: mongoose.Schema.Types.ObjectId,
+              required: true,
+              ref: "Variants",
+            },
+            variantTitle: { type: String, required: true },
+            itemName: { type: String, required: true },
+            itemPrice: { type: Number, required: true },
+            quantity: { type: Number, required: true },
+            totalPrice: { type: Number, required: true, default: 0.0 },
+          },
+        ],
+      },
+    ],
   },
   { timestamps: true }
 );
