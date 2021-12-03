@@ -9,7 +9,7 @@ const getUsers = async (req, res) => {
   const users = await userService.getUsers(req.query);
 
   users && users.length > 0
-    ? res.status(200).json(users)
+    ? res.status(200).json({ success: true, result: users, size: users.length })
     : res.status(404).json({ success: false, msg: "No Users found" });
 };
 
