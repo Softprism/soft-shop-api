@@ -25,12 +25,6 @@ const getProducts = async (req, res, next) => {
 const createProduct = async (req, res, next) => {
   let storeID; // container to store the store's ID, be it a store request or an admin request
 
-  if (req.store === undefined && req.query.storeID === undefined) {
-    res
-      .status(400)
-      .json({ success: false, msg: "unable to authenticate this store" });
-  }
-
   if (req.store) storeID = req.store.id;
   if (req.query.storeID && req.admin) storeID = req.query.storeID;
 
@@ -63,12 +57,6 @@ const updateProduct = async (req, res, next) => {
   }
 
   let storeID; // container to store the store's ID, be it a store request or an admin request
-  if (req.store === undefined && req.query.storeID === undefined) {
-    res
-      .status(400)
-      .json({ success: false, msg: "unable to authenticate this store" });
-  }
-
   if (req.store) storeID = req.store.id;
   if (req.query.storeID && req.admin) storeID = req.query.storeID;
 
@@ -84,12 +72,6 @@ const updateProduct = async (req, res, next) => {
 
 const deleteProduct = async (req, res, next) => {
   let storeID;
-  if (req.store === undefined && req.query.storeID === undefined) {
-    res
-      .status(400)
-      .json({ success: false, msg: "unable to authenticate this store" });
-  }
-
   if (req.store) storeID = req.store.id;
 
   if (req.query.storeID && req.admin) storeID = req.query.storeID;
@@ -117,7 +99,6 @@ const reviewProduct = async (req, res, next) => {
 };
 
 const getProductDetails = async (req, res, next) => {
-  console.log(req.params);
   const productDetails = await productService.getProductDetails(
     req.params.productId
   );
@@ -130,20 +111,7 @@ const getProductDetails = async (req, res, next) => {
 };
 
 const createVariant = async (req, res, next) => {
-  // verifiy permission
-  if (req.admin === undefined && req.store === undefined)
-    return res.status(403).json({
-      success: false,
-      msg: "You're not permitted to carry out this action",
-    });
-
   let storeID;
-
-  if (req.store === undefined && req.query.storeID === undefined) {
-    res
-      .status(400)
-      .json({ success: false, msg: "unable to authenticate this store" });
-  }
   if (req.store) storeID = req.store.id;
   if (req.query.storeID && req.admin) storeID = req.query.storeID;
 
@@ -156,20 +124,7 @@ const createVariant = async (req, res, next) => {
 };
 
 const updateVariant = async (req, res, next) => {
-  // verifiy permission
-  if (req.admin === undefined && req.store === undefined)
-    return res.status(403).json({
-      success: false,
-      msg: "You're not permitted to carry out this action",
-    });
-
   let storeID;
-
-  if (req.store === undefined && req.query.storeID === undefined) {
-    res
-      .status(400)
-      .json({ success: false, msg: "unable to authenticate this store" });
-  }
   if (req.store) storeID = req.store.id;
   if (req.query.storeID && req.admin) storeID = req.query.storeID;
 
@@ -179,28 +134,13 @@ const updateVariant = async (req, res, next) => {
   );
 
   if (updateVariant.err) {
-    console.log("error");
     res.status(500).json({ success: false, msg: updateVariant.err });
   } else {
-    console.log("no error");
     res.status(200).json({ success: true, result: updateVariant });
   }
 };
 
 const addVariantItem = async (req, res, next) => {
-  // verifiy permission
-  if (req.admin === undefined && req.store === undefined)
-    return res.status(403).json({
-      success: false,
-      msg: "You're not permitted to carry out this action",
-    });
-
-  if (req.store === undefined && req.query.storeID === undefined) {
-    res
-      .status(400)
-      .json({ success: false, msg: "unable to authenticate this store" });
-  }
-
   let storeID;
   if (req.store) storeID = req.store.id;
   if (req.query.storeID && req.admin) storeID = req.query.storeID;
@@ -211,10 +151,8 @@ const addVariantItem = async (req, res, next) => {
   );
 
   if (addVariantItem.err) {
-    console.log("error");
     res.status(500).json({ success: false, msg: addVariantItem.err });
   } else {
-    console.log("no error");
     res.status(200).json({ success: true, result: addVariantItem });
   }
 };
@@ -249,20 +187,7 @@ const getVariantItem = async (req, res, next) => {
 };
 
 const addCustomFee = async (req, res, next) => {
-  // verifiy permission
-  if (req.admin === undefined && req.store === undefined)
-    return res.status(403).json({
-      success: false,
-      msg: "You're not permitted to carry out this action",
-    });
-
   let storeID;
-
-  if (req.store === undefined && req.query.storeID === undefined) {
-    res
-      .status(400)
-      .json({ success: false, msg: "unable to authenticate this store" });
-  }
   if (req.store) storeID = req.store.id;
   if (req.query.storeID && req.admin) storeID = req.query.storeID;
 
@@ -275,20 +200,7 @@ const addCustomFee = async (req, res, next) => {
 };
 
 const deleteCustomFee = async (req, res, next) => {
-  // verifiy permission
-  if (req.admin === undefined && req.store === undefined)
-    return res.status(403).json({
-      success: false,
-      msg: "You're not permitted to carry out this action",
-    });
-
   let storeID;
-
-  if (req.store === undefined && req.query.storeID === undefined) {
-    res
-      .status(400)
-      .json({ success: false, msg: "unable to authenticate this store" });
-  }
   if (req.store) storeID = req.store.id;
   if (req.query.storeID && req.admin) storeID = req.query.storeID;
 
