@@ -27,7 +27,7 @@ router.get("/", auth, getProducts);
 // @desc    add a new product to store
 // @access  Private
 router.post(
-  "/create",
+  "/",
   [
     check("product_name", "Please Enter Product Name").not().isEmpty(),
     // check('images', 'Please add images for your store').not().isEmpty(),
