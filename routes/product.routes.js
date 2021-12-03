@@ -1,6 +1,9 @@
 import express from "express";
 import { check, validationResult } from "express-validator";
 import { auth } from "../middleware/auth.js";
+import { isStoreAdmin } from "../middleware/verifyStorePermission.js";
+import { checkPagination } from "../middleware/checkPagination.js";
+
 const router = express.Router();
 
 import {
@@ -21,7 +24,7 @@ import {
 // @route   GET /
 // @desc    Get all products from all stores.
 // @access  Private
-router.get("/", auth, getProducts);
+router.get("/", auth, checkPagination, getProducts);
 
 // @route   POST /create
 // @desc    add a new product to store
@@ -36,6 +39,7 @@ router.post(
     // check('rating', 'Please Enter Stores Address').not().isEmpty(),
   ],
   auth,
+  isStoreAdmin,
   createProduct
 );
 
@@ -47,46 +51,46 @@ router.put("/review", auth, reviewProduct);
 // @route   PUT /stores/variants
 // @desc    add variant to store
 // @access  Private
-router.put("/variants/:variantId/item", auth, addVariantItem);
+router.put("/variants/:variantId/item", auth, isStoreAdmin, addVariantItem);
 
-// @route   PUT /stores/variants
-// @desc    add variant to store
+// @route   PUT /stores/variants/:variantId
+// @desc    update store variant
 // @access  Private
-router.put("/variants/:variantId", auth, updateVariant);
+router.put("/variants/:variantId", auth, isStoreAdmin, updateVariant);
 
 // @route   GET /stores/variants
 // @desc   gets variant items
 // @access  Private
-router.get("/variants/:variantId", auth, getVariantItem);
+router.get("/variants/:variantId", auth, isStoreAdmin, getVariantItem);
 
 // @route   PUT /:id
 // @desc    update a store product, can be used by admin and stores
 // @access  Private
-router.put("/:id", auth, updateProduct);
+router.put("/:id", auth, isStoreAdmin, updateProduct);
 
 // @route   GET /
 // @desc    Get a product info.
 // @access  Private
-router.get("/:productId", auth, getProductDetails);
+router.get("/:productId", auth, isStoreAdmin, getProductDetails);
 
 // @route   DELETE /:id
 // @desc    delete a store product, can be used by admin and stores
 // @access  Private
-router.delete("/:id", auth, deleteProduct);
+router.delete("/:id", auth, isStoreAdmin, deleteProduct);
 
 // @route   POST /stores/variants
 // @desc    add variant to store
 // @access  Private
-router.post("/variants", auth, createVariant);
+router.post("/variants", auth, isStoreAdmin, createVariant);
 
 // @route   POST /stores/custom-fees
 // @desc    add custom fee to product
 // @access  Private
-router.post("/custom-fees", auth, addCustomFee);
+router.post("/custom-fees", auth, isStoreAdmin, addCustomFee);
 
 // @route   DELETE /stores/custom-fees
 // @desc    delete custom fee
 // @access  Private
-router.delete("/custom-fees/:customFeeId", auth, deleteCustomFee);
+router.delete("/custom-fees/:customFeeId", auth, isStoreAdmin, deleteCustomFee);
 
 export default router;
