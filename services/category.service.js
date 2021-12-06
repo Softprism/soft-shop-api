@@ -3,47 +3,52 @@ import Category from "../models/category.model.js";
 //  Get all Categories
 const getCategories = async (urlParams) => {
   try {
-    const limit = Number(urlParams.limit);
-    const skip = Number(urlParams.skip);
-
     if (urlParams.long && urlParams.lat && urlParams.radius) {
       var long = parseFloat(urlParams.long);
       var lat = parseFloat(urlParams.lat);
       var radian = parseFloat(urlParams.radius / 3963.2);
     }
 
+    // declare fields to remove after aggregating
     const pipeline = [
       {
-        $unset: ["products", "stores"],
+        $unset: ["stores"],
       },
     ];
-    return Category.aggregate()
-      .lookup({
-        from: "products",
-        localField: "_id",
-        foreignField: "category",
-        as: "products",
-      })
-      .lookup({
-        from: "stores",
-        localField: "_id",
-        foreignField: "category",
-        as: "stores",
-      })
-      .match({
-        "stores.location": {
-          $geoWithin: {
-            $centerSphere: [[long, lat], radian],
-          },
-        },
-      })
-      .addFields({
-        productCount: { $size: "$products" },
-      })
-      .addFields({
-        storeCount: { $size: "$stores" },
-      })
-      .append(pipeline);
+
+    // start aggregate
+    return (
+      Category.aggregate()
+        // lookup stores - trying to JOIN the categories and stores
+        .lookup({
+          from: "stores",
+          // declare local variable for category id, since we're using version 4 of mongodb we can't use foreign and local fields here, hence doing it the OG way.
+          let: { category_id: "$_id" },
+          pipeline: [
+            {
+              // matching each category to a store, this should return all categories and a store array field inside each category object, an empty array if the category has no stores.
+              $match: {
+                $expr: {
+                  $eq: ["$$category_id", "$category"],
+                },
+                // run geoWithin operation to return all stores that are within the selected radius of the user's location
+                location: {
+                  $geoWithin: {
+                    $centerSphere: [[long, lat], radian],
+                  },
+                },
+              },
+            },
+          ],
+          as: "stores",
+        })
+        // count number of stores in each category, will return zero for empty arrays
+        .addFields({
+          storeCount: { $size: "$stores" },
+        })
+        // appends the pipeline specified above
+        .append(pipeline)
+    );
   } catch (err) {
     return err;
   }

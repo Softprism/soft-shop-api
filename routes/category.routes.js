@@ -16,7 +16,7 @@ import {
 // @route   GET /category
 // @desc    Get all Categories
 // @access  Public
-router.get("/", auth, checkPagination, getCategories);
+router.get("/", auth, getCategories);
 
 // @route   POST /category/new
 // @desc    Create New Category

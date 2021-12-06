@@ -12,16 +12,22 @@ import {
   addLabel,
   getLabels,
   getStore,
+  getStoresNoGeo,
 } from "../controllers/store.controller.js";
 
 import { auth } from "../middleware/auth.js";
 import { checkPagination } from "../middleware/checkPagination.js";
 import { isStoreAdmin } from "../middleware/verifyStorePermission.js";
 
-// @route   GET /store
+// @route   GET /stores
 // @desc    Get all registered stores
 // @access  Private
 router.get("/", auth, checkPagination, getStores);
+
+// @route   GET /store
+// @desc    Get all registered stores
+// @access  Private
+router.get("/nogeo", auth, checkPagination, getStoresNoGeo);
 
 // @route   GET /stores/login
 // @desc    Get logged in Store

@@ -21,11 +21,16 @@ const getStores = async (urlParams) => {
       },
     ];
 
-    let storesWithRating = []; // container to hold stores based on rating search
+    let storesWithRating = []; // container to hold stores based on rating search filter
 
     // setting pagination params
     const limit = Number(urlParams.limit);
     const skip = Number(urlParams.skip);
+    let sort = urlParams.sort;
+
+    // check for sort type
+    if (urlParams.sortType == "desc") sort = "-" + sort;
+    if (!urlParams.sort) sort = "createdAt";
 
     // validating rating param
     const rating = Number(urlParams.rating);
@@ -106,12 +111,15 @@ const getStores = async (urlParams) => {
         productCount: { $size: "$products" },
         orderCount: { $size: "$orders" },
       })
+      .addFields({
+        averageRating: { $ifNull: ["$averageRating", 0] },
+      })
       // appending excludes
       .append(pipeline)
       // sorting and pagination
-      .sort("-createdDate")
-      .limit(limit)
-      .skip(skip);
+      .sort(sort)
+      .skip(skip)
+      .limit(limit);
 
     if (rating >= 0) {
       (await stores).forEach((store) => {
@@ -124,78 +132,80 @@ const getStores = async (urlParams) => {
       return stores;
     }
   } catch (err) {
-    console.log(err);
     return err;
   }
 };
 
-const getStore = async (storeId) => {
-  // declare fields to exclude from response
-  const pipeline = [
-    {
-      $unset: [
-        "products.store",
-        "products.rating",
-        "products.category",
-        "products.customFee.items",
-        "productReview",
-        "password",
-        "email",
-        "phone_number",
-        "orders",
-        "orderReview",
-        "products.variant",
-      ],
-    },
-  ];
+const getStoresNoGeo = async (urlParams) => {
+  try {
+    // declare fields to exclude from response
+    const pipeline = [
+      {
+        $unset: [
+          "products",
+          "orderReview",
+          "password",
+          "email",
+          "phone_number",
+          "labels",
+          "orders",
+        ],
+      },
+    ];
 
-  // aggregating stores
-  let store = await Store.aggregate()
-    // matching with requested store
-    .match({
-      _id: mongoose.Types.ObjectId(storeId),
-    })
-    // looking up the store in the product collection
-    .lookup({
-      from: "products",
-      localField: "_id",
-      foreignField: "store",
-      as: "products",
-    })
-    // returning only active products
-    .match({
-      "products.status": "active",
-    })
-    //looking up the order collection for each stores
-    .lookup({
-      from: "orders",
-      localField: "_id",
-      foreignField: "store",
-      as: "orders",
-    })
-    // looking up each product on the review collection
-    .lookup({
-      from: "reviews",
-      localField: "orders._id",
-      foreignField: "order",
-      as: "orderReview",
-    })
-    // adding metrics to the response
-    .addFields({
-      sumOfStars: { $sum: "$orderReview.star" },
-      numOfReviews: { $size: "$orderReview" },
-      averageRating: { $ceil: { $avg: "$orderReview.star" } },
-      productCount: { $size: "$products" },
-      orderCount: { $size: "$orders" },
-    })
-    // appending excludes
-    .append(pipeline);
-  console.log(store);
-  if (store.length < 1) {
-    store = await Store.aggregate()
-      // matching with requested store
-      .match({
-        _id: mongoose.Types.ObjectId(storeId),
+    let storesWithRating = []; // container to hold stores based on rating search filter
+
+    // setting pagination params
+    const limit = Number(urlParams.limit);
+    const skip = Number(urlParams.skip);
+    let sort = urlParams.sort;
+
+    // check for sort type
+    if (urlParams.sortType == "desc") sort = "-" + sort;
+    if (!urlParams.sort) sort = "createdAt";
+
+    // validating rating param
+    const rating = Number(urlParams.rating);
+
+    // initializing matchParam
+    const matchParam = {};
+
+    if (urlParams.isOpen === "true" && urlParams.currentTime) {
+      matchParam.closingTime = { $gte: urlParams.currentTime };
+      matchParam.isActive = true;
+    } // checking opened stores
+
+    if (urlParams.isOpen === "false" && urlParams.currentTime) {
+      matchParam.closingTime = { $lte: urlParams.currentTime };
+      matchParam.isActive = false;
+    } // checking closed stores
+
+    if (urlParams.name) {
+      matchParam.name = new RegExp(urlParams.name, "i");
+    }
+
+    if (urlParams.category) {
+      urlParams.category = mongoose.Types.ObjectId(urlParams.category);
+      matchParam.category = urlParams.category;
+    }
+
+    // cleaning up the urlParams
+    delete urlParams.limit;
+    delete urlParams.skip;
+    delete urlParams.rating;
+    delete urlParams.long;
+    delete urlParams.lat;
+
+    // aggregating stores
+    const stores = Store.aggregate()
+      // matching stores with matchParam
+      .match(matchParam)
+      //looking up the product collection for each stores
+      .lookup({
+        from: "products",
+        localField: "_id",
+        foreignField: "store",
+        as: "products",
       })
       //looking up the order collection for each stores
       .lookup({
@@ -216,14 +226,136 @@ const getStore = async (storeId) => {
         sumOfStars: { $sum: "$orderReview.star" },
         numOfReviews: { $size: "$orderReview" },
         averageRating: { $ceil: { $avg: "$orderReview.star" } },
+        productCount: { $size: "$products" },
         orderCount: { $size: "$orders" },
       })
-      .append(pipeline);
-  }
+      .addFields({
+        averageRating: { $ifNull: ["$averageRating", 0] },
+      })
+      // appending excludes
+      .append(pipeline)
+      // sorting and pagination
+      .sort(sort)
+      .skip(skip)
+      .limit(limit);
 
-  // make average rating zero if null
-  if (store[0].averageRating === null) store[0].averageRating = 0;
-  return store[0];
+    if (rating >= 0) {
+      (await stores).forEach((store) => {
+        if (store.averageRating == rating) {
+          storesWithRating.push(store);
+        }
+      });
+      return storesWithRating;
+    } else {
+      return stores;
+    }
+  } catch (err) {
+    return err;
+  }
+};
+
+const getStore = async (storeId) => {
+  try {
+    // declare fields to exclude from response
+    const pipeline = [
+      {
+        $unset: [
+          "products.store",
+          "products.rating",
+          "products.category",
+          "products.customFee.items",
+          "productReview",
+          "password",
+          "email",
+          "phone_number",
+          "orders",
+          "orderReview",
+          "products.variant",
+        ],
+      },
+    ];
+
+    // aggregating stores
+    let store = await Store.aggregate()
+      // matching with requested store
+      .match({
+        _id: mongoose.Types.ObjectId(storeId),
+      })
+      // looking up the store in the product collection
+      .lookup({
+        from: "products",
+        localField: "_id",
+        foreignField: "store",
+        as: "products",
+      })
+      // returning only active products
+      .match({
+        "products.status": "active",
+      })
+      //looking up the order collection for each stores
+      .lookup({
+        from: "orders",
+        localField: "_id",
+        foreignField: "store",
+        as: "orders",
+      })
+      // looking up each product on the review collection
+      .lookup({
+        from: "reviews",
+        localField: "orders._id",
+        foreignField: "order",
+        as: "orderReview",
+      })
+      // adding metrics to the response
+      .addFields({
+        sumOfStars: { $sum: "$orderReview.star" },
+        numOfReviews: { $size: "$orderReview" },
+        averageRating: { $ceil: { $avg: "$orderReview.star" } },
+        productCount: { $size: "$products" },
+        orderCount: { $size: "$orders" },
+      })
+      .addFields({
+        averageRating: { $ifNull: ["$averageRating", 0] },
+      })
+      // appending excludes
+      .append(pipeline);
+
+    if (store.length < 1) {
+      store = await Store.aggregate()
+        // matching with requested store
+        .match({
+          _id: mongoose.Types.ObjectId(storeId),
+        })
+        //looking up the order collection for each stores
+        .lookup({
+          from: "orders",
+          localField: "_id",
+          foreignField: "store",
+          as: "orders",
+        })
+        // looking up each product on the review collection
+        .lookup({
+          from: "reviews",
+          localField: "orders._id",
+          foreignField: "order",
+          as: "orderReview",
+        })
+        // adding metrics to the response
+        .addFields({
+          sumOfStars: { $sum: "$orderReview.star" },
+          numOfReviews: { $size: "$orderReview" },
+          averageRating: { $ceil: { $avg: "$orderReview.star" } },
+          orderCount: { $size: "$orders" },
+        })
+        .addFields({
+          averageRating: { $ifNull: ["$averageRating", 0] },
+        })
+        .append(pipeline);
+    }
+    return store[0];
+  } catch (err) {
+    return { err: "failed to get store data" };
+  }
 };
 
 const createStore = async (StoreParam) => {
@@ -413,4 +545,5 @@ export {
   addLabel,
   getStore,
   getLabels,
+  getStoresNoGeo,
 };

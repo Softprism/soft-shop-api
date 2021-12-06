@@ -91,8 +91,8 @@ const getProducts = async (getParam) => {
       .append(pipeline)
       // Sorting and pagination
       .sort("-createdDate")
-      .limit(limit)
-      .skip(skip);
+      .skip(skip)
+      .limit(limit);
 
     return allProducts;
   } catch (error) {
