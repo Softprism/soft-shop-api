@@ -3,9 +3,6 @@ import Category from "../models/category.model.js";
 //  Get all Categories
 const getCategories = async (urlParams) => {
   try {
-    const limit = Number(urlParams.limit);
-    const skip = Number(urlParams.skip);
-
     if (urlParams.long && urlParams.lat && urlParams.radius) {
       var long = parseFloat(urlParams.long);
       var lat = parseFloat(urlParams.lat);
@@ -14,36 +11,50 @@ const getCategories = async (urlParams) => {
 
     const pipeline = [
       {
-        $unset: ["products", "stores"],
+        $unset: ["products"],
       },
     ];
-    return Category.aggregate()
-      .lookup({
-        from: "products",
-        localField: "_id",
-        foreignField: "category",
-        as: "products",
-      })
-      .lookup({
-        from: "stores",
-        localField: "_id",
-        foreignField: "category",
-        as: "stores",
-      })
-      .match({
-        "stores.location": {
-          $geoWithin: {
-            $centerSphere: [[long, lat], radian],
+    return (
+      Category.aggregate()
+        .lookup({
+          from: "products",
+          localField: "_id",
+          foreignField: "category",
+          as: "products",
+        })
+        .lookup({
+          from: "stores",
+          localField: "_id",
+          foreignField: "category",
+          pipeline: [
+            {
+              $match: {
+                location: {
+                  $geoWithin: {
+                    $centerSphere: [[long, lat], radian],
+                  },
+                },
+              },
+            },
+          ],
+          as: "stores",
+        })
+        // .unwind({ path: "$stores", preserveNullAndEmptyArrays: true })
+        .match({
+          "stores.location": {
+            $geoWithin: {
+              $centerSphere: [[long, lat], radian],
+            },
           },
-        },
-      })
-      .addFields({
-        productCount: { $size: "$products" },
-      })
-      .addFields({
-        storeCount: { $size: "$stores" },
-      })
-      .append(pipeline);
+        })
+        .addFields({
+          productCount: { $size: "$products" },
+        })
+        .addFields({
+          storeCount: { $size: "$stores" },
+        })
+        .append(pipeline)
+    );
   } catch (err) {
     return err;
   }
