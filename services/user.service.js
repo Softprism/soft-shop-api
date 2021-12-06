@@ -119,9 +119,9 @@ const registerUser = async (userParam) => {
     user.password = undefined;
 
     // set user token
-    user.set("token", token, { strict: false });
+    // user.set("token", token, { strict: false });
 
-    return user;
+    return { user, token };
   } catch (err) {
     console.log(err);
     return err;
