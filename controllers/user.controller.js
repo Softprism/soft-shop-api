@@ -5,103 +5,142 @@ import * as userService from "../services/user.service.js";
 
 const router = express.Router();
 
-const getUsers = async (req, res) => {
-  const users = await userService.getUsers(req.query);
+// ========================================================================== //
 
-  users && users.length > 0
-    ? res.status(200).json({ success: true, result: users, size: users.length })
-    : res.status(404).json({ success: false, msg: "No Users found" });
+const getUsers = async (req, res) => {
+  try {
+    const users = await userService.getUsers(req.query);
+
+    users && users.length > 0
+      ? res
+          .status(200)
+          .json({ success: true, result: users, size: users.length })
+      : res.status(404).json({ success: false, msg: "No Users found" });
+  } catch (error) {
+    next(error);
+  }
 };
+
+// ========================================================================== //
 
 const verifyEmailAddress = async (req, res) => {
-  const action = await userService.verifyEmailAddress(req.body);
+  try {
+    const action = await userService.verifyEmailAddress(req.body);
 
-  if (action.err) {
-    return res.status(403).json({ success: false, msg: action.err });
+    if (action.err) {
+      return res.status(403).json({ success: false, msg: action.err });
+    }
+
+    return res.status(202).json({ success: true, result: action });
+  } catch (error) {
+    next(error);
   }
-
-  return res.status(202).json({ success: true, result: action });
 };
+
+// ========================================================================== //
 
 const registerUser = async (req, res, next) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ success: false, msg: errors.array() });
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, msg: errors.array() });
+    }
+
+    const result = await userService.registerUser(req.body);
+
+    if (result.err) {
+      return res.status(409).json({ success: false, msg: result.err });
+    }
+
+    return res
+      .status(201)
+      .json({ success: true, result: result.user, token: result.token });
+  } catch (error) {
+    next(error);
   }
-
-  const result = await userService.registerUser(req.body);
-
-  if (result.err) {
-    return res.status(409).json({ success: false, msg: result.err });
-  }
-
-  return res
-    .status(201)
-    .json({ success: true, result: result.user, token: result.token });
 };
+
+// ========================================================================== //
 
 const loginUser = async (req, res, next) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ success: false, msg: errors });
-  }
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, msg: errors });
+    }
 
-  // Call Login function from userService
-  const loginRequest = await userService.loginUser(req.body);
-  console.log(await loginRequest);
-  if (loginRequest.err) {
-    return res.status(403).json({ success: false, msg: loginRequest.err });
-  }
+    // Call Login function from userService
+    const loginRequest = await userService.loginUser(req.body);
+    if (loginRequest.err) {
+      return res.status(403).json({ success: false, msg: loginRequest.err });
+    }
 
-  res.status(200).json({
-    success: true,
-    result: loginRequest.userDetails[0],
-    token: loginRequest.token,
-  });
+    res.status(200).json({
+      success: true,
+      result: loginRequest.userDetails[0],
+      token: loginRequest.token,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
+
+// ========================================================================== //
 
 const getLoggedInUser = async (req, res, next) => {
-  // Call Get Logged in User function from userService
-  const user = await userService.getLoggedInUser(req.user.id);
+  try {
+    // Call Get Logged in User function from userService
+    const user = await userService.getLoggedInUser(req.user.id);
 
-  if (user.err) {
-    res.status(400).json({ success: false, msg: user.err });
+    if (user.err) {
+      res.status(400).json({ success: false, msg: user.err });
+    }
+
+    res.status(200).json({
+      success: true,
+      result: user[0],
+    });
+  } catch (error) {
+    next(error);
   }
-
-  res.status(200).json({
-    success: true,
-    result: user[0],
-  });
 };
+
+// ========================================================================== //
 
 const updateUser = async (req, res) => {
-  const errors = validationResult(req);
+  try {
+    const errors = validationResult(req);
 
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    let userID;
+
+    if (req.user === undefined && req.query.userID === undefined) {
+      res
+        .status(400)
+        .json({ success: false, msg: "unable to authenticate this user" });
+    }
+    if (req.user) userID = req.user.id;
+    if (req.query.userID && req.admin) userID = req.query.userID;
+
+    const user = await userService.updateUser(req.body, userID);
+
+    if (user.err) {
+      return res.status(500).json({ success: false, msg: user.err });
+    }
+
+    res.status(200).json({
+      success: true,
+      user: user,
+    });
+  } catch (error) {
+    next(error);
   }
-
-  let userID;
-
-  if (req.user === undefined && req.query.userID === undefined) {
-    res
-      .status(400)
-      .json({ success: false, msg: "unable to authenticate this user" });
-  }
-  if (req.user) userID = req.user.id;
-  if (req.query.userID && req.admin) userID = req.query.userID;
-
-  const user = await userService.updateUser(req.body, userID);
-
-  if (user.err) {
-    return res.status(500).json({ success: false, msg: user.err });
-  }
-
-  res.status(200).json({
-    success: true,
-    user: user,
-  });
 };
+// ========================================================================== //
+
 // const createUserBasket = async (req, res) => { deprecated
 //   if (!req.body.store) {
 //     return res
@@ -115,6 +154,8 @@ const updateUser = async (req, res) => {
 
 //   res.status(200).json({ success: true, result: action });
 // };
+
+// ========================================================================== //
 
 const addItemToBasket = async (req, res, next) => {
   try {
@@ -130,6 +171,8 @@ const addItemToBasket = async (req, res, next) => {
     next(error);
   }
 };
+
+// ========================================================================== //
 
 const getUserBasketItems = async (req, res, next) => {
   try {
@@ -151,6 +194,8 @@ const getUserBasketItems = async (req, res, next) => {
   }
 };
 
+// ========================================================================== //
+
 const editBasketItems = async (req, res, next) => {
   try {
     const action = await userService.editBasketItems(req.user.id, req.body);
@@ -169,6 +214,8 @@ const editBasketItems = async (req, res, next) => {
   }
 };
 
+// ========================================================================== //
+
 const deleteBasketItem = async (req, res, next) => {
   try {
     const action = await userService.deleteBasketItem(req.user.id, req.body);
@@ -181,6 +228,8 @@ const deleteBasketItem = async (req, res, next) => {
     next(error);
   }
 };
+
+// ========================================================================== //
 
 const deleteAllBasketItems = async (req, res, next) => {
   try {
@@ -195,34 +244,55 @@ const deleteAllBasketItems = async (req, res, next) => {
   }
 };
 
+// ========================================================================== //
+
 const forgotPassword = async (req, res) => {
-  const action = await userService.forgotPassword(req.body);
+  try {
+    const action = await userService.forgotPassword(req.body);
 
-  if (action.err) {
-    return res.status(404).json({ success: false, msg: action.err });
+    if (action.err) {
+      return res.status(404).json({ success: false, msg: action.err });
+    }
+
+    return res.status(200).json({ success: true, result: action });
+  } catch (error) {
+    next(error);
   }
-
-  return res.status(200).json({ success: true, result: action });
 };
+
+// ========================================================================== //
 
 const validateToken = async (req, res) => {
-  const action = await userService.validateToken(req.query);
+  try {
+    const action = await userService.validateToken(req.query);
 
-  if (action.err) {
-    return res.status(403).json({ success: false, msg: action.err });
+    if (action.err) {
+      return res.status(403).json({ success: false, msg: action.err });
+    }
+
+    return res.status(200).json({ success: true, result: action });
+  } catch (error) {
+    next(error);
   }
-
-  return res.status(200).json({ success: true, result: action });
 };
+
+// ========================================================================== //
 
 const createNewPassword = async (req, res) => {
-  const action = await userService.createNewPassword(req.body);
-  if (action.err) {
-    return res.status(403).json({ success: false, msg: action.err });
-  }
+  try {
+    const action = await userService.createNewPassword(req.body);
+    if (action.err) {
+      return res.status(403).json({ success: false, msg: action.err });
+    }
 
-  return res.status(200).json({ success: true, result: action });
+    return res.status(200).json({ success: true, result: action });
+  } catch (error) {
+    next(error);
+  }
 };
+
+// ========================================================================== //
+
 export {
   getUsers,
   verifyEmailAddress,
