@@ -84,7 +84,6 @@ const getOrders = async (urlParams) => {
 
     return orders;
   } catch (error) {
-    console.log(error);
     return { err: "error loading orders" };
   }
 };

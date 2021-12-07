@@ -21,19 +21,13 @@ const getUsers = async (urlParams) => {
     delete urlParams.page;
 
     const users = await User.find(urlParams)
-      .select("-password")
-      .populate({
-        path: "cart.product_id",
-        select: "product_name price availability",
-      })
-      .populate({ path: "orders", select: "orderId status" })
+      .select("-password -orders -cart")
       .sort({ createdDate: -1 }) // -1 for descending sort
       .skip(skip)
       .limit(limit);
 
     return users;
   } catch (err) {
-    console.log(err);
     return err;
   }
 };
@@ -170,7 +164,7 @@ const loginUser = async (loginParam) => {
       { $unset: ["userReviews", "userOrders", "cart", "password", "orders"] },
     ];
 
-    const userDetails = User.aggregate()
+    const userDetails = await User.aggregate()
       .match({
         _id: mongoose.Types.ObjectId(user._id),
       })
@@ -189,11 +183,10 @@ const loginUser = async (loginParam) => {
       .addFields({
         totalReviews: { $size: "$userReviews" },
         totalOrders: { $size: "$userOrders" },
-        token: token,
       })
       .append(pipeline);
 
-    return userDetails;
+    return { userDetails, token };
   } catch (err) {
     return err;
   }
@@ -301,8 +294,51 @@ const addItemToBasket = async (userId, basketItemMeta) => {
   let newBasketItem = new Basket(basketItemMeta);
   await newBasketItem.save();
 
-  // return user basket items
-  return await getUserBasketItems(userId);
+  // run price calculations
+  const newBasketItemChore = await Basket.aggregate()
+    .match({
+      _id: mongoose.Types.ObjectId(newBasketItem._id),
+    })
+    .addFields({
+      "product.selectedVariants": {
+        $map: {
+          input: "$product.selectedVariants",
+          as: "variant",
+          in: {
+            $mergeObjects: [
+              "$$variant",
+              {
+                totalPrice: {
+                  $multiply: ["$$variant.itemPrice", "$$variant.quantity"],
+                },
+              },
+            ],
+          },
+        },
+      },
+      totalProductPrice: { $multiply: ["$product.price", "$product.qty"] },
+    })
+    .addFields({
+      totalVariantPrice: { $sum: "$product.selectedVariants.totalPrice" },
+    })
+    .addFields({
+      "product.totalPrice": {
+        $add: ["$totalProductPrice", "$totalVariantPrice"],
+      },
+    });
+
+  // update new basket details with calculated prices
+  return await Basket.findOneAndUpdate(
+    { _id: newBasketItem._id },
+    {
+      $set: {
+        "product.selectedVariants":
+          newBasketItemChore[0].product.selectedVariants,
+        "product.totalPrice": newBasketItemChore[0].product.totalPrice,
+      },
+    },
+    { omitUndefined: true, new: true, useFindAndModify: false }
+  );
 };
 
 const getUserBasketItems = async (userId) => {
@@ -313,15 +349,17 @@ const getUserBasketItems = async (userId) => {
     })
     .group({
       _id: "$user",
-      total: { $sum: "$product.price" },
+      total: { $sum: "$product.totalPrice" },
     });
   // get user basket items
-  let userBasket = await Basket.aggregate().match({
-    user: mongoose.Types.ObjectId(userId),
-  });
+  let userBasket = await Basket.aggregate()
+    .match({
+      user: mongoose.Types.ObjectId(userId),
+    })
+    .sort("createdAt");
   return {
     userBasket,
-    total: totalProductPriceInBasket[0].total,
+    totalPrice: totalProductPriceInBasket[0].total,
     count: userBasket.length,
   };
 };
@@ -333,7 +371,7 @@ const editBasketItems = async (userId, basketMeta) => {
     if (!userBasket) throw { err: "basket not found" };
 
     // update basket with new data
-    let updateBasket = await Basket.findByIdAndUpdate(
+    await Basket.findByIdAndUpdate(
       basketMeta.basketId,
       { $set: basketMeta },
       { omitUndefined: true, new: true, useFindAndModify: false }
