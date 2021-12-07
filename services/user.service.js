@@ -352,9 +352,11 @@ const getUserBasketItems = async (userId) => {
       total: { $sum: "$product.totalPrice" },
     });
   // get user basket items
-  let userBasket = await Basket.aggregate().match({
-    user: mongoose.Types.ObjectId(userId),
-  });
+  let userBasket = await Basket.aggregate()
+    .match({
+      user: mongoose.Types.ObjectId(userId),
+    })
+    .sort("createdAt");
   return {
     userBasket,
     totalPrice: totalProductPriceInBasket[0].total,
@@ -369,7 +371,7 @@ const editBasketItems = async (userId, basketMeta) => {
     if (!userBasket) throw { err: "basket not found" };
 
     // update basket with new data
-    let updateBasket = await Basket.findByIdAndUpdate(
+    await Basket.findByIdAndUpdate(
       basketMeta.basketId,
       { $set: basketMeta },
       { omitUndefined: true, new: true, useFindAndModify: false }
