@@ -71,7 +71,7 @@ router.put("/:id", auth, isStoreAdmin, updateProduct);
 // @route   GET /
 // @desc    Get a product info.
 // @access  Private
-router.get("/:productId", auth, isStoreAdmin, getProductDetails);
+router.get("/:productId", auth, getProductDetails);
 
 // @route   DELETE /:id
 // @desc    delete a store product, can be used by admin and stores
