@@ -21,19 +21,13 @@ const getUsers = async (urlParams) => {
     delete urlParams.page;
 
     const users = await User.find(urlParams)
-      .select("-password")
-      .populate({
-        path: "cart.product_id",
-        select: "product_name price availability",
-      })
-      .populate({ path: "orders", select: "orderId status" })
+      .select("-password -orders -cart")
       .sort({ createdDate: -1 }) // -1 for descending sort
       .skip(skip)
       .limit(limit);
 
     return users;
   } catch (err) {
-    console.log(err);
     return err;
   }
 };
