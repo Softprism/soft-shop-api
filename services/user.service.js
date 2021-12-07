@@ -294,8 +294,51 @@ const addItemToBasket = async (userId, basketItemMeta) => {
   let newBasketItem = new Basket(basketItemMeta);
   await newBasketItem.save();
 
-  // return user basket items
-  return await getUserBasketItems(userId);
+  // run price calculations
+  const newBasketItemChore = await Basket.aggregate()
+    .match({
+      _id: mongoose.Types.ObjectId(newBasketItem._id),
+    })
+    .addFields({
+      "product.selectedVariants": {
+        $map: {
+          input: "$product.selectedVariants",
+          as: "variant",
+          in: {
+            $mergeObjects: [
+              "$$variant",
+              {
+                totalPrice: {
+                  $multiply: ["$$variant.itemPrice", "$$variant.quantity"],
+                },
+              },
+            ],
+          },
+        },
+      },
+      totalProductPrice: { $multiply: ["$product.price", "$product.qty"] },
+    })
+    .addFields({
+      totalVariantPrice: { $sum: "$product.selectedVariants.totalPrice" },
+    })
+    .addFields({
+      "product.totalPrice": {
+        $add: ["$totalProductPrice", "$totalVariantPrice"],
+      },
+    });
+
+  // update new basket details with calculated prices
+  return await Basket.findOneAndUpdate(
+    { _id: newBasketItem._id },
+    {
+      $set: {
+        "product.selectedVariants":
+          newBasketItemChore[0].product.selectedVariants,
+        "product.totalPrice": newBasketItemChore[0].product.totalPrice,
+      },
+    },
+    { omitUndefined: true, new: true, useFindAndModify: false }
+  );
 };
 
 const getUserBasketItems = async (userId) => {
@@ -306,7 +349,7 @@ const getUserBasketItems = async (userId) => {
     })
     .group({
       _id: "$user",
-      total: { $sum: "$product.price" },
+      total: { $sum: "$product.totalPrice" },
     });
   // get user basket items
   let userBasket = await Basket.aggregate().match({
@@ -314,7 +357,7 @@ const getUserBasketItems = async (userId) => {
   });
   return {
     userBasket,
-    total: totalProductPriceInBasket[0].total,
+    totalPrice: totalProductPriceInBasket[0].total,
     count: userBasket.length,
   };
 };
