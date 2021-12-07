@@ -9,10 +9,8 @@ const getUsers = async (req, res) => {
   const users = await userService.getUsers(req.query);
 
   users && users.length > 0
-    ? res
-        .status(200)
-        .json({ status: "success", data: users, size: users.length })
-    : res.status(404).json({ status: "fail", message: "No Users found" });
+    ? res.status(200).json({ success: true, result: users, size: users.length })
+    : res.status(404).json({ success: false, msg: "No Users found" });
 };
 
 const verifyEmailAddress = async (req, res) => {
@@ -28,18 +26,18 @@ const verifyEmailAddress = async (req, res) => {
 const registerUser = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ status: "error", message: errors.array() });
+    return res.status(400).json({ success: false, msg: errors.array() });
   }
 
   const result = await userService.registerUser(req.body);
 
   if (result.err) {
-    return res.status(409).json({ status: "fail", message: result.err });
+    return res.status(409).json({ success: false, msg: result.err });
   }
 
   return res
     .status(201)
-    .json({ status: "success", data: result.user, token: result.token });
+    .json({ success: true, result: result.user, token: result.token });
 };
 
 const loginUser = async (req, res, next) => {
@@ -49,15 +47,16 @@ const loginUser = async (req, res, next) => {
   }
 
   // Call Login function from userService
-  const token = await userService.loginUser(req.body);
-  console.log(token);
-  if (token.err) {
-    return res.status(403).json({ success: false, msg: token.err });
+  const loginRequest = await userService.loginUser(req.body);
+  console.log(await loginRequest);
+  if (loginRequest.err) {
+    return res.status(403).json({ success: false, msg: loginRequest.err });
   }
 
   res.status(200).json({
     success: true,
-    result: token[0],
+    result: loginRequest.userDetails[0],
+    token: loginRequest.token,
   });
 };
 
