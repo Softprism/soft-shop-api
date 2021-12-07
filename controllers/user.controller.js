@@ -140,7 +140,12 @@ const getUserBasketItems = async (req, res, next) => {
         .json({ success: false, msg: "error adding item to basket" });
     }
 
-    res.status(200).json({ success: true, result: action });
+    res.status(200).json({
+      success: true,
+      result: action.userBasket,
+      totalPrice: action.totalPrice,
+      size: action.count,
+    });
   } catch (error) {
     next(error);
   }
