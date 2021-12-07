@@ -164,7 +164,7 @@ const loginUser = async (loginParam) => {
       { $unset: ["userReviews", "userOrders", "cart", "password", "orders"] },
     ];
 
-    const userDetails = User.aggregate()
+    const userDetails = await User.aggregate()
       .match({
         _id: mongoose.Types.ObjectId(user._id),
       })
@@ -183,11 +183,10 @@ const loginUser = async (loginParam) => {
       .addFields({
         totalReviews: { $size: "$userReviews" },
         totalOrders: { $size: "$userOrders" },
-        token: token,
       })
       .append(pipeline);
 
-    return userDetails;
+    return { userDetails, token };
   } catch (err) {
     return err;
   }
