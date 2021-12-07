@@ -12,7 +12,7 @@ const BasketSchema = mongoose.Schema(
       qty: { type: Number, required: true, default: 1 },
       productImage: { type: String, required: true },
       price: { type: Number, required: true },
-      totalPrice: { type: Number, required: true }, // qty * price
+      totalPrice: { type: Number, required: true, default: 0.0 }, // qty * price
       productId: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
@@ -27,9 +27,9 @@ const BasketSchema = mongoose.Schema(
           },
           variantTitle: { type: String, required: true },
           itemName: { type: String, required: true },
-          itemPrice: { type: Number, required: true },
+          itemPrice: { type: Number, required: true, default: 0.0 },
           quantity: { type: Number, required: true },
-          totalPrice: { type: Number, required: true },
+          totalPrice: { type: Number, required: true, default: 0.0 },
         },
       ],
     },
