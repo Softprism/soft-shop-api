@@ -5,7 +5,11 @@ import { validationResult } from "express-validator";
 // Get Categories
 const getCategories = async (req, res, next) => {
   // Call getCategories function from category service
-  const categories = await categoryService.getCategories(req.query);
+  if (req.query.nogeo === "true") {
+    var categories = await categoryService.getCategoriesNogeo(req.query);
+  } else {
+    var categories = await categoryService.getCategories(req.query);
+  }
 
   if (categories.err) {
     res.status(400).json({ success: false, msg: categories.err });

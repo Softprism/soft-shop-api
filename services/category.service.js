@@ -54,6 +54,46 @@ const getCategories = async (urlParams) => {
   }
 };
 
+const getCategoriesNogeo = async (urlParams) => {
+  try {
+    // declare fields to remove after aggregating
+    const pipeline = [
+      {
+        $unset: ["stores"],
+      },
+    ];
+
+    // start aggregate
+    return (
+      Category.aggregate()
+        // lookup stores - trying to JOIN the categories and stores
+        .lookup({
+          from: "stores",
+          // declare local variable for category id, since we're using version 4 of mongodb we can't use foreign and local fields here, hence doing it the OG way.
+          let: { category_id: "$_id" },
+          pipeline: [
+            {
+              // matching each category to a store, this should return all categories and a store array field inside each category object, an empty array if the category has no stores.
+              $match: {
+                $expr: {
+                  $eq: ["$$category_id", "$category"],
+                },
+              },
+            },
+          ],
+          as: "stores",
+        })
+        // count number of stores in each category, will return zero for empty arrays
+        .addFields({
+          storeCount: { $size: "$stores" },
+        })
+        // appends the pipeline specified above
+        .append(pipeline)
+    );
+  } catch (err) {
+    return err;
+  }
+};
 // Create a new Category
 const createCategory = async (categoryParams) => {
   const { name, image } = categoryParams;
@@ -138,4 +178,10 @@ const deleteCategory = async (id) => {
   }
 };
 
-export { getCategories, createCategory, editCategory, deleteCategory };
+export {
+  getCategories,
+  createCategory,
+  editCategory,
+  deleteCategory,
+  getCategoriesNogeo,
+};
