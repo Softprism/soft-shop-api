@@ -317,6 +317,7 @@ const getOrderDetails = async (orderID) => {
           "productData",
           "user.password",
           "user.cart",
+          "user.orders",
         ],
       },
     ];
