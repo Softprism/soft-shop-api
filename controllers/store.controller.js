@@ -148,12 +148,16 @@ const getLabels = async (req, res, next) => {
 };
 
 const getStore = async (req, res, next) => {
-  const storeDetails = await storeService.getStore(req.params.storeId);
+  try {
+    const storeDetails = await storeService.getStore(req.params.storeId);
 
-  if (storeDetails.err) {
-    return res.status(403).json({ success: false, msg: storeDetails.err });
-  } else {
-    res.status(200).json({ success: true, result: storeDetails });
+    if (storeDetails.err) {
+      return res.status(403).json({ success: false, msg: storeDetails.err });
+    } else {
+      res.status(200).json({ success: true, result: storeDetails });
+    }
+  } catch (error) {
+    next(error);
   }
 };
 
