@@ -161,6 +161,21 @@ const getStore = async (req, res, next) => {
   }
 };
 
+const getStoreSalesStats = async (req, res, next) => {
+  try {
+    const salesStats = await storeService.getStoreSalesStats(
+      req.store.id,
+      req.query.days
+    );
+
+    salesStats.err
+      ? res.status(403).json({ success: false, msg: salesStats.err })
+      : res.status(200).json({ success: true, result: salesStats });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export {
   getStores,
   createStore,
@@ -171,4 +186,5 @@ export {
   getLabels,
   getStore,
   getStoresNoGeo,
+  getStoreSalesStats,
 };

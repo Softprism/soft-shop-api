@@ -13,6 +13,7 @@ import {
   getLabels,
   getStore,
   getStoresNoGeo,
+  getStoreSalesStats,
 } from "../controllers/store.controller.js";
 
 import { auth } from "../middleware/auth.js";
@@ -38,6 +39,8 @@ router.get("/login", auth, getLoggedInStore);
 // @desc    Get a store's labels
 // @access  Private
 router.get("/labels", auth, isStoreAdmin, getLabels);
+
+router.get("/stats/sales", auth, getStoreSalesStats);
 
 // @route   GET /store
 // @desc    Get store data, used when a store is being checked, produces store data like name, rating/reviews, menu labels, address, delivery time, and products
@@ -90,5 +93,4 @@ router.put("/", auth, isStoreAdmin, updateStore);
 // @desc    add label to store
 // @access  Private
 router.put("/label", auth, isStoreAdmin, addLabel);
-
 export default router;
