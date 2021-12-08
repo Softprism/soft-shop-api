@@ -108,7 +108,7 @@ const createOrder = async (orderParam) => {
           .substring(1);
       };
       //return id of format 'soft - aaaaa'
-      return "soft - " + s4();
+      return "soft-" + s4();
     };
 
     //creates an order for user after all validation passes
