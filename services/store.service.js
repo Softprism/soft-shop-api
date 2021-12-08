@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
 
 import Store from "../models/store.model.js";
+import Order from "../models/order.model.js";
 
 const getStores = async (urlParams) => {
   try {
@@ -532,6 +533,42 @@ const getLabels = async (storeId) => {
   return store.labels;
 };
 
+const getStoreSalesStats = async (storeId, days) => {
+  try {
+    if (!days) throw { err: "please specify amount of days to get stats for" };
+    var d = new Date();
+    d.setDate(d.getDate() - days);
+
+    let salesStats = await Order.aggregate()
+      .match({
+        store: mongoose.Types.ObjectId(storeId),
+        status: "sent",
+        createdAt: { $gt: d },
+      })
+      .addFields({
+        dayOfOrder: { $dayOfWeek: "$createdAt" },
+      })
+      .group({
+        _id: "$dayOfOrder",
+        sales: { $push: "$subtotal" },
+      })
+      .addFields({
+        weekday: { $toInt: "$_id" },
+        totalSales: { $sum: "$sales" },
+        totalOrders: { $size: "$sales" },
+      })
+      .sort("weekday")
+      .project({
+        _id: 0,
+        sales: 0,
+      });
+
+    return salesStats;
+  } catch (error) {
+    return error;
+  }
+};
+
 export {
   getStores,
   createStore,
@@ -542,4 +579,5 @@ export {
   getStore,
   getLabels,
   getStoresNoGeo,
+  getStoreSalesStats,
 };
