@@ -529,8 +529,13 @@ const getCartItems = async (userID) => {
 
 const reviewOrder = async (review) => {
   try {
-    const product = await Order.findById(review.order);
+    const user = await User.findById(review.user);
+    if (!user) throw { err: "user not be found" };
 
+    const product = await Order.findOne({
+      _id: mongoose.Types.ObjectId(review.order),
+      user: mongoose.Types.ObjectId(review.user),
+    });
     if (!product) throw { err: "order could not be found" };
 
     const newReview = new Review(review);
