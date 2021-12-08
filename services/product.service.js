@@ -84,6 +84,9 @@ const getProducts = async (getParam) => {
         ratingAmount: { $size: "$productReview" },
         averageRating: { $ceil: { $avg: "$productReview.star" } },
       })
+      .addFields({
+        averageRating: { $ifNull: ["$averageRating", 0] },
+      })
       // $lookup produces array, $unwind go destructure everything to object
       .unwind("$store")
       .unwind("$category")
@@ -335,7 +338,6 @@ const addCustomFee = async (storeId, customrFeeParam) => {
 
 const deleteCustomFee = async (customFeeId) => {
   try {
-    console.log(customFeeId);
     let customFee = await CustomFee.findByIdAndDelete(customFeeId);
     console.log(customFee);
     if (!customFee) throw { err: "custom fee not found" };
