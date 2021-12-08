@@ -260,17 +260,13 @@ const getStore = async (storeId) => {
     const pipeline = [
       {
         $unset: [
-          "products.store",
-          "products.rating",
-          "products.category",
-          "products.customFee.items",
+          "products",
           "productReview",
           "password",
           "email",
           "phone_number",
           "orders",
           "orderReview",
-          "products.variant",
         ],
       },
     ];
