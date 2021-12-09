@@ -9,6 +9,8 @@ import productRoutes from "./routes/product.routes.js";
 import storeRoutes from "./routes/store.routes.js";
 import orderRoutes from "./routes/order.routes.js";
 import categoryRoutes from "./routes/category.routes.js";
+import mongoSanitize from "express-mongo-sanitize";
+import xss from "xss-clean";
 
 dotenv.config();
 
@@ -19,6 +21,10 @@ const app = express();
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(cors());
+
+// sanitization and other preventive measures
+app.use(mongoSanitize());
+app.use(xss());
 
 // api routes
 app.use("/users", userRoutes);
