@@ -46,22 +46,25 @@ const createStore = async (req, res, next) => {
 };
 
 const loginStore = async (req, res, next) => {
-  const errors = validationResult(req);
+  try {
+    const errors = validationResult(req);
 
-  if (!errors.isEmpty()) {
-    res.status(400).json({
-      success: false,
-      errors: errors,
-    });
-  }
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        errors: errors,
+      });
+    }
 
-  const store = await storeService.loginStore(req.body);
+    const store = await storeService.loginStore(req.body);
 
-  if (store.err) {
-    console.log(store.err.msg);
-    return res.status(403).json({ success: false, msg: store.err });
-  } else {
-    res.status(200).json({ success: true, result: store });
+    if (store.err) {
+      return res.status(403).json({ success: false, msg: store.err });
+    } else {
+      res.status(200).json({ success: true, result: store });
+    }
+  } catch (error) {
+    next(error);
   }
 };
 

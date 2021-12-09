@@ -41,13 +41,9 @@ const getProducts = async (getParam) => {
     const pipeline = [
       {
         $unset: [
-          "store.password",
-          "store.email",
-          "store.labels",
-          "store.phone_number",
+          "store",
           "category.image",
           "productReview",
-          "store.address",
           "variants.data",
           "variant.items",
           "customFee.items",

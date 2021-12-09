@@ -44,7 +44,7 @@ router.put("/user/edit/:orderID", auth, editOrder);
 // @route   PUT /review
 // @desc    user adds review to their order
 // @access  Private
-router.put("/review", auth, reviewOrder);
+router.put("/review/:orderId?", auth, reviewOrder);
 
 // @route   GET /:orderID
 // @desc    toggles an order's detail

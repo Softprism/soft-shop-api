@@ -61,11 +61,15 @@ const editOrder = async (req, res, next) => {
 //======================================================================
 
 const reviewOrder = async (req, res, next) => {
+  if (req.params.orderId) req.body.order = req.params.orderId;
+
   if (req.store) {
     return res
       .status(400)
       .json({ success: false, msg: "action not allowed by store" });
   }
+  if (req.user) req.body.user = req.user.id;
+
   const newReview = await orderService.reviewOrder(req.body);
 
   if (newReview.err) {

@@ -17,13 +17,16 @@
 		"dotenv": "^10.0.0",
 		"express": "^4.17.1",
 		"express-jwt": "^6.0.0",
+		"express-mongo-sanitize": "^2.1.0",
 		"express-validator": "^6.9.2",
+		"hpp": "^0.2.3",
 		"jsonwebtoken": "^8.5.1",
 		"mongodb": "^3.5.9",
 		"mongoose": "^5.9.21",
 		"nodemailer": "^6.7.0",
 		"otp-generator": "^3.0.0",
-		"rootpath": "^0.1.2"
+		"rootpath": "^0.1.2",
+		"xss-clean": "^0.1.1"
 	},
 	"devDependencies": {
 		"nodemon": "^2.0.4"
