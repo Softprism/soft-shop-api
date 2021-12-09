@@ -412,7 +412,6 @@ const loginStore = async (StoreParam) => {
     const { email, password } = StoreParam;
 
     let store = await Store.findOne({ email });
-    let storeRes = await Store.findOne({ email }).select("-password");
 
     if (!store) throw { err: "Invalid Credentials" };
 
@@ -425,7 +424,7 @@ const loginStore = async (StoreParam) => {
 
     const payload = {
       store: {
-        id: storeRes.id,
+        id: store.id,
       },
     };
 
