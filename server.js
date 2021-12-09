@@ -11,6 +11,7 @@ import orderRoutes from "./routes/order.routes.js";
 import categoryRoutes from "./routes/category.routes.js";
 import mongoSanitize from "express-mongo-sanitize";
 import xss from "xss-clean";
+import hpp from "hpp";
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ app.use(cors());
 // sanitization and other preventive measures
 app.use(mongoSanitize());
 app.use(xss());
+app.use(hpp());
 
 // api routes
 app.use("/users", userRoutes);
