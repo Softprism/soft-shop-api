@@ -569,8 +569,9 @@ const getStoreSalesStats = async (storeId, days) => {
   }
 };
 
-const bestSellers = async (storeId) => {
+const bestSellers = async (storeId, pagingParam) => {
   try {
+    const { limit, skip } = pagingParam;
     // or pass an array
     const pipeline1 = [
       {
@@ -626,7 +627,10 @@ const bestSellers = async (storeId) => {
       })
       .project({
         _id: 0,
-      });
+      })
+      .sort("-totalQuantitySold")
+      .skip(skip)
+      .limit(limit);
 
     return bestSellingItems;
   } catch (error) {

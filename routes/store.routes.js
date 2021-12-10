@@ -43,7 +43,7 @@ router.get("/labels", auth, isStoreAdmin, getLabels);
 
 router.get("/stats/sales", auth, getStoreSalesStats);
 
-router.get("/stats/best-sellers", auth, bestSellers);
+router.get("/stats/best-sellers", auth, checkPagination, bestSellers);
 
 // @route   GET /store
 // @desc    Get store data, used when a store is being checked, produces store data like name, rating/reviews, menu labels, address, delivery time, and products
