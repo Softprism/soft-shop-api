@@ -638,6 +638,72 @@ const bestSellers = async (storeId, pagingParam) => {
   }
 };
 
+const getStoreFeedback = async (storeId, pagingParam) => {
+  try {
+    const pipeline = [
+      {
+        $unset: [
+          "taxPrice",
+          "deliveryPrice",
+          "subtotal",
+          "totalPrice",
+          "isPaid",
+          "isDelivered",
+          "isFavorite",
+          "status",
+          "orderItems",
+          "paymentMethod",
+          "deliveryAddress",
+          "orderReview.user.orders",
+          "orderReview.user.password",
+          "orderReview.user.phone_number",
+          "orderReview.user.email",
+          "orderReview.user.address",
+        ],
+      },
+    ];
+    const { limit, skip, fromStarAmount, toStarAmount } = pagingParam;
+    console.log(fromStarAmount, toStarAmount);
+
+    const feedbacks = await Order.aggregate()
+      .match({
+        store: mongoose.Types.ObjectId(storeId),
+      })
+      .lookup({
+        from: "reviews",
+        localField: "_id",
+        foreignField: "order",
+        as: "orderReview",
+      })
+      .unwind("orderReview")
+      .match({
+        $expr: {
+          $and: [
+            { $gte: ["$orderReview.star", Number(fromStarAmount)] },
+            { $lte: ["$orderReview.star", Number(toStarAmount)] },
+          ],
+        },
+      })
+      .lookup({
+        from: "users",
+        localField: "orderReview.user",
+        foreignField: "_id",
+        as: "orderReview.user",
+      })
+      .unwind("orderReview.user")
+      .project({
+        orderReview: 1,
+      })
+      .sort("-orderReview.star")
+      .skip(skip)
+      .limit(limit)
+      .append(pipeline);
+    return feedbacks;
+  } catch (error) {
+    return error;
+  }
+};
+
 export {
   getStores,
   createStore,
@@ -650,4 +716,5 @@ export {
   getStoresNoGeo,
   getStoreSalesStats,
   bestSellers,
+  getStoreFeedback,
 };
