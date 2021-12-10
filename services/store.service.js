@@ -628,7 +628,7 @@ const bestSellers = async (storeId, pagingParam) => {
       .project({
         _id: 0,
       })
-      .sort("-totalQuantitySold")
+      .sort("-totalOrders")
       .skip(skip)
       .limit(limit);
 
