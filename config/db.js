@@ -1,18 +1,24 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const connectDB = async () => {
-	try {
-		const conn = await mongoose.connect(process.env.MONGO_URI, {
-			useUnifiedTopology: true,
-			useNewUrlParser: true,
-			useCreateIndex: true,
-		});
+  try {
+    let mongoURI;
+    if (process.env.NODE_ENV === "production") {
+      mongoURI = process.env.MONGO_URI_PROD;
+    } else {
+      mongoURI = process.env.MONGO_URI_DEV;
+    }
+    const conn = await mongoose.connect(mongoURI, {
+      useUnifiedTopology: true,
+      useNewUrlParser: true,
+      useCreateIndex: true,
+    });
 
-		console.log(`MongoDB Connected: ${conn.connection.host}`);
-	} catch (error) {
-		console.error(`Error: ${error.message}`);
-		process.exit(1);
-	}
+    console.log(`MongoDB Connected: ${conn.connection.host}`);
+  } catch (error) {
+    console.error(`Error: ${error.message}`);
+    process.exit(1);
+  }
 };
 
 export { connectDB };

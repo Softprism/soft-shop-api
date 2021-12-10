@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 
 import Store from "../models/store.model.js";
 import Order from "../models/order.model.js";
+import Product from "../models/product.model.js";
 
 const getStores = async (urlParams) => {
   try {
@@ -568,6 +569,75 @@ const getStoreSalesStats = async (storeId, days) => {
   }
 };
 
+const bestSellers = async (storeId, pagingParam) => {
+  try {
+    const { limit, skip } = pagingParam;
+    // or pass an array
+    const pipeline1 = [
+      {
+        $filter: {
+          input: "$orders.orderItems",
+          as: "orderItem",
+          cond: { $eq: ["$$orderItem.product_name", "$product_name"] },
+        },
+      },
+    ];
+    let bestSellingItems = Order.aggregate()
+      .match({ store: mongoose.Types.ObjectId(storeId) })
+      .lookup({
+        from: "products",
+        localField: "orderItems.product",
+        foreignField: "_id",
+        as: "products",
+      })
+      .unwind("products")
+      .unwind("orderItems")
+      .group({
+        _id: "$products",
+        orders: { $push: "$orderItems" },
+      })
+      .project({
+        orders: {
+          $filter: {
+            input: "$orders",
+            as: "order",
+            cond: { $eq: ["$$order.product", "$_id._id"] },
+          },
+        },
+      })
+      .addFields({
+        totalOrders: { $size: "$orders" },
+        totalQuantitySold: { $sum: "$orders.qty" },
+        grossSales: { $sum: "$orders.totalPrice" },
+      })
+      .project({
+        "_id.orders": 0,
+        "_id.category": 0,
+        "_id.variantOpt": 0,
+        "_id.store": 0,
+        "_id.status": 0,
+        "_id.variant": 0,
+        "_id.label": 0,
+        "_id.createdDate": 0,
+        "_id._id": 0,
+        orders: 0,
+      })
+      .addFields({
+        product: "$_id",
+      })
+      .project({
+        _id: 0,
+      })
+      .sort("-totalQuantitySold")
+      .skip(skip)
+      .limit(limit);
+
+    return bestSellingItems;
+  } catch (error) {
+    return error;
+  }
+};
+
 export {
   getStores,
   createStore,
@@ -579,4 +649,5 @@ export {
   getLabels,
   getStoresNoGeo,
   getStoreSalesStats,
+  bestSellers,
 };

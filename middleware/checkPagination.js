@@ -1,5 +1,4 @@
 const checkPagination = (req, res, next) => {
-  console.log("checking");
   if (req.query.page === undefined || req.query.limit === undefined) {
     return res
       .status(400)
@@ -10,6 +9,8 @@ const checkPagination = (req, res, next) => {
       .json({ success: false, msg: "zeroes aren't allowed" });
   }
   req.query.skip = (req.query.page - 1) * req.query.limit;
+  req.query.skip = Number(req.query.skip);
+  req.query.limit = Number(req.query.limit);
   next();
 };
 

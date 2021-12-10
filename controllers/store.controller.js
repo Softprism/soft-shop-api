@@ -179,6 +179,19 @@ const getStoreSalesStats = async (req, res, next) => {
   }
 };
 
+const bestSellers = async (req, res, next) => {
+  try {
+    const bestSellingItems = await storeService.bestSellers(
+      req.store.id,
+      req.query
+    );
+
+    res.status(200).json({ success: true, result: bestSellingItems });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export {
   getStores,
   createStore,
@@ -190,4 +203,5 @@ export {
   getStore,
   getStoresNoGeo,
   getStoreSalesStats,
+  bestSellers,
 };
