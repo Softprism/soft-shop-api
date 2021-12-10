@@ -192,6 +192,23 @@ const bestSellers = async (req, res, next) => {
   }
 };
 
+const getStoreFeedback = async (req, res, next) => {
+  try {
+    const feedbacks = await storeService.getStoreFeedback(
+      req.store.id,
+      req.query
+    );
+    feedbacks.err
+      ? res.status(403).json({ success: false, msg: feedbacks.err })
+      : res.status(200).json({
+          success: true,
+          result: { feedbacks, size: feedbacks.length },
+        });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export {
   getStores,
   createStore,
@@ -204,4 +221,5 @@ export {
   getStoresNoGeo,
   getStoreSalesStats,
   bestSellers,
+  getStoreFeedback,
 };

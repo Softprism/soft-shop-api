@@ -1,5 +1,6 @@
 import express from "express";
 import { check } from "express-validator";
+import { checkFeedbackRangeTypes } from "../utils/checkParamTypes.js";
 
 const router = express.Router();
 
@@ -15,6 +16,7 @@ import {
   getStoresNoGeo,
   getStoreSalesStats,
   bestSellers,
+  getStoreFeedback,
 } from "../controllers/store.controller.js";
 
 import { auth } from "../middleware/auth.js";
@@ -44,6 +46,14 @@ router.get("/labels", auth, isStoreAdmin, getLabels);
 router.get("/stats/sales", auth, getStoreSalesStats);
 
 router.get("/stats/best-sellers", auth, checkPagination, bestSellers);
+
+router.get(
+  "/stats/feedback",
+  auth,
+  checkPagination,
+  checkFeedbackRangeTypes,
+  getStoreFeedback
+);
 
 // @route   GET /store
 // @desc    Get store data, used when a store is being checked, produces store data like name, rating/reviews, menu labels, address, delivery time, and products
