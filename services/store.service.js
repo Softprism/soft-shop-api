@@ -441,15 +441,8 @@ const loginStore = async (StoreParam) => {
   }
 };
 
-const getLoggedInStore = async (userParam) => {
-  console.log("running");
-  try {
-    const store = await Store.findById(userParam).select("-password");
-    return store;
-  } catch (err) {
-    // console.error(err.message);
-    return err;
-  }
+const getLoggedInStore = async (storeId) => {
+  return await getStore(storeId);
 };
 
 const updateStore = async (storeID, updateParam) => {
@@ -704,6 +697,22 @@ const getStoreFeedback = async (storeId, pagingParam) => {
   }
 };
 
+const getInventoryList = async (queryParam) => {
+  try {
+    const { skip, limit, labelId } = queryParam;
+    const inventoryList = await Product.aggregate()
+      .match({
+        "labels.labelId": mongoose.Types.ObjectId(labelId),
+      })
+      .sort("-createdDate")
+      .skip(skip)
+      .limit(limit);
+    return inventoryList;
+  } catch (error) {
+    return error;
+  }
+};
+
 export {
   getStores,
   createStore,
@@ -717,4 +726,5 @@ export {
   getStoreSalesStats,
   bestSellers,
   getStoreFeedback,
+  getInventoryList,
 };
