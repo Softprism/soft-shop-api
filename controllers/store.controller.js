@@ -209,6 +209,24 @@ const getStoreFeedback = async (req, res, next) => {
   }
 };
 
+const getInventoryList = async (req, res, next) => {
+  try {
+    const inventoryList = await storeService.getInventoryList(
+      req.store.id,
+      req.query
+    );
+
+    inventoryList.err
+      ? res.status(403).json({ success: false, msg: inventoryList.err })
+      : res.status(200).json({
+          success: true,
+          result: { inventoryList, size: inventoryList.length },
+        });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export {
   getStores,
   createStore,
@@ -222,4 +240,5 @@ export {
   getStoreSalesStats,
   bestSellers,
   getStoreFeedback,
+  getInventoryList,
 };

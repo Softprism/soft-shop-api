@@ -17,6 +17,7 @@ import {
   getStoreSalesStats,
   bestSellers,
   getStoreFeedback,
+  getInventoryList,
 } from "../controllers/store.controller.js";
 
 import { auth } from "../middleware/auth.js";
@@ -46,6 +47,8 @@ router.get("/labels", auth, isStoreAdmin, getLabels);
 router.get("/stats/sales", auth, getStoreSalesStats);
 
 router.get("/stats/best-sellers", auth, checkPagination, bestSellers);
+
+router.get("/inventory", auth, isStoreAdmin, checkPagination, getInventoryList);
 
 router.get(
   "/stats/feedback",
