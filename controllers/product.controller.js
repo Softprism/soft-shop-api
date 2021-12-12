@@ -115,15 +115,19 @@ const getProductDetails = async (req, res, next) => {
 };
 
 const createVariant = async (req, res, next) => {
-  let storeID;
-  if (req.store) storeID = req.store.id;
-  if (req.query.storeID && req.admin) storeID = req.query.storeID;
+  try {
+    let storeID;
+    if (req.store) storeID = req.store.id;
+    if (req.query.storeID && req.admin) storeID = req.query.storeID;
 
-  const createVariant = await productService.createVariant(storeID, req.body);
-  if (createVariant.err || !createVariant) {
-    res.status(500).json({ success: false, msg: createVariant.err });
-  } else {
-    res.status(200).json({ success: true, result: createVariant });
+    const createVariant = await productService.createVariant(storeID, req.body);
+    if (createVariant.err) {
+      res.status(500).json({ success: false, msg: createVariant.err });
+    } else {
+      res.status(200).json({ success: true, result: createVariant });
+    }
+  } catch (error) {
+    next(error);
   }
 };
 

@@ -268,15 +268,16 @@ const createVariant = async (storeId, variantParam) => {
   try {
     let store = await Store.findById(storeId);
 
-    if (!store) throw { err: "Store not found" }; // this ain't working
+    if (!store) return { err: "Store not found" }; // this ain't working
 
-    let newVariant = new Variant(variantParam);
+    const { variantTitle, multiSelect } = variantParam;
+
+    let newVariant = new Variant({ variantTitle, multiSelect });
     await newVariant.save();
 
     return newVariant;
   } catch (error) {
-    console.log(error);
-    return error;
+    throw error;
   }
 };
 
