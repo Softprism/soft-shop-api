@@ -458,6 +458,9 @@ const updateStore = async (storeID, updateParam) => {
       category,
       labels,
       tax,
+      isActive,
+      deliveryTime,
+      prepTime,
     } = updateParam;
 
     const storeUpdate = {};
@@ -466,6 +469,10 @@ const updateStore = async (storeID, updateParam) => {
     // if (address) storeUpdate.address = address;
     if (images) storeUpdate.images = images;
     if (email) storeUpdate.email = email;
+    if (deliveryTime) storeUpdate.deliveryTime = deliveryTime;
+    if (prepTime) storeUpdate.prepTime = prepTime;
+    if (isActive === true || isActive === false || isActive !== undefined)
+      storeUpdate.isActive = isActive;
     if (openingTime) {
       if (!storeUpdate.openingTime.includes(":")) {
         delete storeUpdate.openingTime;
