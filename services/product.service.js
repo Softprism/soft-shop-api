@@ -316,16 +316,29 @@ const addVariantItem = async (variantId, variantParam) => {
   }
 };
 
+const getStoreVariants = async (storeId) => {
+  try {
+    // find store variants
+    let storeVariants = await Variant.find({ store: storeId });
+    if (!storeVariants) return { err: "variants not found" };
+    let size = storeVariants.length;
+
+    return { storeVariants, size };
+  } catch (error) {
+    throw error;
+  }
+};
+
 const getVariantItem = async (variantId) => {
   // add items to a variant label
   try {
     // find variant
     let variant = await Variant.findById(variantId);
-    if (!variant) throw { err: "variant not found" };
+    if (!variant) return { err: "variant not found" };
 
     return variant.variantItems;
   } catch (error) {
-    return error;
+    throw error;
   }
 };
 
@@ -376,6 +389,7 @@ export {
   getVariantItem,
   addCustomFee,
   deleteCustomFee,
+  getStoreVariants,
 };
 
 //UPDATES
