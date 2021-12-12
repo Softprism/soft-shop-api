@@ -67,7 +67,13 @@ router.get("/variants/", auth, isStoreAdmin, getStoreVariants);
 // @route   GET /stores/variantsItems
 // @desc   gets variant items
 // @access  Private
-router.get("/variants/:variantId", auth, isStoreAdmin, getVariantItem);
+router.get(
+  "/variants/:variantId",
+  auth,
+  isStoreAdmin,
+  checkPagination,
+  getVariantItem
+);
 
 // @route   PUT /:id
 // @desc    update a store product, can be used by admin and stores

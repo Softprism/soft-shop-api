@@ -189,7 +189,8 @@ const getVariantItem = async (req, res, next) => {
     if (req.query.storeID && req.admin) storeID = req.query.storeID;
 
     const getVariantItem = await productService.getVariantItem(
-      req.params.variantId
+      req.params.variantId,
+      req.query
     );
 
     if (getVariantItem.err) {
@@ -198,6 +199,7 @@ const getVariantItem = async (req, res, next) => {
       res.status(200).json({ success: true, result: getVariantItem });
     }
   } catch (error) {
+    console.log(error);
     next(error);
   }
 };
