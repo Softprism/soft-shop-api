@@ -463,7 +463,7 @@ const updateStore = async (storeID, updateParam) => {
     const storeUpdate = {};
 
     // Check for fields
-    if (address) storeUpdate.address = address;
+    // if (address) storeUpdate.address = address;
     if (images) storeUpdate.images = images;
     if (email) storeUpdate.email = email;
     if (openingTime) {
@@ -481,8 +481,8 @@ const updateStore = async (storeID, updateParam) => {
       storeUpdate.closingTime = closingTime;
     }
     if (phone_number) storeUpdate.email = phone_number;
-    if (category) storeUpdate.category = category;
-    if (labels) storeUpdate.labels = labels;
+    // if (category) storeUpdate.category = category;
+    // if (labels) storeUpdate.labels = labels;
     if (password) {
       const salt = await bcrypt.genSalt(10);
       storeUpdate.password = await bcrypt.hash(password, salt);
@@ -491,7 +491,6 @@ const updateStore = async (storeID, updateParam) => {
     let store = await Store.findById(storeID);
 
     if (!store) throw { err: "Store not found" };
-    console.log(storeID, storeUpdate);
     store = await Store.findByIdAndUpdate(
       storeID,
       { $set: storeUpdate },
