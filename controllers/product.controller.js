@@ -23,27 +23,31 @@ const getProducts = async (req, res, next) => {
 };
 
 const createProduct = async (req, res, next) => {
-  let storeID; // container to store the store's ID, be it a store request or an admin request
+  try {
+    let storeID; // container to store the store's ID, be it a store request or an admin request
 
-  if (req.store) storeID = req.store.id;
-  if (req.query.storeID && req.admin) storeID = req.query.storeID;
+    if (req.store) storeID = req.store.id;
+    if (req.query.storeID && req.admin) storeID = req.query.storeID;
 
-  const errors = validationResult(req);
+    const errors = validationResult(req);
 
-  if (!errors.isEmpty()) {
-    let error_msgs = [];
-    errors.array().forEach((element) => {
-      error_msgs = [...error_msgs, element.msg];
-    });
+    if (!errors.isEmpty()) {
+      let error_msgs = [];
+      errors.array().forEach((element) => {
+        error_msgs = [...error_msgs, element.msg];
+      });
 
-    return res.status(400).json({ success: false, msg: error_msgs });
+      return res.status(400).json({ success: false, msg: error_msgs });
+    }
+
+    const product = await productService.createProduct(req.body, storeID);
+
+    product.err
+      ? res.status(409).json({ success: false, msg: product.err })
+      : res.status(201).json({ success: true, result: product });
+  } catch (error) {
+    next(error);
   }
-
-  const product = await productService.createProduct(req.body, storeID);
-
-  product.err
-    ? res.status(409).json({ success: false, msg: product.err })
-    : res.status(201).json({ success: true, result: product });
 };
 
 const updateProduct = async (req, res, next) => {
@@ -116,7 +120,7 @@ const createVariant = async (req, res, next) => {
   if (req.query.storeID && req.admin) storeID = req.query.storeID;
 
   const createVariant = await productService.createVariant(storeID, req.body);
-  if (createVariant.err) {
+  if (createVariant.err || !createVariant) {
     res.status(500).json({ success: false, msg: createVariant.err });
   } else {
     res.status(200).json({ success: true, result: createVariant });
