@@ -211,10 +211,7 @@ const getStoreFeedback = async (req, res, next) => {
 
 const getInventoryList = async (req, res, next) => {
   try {
-    const inventoryList = await storeService.getInventoryList(
-      req.store.id,
-      req.query
-    );
+    const inventoryList = await storeService.getInventoryList(req.query);
 
     inventoryList.err
       ? res.status(403).json({ success: false, msg: inventoryList.err })
@@ -223,6 +220,7 @@ const getInventoryList = async (req, res, next) => {
           result: { inventoryList, size: inventoryList.length },
         });
   } catch (error) {
+    console.log(error);
     next(error);
   }
 };
