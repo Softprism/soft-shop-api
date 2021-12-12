@@ -319,7 +319,10 @@ const addVariantItem = async (variantId, variantParam) => {
 const getStoreVariants = async (storeId) => {
   try {
     // find store variants
-    let storeVariants = await Variant.find({ store: storeId });
+    let storeVariants = await Variant.find({
+      store: storeId,
+      active: true,
+    }).select("variantTitle");
     if (!storeVariants) return { err: "variants not found" };
     let size = storeVariants.length;
 
@@ -329,14 +332,24 @@ const getStoreVariants = async (storeId) => {
   }
 };
 
-const getVariantItem = async (variantId) => {
+const getVariantItem = async (variantId, pagingParam) => {
   // add items to a variant label
   try {
+    const { limit, skip } = pagingParam;
     // find variant
-    let variant = await Variant.findById(variantId);
+    let variant = await Variant.aggregate()
+      .match({
+        _id: mongoose.Types.ObjectId(variantId),
+      })
+      .unwind("$variantItems")
+      .replaceRoot("$variantItems")
+      .sort("itemPrice")
+      .skip(skip)
+      .limit(limit);
+
     if (!variant) return { err: "variant not found" };
 
-    return variant.variantItems;
+    return variant;
   } catch (error) {
     throw error;
   }
