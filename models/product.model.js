@@ -11,16 +11,10 @@ const ProductSchema = mongoose.Schema({
     required: true,
   },
   variantOpt: { type: Boolean, required: true },
-  variant: [
+  variants: [
     { type: mongoose.Schema.Types.ObjectId, ref: "Variants", required: true },
   ],
-  labels: [
-    {
-      labelId: { type: mongoose.Schema.Types.ObjectId, required: true },
-      labelTitle: { type: String },
-      labelThumb: { type: String }, //Label thumbnail
-    },
-  ],
+  labels: [{ type: mongoose.Schema.Types.ObjectId, required: true }],
   availability: { type: Boolean, required: true, default: true },
   status: { type: String, default: "active" }, // deleted||active
   price: { type: Number, required: true },

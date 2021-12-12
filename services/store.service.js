@@ -702,7 +702,7 @@ const getInventoryList = async (queryParam) => {
     const { skip, limit, labelId } = queryParam;
     const inventoryList = await Product.aggregate()
       .match({
-        "labels.labelId": mongoose.Types.ObjectId(labelId),
+        labels: mongoose.Types.ObjectId(labelId),
       })
       .sort("-createdDate")
       .skip(skip)
