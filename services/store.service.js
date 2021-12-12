@@ -511,8 +511,8 @@ const addLabel = async (storeId, labelParam) => {
   let store = await Store.findById(storeId);
 
   if (!store) throw { err: "Store not found" };
-
-  store.labels.push(labelParam);
+  const { labelTitle, labelThumb } = labelParam;
+  store.labels.push({ labelTitle, labelThumb });
   await store.save();
   return await Store.findById(storeId).select("-password, -__v");
 };
