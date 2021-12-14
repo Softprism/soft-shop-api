@@ -264,7 +264,7 @@ const forgotPassword = async (req, res) => {
 
 const validateToken = async (req, res) => {
   try {
-    const action = await userService.validateToken(req.query);
+    const action = await userService.validateToken(req.body);
 
     if (action.err) {
       return res.status(403).json({ success: false, msg: action.err });

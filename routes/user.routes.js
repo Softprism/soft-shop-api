@@ -105,15 +105,15 @@ router.delete("/basket", auth, deleteBasketItem);
 // @access  Public
 router.delete("/basket/all", auth, deleteAllBasketItems);
 
-// @route   PUT /password
+// @route   POST /password
 // @desc    reset a forget password
 // @access  Public
-router.put("/forgot-password", forgotPassword);
+router.post("/forgot-password", forgotPassword);
 
 // @route   GET /token
 // @desc    validates a token
 // @access  Public
-router.get("/token", validateToken);
+router.post("/token", validateToken);
 
 // @route   PATCH /password
 // @desc    creates new password for user after forget password
