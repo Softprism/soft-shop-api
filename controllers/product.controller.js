@@ -23,27 +23,31 @@ const getProducts = async (req, res, next) => {
 };
 
 const createProduct = async (req, res, next) => {
-  let storeID; // container to store the store's ID, be it a store request or an admin request
+  try {
+    let storeID; // container to store the store's ID, be it a store request or an admin request
 
-  if (req.store) storeID = req.store.id;
-  if (req.query.storeID && req.admin) storeID = req.query.storeID;
+    if (req.store) storeID = req.store.id;
+    if (req.query.storeID && req.admin) storeID = req.query.storeID;
 
-  const errors = validationResult(req);
+    const errors = validationResult(req);
 
-  if (!errors.isEmpty()) {
-    let error_msgs = [];
-    errors.array().forEach((element) => {
-      error_msgs = [...error_msgs, element.msg];
-    });
+    if (!errors.isEmpty()) {
+      let error_msgs = [];
+      errors.array().forEach((element) => {
+        error_msgs = [...error_msgs, element.msg];
+      });
 
-    return res.status(400).json({ success: false, msg: error_msgs });
+      return res.status(400).json({ success: false, msg: error_msgs });
+    }
+
+    const product = await productService.createProduct(req.body, storeID);
+
+    product.err
+      ? res.status(409).json({ success: false, msg: product.err })
+      : res.status(201).json({ success: true, result: product });
+  } catch (error) {
+    next(error);
   }
-
-  const product = await productService.createProduct(req.body, storeID);
-
-  product.err
-    ? res.status(409).json({ success: false, msg: product.err })
-    : res.status(201).json({ success: true, result: product });
 };
 
 const updateProduct = async (req, res, next) => {
@@ -111,15 +115,19 @@ const getProductDetails = async (req, res, next) => {
 };
 
 const createVariant = async (req, res, next) => {
-  let storeID;
-  if (req.store) storeID = req.store.id;
-  if (req.query.storeID && req.admin) storeID = req.query.storeID;
+  try {
+    let storeID;
+    if (req.store) storeID = req.store.id;
+    if (req.query.storeID && req.admin) storeID = req.query.storeID;
 
-  const createVariant = await productService.createVariant(storeID, req.body);
-  if (createVariant.err) {
-    res.status(500).json({ success: false, msg: createVariant.err });
-  } else {
-    res.status(200).json({ success: true, result: createVariant });
+    const createVariant = await productService.createVariant(storeID, req.body);
+    if (createVariant.err) {
+      res.status(500).json({ success: false, msg: createVariant.err });
+    } else {
+      res.status(200).json({ success: true, result: createVariant });
+    }
+  } catch (error) {
+    next(error);
   }
 };
 
@@ -157,32 +165,42 @@ const addVariantItem = async (req, res, next) => {
   }
 };
 
-const getVariantItem = async (req, res, next) => {
-  // verifiy permission
-  if (req.admin === undefined && req.store === undefined)
-    return res.status(403).json({
-      success: false,
-      msg: "You're not permitted to carry out this action",
-    });
+const getStoreVariants = async (req, res, next) => {
+  try {
+    let storeID;
+    if (req.store) storeID = req.store.id;
+    if (req.query.storeID && req.admin) storeID = req.query.storeID;
 
-  if (req.store === undefined && req.query.storeID === undefined) {
-    res
-      .status(400)
-      .json({ success: false, msg: "unable to authenticate this store" });
+    const storeVariants = await productService.getStoreVariants(storeID);
+
+    if (storeVariants.err) {
+      res.status(500).json({ success: false, msg: storeVariants.err });
+    } else {
+      res.status(200).json({ success: true, result: storeVariants });
+    }
+  } catch (error) {
+    next(error);
   }
+};
+const getVariantItem = async (req, res, next) => {
+  try {
+    let storeID;
+    if (req.store) storeID = req.store.id;
+    if (req.query.storeID && req.admin) storeID = req.query.storeID;
 
-  let storeID;
-  if (req.store) storeID = req.store.id;
-  if (req.query.storeID && req.admin) storeID = req.query.storeID;
+    const getVariantItem = await productService.getVariantItem(
+      req.params.variantId,
+      req.query
+    );
 
-  const getVariantItem = await productService.getVariantItem(
-    req.params.variantId
-  );
-
-  if (getVariantItem.err) {
-    res.status(500).json({ success: false, msg: getVariantItem.err });
-  } else {
-    res.status(200).json({ success: true, result: getVariantItem });
+    if (getVariantItem.err) {
+      res.status(500).json({ success: false, msg: getVariantItem.err });
+    } else {
+      res.status(200).json({ success: true, result: getVariantItem });
+    }
+  } catch (error) {
+    console.log(error);
+    next(error);
   }
 };
 
@@ -226,4 +244,5 @@ export {
   getVariantItem,
   addCustomFee,
   deleteCustomFee,
+  getStoreVariants,
 };

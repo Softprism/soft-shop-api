@@ -158,23 +158,42 @@ const getProductDetails = async (productId) => {
 const createProduct = async (productParam, storeId) => {
   try {
     // validate store, we have to make sure we're assigning a product to a store
-    const store = await Store.findById(storeId).catch((err) => {
-      throw { err: "store not found" };
-    });
-    if (!store) {
-      throw "unable to add product to this store";
+    const storeChecker = await Store.findById(storeId);
+    if (!storeChecker) {
+      return { err: "unable to add product to this store" };
     }
 
     // add store ID to productParam
     productParam.store = storeId;
-
+    const {
+      product_name,
+      product_description,
+      product_image,
+      labels,
+      price,
+      category,
+      variantOpt,
+      variants,
+      store,
+    } = productParam;
     //create new product
-    const newProduct = new Product(productParam);
+    const newProduct = new Product({
+      product_name,
+      product_description,
+      product_image,
+      labels,
+      price,
+      category,
+      variantOpt,
+      variants,
+      store,
+    });
     await newProduct.save(); // save new product
 
     return newProduct;
   } catch (error) {
-    return error;
+    console.log(error);
+    throw error;
   }
 };
 
@@ -249,15 +268,16 @@ const createVariant = async (storeId, variantParam) => {
   try {
     let store = await Store.findById(storeId);
 
-    if (!store) throw { err: "Store not found" }; // this ain't working
+    if (!store) return { err: "Store not found" }; // this ain't working
 
-    let newVariant = new Variant(variantParam);
+    const { variantTitle, multiSelect } = variantParam;
+
+    let newVariant = new Variant({ variantTitle, multiSelect });
     await newVariant.save();
 
     return newVariant;
   } catch (error) {
-    console.log(error);
-    return error;
+    throw error;
   }
 };
 
@@ -296,16 +316,42 @@ const addVariantItem = async (variantId, variantParam) => {
   }
 };
 
-const getVariantItem = async (variantId) => {
+const getStoreVariants = async (storeId) => {
+  try {
+    // find store variants
+    let storeVariants = await Variant.find({
+      store: storeId,
+      active: true,
+    }).select("variantTitle");
+    if (!storeVariants) return { err: "variants not found" };
+    let size = storeVariants.length;
+
+    return { storeVariants, size };
+  } catch (error) {
+    throw error;
+  }
+};
+
+const getVariantItem = async (variantId, pagingParam) => {
   // add items to a variant label
   try {
+    const { limit, skip } = pagingParam;
     // find variant
-    let variant = await Variant.findById(variantId);
-    if (!variant) throw { err: "variant not found" };
+    let variant = await Variant.aggregate()
+      .match({
+        _id: mongoose.Types.ObjectId(variantId),
+      })
+      .unwind("$variantItems")
+      .replaceRoot("$variantItems")
+      .sort("itemPrice")
+      .skip(skip)
+      .limit(limit);
 
-    return variant.variantItems;
+    if (!variant) return { err: "variant not found" };
+
+    return variant;
   } catch (error) {
-    return error;
+    throw error;
   }
 };
 
@@ -356,6 +402,7 @@ export {
   getVariantItem,
   addCustomFee,
   deleteCustomFee,
+  getStoreVariants,
 };
 
 //UPDATES

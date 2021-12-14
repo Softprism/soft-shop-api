@@ -19,6 +19,7 @@ import {
   getVariantItem,
   addCustomFee,
   deleteCustomFee,
+  getStoreVariants,
 } from "../controllers/product.controller.js";
 
 // @route   GET /
@@ -59,9 +60,20 @@ router.put("/variants/:variantId/item", auth, isStoreAdmin, addVariantItem);
 router.put("/variants/:variantId", auth, isStoreAdmin, updateVariant);
 
 // @route   GET /stores/variants
+// @desc   gets variants belonging to store
+// @access  Private
+router.get("/variants/", auth, isStoreAdmin, getStoreVariants);
+
+// @route   GET /stores/variantsItems
 // @desc   gets variant items
 // @access  Private
-router.get("/variants/:variantId", auth, isStoreAdmin, getVariantItem);
+router.get(
+  "/variants/:variantId",
+  auth,
+  isStoreAdmin,
+  checkPagination,
+  getVariantItem
+);
 
 // @route   PUT /:id
 // @desc    update a store product, can be used by admin and stores

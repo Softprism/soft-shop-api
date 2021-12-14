@@ -11,6 +11,8 @@ const VariantSchema = mongoose.Schema({
       quantityOpt: { type: Boolean },
     },
   ],
+  store: { type: mongoose.Schema.Types.ObjectId, ref: "Store", required: true },
+  active: { type: Boolean, default: true },
   multiSelect: { type: Boolean, required: true },
   createdDate: { type: Date, default: Date.now },
 });

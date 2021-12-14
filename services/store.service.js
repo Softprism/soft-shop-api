@@ -458,14 +458,21 @@ const updateStore = async (storeID, updateParam) => {
       category,
       labels,
       tax,
+      isActive,
+      deliveryTime,
+      prepTime,
     } = updateParam;
 
     const storeUpdate = {};
 
     // Check for fields
-    if (address) storeUpdate.address = address;
+    // if (address) storeUpdate.address = address;
     if (images) storeUpdate.images = images;
     if (email) storeUpdate.email = email;
+    if (deliveryTime) storeUpdate.deliveryTime = deliveryTime;
+    if (prepTime) storeUpdate.prepTime = prepTime;
+    if (isActive === true || isActive === false || isActive !== undefined)
+      storeUpdate.isActive = isActive;
     if (openingTime) {
       if (!storeUpdate.openingTime.includes(":")) {
         delete storeUpdate.openingTime;
@@ -481,8 +488,8 @@ const updateStore = async (storeID, updateParam) => {
       storeUpdate.closingTime = closingTime;
     }
     if (phone_number) storeUpdate.email = phone_number;
-    if (category) storeUpdate.category = category;
-    if (labels) storeUpdate.labels = labels;
+    // if (category) storeUpdate.category = category;
+    // if (labels) storeUpdate.labels = labels;
     if (password) {
       const salt = await bcrypt.genSalt(10);
       storeUpdate.password = await bcrypt.hash(password, salt);
@@ -491,7 +498,6 @@ const updateStore = async (storeID, updateParam) => {
     let store = await Store.findById(storeID);
 
     if (!store) throw { err: "Store not found" };
-    console.log(storeID, storeUpdate);
     store = await Store.findByIdAndUpdate(
       storeID,
       { $set: storeUpdate },
@@ -511,8 +517,8 @@ const addLabel = async (storeId, labelParam) => {
   let store = await Store.findById(storeId);
 
   if (!store) throw { err: "Store not found" };
-
-  store.labels.push(labelParam);
+  const { labelTitle, labelThumb } = labelParam;
+  store.labels.push({ labelTitle, labelThumb });
   await store.save();
   return await Store.findById(storeId).select("-password, -__v");
 };
@@ -702,7 +708,7 @@ const getInventoryList = async (queryParam) => {
     const { skip, limit, labelId } = queryParam;
     const inventoryList = await Product.aggregate()
       .match({
-        "labels.labelId": mongoose.Types.ObjectId(labelId),
+        labels: mongoose.Types.ObjectId(labelId),
       })
       .sort("-createdDate")
       .skip(skip)
