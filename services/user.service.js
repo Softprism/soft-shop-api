@@ -47,7 +47,7 @@ const verifyEmailAddress = async ({ email }) => {
     let email_message = token.otp;
     await sendEmail(email, email_subject, email_message);
 
-    return token;
+    return "OTP sent!";
   } catch (err) {
     throw err;
   }
@@ -232,11 +232,14 @@ const getLoggedInUser = async (userParam) => {
 
 // Update User Details
 const updateUser = async (updateParam, id) => {
-  const { address, password, email, phone_number } = updateParam;
+  const { first_name, last_name, address, password, email, phone_number } =
+    updateParam;
   // Build User Object
   const userFields = {};
 
   // Check for fields
+  if (first_name) userFields.first_name = first_name;
+  if (last_name) userFields.last_name = last_name;
   if (address) userFields.address = address;
   if (email) userFields.email = email;
   if (phone_number) userFields.phone_number = phone_number;
@@ -462,7 +465,7 @@ const forgotPassword = async ({ email }) => {
     let email_message = token.otp;
     await sendEmail(email, email_subject, email_message);
 
-    return token;
+    return "OTP sent!";
   } catch (err) {
     throw err;
   }
