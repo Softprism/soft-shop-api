@@ -1,22 +1,28 @@
-import * as categoryService from "../services/category.service.js";
 import { validationResult } from "express-validator";
+import * as categoryService from "../services/category.service";
 
 // FUNCTIONS
 // Get Categories
 const getCategories = async (req, res, next) => {
   // Call getCategories function from category service
+  let categories = {};
   if (req.query.nogeo === "true") {
-    var categories = await categoryService.getCategoriesNogeo(req.query);
+    categories = await categoryService.getCategoriesNogeo(req.query);
   } else {
-    var categories = await categoryService.getCategories(req.query);
+    categories = await categoryService.getCategories(req.query);
   }
 
   if (categories.err) {
     res.status(400).json({ success: false, msg: categories.err });
   }
+
   categories && categories.length > 0
     ? res.status(200).json({ success: true, result: categories })
     : res.status(404).json({ success: false, msg: "No categories found" });
+  
+  // voixter ? 200 : 404,
+  //       voixter ? "Voixter fetched successfully" : "Voixter not found",
+  //       voixter
 };
 
 // Create Category
@@ -48,7 +54,7 @@ const editCategory = async (req, res, next) => {
   if (request.err) {
     res.status(500).json({ success: false, msg: request.err });
   } else {
-    res.status(200).json({ success: true, result: request }); //request returns the modified category
+    res.status(200).json({ success: true, result: request }); // request returns the modified category
   }
 };
 
@@ -62,4 +68,6 @@ const deleteCategory = async (req, res, next) => {
   }
 };
 
-export { getCategories, editCategory, createCategory, deleteCategory };
+export {
+  getCategories, editCategory, createCategory, deleteCategory
+};

@@ -1,8 +1,8 @@
 import express from "express";
 import { validationResult } from "express-validator";
-import { auth } from "../middleware/auth.js";
+import { auth } from "../middleware/auth";
 
-import * as adminService from "../services/admin.service.js";
+import * as adminService from "../services/admin.service";
 
 const router = express.Router();
 
@@ -76,4 +76,6 @@ const updateAdmin = async (req, res, next) => {
   }
 };
 
-export { getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin };
+export {
+  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin
+};
