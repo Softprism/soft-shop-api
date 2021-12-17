@@ -12,7 +12,13 @@ const ProductSchema = mongoose.Schema({
   },
   variantOpt: { type: Boolean, required: true },
   variants: [
-    { type: mongoose.Schema.Types.ObjectId, ref: "Variants", required: true },
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Variants",
+      required: function () {
+        return this.variantOpt == true;
+      },
+    },
   ],
   labels: [{ type: mongoose.Schema.Types.ObjectId, required: true }],
   availability: { type: Boolean, required: true, default: true },
