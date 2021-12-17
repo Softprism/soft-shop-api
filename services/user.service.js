@@ -3,7 +3,6 @@ import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
 
 import User from "../models/user.model.js";
-import Product from "../models/product.model.js";
 import Token from "../models/tokens.model.js";
 import Basket from "../models/user-cart.model.js";
 
@@ -28,7 +27,7 @@ const getUsers = async (urlParams) => {
 
     return users;
   } catch (err) {
-    return err;
+    throw err;
   }
 };
 
@@ -38,7 +37,7 @@ const verifyEmailAddress = async ({ email }) => {
     // check if user exists
     let user = await User.findOne({ email });
     if (user) {
-      throw { err: "User with this email already exists" };
+      return { err: "This email is being used by another user.", status: 409 };
     }
 
     let token = await getOTP("user-signup", email);
@@ -48,9 +47,9 @@ const verifyEmailAddress = async ({ email }) => {
     let email_message = token.otp;
     await sendEmail(email, email_subject, email_message);
 
-    return token;
+    return "OTP sent!";
   } catch (err) {
-    return err;
+    throw err;
   }
 };
 
@@ -61,10 +60,7 @@ const registerUser = async (userParam) => {
     let user = await User.findOne({ email });
 
     if (user) {
-      // return res
-      // 	.status(400)
-      // 	.json({ msg: 'User with this email already exists' });
-      throw { err: "User with this email already exists" };
+      return { err: "User with this email already exists", status: 409 };
     }
 
     // Create User Object
@@ -117,8 +113,7 @@ const registerUser = async (userParam) => {
 
     return { user, token };
   } catch (err) {
-    console.log(err);
-    return err;
+    throw err;
   }
 };
 
@@ -131,14 +126,20 @@ const loginUser = async (loginParam) => {
     let user = await User.findOne({ email });
 
     if (!user) {
-      throw { err: "User not found" };
+      return {
+        err: "the email entered is not registered, please try again",
+        status: 401,
+      };
     }
 
     // Check if password matches with stored hash
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
-      throw { err: "Wrong password" };
+      return {
+        err: "the password entered in incorrect, please try again",
+        status: 401,
+      };
     }
 
     // unset user pass***d
@@ -157,7 +158,10 @@ const loginUser = async (loginParam) => {
     });
 
     if (!token) {
-      throw { err: "Missing Token" };
+      return {
+        err: "signup successful but auth failed, please try logging in",
+        status: 400,
+      };
     }
 
     const pipeline = [
@@ -188,7 +192,7 @@ const loginUser = async (loginParam) => {
 
     return { userDetails, token };
   } catch (err) {
-    return err;
+    throw err;
   }
 };
 
@@ -222,17 +226,20 @@ const getLoggedInUser = async (userParam) => {
 
     return user;
   } catch (err) {
-    return err;
+    throw err;
   }
 };
 
 // Update User Details
 const updateUser = async (updateParam, id) => {
-  const { address, password, email, phone_number } = updateParam;
+  const { first_name, last_name, address, password, email, phone_number } =
+    updateParam;
   // Build User Object
   const userFields = {};
 
   // Check for fields
+  if (first_name) userFields.first_name = first_name;
+  if (last_name) userFields.last_name = last_name;
   if (address) userFields.address = address;
   if (email) userFields.email = email;
   if (phone_number) userFields.phone_number = phone_number;
@@ -248,7 +255,11 @@ const updateUser = async (updateParam, id) => {
     // Find user from DB Collection
     let user = await User.findById(id);
 
-    if (!user) throw { err: "User not found" };
+    if (!user)
+      return {
+        err: "the server couldn't validate your account, please try logging in again",
+        status: 403,
+      };
 
     // Updates the user Object with the changed values
     user = await User.findByIdAndUpdate(
@@ -263,7 +274,7 @@ const updateUser = async (updateParam, id) => {
 
     return user;
   } catch (err) {
-    return err;
+    throw err;
   }
 };
 // const createUserBasket = async (userId, basketMeta) => { DEPRECATED
@@ -287,88 +298,101 @@ const updateUser = async (updateParam, id) => {
 // };
 
 const addItemToBasket = async (userId, basketItemMeta) => {
-  // add user ID to basketMeta
-  basketItemMeta.user = userId;
+  try {
+    // add user ID to basketMeta
+    basketItemMeta.user = userId;
 
-  // add item to basket
-  let newBasketItem = new Basket(basketItemMeta);
-  await newBasketItem.save();
+    // add item to basket
+    let newBasketItem = new Basket(basketItemMeta);
+    await newBasketItem.save();
 
-  // run price calculations
-  const newBasketItemChore = await Basket.aggregate()
-    .match({
-      _id: mongoose.Types.ObjectId(newBasketItem._id),
-    })
-    .addFields({
-      "product.selectedVariants": {
-        $map: {
-          input: "$product.selectedVariants",
-          as: "variant",
-          in: {
-            $mergeObjects: [
-              "$$variant",
-              {
-                totalPrice: {
-                  $multiply: ["$$variant.itemPrice", "$$variant.quantity"],
+    // run price calculations
+    const newBasketItemChore = await Basket.aggregate()
+      .match({
+        _id: mongoose.Types.ObjectId(newBasketItem._id),
+      })
+      .addFields({
+        "product.selectedVariants": {
+          $map: {
+            input: "$product.selectedVariants",
+            as: "variant",
+            in: {
+              $mergeObjects: [
+                "$$variant",
+                {
+                  totalPrice: {
+                    $multiply: ["$$variant.itemPrice", "$$variant.quantity"],
+                  },
                 },
-              },
-            ],
+              ],
+            },
           },
         },
-      },
-      totalProductPrice: { $multiply: ["$product.price", "$product.qty"] },
-    })
-    .addFields({
-      totalVariantPrice: { $sum: "$product.selectedVariants.totalPrice" },
-    })
-    .addFields({
-      "product.totalPrice": {
-        $add: ["$totalProductPrice", "$totalVariantPrice"],
-      },
-    });
+        totalProductPrice: { $multiply: ["$product.price", "$product.qty"] },
+      })
+      .addFields({
+        totalVariantPrice: { $sum: "$product.selectedVariants.totalPrice" },
+      })
+      .addFields({
+        "product.totalPrice": {
+          $add: ["$totalProductPrice", "$totalVariantPrice"],
+        },
+      });
 
-  // update new basket details with calculated prices
-  return await Basket.findOneAndUpdate(
-    { _id: newBasketItem._id },
-    {
-      $set: {
-        "product.selectedVariants":
-          newBasketItemChore[0].product.selectedVariants,
-        "product.totalPrice": newBasketItemChore[0].product.totalPrice,
+    // update new basket details with calculated prices
+    return await Basket.findOneAndUpdate(
+      { _id: newBasketItem._id },
+      {
+        $set: {
+          "product.selectedVariants":
+            newBasketItemChore[0].product.selectedVariants,
+          "product.totalPrice": newBasketItemChore[0].product.totalPrice,
+        },
       },
-    },
-    { omitUndefined: true, new: true, useFindAndModify: false }
-  );
+      { omitUndefined: true, new: true, useFindAndModify: false }
+    );
+  } catch (error) {
+    throw error;
+  }
 };
 
 const getUserBasketItems = async (userId) => {
-  // get total price in basket
-  const totalProductPriceInBasket = await Basket.aggregate()
-    .match({
-      user: mongoose.Types.ObjectId(userId),
-    })
-    .group({
-      _id: "$user",
-      total: { $sum: "$product.totalPrice" },
-    });
-  // get user basket items
-  let userBasket = await Basket.aggregate()
-    .match({
-      user: mongoose.Types.ObjectId(userId),
-    })
-    .sort("createdAt");
-  return {
-    userBasket,
-    totalPrice: totalProductPriceInBasket[0].total,
-    count: userBasket.length,
-  };
+  try {
+    // get total price in basket
+    const totalProductPriceInBasket = await Basket.aggregate()
+      .match({
+        user: mongoose.Types.ObjectId(userId),
+      })
+      .group({
+        _id: "$user",
+        total: { $sum: "$product.totalPrice" },
+      });
+    // get user basket items
+    let userBasket = await Basket.aggregate()
+      .match({
+        user: mongoose.Types.ObjectId(userId),
+      })
+      .sort("createdAt");
+
+    return {
+      userBasket,
+      totalPrice: totalProductPriceInBasket[0].total,
+      count: userBasket.length,
+    };
+  } catch (error) {
+    throw error;
+  }
 };
 
 const editBasketItems = async (userId, basketMeta) => {
   try {
     // check if basket exists
     let userBasket = await Basket.findById(basketMeta.basketId);
-    if (!userBasket) throw { err: "basket not found" };
+    if (!userBasket)
+      return {
+        err: "please try again, some errors encountered while updating basket items",
+        status: 400,
+      };
 
     // update basket with new data
     await Basket.findByIdAndUpdate(
@@ -380,7 +404,7 @@ const editBasketItems = async (userId, basketMeta) => {
     // return user basket items
     return await getUserBasketItems(userId);
   } catch (err) {
-    return err;
+    throw err;
   }
 };
 
@@ -388,7 +412,11 @@ const deleteBasketItem = async (userId, { basketId }) => {
   try {
     // check if basket exists
     let userBasket = await Basket.findById(basketId);
-    if (!userBasket) throw { err: "basket not found" };
+    if (!userBasket)
+      return {
+        err: "please try again, some errors encountered while deleting basket items",
+        status: 400,
+      };
 
     // update basket with new data
     await Basket.findByIdAndDelete(basketId);
@@ -396,7 +424,7 @@ const deleteBasketItem = async (userId, { basketId }) => {
     // return user basket items
     return await getUserBasketItems(userId);
   } catch (err) {
-    return err;
+    throw err;
   }
 };
 
@@ -404,7 +432,11 @@ const deleteAllBasketItems = async (userId) => {
   try {
     // check if basket exists
     let userBasket = await Basket.find({ user: userId });
-    if (!userBasket) throw { err: "user basket not found" };
+    if (!userBasket)
+      return {
+        err: "please try again, some errors encountered while deleting all basket items",
+        status: 400,
+      };
 
     // update basket with new data
     await Basket.deleteMany({ user: userId });
@@ -412,7 +444,7 @@ const deleteAllBasketItems = async (userId) => {
     // return user basket items
     return await getUserBasketItems(userId);
   } catch (err) {
-    return err;
+    throw err;
   }
 };
 
@@ -420,7 +452,11 @@ const forgotPassword = async ({ email }) => {
   try {
     // verify if user exists, throws error if not
     let findUser = await User.findOne({ email });
-    if (!findUser) throw { err: "email is not registered" };
+    if (!findUser)
+      return {
+        err: "the email entered is not registered, please try again",
+        status: 401,
+      };
 
     let token = await getOTP("user-forgot-password", email);
 
@@ -429,9 +465,9 @@ const forgotPassword = async ({ email }) => {
     let email_message = token.otp;
     await sendEmail(email, email_subject, email_message);
 
-    return token;
+    return "OTP sent!";
   } catch (err) {
-    return err;
+    throw err;
   }
 };
 
@@ -444,11 +480,15 @@ const validateToken = async ({ type, otp, email }) => {
       type,
     });
 
-    if (!userToken) throw { err: "invalid token" };
+    if (!userToken)
+      return {
+        err: "the OTP entered is incorrect, please try again",
+        status: 406,
+      };
 
     return userToken;
   } catch (err) {
-    return err;
+    throw err;
   }
 };
 
@@ -458,7 +498,11 @@ const createNewPassword = async ({ token, email, password }) => {
     let requestToken = await Token.findById(token);
 
     // cancel operation if new password request doesn't have a token
-    if (!requestToken) throw { err: "invalid token" };
+    if (!requestToken)
+      return {
+        err: "password reset request canceled, please request for new OTP",
+        status: 406,
+      };
 
     // encrypting password
     const salt = await bcrypt.genSalt(10);
@@ -485,7 +529,7 @@ const createNewPassword = async ({ token, email, password }) => {
 
     return user;
   } catch (err) {
-    return err;
+    throw err;
   }
 };
 

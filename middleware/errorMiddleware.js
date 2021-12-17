@@ -19,7 +19,14 @@ const errorHandler = (err, req, res, next) => {
     return res.status(401).json({ success: false, msg: "Invalid Token" });
   }
 
+  if (err.name === "TypeError") {
+    // jwt authentication error
+    console.log(err);
+    return res.status(401).json({ success: false, msg: err });
+  }
+
   // default to 500 server error
+  console.log(err);
   return res.status(500).json({ success: false, msg: "server error" });
 };
 

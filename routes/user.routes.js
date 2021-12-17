@@ -1,5 +1,5 @@
 import express from "express";
-import { check } from "express-validator";
+import * as validate from "../middleware/validationMiddleware.js";
 
 const router = express.Router();
 
@@ -37,36 +37,13 @@ router.post("/verify", verifyEmailAddress);
 // @route   POST /users/register
 // @desc    Register a User
 // @access  Public
-router.post(
-  "/",
-  [
-    check("first_name", "Please Enter First Name").not().isEmpty(),
-    check("last_name", "Please Enter Last Name").not().isEmpty(),
-    check("email", "Please Enter Valid Email").isEmail(),
-    check("phone_number", "Please Enter Valid Phone Number").isMobilePhone(),
-    check(
-      "password",
-      "Please Enter Password with 6 or more characters"
-    ).isLength({ min: 6 }),
-  ],
-  registerUser
-);
+router.post("/", registerUser);
 
 // @route   POST /user/login
 // @desc    Login a User & get token
 // @access  Public
 
-router.post(
-  "/login",
-  [
-    check("email", "Please enter a Valid Email").isEmail(),
-    check("password", "Password should be 6 characters or more").isLength({
-      min: 6,
-    }),
-    check("password", "Password is Required").exists(),
-  ],
-  loginUser
-);
+router.post("/login", validate.userLogin, loginUser);
 
 // @route   GET /user/login
 // @desc    Get logged in user
