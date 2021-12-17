@@ -1,6 +1,5 @@
 import express from "express";
-import { validationResult } from "express-validator";
-
+// import { validationResult } from "express-validator";
 import * as userService from "../services/user.service.js";
 
 const router = express.Router();
@@ -43,11 +42,6 @@ const verifyEmailAddress = async (req, res) => {
 
 const registerUser = async (req, res, next) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ success: false, msg: errors.array() });
-    }
-
     const result = await userService.registerUser(req.body);
 
     if (result.err) {
@@ -68,11 +62,6 @@ const registerUser = async (req, res, next) => {
 
 const loginUser = async (req, res, next) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ success: false, msg: errors });
-    }
-
     // Call Login function from userService
     const loginRequest = await userService.loginUser(req.body);
     if (loginRequest.err) {
