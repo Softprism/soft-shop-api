@@ -1,6 +1,5 @@
 import express from "express";
-import { validationResult } from "express-validator";
-
+// import { validationResult } from "express-validator";
 import * as userService from "../services/user.service.js";
 
 const router = express.Router();
@@ -28,10 +27,12 @@ const verifyEmailAddress = async (req, res) => {
     const action = await userService.verifyEmailAddress(req.body);
 
     if (action.err) {
-      return res.status(403).json({ success: false, msg: action.err });
+      return res
+        .status(403)
+        .json({ success: false, msg: action.err, status: action.status });
     }
 
-    return res.status(202).json({ success: true, result: action });
+    return res.status(200).json({ success: true, result: action });
   } catch (error) {
     next(error);
   }
@@ -41,15 +42,12 @@ const verifyEmailAddress = async (req, res) => {
 
 const registerUser = async (req, res, next) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ success: false, msg: errors.array() });
-    }
-
     const result = await userService.registerUser(req.body);
 
     if (result.err) {
-      return res.status(409).json({ success: false, msg: result.err });
+      return res
+        .status(409)
+        .json({ success: false, msg: result.err, status: result.status });
     }
 
     return res
@@ -64,15 +62,14 @@ const registerUser = async (req, res, next) => {
 
 const loginUser = async (req, res, next) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ success: false, msg: errors });
-    }
-
     // Call Login function from userService
     const loginRequest = await userService.loginUser(req.body);
     if (loginRequest.err) {
-      return res.status(403).json({ success: false, msg: loginRequest.err });
+      return res.status(403).json({
+        success: false,
+        msg: loginRequest.err,
+        status: loginRequest.status,
+      });
     }
 
     res.status(200).json({
@@ -93,7 +90,9 @@ const getLoggedInUser = async (req, res, next) => {
     const user = await userService.getLoggedInUser(req.user.id);
 
     if (user.err) {
-      res.status(400).json({ success: false, msg: user.err });
+      res
+        .status(400)
+        .json({ success: false, msg: user.err, status: user.status });
     }
 
     res.status(200).json({
@@ -128,7 +127,9 @@ const updateUser = async (req, res) => {
     const user = await userService.updateUser(req.body, userID);
 
     if (user.err) {
-      return res.status(500).json({ success: false, msg: user.err });
+      return res
+        .status(500)
+        .json({ success: false, msg: user.err, status: user.status });
     }
 
     res.status(200).json({
@@ -200,7 +201,9 @@ const editBasketItems = async (req, res, next) => {
   try {
     const action = await userService.editBasketItems(req.user.id, req.body);
     if (action.err) {
-      return res.status(400).json({ success: false, msg: action.err });
+      return res
+        .status(400)
+        .json({ success: false, msg: action.err, status: action.status });
     }
 
     res.status(200).json({
@@ -220,7 +223,9 @@ const deleteBasketItem = async (req, res, next) => {
   try {
     const action = await userService.deleteBasketItem(req.user.id, req.body);
     if (action.err) {
-      return res.status(400).json({ success: false, msg: action.err });
+      return res
+        .status(400)
+        .json({ success: false, msg: action.err, status: action.status });
     }
 
     res.status(200).json({ success: true, result: action });
@@ -235,7 +240,9 @@ const deleteAllBasketItems = async (req, res, next) => {
   try {
     const action = await userService.deleteAllBasketItems(req.user.id);
     if (action.err) {
-      return res.status(400).json({ success: false, msg: action.err });
+      return res
+        .status(400)
+        .json({ success: false, msg: action.err, status: action.status });
     }
 
     res.status(200).json({ success: true, result: action });
@@ -251,7 +258,9 @@ const forgotPassword = async (req, res) => {
     const action = await userService.forgotPassword(req.body);
 
     if (action.err) {
-      return res.status(404).json({ success: false, msg: action.err });
+      return res
+        .status(404)
+        .json({ success: false, msg: action.err, status: action.status });
     }
 
     return res.status(200).json({ success: true, result: action });
@@ -267,7 +276,9 @@ const validateToken = async (req, res) => {
     const action = await userService.validateToken(req.body);
 
     if (action.err) {
-      return res.status(403).json({ success: false, msg: action.err });
+      return res
+        .status(403)
+        .json({ success: false, msg: action.err, status: action.status });
     }
 
     return res.status(200).json({ success: true, result: action });
@@ -282,7 +293,9 @@ const createNewPassword = async (req, res) => {
   try {
     const action = await userService.createNewPassword(req.body);
     if (action.err) {
-      return res.status(403).json({ success: false, msg: action.err });
+      return res
+        .status(403)
+        .json({ success: false, msg: action.err, status: action.status });
     }
 
     return res.status(200).json({ success: true, result: action });
