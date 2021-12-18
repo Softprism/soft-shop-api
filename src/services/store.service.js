@@ -415,7 +415,9 @@ const loginStore = async (StoreParam) => {
 
     let store = await Store.findOne({ email });
 
-    if (!store) { throw { err: "Invalid Credentials" }; }
+    if (!store) {
+      throw { err: "Invalid Credentials" };
+    }
     // Check if password matches with stored hash
     const isMatch = await bcrypt.compare(password, store.password);
 
@@ -443,7 +445,7 @@ const loginStore = async (StoreParam) => {
 
 const getLoggedInStore = async (storeId) => {
   const store = await getStore(storeId);
-  return res.status(200).json({ success: true, data: store });
+  return store;
 };
 
 const updateStore = async (storeID, updateParam) => {
@@ -472,7 +474,9 @@ const updateStore = async (storeID, updateParam) => {
     if (email) storeUpdate.email = email;
     if (deliveryTime) storeUpdate.deliveryTime = deliveryTime;
     if (prepTime) storeUpdate.prepTime = prepTime;
-    if (isActive === true || isActive === false || isActive !== undefined) { storeUpdate.isActive = isActive; }
+    if (isActive === true || isActive === false || isActive !== undefined) {
+      storeUpdate.isActive = isActive;
+    }
     if (openingTime) {
       if (!storeUpdate.openingTime.includes(":")) {
         delete storeUpdate.openingTime;
@@ -662,9 +666,7 @@ const getStoreFeedback = async (storeId, pagingParam) => {
         ],
       },
     ];
-    const {
-      limit, skip, fromStarAmount, toStarAmount
-    } = pagingParam;
+    const { limit, skip, fromStarAmount, toStarAmount } = pagingParam;
     console.log(fromStarAmount, toStarAmount);
 
     const feedbacks = await Order.aggregate()
