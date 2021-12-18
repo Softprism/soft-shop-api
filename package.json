@@ -5,10 +5,12 @@
 	"engines": {
 		"node": "14.x"
 	},
-	"type": "module",
 	"scripts": {
-		"start": "node ./server.js",
-		"start:dev": "nodemon ./server.js"
+		"clean": "rm -rf build && npm run build-babel",
+		"build-babel": "babel -d ./build ./src -s --copy-files",
+		"build": "npm run clean && npm run build-babel",
+		"start": " npm run build && node ./build/server.js",
+		"dev": "nodemon --exec babel-node src/server.js"
 	},
 	"dependencies": {
 		"bcryptjs": "^2.4.3",
@@ -26,11 +28,22 @@
 		"mongoose-validator": "^2.1.0",
 		"nodemailer": "^6.7.0",
 		"otp-generator": "^3.0.0",
+		"path": "^0.12.7",
 		"rootpath": "^0.1.2",
 		"validator": "^13.7.0",
 		"xss-clean": "^0.1.1"
 	},
 	"devDependencies": {
+		"@babel/cli": "^7.16.0",
+		"@babel/core": "^7.16.0",
+		"@babel/node": "^7.16.0",
+		"@babel/plugin-transform-runtime": "^7.16.4",
+		"@babel/preset-env": "^7.16.4",
+		"@babel/register": "^7.16.0",
+		"@babel/runtime": "^7.16.3",
+		"eslint": "^7.25.0",
+		"eslint-config-airbnb-base": "^14.2.1",
+		"eslint-plugin-import": "^2.22.1",
 		"nodemon": "^2.0.4"
 	},
 	"repository": {

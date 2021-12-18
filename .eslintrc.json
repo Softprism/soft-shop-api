@@ -31,7 +31,9 @@
         "no-underscore-dangle":"off",
         "no-shadow":"off",
         "max-len":"off",
-        "no-plusplus":"off"
+        "no-plusplus":"off",
+        "no-throw-literal": "off",
+        "no-param-reassign": "off"
         // "allowShortCircuit": true
         // "allowTernary": true 
     }
