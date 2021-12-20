@@ -30,7 +30,7 @@ const auth = async (req, res, next) => {
 
       if (decoded.admin) {
         const { admin } = decoded;
-        let verifyAdmin = await Store.findById(admin.id);
+        let verifyAdmin = await Admin.findById(admin.id);
         if (!verifyAdmin) res.status(401).json({ success: false, msg: "admin doesn't exist" });
         req.admin = decoded.admin;
       }
