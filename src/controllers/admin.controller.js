@@ -48,7 +48,7 @@ const getLoggedInAdmin = async (req, res, next) => {
   const admin = await adminService.getLoggedInAdmin(req.admin.id);
 
   if (admin.err) {
-    res.status(500).json({ success: false, msg: token.err });
+    res.status(404).json({ success: false, msg: token.err });
   } else {
     res.status(200).json({ success: true, result: admin });
   }

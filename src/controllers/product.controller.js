@@ -80,7 +80,7 @@ const deleteProduct = async (req, res, next) => {
 
   if (product.err) return res.status(404).json({ success: false, msg: product.err });
 
-  return res.status(201).json({ success: true, result: product.msg });
+  return res.status(200).json({ success: true, result: product.msg });
 };
 
 const reviewProduct = async (req, res, next) => {
