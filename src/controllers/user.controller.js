@@ -20,16 +20,16 @@ const getUsers = async (req, res) => {
 
 // ========================================================================== //
 
-const verifyEmailAddress = async (req, res) => {
+const verifyEmailAddress = async (req, res, next) => {
   try {
     const action = await userService.verifyEmailAddress(req.body);
-
     if (action.err) {
       return res
         .status(403)
-        .json({ success: false, msg: action.err, status: action.status });
+        .json({
+          success: false, msg: action.err, status: action.status
+        });
     }
-
     return res.status(200).json({ success: true, result: action, status: 200 });
   } catch (error) {
     next(error);
