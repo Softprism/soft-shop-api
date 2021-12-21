@@ -10,7 +10,9 @@ const getUsers = async (req, res) => {
   try {
     const users = await userService.getUsers(req.query);
 
-    return res.status(200).json({ success: true, result: users, size: users.length });
+    return res.status(200).json({
+      success: true, result: users, size: users.length, status: 200
+    });
   } catch (error) {
     next(error);
   }
@@ -28,7 +30,7 @@ const verifyEmailAddress = async (req, res) => {
         .json({ success: false, msg: action.err, status: action.status });
     }
 
-    return res.status(200).json({ success: true, result: action });
+    return res.status(200).json({ success: true, result: action, status: 200 });
   } catch (error) {
     next(error);
   }
@@ -48,7 +50,9 @@ const registerUser = async (req, res, next) => {
 
     return res
       .status(201)
-      .json({ success: true, result: result.user, token: result.token });
+      .json({
+        success: true, result: result.user, token: result.token, status: 201
+      });
   } catch (error) {
     next(error);
   }
@@ -72,6 +76,7 @@ const loginUser = async (req, res, next) => {
       success: true,
       result: loginRequest.userDetails[0],
       token: loginRequest.token,
+      status: 200
     });
   } catch (error) {
     next(error);
@@ -85,15 +90,10 @@ const getLoggedInUser = async (req, res, next) => {
     // Call Get Logged in User function from userService
     const user = await userService.getLoggedInUser(req.user.id);
 
-    if (user.err) {
-      res
-        .status(400)
-        .json({ success: false, msg: user.err, status: user.status });
-    }
-
     res.status(200).json({
       success: true,
       result: user[0],
+      status: 200
     });
   } catch (error) {
     next(error);
@@ -104,12 +104,6 @@ const getLoggedInUser = async (req, res, next) => {
 
 const updateUser = async (req, res) => {
   try {
-    const errors = validationResult(req);
-
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
     let userID;
 
     if (req.user === undefined && req.query.userID === undefined) {
@@ -122,15 +116,10 @@ const updateUser = async (req, res) => {
 
     const user = await userService.updateUser(req.body, userID);
 
-    if (user.err) {
-      return res
-        .status(500)
-        .json({ success: false, msg: user.err, status: user.status });
-    }
-
     res.status(200).json({
       success: true,
       user,
+      status: 200
     });
   } catch (error) {
     next(error);
@@ -157,13 +146,8 @@ const updateUser = async (req, res) => {
 const addItemToBasket = async (req, res, next) => {
   try {
     const action = await userService.addItemToBasket(req.user.id, req.body);
-    if (!action) {
-      return res
-        .status(400)
-        .json({ success: false, msg: "error adding item to basket" });
-    }
 
-    res.status(200).json({ success: true, result: action });
+    res.status(200).json({ success: true, result: action, status: 200 });
   } catch (error) {
     next(error);
   }
@@ -174,12 +158,6 @@ const addItemToBasket = async (req, res, next) => {
 const getUserBasketItems = async (req, res, next) => {
   try {
     const action = await userService.getUserBasketItems(req.user.id);
-    if (!action) {
-      return res
-        .status(400)
-        .json({ success: false, msg: "error adding item to basket" });
-    }
-
     res.status(200).json({
       success: true,
       result: action.userBasket,
@@ -207,6 +185,7 @@ const editBasketItems = async (req, res, next) => {
       result: action.userBasket,
       totalPrice: action.totalPrice,
       size: action.count,
+      status: 200
     });
   } catch (error) {
     next(error);
@@ -224,7 +203,7 @@ const deleteBasketItem = async (req, res, next) => {
         .json({ success: false, msg: action.err, status: action.status });
     }
 
-    res.status(200).json({ success: true, result: action });
+    res.status(200).json({ success: true, result: action, status: 200 });
   } catch (error) {
     next(error);
   }
@@ -241,7 +220,7 @@ const deleteAllBasketItems = async (req, res, next) => {
         .json({ success: false, msg: action.err, status: action.status });
     }
 
-    res.status(200).json({ success: true, result: action });
+    res.status(200).json({ success: true, result: action, status: 200 });
   } catch (error) {
     next(error);
   }
@@ -259,7 +238,7 @@ const forgotPassword = async (req, res) => {
         .json({ success: false, msg: action.err, status: action.status });
     }
 
-    return res.status(200).json({ success: true, result: action });
+    return res.status(200).json({ success: true, result: action, status: 200 });
   } catch (error) {
     next(error);
   }
@@ -277,7 +256,7 @@ const validateToken = async (req, res) => {
         .json({ success: false, msg: action.err, status: action.status });
     }
 
-    return res.status(200).json({ success: true, result: action });
+    return res.status(200).json({ success: true, result: action, status: 200 });
   } catch (error) {
     next(error);
   }
@@ -294,7 +273,7 @@ const createNewPassword = async (req, res) => {
         .json({ success: false, msg: action.err, status: action.status });
     }
 
-    return res.status(200).json({ success: true, result: action });
+    return res.status(200).json({ success: true, result: action, status: 200 });
   } catch (error) {
     next(error);
   }

@@ -53,6 +53,7 @@ router.get("/inventory", auth, isStoreAdmin, checkPagination, getInventoryList);
 router.get(
   "/stats/feedback",
   auth,
+  isStoreAdmin,
   checkPagination,
   checkFeedbackRangeTypes,
   getStoreFeedback
