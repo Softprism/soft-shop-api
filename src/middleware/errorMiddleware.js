@@ -21,8 +21,7 @@ const errorHandler = (err, req, res, next) => {
 
   if (err.name === "TypeError") {
     // jwt authentication error
-    console.log(err);
-    return res.status(401).json({ success: false, msg: err });
+    return res.status(401).json({ success: false, msg: err.message });
   }
 
   // default to 500 server error
