@@ -535,8 +535,10 @@ const reviewOrder = async (review) => {
     });
     if (!product) throw { err: "order could not be found" };
 
-    const newReview = new Review(review);
-    await newReview.save();
+    const userReview = new Review(review);
+    await userReview.save();
+
+    const newReview = Review.findById(userReview._id).populate("user", "first_name last_name");
 
     return newReview;
   } catch (error) {
