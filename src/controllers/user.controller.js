@@ -18,17 +18,20 @@ const getUsers = async (req, res) => {
 
 // ========================================================================== //
 
-const verifyEmailAddress = async (req, res) => {
+const verifyEmailAddress = async (req, res, next) => {
   try {
     const action = await userService.verifyEmailAddress(req.body);
-
     if (action.err) {
       return res
         .status(403)
-        .json({ success: false, msg: action.err, status: action.status });
+        .json({
+          success: false, msg: action.err, status: action.status
+        });
     }
 
-    return res.status(200).json({ success: true, result: action });
+    return res.status(200).json({
+      success: true, result: action
+    });
   } catch (error) {
     next(error);
   }
@@ -160,7 +163,7 @@ const addItemToBasket = async (req, res, next) => {
     if (!action) {
       return res
         .status(400)
-        .json({ success: false, msg: "error adding item to basket" });
+        .json({ success: false, msg: "error adding item to basket", status: action.status });
     }
 
     res.status(200).json({ success: true, result: action });
@@ -177,7 +180,7 @@ const getUserBasketItems = async (req, res, next) => {
     if (!action) {
       return res
         .status(400)
-        .json({ success: false, msg: "error adding item to basket" });
+        .json({ success: false, msg: "error adding item to basket", status: action.status });
     }
 
     res.status(200).json({
