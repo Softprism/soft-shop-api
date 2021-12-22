@@ -2,58 +2,50 @@ import { validationResult } from "express-validator";
 import * as storeService from "../services/store.service";
 
 const getStores = async (req, res, next) => {
-  const stores = await storeService.getStores(req.query);
-
-  return res.status(200).json({ success: true, result: stores, size: stores.length });
+  try {
+    const stores = await storeService.getStores(req.query);
+    return res.status(200).json({
+      success: true, result: stores, size: stores.length, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
 const getStoresNoGeo = async (req, res, next) => {
-  const stores = await storeService.getStoresNoGeo(req.query);
+  try {
+    const stores = await storeService.getStoresNoGeo(req.query);
 
-  return res.status(200).json({ success: true, result: stores, size: stores.length });
+    return res.status(200).json({
+      success: true, result: stores, size: stores.length, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
 const createStore = async (req, res, next) => {
-  const errors = validationResult(req);
+  try {
+    const store = await storeService.createStore(req.body);
 
-  if (!errors.isEmpty()) {
-    let error_msgs = [];
-    errors.array().forEach((element) => {
-      error_msgs = [...error_msgs, element.msg];
-    });
-
-    return res.status(400).json({
-      success: false,
-      errors: error_msgs,
-    });
-  }
-
-  const store = await storeService.createStore(req.body);
-
-  if (store.err) {
-    res.status(409).json({ success: false, msg: store.err, status: store.status });
-  } else {
-    res.status(201).json({ success: true, result: store });
+    if (store.err) {
+      res.status(409).json({ success: false, msg: store.err, status: store.status });
+    } else {
+      res.status(201).json({ success: true, result: store, status: 201 });
+    }
+  } catch (error) {
+    next(error);
   }
 };
 
 const loginStore = async (req, res, next) => {
   try {
-    const errors = validationResult(req);
-
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        success: false,
-        errors,
-      });
-    }
-
     const store = await storeService.loginStore(req.body);
 
     if (store.err) {
       return res.status(403).json({ success: false, msg: store.err, status: store.status });
     }
-    res.status(200).json({ success: true, result: store });
+    res.status(200).json({ success: true, result: store, status: 200 });
   } catch (error) {
     next(error);
   }
@@ -61,51 +53,38 @@ const loginStore = async (req, res, next) => {
 
 const getLoggedInStore = async (req, res, next) => {
   // Call Get Logged in User function from userService
-  const store = await storeService.getLoggedInStore(req.store.id);
+  try {
+    const store = await storeService.getLoggedInStore(req.store.id);
 
-  if (store.err) {
-    res.status(500).json({ success: false, msg: store.err, status: store.status });
-  } else {
     res.status(200).json({
       success: true,
       result: store,
+      status: 200
     });
+  } catch (error) {
+    next(error);
   }
 };
 
 const updateStore = async (req, res, next) => {
-  const errors = validationResult(req);
+  try {
+    let storeID;
+    if (req.store) storeID = req.store.id;
+    if (req.query.storeID && req.admin) storeID = req.query.storeID;
 
-  if (!errors.isEmpty()) {
-    res.status(400).json({
-      success: false,
-      errors: errors.array().msg,
-    });
-  }
+    const store = await storeService.updateStore(storeID, req.body);
 
-  let storeID;
-  if (req.store) storeID = req.store.id;
-  if (req.query.storeID && req.admin) storeID = req.query.storeID;
-
-  const store = await storeService.updateStore(storeID, req.body);
-
-  if (store.err) {
-    res.status(500).json({ success: false, msg: store.err, status: store.status });
-  } else {
-    res.status(200).json({ success: true, result: store });
+    if (store.err) {
+      res.status(500).json({ success: false, msg: store.err, status: store.status });
+    } else {
+      res.status(200).json({ success: true, result: store, status: 200 });
+    }
+  } catch (error) {
+    next(error);
   }
 };
 
 const addLabel = async (req, res, next) => {
-  const errors = validationResult(req);
-
-  if (!errors.isEmpty()) {
-    res.status(400).json({
-      success: false,
-      errors: errors.array().msg,
-    });
-  }
-
   let storeID;
   if (req.store) storeID = req.store.id;
   if (req.query.storeID && req.admin) storeID = req.query.storeID;
@@ -119,24 +98,19 @@ const addLabel = async (req, res, next) => {
 };
 
 const getLabels = async (req, res, next) => {
-  const errors = validationResult(req);
+  try {
+    let storeID;
+    if (req.store) storeID = req.store.id;
+    if (req.query.storeID && req.admin) storeID = req.query.storeID;
 
-  if (!errors.isEmpty()) {
-    res.status(400).json({
-      success: false,
-      errors: errors.array().msg,
-    });
-  }
-
-  let storeID;
-  if (req.store) storeID = req.store.id;
-  if (req.query.storeID && req.admin) storeID = req.query.storeID;
-
-  const store = await storeService.getLabels(storeID);
-  if (store.err) {
-    res.status(500).json({ success: false, msg: store.err, status: store.status });
-  } else {
-    res.status(200).json({ success: true, result: store });
+    const store = await storeService.getLabels(storeID);
+    if (store.err) {
+      res.status(500).json({ success: false, msg: store.err, status: store.status });
+    } else {
+      res.status(200).json({ success: true, result: store, status: 200 });
+    }
+  } catch (error) {
+    next(error);
   }
 };
 
@@ -144,10 +118,7 @@ const getStore = async (req, res, next) => {
   try {
     const storeDetails = await storeService.getStore(req.params.storeId);
 
-    if (storeDetails.err) {
-      return res.status(403).json({ success: false, msg: storeDetails.err, status: storeDetails.status });
-    }
-    res.status(200).json({ success: true, result: storeDetails });
+    res.status(200).json({ success: true, result: storeDetails, status: 200 });
   } catch (error) {
     next(error);
   }
@@ -162,7 +133,7 @@ const getStoreSalesStats = async (req, res, next) => {
 
     if (salesStats.err) { return res.status(403).json({ success: false, msg: salesStats.err, status: salesStats.status }); }
 
-    return res.status(200).json({ success: true, result: salesStats });
+    return res.status(200).json({ success: true, result: salesStats, status: 200 });
   } catch (error) {
     next(error);
   }
@@ -174,12 +145,7 @@ const bestSellers = async (req, res, next) => {
       req.store.id,
       req.query
     );
-    if (bestSellingItems.err) {
-      return res.status(403).json({
-        success: false, msg: bestSellingItems.err, status: bestSellingItems.status
-      });
-    }
-    res.status(200).json({ success: true, result: bestSellingItems });
+    res.status(200).json({ success: true, result: bestSellingItems, status: 200 });
   } catch (error) {
     next(error);
   }
@@ -191,15 +157,10 @@ const getStoreFeedback = async (req, res, next) => {
       req.store.id,
       req.query
     );
-    if (feedbacks.err) {
-      return res.status(403).json({
-        success: false, msg: feedbacks.err, status: feedbacks.status
-      });
-    }
 
     return res.status(200).json({
       success: true,
-      result: { feedbacks, size: feedbacks.length },
+      result: { feedbacks, size: feedbacks.length, status: 200 },
     });
   } catch (error) {
     next(error);
@@ -209,10 +170,6 @@ const getStoreFeedback = async (req, res, next) => {
 const getInventoryList = async (req, res, next) => {
   try {
     const inventoryList = await storeService.getInventoryList(req.query);
-
-    if (inventoryList.err) {
-      return res.status(403).json({ success: false, msg: inventoryList.err, status: inventoryList.status });
-    }
 
     return res.status(200).json({
       success: true,
