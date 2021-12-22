@@ -12,225 +12,205 @@ import getOTP from "../utils/sendOTP";
 
 // Get all Users
 const getUsers = async (urlParams) => {
-  try {
-    const limit = Number(urlParams.limit);
-    const skip = Number(urlParams.skip);
+  const limit = Number(urlParams.limit);
+  const skip = Number(urlParams.skip);
 
-    delete urlParams.limit;
-    delete urlParams.skip;
-    delete urlParams.page;
+  delete urlParams.limit;
+  delete urlParams.skip;
+  delete urlParams.page;
 
-    const users = await User.find(urlParams)
-      .select("-password -orders -cart")
-      .sort({ createdDate: -1 }) // -1 for descending sort
-      .skip(skip)
-      .limit(limit);
+  const users = await User.find(urlParams)
+    .select("-password -orders -cart")
+    .sort({ createdDate: -1 }) // -1 for descending sort
+    .skip(skip)
+    .limit(limit);
 
-    return users;
-  } catch (err) {
-    throw err;
-  }
+  return users;
 };
 
 // send otp to Verify user email before sign up
 const verifyEmailAddress = async ({ email }) => {
-  try {
-    // check if user exists
-    let user = await User.findOne({ email });
-    if (user) {
-      return { err: "This email is being used by another user.", status: 409 };
-    }
-
-    let token = await getOTP("user-signup", email);
-
-    // send otp
-    let email_subject = "OTP For Account Creation";
-    let email_message = token.otp;
-    await sendEmail(email, email_subject, email_message);
-
-    return "OTP sent!";
-  } catch (err) {
-    throw err;
+  // check if user exists
+  let user = await User.findOne({ email });
+  if (user) {
+    return { err: "This email is being used by another user.", status: 409 };
   }
+
+  let token = await getOTP("user-signup", email);
+
+  // send otp
+  let email_subject = "OTP For Account Creation";
+  let email_message = token.otp;
+  await sendEmail(email, email_subject, email_message);
+
+  return "OTP sent!";
 };
 
 // Register User
 const registerUser = async (userParam) => {
-  try {
-    const {
-      first_name, last_name, email, phone_number, password
-    } = userParam;
-    let user = await User.findOne({ email });
+  const {
+    first_name, last_name, email, phone_number, password
+  } = userParam;
+  let user = await User.findOne({ email });
 
-    if (user) {
-      return { err: "User with this email already exists.", status: 409 };
-    }
-
-    // Create User Object
-    user = new User({
-      first_name,
-      last_name,
-      email,
-      phone_number,
-      password,
-    });
-
-    const salt = await bcrypt.genSalt(10);
-
-    // Replace password from user object with encrypted one
-    user.password = await bcrypt.hash(password, salt);
-
-    // verify user's signup token
-    let signupToken = await Token.findById(userParam.token);
-
-    if (signupToken) {
-      user.isVerified = true;
-    }
-
-    // Save user to db
-    let newUser = await user.save();
-
-    // delete sign up token
-    if (newUser._id) await Token.findByIdAndDelete(userParam.token);
-
-    // delete user on creation, uncomment to test registration without populating your database
-    // await User.findByIdAndDelete(newUser._id);
-
-    // Define payload for token
-    const payload = {
-      user: {
-        id: user.id,
-      },
-    };
-
-    // Generate and return token to server
-    const token = jwt.sign(payload, process.env.JWT_SECRET, {
-      expiresIn: 36000,
-    });
-
-    // unset user pass****d
-    user.password = undefined;
-
-    // set user token
-    // user.set("token", token, { strict: false });
-
-    return { user, token };
-  } catch (err) {
-    throw err;
+  if (user) {
+    return { err: "User with this email already exists.", status: 409 };
   }
+
+  // Create User Object
+  user = new User({
+    first_name,
+    last_name,
+    email,
+    phone_number,
+    password,
+  });
+
+  const salt = await bcrypt.genSalt(10);
+
+  // Replace password from user object with encrypted one
+  user.password = await bcrypt.hash(password, salt);
+
+  // verify user's signup token
+  let signupToken = await Token.findById(userParam.token);
+
+  if (signupToken) {
+    user.isVerified = true;
+  }
+
+  // Save user to db
+  let newUser = await user.save();
+
+  // delete sign up token
+  if (newUser._id) await Token.findByIdAndDelete(userParam.token);
+
+  // delete user on creation, uncomment to test registration without populating your database
+  // await User.findByIdAndDelete(newUser._id);
+
+  // Define payload for token
+  const payload = {
+    user: {
+      id: user.id,
+    },
+  };
+
+  // Generate and return token to server
+  const token = jwt.sign(payload, process.env.JWT_SECRET, {
+    expiresIn: "36000 days",
+  });
+
+  // unset user pass****d
+  user.password = undefined;
+
+  // set user token
+  // user.set("token", token, { strict: false });
+
+  return { user, token };
 };
 
 // Login User
 const loginUser = async (loginParam) => {
   const { email, password } = loginParam;
 
-  try {
-    // Find user with email
-    let user = await User.findOne({ email });
+  // Find user with email
+  let user = await User.findOne({ email });
 
-    if (!user) {
-      return {
-        err: "The email entered is not registered, please try again.",
-        status: 401,
-      };
-    }
-
-    // Check if password matches with stored hash
-    const isMatch = await bcrypt.compare(password, user.password);
-
-    if (!isMatch) {
-      return {
-        err: "The password entered in incorrect, please try again.",
-        status: 401,
-      };
-    }
-
-    // unset user pass***d
-    user.password = undefined;
-
-    // Define payload for token
-    const payload = {
-      user: {
-        id: user.id,
-      },
+  if (!user) {
+    return {
+      err: "The email entered is not registered, please try again.",
+      status: 401,
     };
-
-    // Generate and return token to server
-    const token = jwt.sign(payload, process.env.JWT_SECRET, {
-      expiresIn: 36000,
-    });
-
-    if (!token) {
-      return {
-        err: "Session expired, please try logging in.",
-        status: 401,
-      };
-    }
-
-    const pipeline = [
-      { $unset: ["userReviews", "userOrders", "cart", "password", "orders"] },
-    ];
-
-    const userDetails = await User.aggregate()
-      .match({
-        _id: mongoose.Types.ObjectId(user._id),
-      })
-      .lookup({
-        from: "reviews",
-        localField: "_id",
-        foreignField: "user",
-        as: "userReviews",
-      })
-      .lookup({
-        from: "orders",
-        localField: "_id",
-        foreignField: "user",
-        as: "userOrders",
-      })
-      .addFields({
-        totalReviews: { $size: "$userReviews" },
-        totalOrders: { $size: "$userOrders" },
-      })
-      .append(pipeline);
-
-    return { userDetails, token };
-  } catch (err) {
-    throw err;
   }
+
+  // Check if password matches with stored hash
+  const isMatch = await bcrypt.compare(password, user.password);
+
+  if (!isMatch) {
+    return {
+      err: "The password entered in incorrect, please try again.",
+      status: 401,
+    };
+  }
+
+  // unset user pass***d
+  user.password = undefined;
+
+  // Define payload for token
+  const payload = {
+    user: {
+      id: user.id,
+    },
+  };
+
+  // Generate and return token to server
+  const token = jwt.sign(payload, process.env.JWT_SECRET, {
+    expiresIn: "36000 days",
+  });
+
+  if (!token) {
+    return {
+      err: "Session expired, please try logging in.",
+      status: 401,
+    };
+  }
+
+  const pipeline = [
+    { $unset: ["userReviews", "userOrders", "cart", "password", "orders"] },
+  ];
+
+  const userDetails = await User.aggregate()
+    .match({
+      _id: mongoose.Types.ObjectId(user._id),
+    })
+    .lookup({
+      from: "reviews",
+      localField: "_id",
+      foreignField: "user",
+      as: "userReviews",
+    })
+    .lookup({
+      from: "orders",
+      localField: "_id",
+      foreignField: "user",
+      as: "userOrders",
+    })
+    .addFields({
+      totalReviews: { $size: "$userReviews" },
+      totalOrders: { $size: "$userOrders" },
+    })
+    .append(pipeline);
+
+  return { userDetails, token };
 };
 
 // Get Logged in User info
 const getLoggedInUser = async (userParam) => {
-  try {
-    const pipeline = [
-      { $unset: ["userReviews", "userOrders", "cart", "password", "orders"] },
-    ];
-    const user = User.aggregate()
-      .match({
-        _id: mongoose.Types.ObjectId(userParam),
-      })
-      .lookup({
-        from: "reviews",
-        localField: "_id",
-        foreignField: "user",
-        as: "userReviews",
-      })
-      .lookup({
-        from: "orders",
-        localField: "_id",
-        foreignField: "user",
-        as: "userOrders",
-      })
-      .addFields({
-        totalReviews: { $size: "$userReviews" },
-        totalOrders: { $size: "$userOrders" },
-      })
-      .append(pipeline);
+  const pipeline = [
+    { $unset: ["userReviews", "userOrders", "cart", "password", "orders"] },
+  ];
+  const user = User.aggregate()
+    .match({
+      _id: mongoose.Types.ObjectId(userParam),
+    })
+    .lookup({
+      from: "reviews",
+      localField: "_id",
+      foreignField: "user",
+      as: "userReviews",
+    })
+    .lookup({
+      from: "orders",
+      localField: "_id",
+      foreignField: "user",
+      as: "userOrders",
+    })
+    .addFields({
+      totalReviews: { $size: "$userReviews" },
+      totalOrders: { $size: "$userOrders" },
+    })
+    .append(pipeline);
 
-    return user;
-  } catch (err) {
-    throw err;
-  }
+  return user;
 };
 
 // Update User Details
@@ -303,245 +283,217 @@ const updateUser = async (updateParam, id) => {
 // };
 
 const addItemToBasket = async (userId, basketItemMeta) => {
-  try {
-    // add user ID to basketMeta
-    basketItemMeta.user = userId;
+  // add user ID to basketMeta
+  basketItemMeta.user = userId;
 
-    // add item to basket
-    let newBasketItem = new Basket(basketItemMeta);
-    await newBasketItem.save();
+  // add item to basket
+  let newBasketItem = new Basket(basketItemMeta);
+  await newBasketItem.save();
 
-    // run price calculations
-    const newBasketItemChore = await Basket.aggregate()
-      .match({
-        _id: mongoose.Types.ObjectId(newBasketItem._id),
-      })
-      .addFields({
-        "product.selectedVariants": {
-          $map: {
-            input: "$product.selectedVariants",
-            as: "variant",
-            in: {
-              $mergeObjects: [
-                "$$variant",
-                {
-                  totalPrice: {
-                    $multiply: ["$$variant.itemPrice", "$$variant.quantity"],
-                  },
+  // run price calculations
+  const newBasketItemChore = await Basket.aggregate()
+    .match({
+      _id: mongoose.Types.ObjectId(newBasketItem._id),
+    })
+    .addFields({
+      "product.selectedVariants": {
+        $map: {
+          input: "$product.selectedVariants",
+          as: "variant",
+          in: {
+            $mergeObjects: [
+              "$$variant",
+              {
+                totalPrice: {
+                  $multiply: ["$$variant.itemPrice", "$$variant.quantity"],
                 },
-              ],
-            },
+              },
+            ],
           },
         },
-        totalProductPrice: { $multiply: ["$product.price", "$product.qty"] },
-      })
-      .addFields({
-        totalVariantPrice: { $sum: "$product.selectedVariants.totalPrice" },
-      })
-      .addFields({
-        "product.totalPrice": {
-          $add: ["$totalProductPrice", "$totalVariantPrice"],
-        },
-      });
-
-    // update new basket details with calculated prices
-    return await Basket.findOneAndUpdate(
-      { _id: newBasketItem._id },
-      {
-        $set: {
-          "product.selectedVariants":
-            newBasketItemChore[0].product.selectedVariants,
-          "product.totalPrice": newBasketItemChore[0].product.totalPrice,
-        },
       },
-      { omitUndefined: true, new: true, useFindAndModify: false }
-    );
-  } catch (error) {
-    throw error;
-  }
+      totalProductPrice: { $multiply: ["$product.price", "$product.qty"] },
+    })
+    .addFields({
+      totalVariantPrice: { $sum: "$product.selectedVariants.totalPrice" },
+    })
+    .addFields({
+      "product.totalPrice": {
+        $add: ["$totalProductPrice", "$totalVariantPrice"],
+      },
+    });
+
+  // update new basket details with calculated prices
+  let basketUpdate = await Basket.findOneAndUpdate(
+    { _id: newBasketItem._id },
+    {
+      $set: {
+        "product.selectedVariants":
+            newBasketItemChore[0].product.selectedVariants,
+        "product.totalPrice": newBasketItemChore[0].product.totalPrice,
+      },
+    },
+    { omitUndefined: true, new: true, useFindAndModify: false }
+  );
+  return basketUpdate;
 };
 
 const getUserBasketItems = async (userId) => {
-  try {
-    // get total price in basket
-    const totalProductPriceInBasket = await Basket.aggregate()
-      .match({
-        user: mongoose.Types.ObjectId(userId),
-      })
-      .group({
-        _id: "$user",
-        total: { $sum: "$product.totalPrice" },
-      });
+  // get total price in basket
+  const totalProductPriceInBasket = await Basket.aggregate()
+    .match({
+      user: mongoose.Types.ObjectId(userId),
+    })
+    .group({
+      _id: "$user",
+      total: { $sum: "$product.totalPrice" },
+    });
     // get user basket items
-    let userBasket = await Basket.aggregate()
-      .match({
-        user: mongoose.Types.ObjectId(userId),
-      })
-      .sort("createdAt");
+  let userBasket = await Basket.aggregate()
+    .match({
+      user: mongoose.Types.ObjectId(userId),
+    })
+    .sort("createdAt");
 
-    return {
-      userBasket,
-      totalPrice: totalProductPriceInBasket[0].total,
-      count: userBasket.length,
-    };
-  } catch (error) {
-    throw error;
-  }
+  return {
+    userBasket,
+    totalPrice: totalProductPriceInBasket[0].total,
+    count: userBasket.length,
+  };
 };
 
 const editBasketItems = async (userId, basketMeta) => {
-  try {
-    // check if basket exists
-    let userBasket = await Basket.findById(basketMeta.basketId);
-    if (!userBasket) {
-      return {
-        err: "Basket not found.",
-        status: 404,
-      };
-    }
-
-    // update basket with new data
-    await Basket.findByIdAndUpdate(
-      basketMeta.basketId,
-      { $set: basketMeta },
-      { omitUndefined: true, new: true, useFindAndModify: false }
-    );
-
-    // return user basket items
-    return await getUserBasketItems(userId);
-  } catch (err) {
-    throw err;
+  // check if basket exists
+  let userBasket = await Basket.findById(basketMeta.basketId);
+  if (!userBasket) {
+    return {
+      err: "Basket not found.",
+      status: 404,
+    };
   }
+
+  // update basket with new data
+  await Basket.findByIdAndUpdate(
+    basketMeta.basketId,
+    { $set: basketMeta },
+    { omitUndefined: true, new: true, useFindAndModify: false }
+  );
+
+  // return user basket items
+  userBasket = await getUserBasketItems(userId);
+  return userBasket;
 };
 
 const deleteBasketItem = async (userId, { basketId }) => {
-  try {
-    // check if basket exists
-    let userBasket = await Basket.findById(basketId);
-    if (!userBasket) {
-      return {
-        err: "Basket not found.",
-        status: 404,
-      };
-    }
-
-    // update basket with new data
-    await Basket.findByIdAndDelete(basketId);
-
-    // return user basket items
-    return await getUserBasketItems(userId);
-  } catch (err) {
-    throw err;
+  // check if basket exists
+  let userBasket = await Basket.findById(basketId);
+  if (!userBasket) {
+    return {
+      err: "Basket not found.",
+      status: 404,
+    };
   }
+
+  // update basket with new data
+  await Basket.findByIdAndDelete(basketId);
+
+  // return user basket items
+  userBasket = await getUserBasketItems(userId);
+  return userBasket;
 };
 
 const deleteAllBasketItems = async (userId) => {
-  try {
-    // check if basket exists
-    let userBasket = await Basket.find({ user: userId });
-    if (!userBasket) {
-      return {
-        err: "Basket not found.",
-        status: 404,
-      };
-    }
-
-    // update basket with new data
-    await Basket.deleteMany({ user: userId });
-
-    // return user basket items
-    return await getUserBasketItems(userId);
-  } catch (err) {
-    throw err;
+  // check if basket exists
+  let userBasket = await Basket.find({ user: userId });
+  if (!userBasket) {
+    return {
+      err: "Basket not found.",
+      status: 404,
+    };
   }
+
+  // update basket with new data
+  await Basket.deleteMany({ user: userId });
+
+  // return user basket items
+  userBasket = await getUserBasketItems(userId);
+  return userBasket;
 };
 
 const forgotPassword = async ({ email }) => {
-  try {
-    // verify if user exists, throws error if not
-    let findUser = await User.findOne({ email });
-    if (!findUser) {
-      return {
-        err: "User does not exists.",
-        status: 404,
-      };
-    }
-
-    let token = await getOTP("user-forgot-password", email);
-
-    // send otp
-    let email_subject = "forgot password";
-    let email_message = token.otp;
-    await sendEmail(email, email_subject, email_message);
-
-    return "OTP sent!";
-  } catch (err) {
-    throw err;
+  // verify if user exists, throws error if not
+  let findUser = await User.findOne({ email });
+  if (!findUser) {
+    return {
+      err: "User does not exists.",
+      status: 404,
+    };
   }
+
+  let token = await getOTP("user-forgot-password", email);
+
+  // send otp
+  let email_subject = "forgot password";
+  let email_message = token.otp;
+  await sendEmail(email, email_subject, email_message);
+
+  return "OTP sent!";
 };
 
 const validateToken = async ({ type, otp, email }) => {
-  try {
-    // find token
-    let userToken = await Token.findOne({
-      otp,
-      email,
-      type,
-    });
+  // find token
+  let userToken = await Token.findOne({
+    otp,
+    email,
+    type,
+  });
 
-    if (!userToken) {
-      return {
-        err: "The OTP entered is incorrect, please try again.",
-        status: 406,
-      };
-    }
-
-    return userToken;
-  } catch (err) {
-    throw err;
+  if (!userToken) {
+    return {
+      err: "The OTP entered is incorrect, please try again.",
+      status: 406,
+    };
   }
+
+  return userToken;
 };
 
 const createNewPassword = async ({ token, email, password }) => {
-  try {
-    // validates token
-    let requestToken = await Token.findById(token);
+  // validates token
+  let requestToken = await Token.findById(token);
 
-    // cancel operation if new password request doesn't have a token
-    if (!requestToken) {
-      return {
-        err: "The OTP entered is incorrect, please try again.",
-        status: 409,
-      };
-    }
-
-    // encrypting password
-    const salt = await bcrypt.genSalt(10);
-    password = await bcrypt.hash(password, salt);
-
-    // update new password
-    let user = await User.findOneAndUpdate(
-      { email },
-      { $set: { password } },
-      { omitUndefined: true, new: true, useFindAndModify: false }
-    );
-
-    await Token.findByIdAndDelete(token);
-
-    // Unsetting unneeded fields
-    user.cart = undefined;
-    user.password = undefined;
-    user.orders = undefined;
-
-    // send confirmation email
-    let email_subject = "Password Reset Successful";
-    let email_message = "Password has been reset successfully";
-    await sendEmail(email, email_subject, email_message);
-
-    return user;
-  } catch (err) {
-    throw err;
+  // cancel operation if new password request doesn't have a token
+  if (!requestToken) {
+    return {
+      err: "The OTP entered is incorrect, please try again.",
+      status: 409,
+    };
   }
+
+  // encrypting password
+  const salt = await bcrypt.genSalt(10);
+  password = await bcrypt.hash(password, salt);
+
+  // update new password
+  let user = await User.findOneAndUpdate(
+    { email },
+    { $set: { password } },
+    { omitUndefined: true, new: true, useFindAndModify: false }
+  );
+
+  await Token.findByIdAndDelete(token);
+
+  // Unsetting unneeded fields
+  user.cart = undefined;
+  user.password = undefined;
+  user.orders = undefined;
+
+  // send confirmation email
+  let email_subject = "Password Reset Successful";
+  let email_message = "Password has been reset successfully";
+  await sendEmail(email, email_subject, email_message);
+
+  return user;
 };
 
 export {
