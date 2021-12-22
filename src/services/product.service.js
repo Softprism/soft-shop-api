@@ -159,7 +159,7 @@ const createProduct = async (productParam, storeId) => {
     // validate store, we have to make sure we're assigning a product to a store
     const storeChecker = await Store.findById(storeId);
     if (!storeChecker) {
-      return { err: "unable to add product to this store" };
+      return { err: "Store not found." };
     }
 
     // add store ID to productParam
@@ -202,7 +202,7 @@ const updateProduct = async (productParam, productId, storeId) => {
     const product = await Product.findById(productId);
     if (!product) {
       throw {
-        err: "Product not found",
+        err: "Product not found.",
       };
     }
 
@@ -226,7 +226,7 @@ const deleteProduct = async (productId, storeId) => {
 
     if (!store) {
       throw {
-        err: "Unable to delete products from this store",
+        err: "Store not found.",
       };
     }
     // check if product exists
@@ -234,14 +234,14 @@ const deleteProduct = async (productId, storeId) => {
 
     if (!product) {
       throw {
-        err: "Product not found",
+        err: "Product not found.",
       };
     }
 
     // delete the product
     await Product.deleteOne({ _id: productId });
 
-    return { msg: "Successfully Deleted Product" };
+    return { msg: "Successfully Deleted Product." };
   } catch (error) {
     return error;
   }
@@ -251,7 +251,7 @@ const reviewProduct = async (review) => {
   try {
     const product = await Product.findById(review.product);
 
-    if (!product) throw { err: "product could not be found" };
+    if (!product) throw { err: "Product not found." };
 
     const newReview = new Review(review);
     await newReview.save();
@@ -267,7 +267,7 @@ const createVariant = async (storeId, variantParam) => {
   try {
     let store = await Store.findById(storeId);
 
-    if (!store) return { err: "Store not found" }; // this ain't working
+    if (!store) return { err: "Store not found." }; // this ain't working
 
     const { variantTitle, multiSelect } = variantParam;
 
@@ -283,7 +283,7 @@ const createVariant = async (storeId, variantParam) => {
 const updateVariant = async (variantId, updateParam) => {
   try {
     let variant = await Variant.findById(variantId);
-    if (!variant) throw { err: "variant not found" };
+    if (!variant) throw { err: "Variant not found." };
     // find a way to validate if variant exists
 
     let updateVariant = await Variant.findByIdAndUpdate(
@@ -303,7 +303,7 @@ const addVariantItem = async (variantId, variantParam) => {
   try {
     // find variant
     let variant = await Variant.findById(variantId);
-    if (!variant) throw { err: "variant not found" };
+    if (!variant) throw { err: "Variant not found." };
 
     // push new variant item and save
     variant.variantItems.push(variantParam);
@@ -322,7 +322,7 @@ const getStoreVariants = async (storeId) => {
       store: storeId,
       active: true,
     }).select("variantTitle");
-    if (!storeVariants) return { err: "variants not found" };
+    if (!storeVariants) return { err: "Variants not found." };
     let size = storeVariants.length;
 
     return { storeVariants, size };
@@ -346,7 +346,7 @@ const getVariantItem = async (variantId, pagingParam) => {
       .skip(skip)
       .limit(limit);
 
-    if (!variant) return { err: "variant not found" };
+    if (!variant) return { err: "Variant not found." };
 
     return variant;
   } catch (error) {
@@ -359,8 +359,8 @@ const addCustomFee = async (storeId, customrFeeParam) => {
     let store = await Store.findById(storeId);
     let product = await Product.findById(customrFeeParam.product);
 
-    if (!store) throw { err: "Store not found" };
-    if (!product) throw { err: "product not found" };
+    if (!store) throw { err: "Store not found." };
+    if (!product) throw { err: "Product not found." };
 
     let newCustomFee = new CustomFee(customrFeeParam);
     await newCustomFee.save();
@@ -381,7 +381,7 @@ const deleteCustomFee = async (customFeeId) => {
   try {
     let customFee = await CustomFee.findByIdAndDelete(customFeeId);
     console.log(customFee);
-    if (!customFee) throw { err: "custom fee not found" };
+    if (!customFee) throw { err: "Custom fee not found." };
     return "fee removed from product";
   } catch (error) {
     return error;

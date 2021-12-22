@@ -106,7 +106,7 @@ const createCategory = async (categoryParams) => {
     let category = await Category.findOne({ name });
 
     if (category) {
-      throw { err: `${category.name} already Exists` };
+      throw { err: `${category.name} already Exists.` };
     }
 
     // Create Category Object
@@ -118,7 +118,7 @@ const createCategory = async (categoryParams) => {
     // Save Category to db
     await category.save();
 
-    return { msg: `${category.name} category successfully created` };
+    return { msg: `${category.name} category successfully created.` };
   } catch (err) {
     return err;
   }
@@ -138,7 +138,7 @@ const editCategory = async (editParams, id) => {
   try {
     let category = await Category.findById(id);
 
-    if (!category) throw { err: "Category not found" };
+    if (!category) throw { err: "Category not found." };
 
     // Images should be replaced
 
@@ -170,7 +170,7 @@ const deleteCategory = async (id) => {
     // Check if id matches any category from db
     let category = await Category.findById(id);
 
-    if (!category) throw { err: "Category not found" };
+    if (!category) throw { err: "Category not found." };
 
     // Remove category by id
     await Category.findByIdAndRemove(id);

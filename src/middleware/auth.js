@@ -17,21 +17,21 @@ const auth = async (req, res, next) => {
       if (decoded.user) {
         const { user } = decoded;
         let verifyUser = await User.findById(user.id);
-        if (!verifyUser) res.status(401).json({ success: false, msg: "user doesn't exist" });
+        if (!verifyUser) res.status(401).json({ success: false, msg: "User does not exist." });
         req.user = decoded.user;
       }
 
       if (decoded.store) {
         const { store } = decoded;
         let verifyStore = await Store.findById(store.id);
-        if (!verifyStore) res.status(401).json({ success: false, msg: "store doesn't exist" });
+        if (!verifyStore) res.status(401).json({ success: false, msg: "Store does not exist." });
         req.store = decoded.store;
       }
 
       if (decoded.admin) {
         const { admin } = decoded;
         let verifyAdmin = await Admin.findById(admin.id);
-        if (!verifyAdmin) res.status(401).json({ success: false, msg: "admin doesn't exist" });
+        if (!verifyAdmin) res.status(401).json({ success: false, msg: "Admin does not exist." });
         req.admin = decoded.admin;
       }
 
@@ -39,12 +39,12 @@ const auth = async (req, res, next) => {
     } catch (err) {
       res
         .status(401)
-        .json({ success: false, msg: "Not authorized, token failed" });
+        .json({ success: false, msg: "Session expired, you have to login." });
     }
   }
 
   if (!token) {
-    res.status(401).json({ success: false, msg: "Not authorized, no token" });
+    res.status(401).json({ success: false, msg: "Not authorized, no token." });
   }
 };
 

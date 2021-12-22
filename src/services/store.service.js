@@ -353,7 +353,7 @@ const getStore = async (storeId) => {
     }
     return store[0];
   } catch (err) {
-    return { err: "failed to get store data" };
+    return { err: "Failed to get store data." };
   }
 };
 
@@ -373,11 +373,11 @@ const createStore = async (StoreParam) => {
     let store = await Store.findOne({ email });
 
     if (store) {
-      throw { err: "A store with this email already exists" };
+      throw { err: "A store with this email already exists." };
     }
 
     if (!openingTime.includes(":") || !closingTime.includes(":")) {
-      throw { err: "Invalid time format" };
+      throw { err: "Invalid time format." };
     }
 
     const newStore = new Store(StoreParam);
@@ -400,7 +400,7 @@ const createStore = async (StoreParam) => {
     });
 
     if (!token) {
-      throw { err: "Missing Token" };
+      throw { err: "Missing Token." };
     }
 
     return token;
@@ -416,13 +416,13 @@ const loginStore = async (StoreParam) => {
     let store = await Store.findOne({ email });
 
     if (!store) {
-      throw { err: "Invalid Credentials" };
+      throw { err: "Store not found." };
     }
     // Check if password matches with stored hash
     const isMatch = await bcrypt.compare(password, store.password);
 
     if (!isMatch) {
-      throw { err: "Invalid Credentials" };
+      throw { err: "The password entered is invalid, please try again." };
     }
 
     const payload = {
@@ -480,14 +480,14 @@ const updateStore = async (storeID, updateParam) => {
     if (openingTime) {
       if (!storeUpdate.openingTime.includes(":")) {
         delete storeUpdate.openingTime;
-        throw { err: "Invalid time" };
+        throw { err: "Invalid time format." };
       }
       storeUpdate.openingTime = openingTime;
     }
     if (closingTime) {
       if (!storeUpdate.closingTime.includes(":")) {
         delete storeUpdate.closingTime;
-        throw { err: "Invalid time" };
+        throw { err: "Invalid time format." };
       }
       storeUpdate.closingTime = closingTime;
     }
@@ -501,7 +501,7 @@ const updateStore = async (storeID, updateParam) => {
 
     let store = await Store.findById(storeID);
 
-    if (!store) throw { err: "Store not found" };
+    if (!store) throw { err: "Store not found." };
     store = await Store.findByIdAndUpdate(
       storeID,
       { $set: storeUpdate },
@@ -520,7 +520,7 @@ const updateStore = async (storeID, updateParam) => {
 const addLabel = async (storeId, labelParam) => {
   let store = await Store.findById(storeId);
 
-  if (!store) throw { err: "Store not found" };
+  if (!store) throw { err: "Store not found." };
   const { labelTitle, labelThumb } = labelParam;
   store.labels.push({ labelTitle, labelThumb });
   await store.save();
@@ -532,14 +532,14 @@ const getLabels = async (storeId) => {
   // get store labels
   let store = await Store.findById(storeId);
 
-  if (!store) throw { err: "Store not found" };
+  if (!store) throw { err: "Store not found." };
 
   return store.labels;
 };
 
 const getStoreSalesStats = async (storeId, days) => {
   try {
-    if (!days) throw { err: "please specify amount of days to get stats for" };
+    if (!days) throw { err: "Please, specify amount of days to get stats for." };
     let d = new Date();
     d.setDate(d.getDate() - days);
 
@@ -666,7 +666,9 @@ const getStoreFeedback = async (storeId, pagingParam) => {
         ],
       },
     ];
-    const { limit, skip, fromStarAmount, toStarAmount } = pagingParam;
+    const {
+      limit, skip, fromStarAmount, toStarAmount
+    } = pagingParam;
     console.log(fromStarAmount, toStarAmount);
 
     const feedbacks = await Order.aggregate()

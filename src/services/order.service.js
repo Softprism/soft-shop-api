@@ -92,11 +92,11 @@ const createOrder = async (orderParam) => {
 
     // validate user
     const vUser = await User.findById(user);
-    if (!vUser) throw { err: "User not found" };
+    if (!vUser) throw { err: "User does not exists." };
 
     // validate store
     const vStore = await Store.findById(store);
-    if (!vStore) throw { err: "Store not found" };
+    if (!vStore) throw { err: "Store not found." };
 
     // generates random unique id;
     let orderId = () => {
@@ -272,20 +272,20 @@ const toggleFavorite = async (orderID) => {
     const order = await Order.findById(orderID);
 
     if (!order) {
-      throw { err: "Invalid Order" };
+      throw { err: "Order not found" };
     }
 
     order.isFavorite = !order.isFavorite;
     order.save();
 
     if (order.isFavorite) {
-      return { msg: "Order marked as favorite" };
+      return { msg: "Order marked as favorite." };
     }
-    return { msg: "Order removed from favorites" };
+    return { msg: "Order removed from favorites." };
 
     // return order;
   } catch (err) {
-    return { err: "Error marking order as favorite" };
+    return { err: "Error marking order as favorite." };
   }
 };
 
@@ -293,9 +293,8 @@ const getOrderDetails = async (orderID) => {
   try {
     const order = await Order.findById(orderID);
 
-    console.log(order);
     if (!order) {
-      throw { err: "Error getting this order details" };
+      throw { err: "Order not found" };
     }
     // get users order details
     // can be used by users, stores and admin
@@ -508,7 +507,7 @@ const editOrder = async (orderID, orderParam) => {
     return newOrder[0];
   } catch (error) {
     console.log(error);
-    return { err: "error editing this order" };
+    return { err: "Error editing this order." };
   }
 };
 
@@ -520,20 +519,20 @@ const getCartItems = async (userID) => {
       .populate("cart.product_id");
     return user;
   } catch (error) {
-    return { err: "error getting user cart items" };
+    return { err: "Error getting user cart items." };
   }
 };
 
 const reviewOrder = async (review) => {
   try {
     const user = await User.findById(review.user);
-    if (!user) throw { err: "user not be found" };
+    if (!user) throw { err: "User does not exists." };
 
     const product = await Order.findOne({
       _id: mongoose.Types.ObjectId(review.order),
       user: mongoose.Types.ObjectId(review.user),
     });
-    if (!product) throw { err: "order could not be found" };
+    if (!product) throw { err: "Order not found." };
 
     const newReview = new Review(review);
     await newReview.save();
