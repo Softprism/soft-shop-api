@@ -416,7 +416,7 @@ const loginStore = async (StoreParam) => {
     let store = await Store.findOne({ email });
 
     if (!store) {
-      throw { err: "Store not found." };
+      throw { err: "Invalid email." };
     }
     // Check if password matches with stored hash
     const isMatch = await bcrypt.compare(password, store.password);
