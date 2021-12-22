@@ -383,7 +383,7 @@ const createStore = async (StoreParam) => {
 
   // Generate and return token to server
   const token = jwt.sign(payload, process.env.JWT_SECRET, {
-    expiresIn: 36000,
+    expiresIn: "365 days",
   });
 
   if (!token) {
@@ -416,7 +416,7 @@ const loginStore = async (StoreParam) => {
 
   // Generate and return token to server
   const token = jwt.sign(payload, process.env.JWT_SECRET, {
-    expiresIn: 36000,
+    expiresIn: "365 days",
   });
 
   return token;
