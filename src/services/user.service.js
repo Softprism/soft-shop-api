@@ -63,7 +63,7 @@ const registerUser = async (userParam) => {
     let user = await User.findOne({ email });
 
     if (user) {
-      return { err: "User with this email already exists", status: 409 };
+      return { err: "User with this email already exists.", status: 409 };
     }
 
     // Create User Object
@@ -130,7 +130,7 @@ const loginUser = async (loginParam) => {
 
     if (!user) {
       return {
-        err: "the email entered is not registered, please try again",
+        err: "The email entered is not registered, please try again.",
         status: 401,
       };
     }
@@ -140,7 +140,7 @@ const loginUser = async (loginParam) => {
 
     if (!isMatch) {
       return {
-        err: "the password entered in incorrect, please try again",
+        err: "The password entered in incorrect, please try again.",
         status: 401,
       };
     }
@@ -162,8 +162,8 @@ const loginUser = async (loginParam) => {
 
     if (!token) {
       return {
-        err: "signup successful but auth failed, please try logging in",
-        status: 400,
+        err: "Session expired, please try logging in.",
+        status: 401,
       };
     }
 
@@ -261,8 +261,8 @@ const updateUser = async (updateParam, id) => {
 
     if (!user) {
       return {
-        err: "the server couldn't validate your account, please try logging in again",
-        status: 403,
+        err: "User does not exists.",
+        status: 404,
       };
     }
 
@@ -395,8 +395,8 @@ const editBasketItems = async (userId, basketMeta) => {
     let userBasket = await Basket.findById(basketMeta.basketId);
     if (!userBasket) {
       return {
-        err: "please try again, some errors encountered while updating basket items",
-        status: 400,
+        err: "Basket not found.",
+        status: 404,
       };
     }
 
@@ -420,8 +420,8 @@ const deleteBasketItem = async (userId, { basketId }) => {
     let userBasket = await Basket.findById(basketId);
     if (!userBasket) {
       return {
-        err: "please try again, some errors encountered while deleting basket items",
-        status: 400,
+        err: "Basket not found.",
+        status: 404,
       };
     }
 
@@ -441,8 +441,8 @@ const deleteAllBasketItems = async (userId) => {
     let userBasket = await Basket.find({ user: userId });
     if (!userBasket) {
       return {
-        err: "please try again, some errors encountered while deleting all basket items",
-        status: 400,
+        err: "Basket not found.",
+        status: 404,
       };
     }
 
@@ -462,8 +462,8 @@ const forgotPassword = async ({ email }) => {
     let findUser = await User.findOne({ email });
     if (!findUser) {
       return {
-        err: "the email entered is not registered, please try again",
-        status: 401,
+        err: "User does not exists.",
+        status: 404,
       };
     }
 
@@ -491,7 +491,7 @@ const validateToken = async ({ type, otp, email }) => {
 
     if (!userToken) {
       return {
-        err: "the OTP entered is incorrect, please try again",
+        err: "The OTP entered is incorrect, please try again.",
         status: 406,
       };
     }
@@ -510,8 +510,8 @@ const createNewPassword = async ({ token, email, password }) => {
     // cancel operation if new password request doesn't have a token
     if (!requestToken) {
       return {
-        err: "password reset request canceled, please request for new OTP",
-        status: 406,
+        err: "The OTP entered is incorrect, please try again.",
+        status: 409,
       };
     }
 

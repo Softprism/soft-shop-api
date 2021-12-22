@@ -22,7 +22,7 @@ const registerAdmin = async (params) => {
     let admin = await Admin.findOne({ username });
 
     if (admin) {
-      throw { err: "Admin account already exists" };
+      throw { err: "Admin account already exists." };
     }
 
     // Create Admin Object
@@ -65,14 +65,14 @@ const loginAdmin = async (loginParam) => {
     let admin = await Admin.findOne({ username });
 
     if (!admin) {
-      throw { err: "Admin not found" };
+      throw { err: "Admin not found." };
     }
 
     // Check if password matches with stored hash
     const isMatch = await bcrypt.compare(password, admin.password);
 
     if (!isMatch) {
-      throw { err: "Wrong password" };
+      throw { err: "The password entered is invalid, please try again." };
     }
 
     // Define payload for token
@@ -127,7 +127,7 @@ const updateAdmin = async (updateParam, id) => {
     // Find admin from DB Collection
     let admin = await Admin.findById(id);
 
-    if (!admin) throw { msg: "Admin not found" };
+    if (!admin) throw { msg: "Admin not found." };
 
     // Updates the admin Object with the changed values
     admin = await Admin.findByIdAndUpdate(

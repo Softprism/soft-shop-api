@@ -30,7 +30,7 @@ const auth = async (req, res, next) => {
 
       if (decoded.admin) {
         const { admin } = decoded;
-        let verifyAdmin = await Admin.findById(admin.id);
+        let verifyAdmin = await Admin.findById(admin.id);\
         if (!verifyAdmin) res.status(404).json({ success: false, msg: "admin doesn't exist" });
         req.admin = decoded.admin;
       }
@@ -39,12 +39,12 @@ const auth = async (req, res, next) => {
     } catch (err) {
       res
         .status(401)
-        .json({ success: false, msg: "Not authorized, token failed" });
+        .json({ success: false, msg: "Session expired, you have to login." });
     }
   }
 
   if (!token) {
-    res.status(401).json({ success: false, msg: "Not authorized, no token" });
+    res.status(401).json({ success: false, msg: "Not authorized, no token." });
   }
 };
 
