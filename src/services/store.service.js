@@ -478,15 +478,13 @@ const updateStore = async (storeID, updateParam) => {
       storeUpdate.isActive = isActive;
     }
     if (openingTime) {
-      if (!storeUpdate.openingTime.includes(":")) {
-        delete storeUpdate.openingTime;
+      if (!openingTime.includes(":")) {
         throw { err: "Invalid time format." };
       }
       storeUpdate.openingTime = openingTime;
     }
     if (closingTime) {
-      if (!storeUpdate.closingTime.includes(":")) {
-        delete storeUpdate.closingTime;
+      if (!closingTime.includes(":")) {
         throw { err: "Invalid time format." };
       }
       storeUpdate.closingTime = closingTime;
