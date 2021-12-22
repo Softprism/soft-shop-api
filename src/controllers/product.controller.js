@@ -12,7 +12,7 @@ const getProducts = async (req, res, next) => {
   const allProducts = await productService.getProducts(req.query);
 
   if (allProducts.err) {
-    res.status(400).json({ success: false, msg: allProducts.err });
+    res.status(400).json({ success: false, msg: allProducts.err, status: allProducts.status });
   }
 
   return res.status(200).json({ success: true, result: allProducts });
@@ -38,7 +38,7 @@ const createProduct = async (req, res, next) => {
 
     const product = await productService.createProduct(req.body, storeID);
 
-    if (product.err) return res.status(409).json({ success: false, msg: product.err });
+    if (product.err) return res.status(409).json({ success: false, msg: product.err, status: product.status });
 
     return res.status(201).json({ success: true, result: product });
   } catch (error) {
@@ -65,7 +65,7 @@ const updateProduct = async (req, res, next) => {
     req.params.id,
     storeID
   );
-  if (request.err) return res.status(400).json({ success: false, msg: request.err });
+  if (request.err) return res.status(400).json({ success: false, msg: request.err, status: request.status });
 
   return res.status(200).json({ success: true, result: request });
 };
@@ -78,9 +78,9 @@ const deleteProduct = async (req, res, next) => {
 
   const product = await productService.deleteProduct(req.params.id, storeID);
 
-  if (product.err) return res.status(404).json({ success: false, msg: product.err });
+  if (product.err) return res.status(404).json({ success: false, msg: product.err, status: product.status });
 
-  return res.status(201).json({ success: true, result: product.msg });
+  return res.status(200).json({ success: true, result: product.msg });
 };
 
 const reviewProduct = async (req, res, next) => {
@@ -92,7 +92,7 @@ const reviewProduct = async (req, res, next) => {
   const newReview = await productService.reviewProduct(req.body);
 
   if (newReview.err) {
-    return res.status(400).json({ success: false, msg: newReview.err });
+    return res.status(400).json({ success: false, msg: newReview.err, status: newReview.status });
   }
 
   res.status(200).json({ success: true, result: newReview });
@@ -104,7 +104,7 @@ const getProductDetails = async (req, res, next) => {
   );
 
   if (productDetails.err) {
-    return res.status(400).json({ success: false, msg: productDetails.err });
+    return res.status(400).json({ success: false, msg: productDetails.err, status: productDetails.status });
   }
 
   res.status(200).json({ success: true, result: productDetails });
@@ -118,7 +118,7 @@ const createVariant = async (req, res, next) => {
 
     const createVariant = await productService.createVariant(storeID, req.body);
     if (createVariant.err) {
-      res.status(500).json({ success: false, msg: createVariant.err });
+      res.status(500).json({ success: false, msg: createVariant.err, status: createVariant.status });
     } else {
       res.status(200).json({ success: true, result: createVariant });
     }
@@ -138,7 +138,7 @@ const updateVariant = async (req, res, next) => {
   );
 
   if (updateVariant.err) {
-    res.status(500).json({ success: false, msg: updateVariant.err });
+    res.status(500).json({ success: false, msg: updateVariant.err, status: updateVariant.status });
   } else {
     res.status(200).json({ success: true, result: updateVariant });
   }
@@ -155,7 +155,7 @@ const addVariantItem = async (req, res, next) => {
   );
 
   if (addVariantItem.err) {
-    res.status(500).json({ success: false, msg: addVariantItem.err });
+    res.status(500).json({ success: false, msg: addVariantItem.err, status: addVariantItem.status });
   } else {
     res.status(200).json({ success: true, result: addVariantItem });
   }
@@ -170,7 +170,7 @@ const getStoreVariants = async (req, res, next) => {
     const storeVariants = await productService.getStoreVariants(storeID);
 
     if (storeVariants.err) {
-      res.status(500).json({ success: false, msg: storeVariants.err });
+      res.status(500).json({ success: false, msg: storeVariants.err, status: storeVariants.status });
     } else {
       res.status(200).json({ success: true, result: storeVariants });
     }
@@ -190,7 +190,7 @@ const getVariantItem = async (req, res, next) => {
     );
 
     if (getVariantItem.err) {
-      res.status(500).json({ success: false, msg: getVariantItem.err });
+      res.status(500).json({ success: false, msg: getVariantItem.err, status: getVariantItem.status });
     } else {
       res.status(200).json({ success: true, result: getVariantItem });
     }
@@ -207,7 +207,7 @@ const addCustomFee = async (req, res, next) => {
 
   const addCustomFee = await productService.addCustomFee(storeID, req.body);
   if (addCustomFee.err) {
-    res.status(500).json({ success: false, msg: addCustomFee.err });
+    res.status(500).json({ success: false, msg: addCustomFee.err, status: addCustomFee.status });
   } else {
     res.status(200).json({ success: true, result: addCustomFee });
   }
@@ -222,7 +222,7 @@ const deleteCustomFee = async (req, res, next) => {
     req.params.customFeeId
   );
   if (deleteCustomFee.err) {
-    res.status(500).json({ success: false, msg: deleteCustomFee.err });
+    res.status(500).json({ success: false, msg: deleteCustomFee.err, status: deleteCustomFee.status });
   } else {
     res.status(200).json({ success: true, result: deleteCustomFee });
   }

@@ -13,7 +13,7 @@ const getCategories = async (req, res, next) => {
   }
 
   if (categories.err) {
-    res.status(400).json({ success: false, msg: categories.err });
+    res.status(400).json({ success: false, msg: categories.err, status: categories.status });
   }
 
   return res.status(200).json({ success: true, result: categories });
@@ -29,7 +29,7 @@ const createCategory = async (req, res, next) => {
   const request = await categoryService.createCategory(req.body);
 
   if (request.err) {
-    res.status(500).json({ success: false, msg: request.err });
+    res.status(500).json({ success: false, msg: request.err, status: request.status });
   } else {
     res.status(201).json({ success: true, result: request.msg });
   }
@@ -46,7 +46,7 @@ const editCategory = async (req, res, next) => {
   const request = await categoryService.editCategory(req.body, req.params.id);
 
   if (request.err) {
-    res.status(500).json({ success: false, msg: request.err });
+    res.status(500).json({ success: false, msg: request.err, status: request.status });
   } else {
     res.status(200).json({ success: true, result: request }); // request returns the modified category
   }
@@ -56,7 +56,7 @@ const deleteCategory = async (req, res, next) => {
   const request = await categoryService.deleteCategory(req.params.id);
 
   if (request.err) {
-    res.status(404).json({ success: false, msg: request.err });
+    res.status(404).json({ success: false, msg: request.err, status: request.status });
   } else {
     res.status(200).json({ success: true, result: request.msg });
   }

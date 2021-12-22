@@ -669,7 +669,6 @@ const getStoreFeedback = async (storeId, pagingParam) => {
     const {
       limit, skip, fromStarAmount, toStarAmount
     } = pagingParam;
-    console.log(fromStarAmount, toStarAmount);
 
     const feedbacks = await Order.aggregate()
       .match({
