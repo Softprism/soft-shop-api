@@ -25,7 +25,7 @@ const verifyEmailAddress = async (req, res, next) => {
     const action = await userService.verifyEmailAddress(req.body);
     if (action.err) {
       return res
-        .status(403)
+        .status(action.status)
         .json({
           success: false, msg: action.err, status: action.status
         });
@@ -44,7 +44,7 @@ const registerUser = async (req, res, next) => {
 
     if (result.err) {
       return res
-        .status(409)
+        .status(result.status)
         .json({ success: false, msg: result.err, status: result.status });
     }
 
@@ -65,7 +65,7 @@ const loginUser = async (req, res, next) => {
     // Call Login function from userService
     const loginRequest = await userService.loginUser(req.body);
     if (loginRequest.err) {
-      return res.status(403).json({
+      return res.status(loginRequest.status).json({
         success: false,
         msg: loginRequest.err,
         status: loginRequest.status,
@@ -109,7 +109,7 @@ const updateUser = async (req, res) => {
     if (req.user === undefined && req.query.userID === undefined) {
       res
         .status(400)
-        .json({ success: false, msg: "unable to authenticate this user" });
+        .json({ success: false, msg: "unable to authenticate this user", status: 400 });
     }
     if (req.user) userID = req.user.id;
     if (req.query.userID && req.admin) userID = req.query.userID;
@@ -176,7 +176,7 @@ const editBasketItems = async (req, res, next) => {
     const action = await userService.editBasketItems(req.user.id, req.body);
     if (action.err) {
       return res
-        .status(400)
+        .status(action.status)
         .json({ success: false, msg: action.err, status: action.status });
     }
 
@@ -199,7 +199,7 @@ const deleteBasketItem = async (req, res, next) => {
     const action = await userService.deleteBasketItem(req.user.id, req.body);
     if (action.err) {
       return res
-        .status(400)
+        .status(action.status)
         .json({ success: false, msg: action.err, status: action.status });
     }
 
@@ -216,7 +216,7 @@ const deleteAllBasketItems = async (req, res, next) => {
     const action = await userService.deleteAllBasketItems(req.user.id);
     if (action.err) {
       return res
-        .status(400)
+        .status(action.status)
         .json({ success: false, msg: action.err, status: action.status });
     }
 
@@ -234,7 +234,7 @@ const forgotPassword = async (req, res) => {
 
     if (action.err) {
       return res
-        .status(404)
+        .status(action.status)
         .json({ success: false, msg: action.err, status: action.status });
     }
 
@@ -252,7 +252,7 @@ const validateToken = async (req, res) => {
 
     if (action.err) {
       return res
-        .status(403)
+        .status(action.status)
         .json({ success: false, msg: action.err, status: action.status });
     }
 
@@ -269,7 +269,7 @@ const createNewPassword = async (req, res) => {
     const action = await userService.createNewPassword(req.body);
     if (action.err) {
       return res
-        .status(403)
+        .status(action.status)
         .json({ success: false, msg: action.err, status: action.status });
     }
 
