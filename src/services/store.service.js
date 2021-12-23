@@ -429,16 +429,10 @@ const getLoggedInStore = async (storeId) => {
 
 const updateStore = async (storeID, updateParam) => {
   const {
-    email,
     password,
-    address,
-    phone_number,
     images,
     openingTime,
     closingTime,
-    category,
-    labels,
-    tax,
     isActive,
     deliveryTime,
     prepTime,
@@ -449,23 +443,20 @@ const updateStore = async (storeID, updateParam) => {
   // Check for fields
   // if (address) storeUpdate.address = address;
   if (images) storeUpdate.images = images;
-  if (email) storeUpdate.email = email;
   if (deliveryTime) storeUpdate.deliveryTime = deliveryTime;
   if (prepTime) storeUpdate.prepTime = prepTime;
   if (isActive === true || isActive === false || isActive !== undefined) {
     storeUpdate.isActive = isActive;
   }
   if (openingTime) {
-    if (!storeUpdate.openingTime.includes(":")) {
-      delete storeUpdate.openingTime;
-      return { err: "Invalid time format." };
+    if (!openingTime.includes(":")) {
+      return { err: "Invalid time format.", status: 400 };
     }
     storeUpdate.openingTime = openingTime;
   }
   if (closingTime) {
-    if (!storeUpdate.closingTime.includes(":")) {
-      delete storeUpdate.closingTime;
-      return { err: "Invalid time format." };
+    if (!closingTime.includes(":")) {
+      return { err: "Invalid time format.", status: 400 };
     }
     storeUpdate.closingTime = closingTime;
   }
