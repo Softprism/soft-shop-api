@@ -24,6 +24,10 @@ const errorHandler = (err, req, res, next) => {
     return res.status(401).json({ success: false, msg: err.message });
   }
 
+  if (err.status) {
+    return res.status(err.status).json({ success: false, msg: err.err });
+  }
+
   // default to 500 server error
   return res.status(500).json({ success: false, msg: "server error" });
 };
