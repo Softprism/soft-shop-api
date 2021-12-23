@@ -1,7 +1,7 @@
 import express from "express";
 import { check, validationResult } from "express-validator";
 import auth from "../middleware/auth";
-import isStoreAdmin from "../middleware/verifyStorePermission";
+import { isStoreAdmin } from "../middleware/Permissions";
 import checkPagination from "../middleware/checkPagination";
 
 import {
