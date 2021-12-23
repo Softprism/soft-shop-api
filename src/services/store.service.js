@@ -413,7 +413,7 @@ const loginStore = async (StoreParam) => {
   try {
     const { email, password } = StoreParam;
 
-    let store = await Store.findOne({ email });
+    let store = await Store.findOne({ email }).select("password isVerified resetPassword");
 
     if (!store) {
       throw { err: "Invalid email." };
@@ -435,8 +435,8 @@ const loginStore = async (StoreParam) => {
     const token = jwt.sign(payload, process.env.JWT_SECRET, {
       expiresIn: 36000,
     });
-
-    return token;
+    store.password = undefined;
+    return { token, store };
   } catch (err) {
     console.log(err);
     return err;
