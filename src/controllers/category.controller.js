@@ -4,61 +4,62 @@ import * as categoryService from "../services/category.service";
 // FUNCTIONS
 // Get Categories
 const getCategories = async (req, res, next) => {
-  // Call getCategories function from category service
-  let categories = {};
-  if (req.query.nogeo === "true") {
-    categories = await categoryService.getCategoriesNogeo(req.query);
-  } else {
-    categories = await categoryService.getCategories(req.query);
-  }
+  try {
+    // Call getCategories function from category service
+    let categories = {};
+    if (req.query.nogeo === "true") {
+      categories = await categoryService.getCategoriesNogeo(req.query);
+    } else {
+      categories = await categoryService.getCategories(req.query);
+    }
 
-  if (categories.err) {
-    res.status(400).json({ success: false, msg: categories.err, status: categories.status });
+    return res.status(200).json({ success: true, result: categories, status: 200 });
+  } catch (error) {
+    next(error);
   }
-
-  return res.status(200).json({ success: true, result: categories });
 };
 
 // Create Category
 const createCategory = async (req, res, next) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
+  try {
+    const request = await categoryService.createCategory(req.body);
 
-  const request = await categoryService.createCategory(req.body);
-
-  if (request.err) {
-    res.status(500).json({ success: false, msg: request.err, status: request.status });
-  } else {
-    res.status(201).json({ success: true, result: request.msg });
+    if (request.err) {
+      res.status(request.status).json({ success: false, msg: request.err, status: request.status });
+    } else {
+      res.status(201).json({ success: true, result: request, status: 201 });
+    }
+  } catch (error) {
+    next(error);
   }
 };
 
 // Edit Category
 const editCategory = async (req, res, next) => {
-  const errors = validationResult(req);
+  try {
+    const request = await categoryService.editCategory(req.body, req.params.id);
 
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-
-  const request = await categoryService.editCategory(req.body, req.params.id);
-
-  if (request.err) {
-    res.status(500).json({ success: false, msg: request.err, status: request.status });
-  } else {
-    res.status(200).json({ success: true, result: request }); // request returns the modified category
+    if (request.err) {
+      res.status(request.status).json({ success: false, msg: request.err, status: request.status });
+    } else {
+      res.status(200).json({ success: true, result: request, status: 200 }); // request returns the modified category
+    }
+  } catch (error) {
+    next(error);
   }
 };
 
 const deleteCategory = async (req, res, next) => {
-  const request = await categoryService.deleteCategory(req.params.id);
+  try {
+    const request = await categoryService.deleteCategory(req.params.id);
 
-  if (request.err) {
-    res.status(404).json({ success: false, msg: request.err, status: request.status });
-  } else {
-    res.status(200).json({ success: true, result: request.msg });
+    if (request.err) {
+      res.status(equest.status).json({ success: false, msg: request.err, status: request.status });
+    } else {
+      res.status(200).json({ success: true, result: request, status: 200 });
+    }
+  } catch (error) {
+    next(error);
   }
 };
 
