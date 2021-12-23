@@ -4,6 +4,7 @@ const isStoreAdmin = (req, res, next) => {
     return res.status(403).json({
       success: false,
       msg: "You're not permitted to carry out this action",
+      status: 403
     });
   }
   next();
@@ -13,8 +14,10 @@ const isAdmin = (req, res, next) => {
     return res.status(403).json({
       success: false,
       msg: "You're not permitted to carry out this action",
+      status: 403
     });
   }
   next();
 };
+
 export { isStoreAdmin, isAdmin };
