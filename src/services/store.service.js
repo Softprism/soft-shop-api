@@ -396,11 +396,14 @@ const createStore = async (StoreParam) => {
 const loginStore = async (StoreParam) => {
   const { email, password } = StoreParam;
 
-
-    let store = await Store.findOne({ email }).select("password isVerified resetPassword");
+  let store = await Store.findOne({ email }).select("password isVerified resetPassword");
 
   if (!store) {
     return { err: "Invalid email.", status: 400 };
+  }
+
+  if (process.env.NODE_ENV === "production" && store.isVerified === false) {
+    return { err: "Please complete your verification.", status: 401 };
   }
   // Check if password matches with stored hash
   const isMatch = await bcrypt.compare(password, store.password);
@@ -420,8 +423,8 @@ const loginStore = async (StoreParam) => {
     expiresIn: "365 days",
   });
 
-    store.password = undefined;
-    return { token, store };
+  store.password = undefined;
+  return { token, store };
 };
 
 const getLoggedInStore = async (storeId) => {
@@ -537,16 +540,7 @@ const getStoreSalesStats = async (storeId, days) => {
 
 const bestSellers = async (storeId, pagingParam) => {
   const { limit, skip } = pagingParam;
-  // or pass an array
-  const pipeline1 = [
-    {
-      $filter: {
-        input: "$orders.orderItems",
-        as: "orderItem",
-        cond: { $eq: ["$$orderItem.product_name", "$product_name"] },
-      },
-    },
-  ];
+
   let bestSellingItems = Order.aggregate()
     .match({ store: mongoose.Types.ObjectId(storeId) })
     .lookup({
