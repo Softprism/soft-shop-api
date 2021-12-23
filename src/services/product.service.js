@@ -6,101 +6,95 @@ import Variant from "../models/variant.model";
 import CustomFee from "../models/customFees.model";
 
 const getProducts = async (getParam) => {
-  try {
-    // get limit and skip from url parameters
-    const limit = Number(getParam.limit);
-    const skip = Number(getParam.skip);
-    let matchParam = {};
-    if (getParam.product_name) {
-      matchParam.product_name = new RegExp(getParam.product_name, "i");
-    }
-    if (getParam.category) {
-      matchParam.category = mongoose.Types.ObjectId(getParam.category);
-    }
-    if (getParam.store) {
-      matchParam.store = mongoose.Types.ObjectId(getParam.store);
-    }
-    if (getParam.price) {
-      matchParam.price = getParam.price;
-    }
-    if (getParam.availability) {
-      getParam.availability = getParam.availability === "true";
-      matchParam.availability = getParam.availability;
-    }
-    if (getParam.rating) {
-      matchParam.rating = getParam.rating;
-    }
-    if (getParam.status) {
-      matchParam.status = getParam.status;
-    }
-    if (getParam.label) {
-      matchParam.label = mongoose.Types.ObjectId(getParam.label);
-    }
-
-    const pipeline = [
-      {
-        $unset: [
-          "store",
-          "category.image",
-          "productReview",
-          "variants.data",
-          "variant.items",
-          "customFee.items",
-        ],
-      },
-    ];
-
-    let allProducts = Product.aggregate()
-      .match(matchParam)
-      // Get data from review collection for each product
-      .lookup({
-        from: "reviews",
-        localField: "_id",
-        foreignField: "product",
-        as: "productReview",
-      })
-      // Populate store field
-      .lookup({
-        from: "stores",
-        localField: "store",
-        foreignField: "_id",
-        as: "store",
-      })
-      // populat category field
-      .lookup({
-        from: "categories",
-        localField: "category",
-        foreignField: "_id",
-        as: "category",
-      })
-      // add the averageRating field for each product
-      .addFields({
-        totalRates: { $sum: "$productReview.star" },
-        ratingAmount: { $size: "$productReview" },
-        averageRating: { $ceil: { $avg: "$productReview.star" } },
-      })
-      .addFields({
-        averageRating: { $ifNull: ["$averageRating", 0] },
-      })
-      // $lookup produces array, $unwind go destructure everything to object
-      .unwind("$store")
-      .unwind("$category")
-      // removing fields we don't need
-      .append(pipeline)
-      // Sorting and pagination
-      .sort("-createdDate")
-      .skip(skip)
-      .limit(limit);
-
-    return allProducts;
-  } catch (error) {
-    console.log(error);
-    return error;
+  // get limit and skip from url parameters
+  const limit = Number(getParam.limit);
+  const skip = Number(getParam.skip);
+  let matchParam = {};
+  if (getParam.product_name) {
+    matchParam.product_name = new RegExp(getParam.product_name, "i");
   }
+  if (getParam.category) {
+    matchParam.category = mongoose.Types.ObjectId(getParam.category);
+  }
+  if (getParam.store) {
+    matchParam.store = mongoose.Types.ObjectId(getParam.store);
+  }
+  if (getParam.price) {
+    matchParam.price = getParam.price;
+  }
+  if (getParam.availability) {
+    getParam.availability = getParam.availability === "true";
+    matchParam.availability = getParam.availability;
+  }
+  if (getParam.rating) {
+    matchParam.rating = getParam.rating;
+  }
+  if (getParam.status) {
+    matchParam.status = getParam.status;
+  }
+  if (getParam.label) {
+    matchParam.label = mongoose.Types.ObjectId(getParam.label);
+  }
+
+  const pipeline = [
+    {
+      $unset: [
+        "store",
+        "category.image",
+        "productReview",
+        "variants.data",
+        "variant.items",
+        "customFee.items",
+      ],
+    },
+  ];
+
+  let allProducts = Product.aggregate()
+    .match(matchParam)
+  // Get data from review collection for each product
+    .lookup({
+      from: "reviews",
+      localField: "_id",
+      foreignField: "product",
+      as: "productReview",
+    })
+  // Populate store field
+    .lookup({
+      from: "stores",
+      localField: "store",
+      foreignField: "_id",
+      as: "store",
+    })
+  // populat category field
+    .lookup({
+      from: "categories",
+      localField: "category",
+      foreignField: "_id",
+      as: "category",
+    })
+  // add the averageRating field for each product
+    .addFields({
+      totalRates: { $sum: "$productReview.star" },
+      ratingAmount: { $size: "$productReview" },
+      averageRating: { $ceil: { $avg: "$productReview.star" } },
+    })
+    .addFields({
+      averageRating: { $ifNull: ["$averageRating", 0] },
+    })
+  // $lookup produces array, $unwind go destructure everything to object
+    .unwind("$store")
+    .unwind("$category")
+  // removing fields we don't need
+    .append(pipeline)
+  // Sorting and pagination
+    .sort("-createdDate")
+    .skip(skip)
+    .limit(limit);
+
+  return allProducts;
 };
 
 const getProductDetails = async (productId) => {
-  console.log(1, productId);
   try {
     const pipeline = [
       {
@@ -149,92 +143,82 @@ const getProductDetails = async (productId) => {
 
     return productDetails;
   } catch (error) {
-    console.log(error);
     return error;
   }
 };
 
 const createProduct = async (productParam, storeId) => {
-  try {
-    // validate store, we have to make sure we're assigning a product to a store
-    const storeChecker = await Store.findById(storeId);
-    if (!storeChecker) {
-      return { err: "Store not found." };
-    }
-
-    // add store ID to productParam
-    productParam.store = storeId;
-    const {
-      product_name,
-      product_description,
-      product_image,
-      labels,
-      price,
-      category,
-      variantOpt,
-      variants,
-      store,
-    } = productParam;
-    // create new product
-    const newProduct = new Product({
-      product_name,
-      product_description,
-      product_image,
-      labels,
-      price,
-      category,
-      variantOpt,
-      variants,
-      store,
-    });
-    await newProduct.save(); // save new product
-
-    return newProduct;
-  } catch (error) {
-    console.log(error);
-    throw error;
+  // validate store, we have to make sure we're assigning a product to a store
+  const storeChecker = await Store.findById(storeId);
+  if (!storeChecker) {
+    return { err: "Store not found.", status: 404 };
   }
+
+  // add store ID to productParam
+  productParam.store = storeId;
+  const {
+    product_name,
+    product_description,
+    product_image,
+    labels,
+    price,
+    category,
+    variantOpt,
+    variants,
+    store,
+  } = productParam;
+    // create new product
+  const newProduct = new Product({
+    product_name,
+    product_description,
+    product_image,
+    labels,
+    price,
+    category,
+    variantOpt,
+    variants,
+    store,
+  });
+  await newProduct.save(); // save new product
+
+  return newProduct;
 };
 
 const updateProduct = async (productParam, productId, storeId) => {
-  try {
-    // check if product exists
-    const product = await Product.findById(productId);
-    if (!product) {
-      throw {
-        err: "Product not found.",
-      };
-    }
-
-    // apply changes to the product
-    let updateProduct = await Product.findByIdAndUpdate(
-      productId,
-      { $set: productParam },
-      { omitUndefined: true, new: true, useFindAndModify: false }
-    );
-
-    return updateProduct;
-  } catch (error) {
-    return error;
+  // check if product exists
+  const product = await Product.findOne({
+    _id: productId,
+    store: storeId
+  });
+  if (!product) {
+    return {
+      err: "Product not found.",
+      status: 404
+    };
   }
+
+  // apply changes to the product
+  let updateProduct = await Product.findByIdAndUpdate(
+    productId,
+    { $set: productParam },
+    { omitUndefined: true, new: true, useFindAndModify: false }
+  );
+
+  return updateProduct;
 };
 
 const deleteProduct = async (productId, storeId) => {
   try {
     // validate store, we have to make sure the product belongs to a store
-    const store = await Store.findById(storeId);
-
-    if (!store) {
-      throw {
-        err: "Store not found.",
-      };
-    }
-    // check if product exists
-    const product = await Product.findById(productId);
+    const product = await Product.findOne({
+      _id: productId,
+      store: storeId
+    });
 
     if (!product) {
-      throw {
+      return {
         err: "Product not found.",
+        status: 404
       };
     }
 
@@ -251,7 +235,7 @@ const reviewProduct = async (review) => {
   try {
     const product = await Product.findById(review.product);
 
-    if (!product) throw { err: "Product not found." };
+    if (!product) throw { err: "Product not found.", status: 404 };
 
     const newReview = new Review(review);
     await newReview.save();
@@ -264,55 +248,43 @@ const reviewProduct = async (review) => {
 
 const createVariant = async (storeId, variantParam) => {
   // create new variant label without items
-  try {
-    let store = await Store.findById(storeId);
+  let store = await Store.findById(storeId);
 
-    if (!store) return { err: "Store not found." }; // this ain't working
+  if (!store) return { err: "Store not found.", status: 404 }; // this ain't working
 
-    const { variantTitle, multiSelect } = variantParam;
+  const { variantTitle, multiSelect } = variantParam;
 
-    let newVariant = new Variant({ variantTitle, multiSelect });
-    await newVariant.save();
+  let newVariant = new Variant({ variantTitle, multiSelect });
+  await newVariant.save();
 
-    return newVariant;
-  } catch (error) {
-    throw error;
-  }
+  return newVariant;
 };
 
 const updateVariant = async (variantId, updateParam) => {
-  try {
-    let variant = await Variant.findById(variantId);
-    if (!variant) throw { err: "Variant not found." };
-    // find a way to validate if variant exists
+  let variant = await Variant.findById(variantId);
+  if (!variant) return { err: "Variant not found.", status: 404 };
+  // find a way to validate if variant exists
 
-    let updateVariant = await Variant.findByIdAndUpdate(
-      variantId,
-      { $set: updateParam },
-      { omitUndefined: true, new: true, useFindAndModify: false }
-    );
+  let updateVariant = await Variant.findByIdAndUpdate(
+    variantId,
+    { $set: updateParam },
+    { omitUndefined: true, new: true, useFindAndModify: false }
+  );
 
-    return updateVariant;
-  } catch (error) {
-    return error;
-  }
+  return updateVariant;
 };
 
 const addVariantItem = async (variantId, variantParam) => {
   // add items to a variant label
-  try {
-    // find variant
-    let variant = await Variant.findById(variantId);
-    if (!variant) throw { err: "Variant not found." };
+  // find variant
+  let variant = await Variant.findById(variantId);
+  if (!variant) return { err: "Variant not found.", status: 404 };
 
-    // push new variant item and save
-    variant.variantItems.push(variantParam);
-    variant.save();
+  // push new variant item and save
+  variant.variantItems.push(variantParam);
+  variant.save();
 
-    return variant;
-  } catch (error) {
-    return error;
-  }
+  return variant;
 };
 
 const getStoreVariants = async (storeId) => {
@@ -322,7 +294,7 @@ const getStoreVariants = async (storeId) => {
       store: storeId,
       active: true,
     }).select("variantTitle");
-    if (!storeVariants) return { err: "Variants not found." };
+    if (!storeVariants) return { err: "Variants not found.", status: 404 };
     let size = storeVariants.length;
 
     return { storeVariants, size };
@@ -346,7 +318,7 @@ const getVariantItem = async (variantId, pagingParam) => {
       .skip(skip)
       .limit(limit);
 
-    if (!variant) return { err: "Variant not found." };
+    if (!variant) return { err: "Variant not found.", status: 404 };
 
     return variant;
   } catch (error) {

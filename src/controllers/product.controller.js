@@ -1,21 +1,15 @@
-import { check, validationResult } from "express-validator";
 import * as productService from "../services/product.service";
 
 const getProducts = async (req, res, next) => {
-  console.log(1234);
   if (req.query.skip === undefined || req.query.limit === undefined) {
     res
       .status(400)
-      .json({ success: false, msg: "filtering parameters are missing" });
+      .json({ success: false, msg: "filtering parameters are missing", status: 400 });
   }
 
   const allProducts = await productService.getProducts(req.query);
 
-  if (allProducts.err) {
-    res.status(400).json({ success: false, msg: allProducts.err, status: allProducts.status });
-  }
-
-  return res.status(200).json({ success: true, result: allProducts });
+  return res.status(200).json({ success: true, result: allProducts, status: 200 });
 };
 
 const createProduct = async (req, res, next) => {
@@ -25,37 +19,17 @@ const createProduct = async (req, res, next) => {
     if (req.store) storeID = req.store.id;
     if (req.query.storeID && req.admin) storeID = req.query.storeID;
 
-    const errors = validationResult(req);
-
-    if (!errors.isEmpty()) {
-      let error_msgs = [];
-      errors.array().forEach((element) => {
-        error_msgs = [...error_msgs, element.msg];
-      });
-
-      return res.status(400).json({ success: false, msg: error_msgs });
-    }
-
     const product = await productService.createProduct(req.body, storeID);
 
-    if (product.err) return res.status(409).json({ success: false, msg: product.err, status: product.status });
+    if (product.err) return res.status(product.status).json({ success: false, msg: product.err, status: product.status });
 
-    return res.status(201).json({ success: true, result: product });
+    return res.status(201).json({ success: true, result: product, status: 201 });
   } catch (error) {
     next(error);
   }
 };
 
 const updateProduct = async (req, res, next) => {
-  const errors = validationResult(req);
-
-  if (!errors.isEmpty()) {
-    res.status(400).json({
-      success: false,
-      errors: errors.array().msg,
-    });
-  }
-
   let storeID; // container to store the store's ID, be it a store request or an admin request
   if (req.store) storeID = req.store.id;
   if (req.query.storeID && req.admin) storeID = req.query.storeID;
@@ -65,9 +39,9 @@ const updateProduct = async (req, res, next) => {
     req.params.id,
     storeID
   );
-  if (request.err) return res.status(400).json({ success: false, msg: request.err, status: request.status });
+  if (request.err) return res.status(request.status).json({ success: false, msg: request.err, status: request.status });
 
-  return res.status(200).json({ success: true, result: request });
+  return res.status(200).json({ success: true, result: request, status: 200 });
 };
 
 const deleteProduct = async (req, res, next) => {
@@ -78,7 +52,7 @@ const deleteProduct = async (req, res, next) => {
 
   const product = await productService.deleteProduct(req.params.id, storeID);
 
-  if (product.err) return res.status(404).json({ success: false, msg: product.err, status: product.status });
+  if (product.err) return res.status(product.status).json({ success: false, msg: product.err, status: product.status });
 
   return res.status(200).json({ success: true, result: product.msg });
 };
@@ -92,10 +66,10 @@ const reviewProduct = async (req, res, next) => {
   const newReview = await productService.reviewProduct(req.body);
 
   if (newReview.err) {
-    return res.status(400).json({ success: false, msg: newReview.err, status: newReview.status });
+    return res.status(newReview.status).json({ success: false, msg: newReview.err, status: newReview.status });
   }
 
-  res.status(200).json({ success: true, result: newReview });
+  res.status(200).json({ success: true, result: newReview, status: 200 });
 };
 
 const getProductDetails = async (req, res, next) => {
@@ -104,7 +78,7 @@ const getProductDetails = async (req, res, next) => {
   );
 
   if (productDetails.err) {
-    return res.status(400).json({ success: false, msg: productDetails.err, status: productDetails.status });
+    return res.status(productDetails.status).json({ success: false, msg: productDetails.err, status: productDetails.status });
   }
 
   res.status(200).json({ success: true, result: productDetails });
@@ -118,9 +92,9 @@ const createVariant = async (req, res, next) => {
 
     const createVariant = await productService.createVariant(storeID, req.body);
     if (createVariant.err) {
-      res.status(500).json({ success: false, msg: createVariant.err, status: createVariant.status });
+      res.status(createVariant.status).json({ success: false, msg: createVariant.err, status: createVariant.status });
     } else {
-      res.status(200).json({ success: true, result: createVariant });
+      res.status(200).json({ success: true, result: createVariant, status: 200 });
     }
   } catch (error) {
     next(error);
@@ -128,36 +102,44 @@ const createVariant = async (req, res, next) => {
 };
 
 const updateVariant = async (req, res, next) => {
-  let storeID;
-  if (req.store) storeID = req.store.id;
-  if (req.query.storeID && req.admin) storeID = req.query.storeID;
+  try {
+    let storeID;
+    if (req.store) storeID = req.store.id;
+    if (req.query.storeID && req.admin) storeID = req.query.storeID;
 
-  const updateVariant = await productService.updateVariant(
-    req.params.variantId,
-    req.body
-  );
+    const updateVariant = await productService.updateVariant(
+      req.params.variantId,
+      req.body
+    );
 
-  if (updateVariant.err) {
-    res.status(500).json({ success: false, msg: updateVariant.err, status: updateVariant.status });
-  } else {
-    res.status(200).json({ success: true, result: updateVariant });
+    if (updateVariant.err) {
+      res.status(updateVariant.status).json({ success: false, msg: updateVariant.err, status: updateVariant.status });
+    } else {
+      res.status(200).json({ success: true, result: updateVariant, status: 200 });
+    }
+  } catch (error) {
+    next(error);
   }
 };
 
 const addVariantItem = async (req, res, next) => {
-  let storeID;
-  if (req.store) storeID = req.store.id;
-  if (req.query.storeID && req.admin) storeID = req.query.storeID;
+  try {
+    let storeID;
+    if (req.store) storeID = req.store.id;
+    if (req.query.storeID && req.admin) storeID = req.query.storeID;
 
-  const addVariantItem = await productService.addVariantItem(
-    req.params.variantId,
-    req.body
-  );
+    const addVariantItem = await productService.addVariantItem(
+      req.params.variantId,
+      req.body
+    );
 
-  if (addVariantItem.err) {
-    res.status(500).json({ success: false, msg: addVariantItem.err, status: addVariantItem.status });
-  } else {
-    res.status(200).json({ success: true, result: addVariantItem });
+    if (addVariantItem.err) {
+      res.status(addVariantItem.status).json({ success: false, msg: addVariantItem.err, status: addVariantItem.status });
+    } else {
+      res.status(200).json({ success: true, result: addVariantItem, status: 200 });
+    }
+  } catch (error) {
+    next(error);
   }
 };
 
@@ -170,9 +152,9 @@ const getStoreVariants = async (req, res, next) => {
     const storeVariants = await productService.getStoreVariants(storeID);
 
     if (storeVariants.err) {
-      res.status(500).json({ success: false, msg: storeVariants.err, status: storeVariants.status });
+      res.status(storeVariants.status).json({ success: false, msg: storeVariants.err, status: storeVariants.status });
     } else {
-      res.status(200).json({ success: true, result: storeVariants });
+      res.status(200).json({ success: true, result: storeVariants, status: 200 });
     }
   } catch (error) {
     next(error);
@@ -190,26 +172,29 @@ const getVariantItem = async (req, res, next) => {
     );
 
     if (getVariantItem.err) {
-      res.status(500).json({ success: false, msg: getVariantItem.err, status: getVariantItem.status });
+      res.status(getVariantItem.status).json({ success: false, msg: getVariantItem.err, status: getVariantItem.status });
     } else {
-      res.status(200).json({ success: true, result: getVariantItem });
+      res.status(200).json({ success: true, result: getVariantItem, status: 200 });
     }
   } catch (error) {
-    console.log(error);
     next(error);
   }
 };
 
 const addCustomFee = async (req, res, next) => {
-  let storeID;
-  if (req.store) storeID = req.store.id;
-  if (req.query.storeID && req.admin) storeID = req.query.storeID;
+  try {
+    let storeID;
+    if (req.store) storeID = req.store.id;
+    if (req.query.storeID && req.admin) storeID = req.query.storeID;
 
-  const addCustomFee = await productService.addCustomFee(storeID, req.body);
-  if (addCustomFee.err) {
-    res.status(500).json({ success: false, msg: addCustomFee.err, status: addCustomFee.status });
-  } else {
-    res.status(200).json({ success: true, result: addCustomFee });
+    const addCustomFee = await productService.addCustomFee(storeID, req.body);
+    if (addCustomFee.err) {
+      res.status(addCustomFee.status).json({ success: false, msg: addCustomFee.err, status: addCustomFee.status });
+    } else {
+      res.status(200).json({ success: true, result: addCustomFee });
+    }
+  } catch (error) {
+    next(error);
   }
 };
 
@@ -222,7 +207,7 @@ const deleteCustomFee = async (req, res, next) => {
     req.params.customFeeId
   );
   if (deleteCustomFee.err) {
-    res.status(500).json({ success: false, msg: deleteCustomFee.err, status: deleteCustomFee.status });
+    res.status(deleteCustomFee.status).json({ success: false, msg: deleteCustomFee.err, status: deleteCustomFee.status });
   } else {
     res.status(200).json({ success: true, result: deleteCustomFee });
   }
