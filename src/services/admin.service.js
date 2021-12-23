@@ -144,7 +144,6 @@ const updateAdmin = async (updateParam, id) => {
   }
 };
 const resetStorePassword = async (storeEmail) => {
-  console.log(storeEmail);
   const salt = await bcrypt.genSalt(10);
   const password = await bcrypt.hash("mysoftshopstore", salt);
   let store = await Store
