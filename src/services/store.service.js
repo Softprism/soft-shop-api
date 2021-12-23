@@ -396,7 +396,8 @@ const createStore = async (StoreParam) => {
 const loginStore = async (StoreParam) => {
   const { email, password } = StoreParam;
 
-  let store = await Store.findOne({ email });
+
+    let store = await Store.findOne({ email }).select("password isVerified resetPassword");
 
   if (!store) {
     return { err: "Invalid email.", status: 400 };
@@ -419,7 +420,8 @@ const loginStore = async (StoreParam) => {
     expiresIn: "365 days",
   });
 
-  return token;
+    store.password = undefined;
+    return { token, store };
 };
 
 const getLoggedInStore = async (storeId) => {

@@ -24,6 +24,7 @@ const StoreSchema = mongoose.Schema({
   ],
   isVerified: { type: Boolean, default: false }, // this validates a store on the platform
   isActive: { type: Boolean, default: true }, // this shows if a store is available to receive orders
+  resetPassword: { type: Boolean, default: false },
   createdDate: { type: Date, default: Date.now },
   tax: { type: String },
 });

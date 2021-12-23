@@ -1,12 +1,13 @@
 import express from "express";
 import { check } from "express-validator";
-
+import { isAdmin } from "../middleware/Permissions";
 import {
   getAdmins,
   registerAdmin,
   loginAdmin,
   getLoggedInAdmin,
   updateAdmin,
+  resetStorePassword
 } from "../controllers/admin.controller";
 
 import auth from "../middleware/auth";
@@ -16,7 +17,7 @@ const router = express.Router();
 // @route   GET /admins/all
 // @desc    Get all Admin Users
 // @access  Public
-router.get("/all", auth, getAdmins);
+router.get("/all", auth, isAdmin, getAdmins);
 
 // @route   POST admin/register
 // @desc    Register an Admin account
@@ -51,11 +52,13 @@ router.post(
 // @route   GET admins/login
 // @desc    Get logged in user
 // @access  Private
-router.get("/", auth, getLoggedInAdmin);
+router.get("/", auth, isAdmin, getLoggedInAdmin);
 
 // @route   PUT admins/:id
 // @desc    Update User Details
 // @access  Private
-router.put("/", auth, updateAdmin);
+router.put("/", auth, isAdmin, updateAdmin);
+
+router.patch("/password-reset/store/:email", isAdmin, resetStorePassword);
 
 export default router;

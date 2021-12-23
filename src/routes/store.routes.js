@@ -20,7 +20,7 @@ import {
 
 import auth from "../middleware/auth";
 import checkPagination from "../middleware/checkPagination";
-import isStoreAdmin from "../middleware/verifyStorePermission";
+import { isStoreAdmin } from "../middleware/Permissions";
 
 const router = express.Router();
 

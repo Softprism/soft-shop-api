@@ -2,6 +2,8 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 
 import Admin from "../models/admin.model";
+import Store from "../models/store.model";
+import sendEmail from "../utils/sendMail";
 
 const getAdmins = async () => {
   const admins = await Admin.find();
@@ -120,7 +122,26 @@ const updateAdmin = async (updateParam, id) => {
     return err;
   }
 };
+const resetStorePassword = async (storeEmail) => {
+  const salt = await bcrypt.genSalt(10);
+  const password = await bcrypt.hash("mysoftshopstore", salt);
+  let store = await Store
+    .findOneAndUpdate(
+      { email: storeEmail },
+      { $set: { resetPassword: true, password } },
+      { omitUndefined: true, new: true, useFindAndModify: false }
+
+    );
+
+  if (!store) return { error: "Store not found", status: 404 };
+  sendEmail(
+    storeEmail,
+    "Reset Password Successful",
+    "Your reset password request has been approved, please sign in to your account with <b> mysoftshopstore </b> as your password. Reset your password afterwards"
+  );
+  return "Password has been reset for store";
+};
 
 export {
-  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin
+  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin, resetStorePassword
 };

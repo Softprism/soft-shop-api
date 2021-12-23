@@ -8,5 +8,13 @@ const isStoreAdmin = (req, res, next) => {
   }
   next();
 };
-
-export default isStoreAdmin;
+const isAdmin = (req, res, next) => {
+  if (req.admin === undefined) {
+    return res.status(403).json({
+      success: false,
+      msg: "You're not permitted to carry out this action",
+    });
+  }
+  next();
+};
+export { isStoreAdmin, isAdmin };
