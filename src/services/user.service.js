@@ -9,6 +9,7 @@ import Basket from "../models/user-cart.model";
 
 import sendEmail from "../utils/sendMail";
 import getOTP from "../utils/sendOTP";
+import { isUserVerified } from "../utils/checkers";
 
 // Get all Users
 const getUsers = async (urlParams) => {
@@ -120,6 +121,10 @@ const loginUser = async (loginParam) => {
       err: "The email entered is not registered, please try again.",
       status: 401,
     };
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    await isUserVerified(user._id);
   }
 
   // Check if password matches with stored hash
