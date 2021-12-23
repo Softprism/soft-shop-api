@@ -29,7 +29,7 @@ const createStore = async (req, res, next) => {
     const store = await storeService.createStore(req.body);
 
     if (store.err) {
-      res.status(409).json({ success: false, msg: store.err, status: store.status });
+      res.status(store.status).json({ success: false, msg: store.err, status: store.status });
     } else {
       res.status(201).json({ success: true, result: store, status: 201 });
     }
@@ -43,7 +43,7 @@ const loginStore = async (req, res, next) => {
     const store = await storeService.loginStore(req.body);
 
     if (store.err) {
-      return res.status(403).json({ success: false, msg: store.err, status: store.status });
+      return res.status(store.status).json({ success: false, msg: store.err, status: store.status });
     }
     res.status(200).json({ success: true, result: store, status: 200 });
   } catch (error) {
@@ -75,7 +75,7 @@ const updateStore = async (req, res, next) => {
     const store = await storeService.updateStore(storeID, req.body);
 
     if (store.err) {
-      res.status(500).json({ success: false, msg: store.err, status: store.status });
+      res.status(store.status).json({ success: false, msg: store.err, status: store.status });
     } else {
       res.status(200).json({ success: true, result: store, status: 200 });
     }
@@ -91,7 +91,7 @@ const addLabel = async (req, res, next) => {
 
   const store = await storeService.addLabel(storeID, req.body);
   if (store.err) {
-    res.status(500).json({ success: false, msg: store.err, status: store.status });
+    res.status(store.status).json({ success: false, msg: store.err, status: store.status });
   } else {
     res.status(200).json({ success: true, result: store });
   }
@@ -105,7 +105,7 @@ const getLabels = async (req, res, next) => {
 
     const store = await storeService.getLabels(storeID);
     if (store.err) {
-      res.status(500).json({ success: false, msg: store.err, status: store.status });
+      res.status(store.status).json({ success: false, msg: store.err, status: store.status });
     } else {
       res.status(200).json({ success: true, result: store, status: 200 });
     }
@@ -131,7 +131,7 @@ const getStoreSalesStats = async (req, res, next) => {
       req.query.days
     );
 
-    if (salesStats.err) { return res.status(403).json({ success: false, msg: salesStats.err, status: salesStats.status }); }
+    if (salesStats.err) { return res.status(salesStats.status).json({ success: false, msg: salesStats.err, status: salesStats.status }); }
 
     return res.status(200).json({ success: true, result: salesStats, status: 200 });
   } catch (error) {
