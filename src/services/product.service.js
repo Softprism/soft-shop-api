@@ -95,56 +95,52 @@ const getProducts = async (getParam) => {
 };
 
 const getProductDetails = async (productId) => {
-  try {
-    const pipeline = [
-      {
-        $unset: [
-          "store.password",
-          "store.email",
-          "store.labels",
-          "store.phone_number",
-          "category.image",
-          "productReview",
-          "store.address",
-          "variants.data",
-        ],
-      },
-    ];
+  const pipeline = [
+    {
+      $unset: [
+        "store.password",
+        "store.email",
+        "store.labels",
+        "store.phone_number",
+        "category.image",
+        "productReview",
+        "store.address",
+        "variants.data",
+      ],
+    },
+  ];
 
-    let productDetails = Product.aggregate()
-      .match({
-        _id: mongoose.Types.ObjectId(productId),
-      })
-      // // Populate store field
-      .lookup({
-        from: "stores",
-        localField: "store",
-        foreignField: "_id",
-        as: "store",
-      })
-      // populat category field
-      .lookup({
-        from: "categories",
-        localField: "category",
-        foreignField: "_id",
-        as: "category",
-      })
-      .lookup({
-        from: "variants",
-        localField: "variant",
-        foreignField: "_id",
-        as: "variant",
-      })
-      // // $lookup produces array, $unwind go destructure everything to object
-      .unwind("$store")
-      .unwind("$category")
-      // removing fields we don't need
-      .append(pipeline);
+  let productDetails = Product.aggregate()
+    .match({
+      _id: mongoose.Types.ObjectId(productId),
+    })
+  // // Populate store field
+    .lookup({
+      from: "stores",
+      localField: "store",
+      foreignField: "_id",
+      as: "store",
+    })
+  // populat category field
+    .lookup({
+      from: "categories",
+      localField: "category",
+      foreignField: "_id",
+      as: "category",
+    })
+    .lookup({
+      from: "variants",
+      localField: "variant",
+      foreignField: "_id",
+      as: "variant",
+    })
+  // // $lookup produces array, $unwind go destructure everything to object
+    .unwind("$store")
+    .unwind("$category")
+  // removing fields we don't need
+    .append(pipeline);
 
-    return productDetails;
-  } catch (error) {
-    return error;
-  }
+  return productDetails;
 };
 
 const createProduct = async (productParam, storeId) => {
@@ -208,42 +204,34 @@ const updateProduct = async (productParam, productId, storeId) => {
 };
 
 const deleteProduct = async (productId, storeId) => {
-  try {
-    // validate store, we have to make sure the product belongs to a store
-    const product = await Product.findOne({
-      _id: productId,
-      store: storeId
-    });
+  // validate store, we have to make sure the product belongs to a store
+  const product = await Product.findOne({
+    _id: productId,
+    store: storeId
+  });
 
-    if (!product) {
-      return {
-        err: "Product not found.",
-        status: 404
-      };
-    }
-
-    // delete the product
-    await Product.deleteOne({ _id: productId });
-
-    return { msg: "Successfully Deleted Product." };
-  } catch (error) {
-    return error;
+  if (!product) {
+    return {
+      err: "Product not found.",
+      status: 404
+    };
   }
+
+  // delete the product
+  await Product.deleteOne({ _id: productId });
+
+  return { msg: "Successfully Deleted Product." };
 };
 
 const reviewProduct = async (review) => {
-  try {
-    const product = await Product.findById(review.product);
+  const product = await Product.findById(review.product);
 
-    if (!product) throw { err: "Product not found.", status: 404 };
+  if (!product) throw { err: "Product not found.", status: 404 };
 
-    const newReview = new Review(review);
-    await newReview.save();
+  const newReview = new Review(review);
+  await newReview.save();
 
-    return newReview;
-  } catch (error) {
-    return error;
-  }
+  return newReview;
 };
 
 const createVariant = async (storeId, variantParam) => {
@@ -288,76 +276,60 @@ const addVariantItem = async (variantId, variantParam) => {
 };
 
 const getStoreVariants = async (storeId) => {
-  try {
-    // find store variants
-    let storeVariants = await Variant.find({
-      store: storeId,
-      active: true,
-    }).select("variantTitle");
-    if (!storeVariants) return { err: "Variants not found.", status: 404 };
-    let size = storeVariants.length;
+  // find store variants
+  let storeVariants = await Variant.find({
+    store: storeId,
+    active: true,
+  }).select("variantTitle");
+  if (!storeVariants) return { err: "Variants not found.", status: 404 };
+  let size = storeVariants.length;
 
-    return { storeVariants, size };
-  } catch (error) {
-    throw error;
-  }
+  return { storeVariants, size };
 };
 
 const getVariantItem = async (variantId, pagingParam) => {
   // add items to a variant label
-  try {
-    const { limit, skip } = pagingParam;
-    // find variant
-    let variant = await Variant.aggregate()
-      .match({
-        _id: mongoose.Types.ObjectId(variantId),
-      })
-      .unwind("$variantItems")
-      .replaceRoot("$variantItems")
-      .sort("itemPrice")
-      .skip(skip)
-      .limit(limit);
+  const { limit, skip } = pagingParam;
+  // find variant
+  let variant = await Variant.aggregate()
+    .match({
+      _id: mongoose.Types.ObjectId(variantId),
+    })
+    .unwind("$variantItems")
+    .replaceRoot("$variantItems")
+    .sort("itemPrice")
+    .skip(skip)
+    .limit(limit);
 
-    if (!variant) return { err: "Variant not found.", status: 404 };
+  if (!variant) return { err: "Variant not found.", status: 404 };
 
-    return variant;
-  } catch (error) {
-    throw error;
-  }
+  return variant;
 };
 
 const addCustomFee = async (storeId, customrFeeParam) => {
-  try {
-    let store = await Store.findById(storeId);
-    let product = await Product.findById(customrFeeParam.product);
+  let store = await Store.findById(storeId);
+  let product = await Product.findById(customrFeeParam.product);
 
-    if (!store) throw { err: "Store not found." };
-    if (!product) throw { err: "Product not found." };
+  if (!store) throw { err: "Store not found." };
+  if (!product) throw { err: "Product not found." };
 
-    let newCustomFee = new CustomFee(customrFeeParam);
-    await newCustomFee.save();
+  let newCustomFee = new CustomFee(customrFeeParam);
+  await newCustomFee.save();
 
-    if (newCustomFee.save()) {
-      product.customFee.availability = true;
-      product.customFee.items.push(newCustomFee._id);
-      await product.save();
-    }
-
-    return await CustomFee.find({ product: newCustomFee.product });
-  } catch (error) {
-    return error;
+  if (newCustomFee.save()) {
+    product.customFee.availability = true;
+    product.customFee.items.push(newCustomFee._id);
+    await product.save();
   }
+
+  newCustomFee = await CustomFee.find({ product: newCustomFee.product });
+  return newCustomFee;
 };
 
 const deleteCustomFee = async (customFeeId) => {
-  try {
-    let customFee = await CustomFee.findByIdAndDelete(customFeeId);
-    console.log(customFee);
-    if (!customFee) throw { err: "Custom fee not found." };
-    return "fee removed from product";
-  } catch (error) {
-    return error;
-  }
+  let customFee = await CustomFee.findByIdAndDelete(customFeeId);
+  if (!customFee) throw { err: "Custom fee not found." };
+  return "fee removed from product";
 };
 
 export {
