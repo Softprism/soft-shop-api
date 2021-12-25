@@ -6,7 +6,6 @@ const userSchema = mongoose.Schema({
     type: String,
     required: true,
     trim: true,
-    lowercase: true,
     minLength: [3, "first name field should be atleast more than 3 characters"],
     validate: [
       validator({
@@ -19,7 +18,6 @@ const userSchema = mongoose.Schema({
     type: String,
     required: true,
     trim: true,
-    owercase: true,
     minLength: [3, "last name field should be atleast more than 3 characters"],
     validate: [
       validator({
@@ -49,6 +47,7 @@ const userSchema = mongoose.Schema({
     type: String,
     unique: true,
     required: true,
+    lowercase: true,
     trim: true,
     validate: [
       validator({
