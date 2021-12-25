@@ -1,5 +1,4 @@
 import express from "express";
-import userLogin from "../middleware/validationMiddleware";
 
 import {
   getUsers,
@@ -21,7 +20,7 @@ import {
 
 import auth from "../middleware/auth";
 import checkPagination from "../middleware/checkPagination";
-import { verifyEmailAddressChecker } from "../utils/checkers";
+import { isUserVerified, userLogin, verifyEmailAddressChecker } from "../middleware/validationMiddleware";
 
 const router = express.Router();
 
@@ -44,7 +43,7 @@ router.post("/", registerUser);
 // @desc    Login a User & get token
 // @access  Public
 
-router.post("/login", userLogin, loginUser);
+router.post("/login", userLogin, isUserVerified, loginUser);
 
 // @route   GET /user/login
 // @desc    Get logged in user
