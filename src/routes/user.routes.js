@@ -21,6 +21,7 @@ import {
 
 import auth from "../middleware/auth";
 import checkPagination from "../middleware/checkPagination";
+import { verifyEmailAddressChecker } from "../utils/checkers";
 
 const router = express.Router();
 
@@ -32,7 +33,7 @@ router.get("/", checkPagination, getUsers);
 // @route   POST /verify
 // @desc    send OTP to verify new user signup email
 // @access  Public
-router.post("/verify", verifyEmailAddress);
+router.post("/verify", verifyEmailAddressChecker, verifyEmailAddress);
 
 // @route   POST /users/register
 // @desc    Register a User
