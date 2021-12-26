@@ -46,6 +46,36 @@ const verifyEmailAddress = async ({ email }) => {
   return "OTP sent!";
 };
 
+const userProfile = async (userId) => {
+  const pipeline = [
+    { $unset: ["userReviews", "userOrders", "cart", "password", "orders"] },
+  ];
+
+  const userDetails = await User.aggregate()
+    .match({
+      _id: mongoose.Types.ObjectId(userId),
+    })
+    .lookup({
+      from: "reviews",
+      localField: "_id",
+      foreignField: "user",
+      as: "userReviews",
+    })
+    .lookup({
+      from: "orders",
+      localField: "_id",
+      foreignField: "user",
+      as: "userOrders",
+    })
+    .addFields({
+      totalReviews: { $size: "$userReviews" },
+      totalOrders: { $size: "$userOrders" },
+    })
+    .append(pipeline);
+
+  return userDetails;
+};
+
 // Register User
 const registerUser = async (userParam) => {
   const {
@@ -96,11 +126,8 @@ const registerUser = async (userParam) => {
     expiresIn: "36000 days",
   });
 
-  // unset user pass****d
-  user.password = undefined;
-
-  // set user token
-  // user.set("token", token, { strict: false });
+  // get user details
+  user = await userProfile(user.id);
 
   return { user, token };
 };
@@ -151,62 +178,15 @@ const loginUser = async (loginParam) => {
     };
   }
 
-  const pipeline = [
-    { $unset: ["userReviews", "userOrders", "cart", "password", "orders"] },
-  ];
-
-  const userDetails = await User.aggregate()
-    .match({
-      _id: mongoose.Types.ObjectId(user._id),
-    })
-    .lookup({
-      from: "reviews",
-      localField: "_id",
-      foreignField: "user",
-      as: "userReviews",
-    })
-    .lookup({
-      from: "orders",
-      localField: "_id",
-      foreignField: "user",
-      as: "userOrders",
-    })
-    .addFields({
-      totalReviews: { $size: "$userReviews" },
-      totalOrders: { $size: "$userOrders" },
-    })
-    .append(pipeline);
+  // get user details
+  const userDetails = await userProfile(user.id);
 
   return { userDetails, token };
 };
 
 // Get Logged in User info
-const getLoggedInUser = async (userParam) => {
-  const pipeline = [
-    { $unset: ["userReviews", "userOrders", "cart", "password", "orders"] },
-  ];
-  const user = User.aggregate()
-    .match({
-      _id: mongoose.Types.ObjectId(userParam),
-    })
-    .lookup({
-      from: "reviews",
-      localField: "_id",
-      foreignField: "user",
-      as: "userReviews",
-    })
-    .lookup({
-      from: "orders",
-      localField: "_id",
-      foreignField: "user",
-      as: "userOrders",
-    })
-    .addFields({
-      totalReviews: { $size: "$userReviews" },
-      totalOrders: { $size: "$userOrders" },
-    })
-    .append(pipeline);
-
+const getLoggedInUser = async (userId) => {
+  const user = await userProfile(userId);
   return user;
 };
 
@@ -232,32 +212,26 @@ const updateUser = async (updateParam, id) => {
     userFields.password = await bcrypt.hash(password, salt);
   }
 
-  try {
-    // Find user from DB Collection
-    let user = await User.findById(id);
+  // Find user from DB Collection
+  let user = await User.findById(id);
 
-    if (!user) {
-      return {
-        err: "User does not exists.",
-        status: 404,
-      };
-    }
-
-    // Updates the user Object with the changed values
-    user = await User.findByIdAndUpdate(
-      id,
-      { $set: userFields },
-      { omitUndefined: true, new: true, useFindAndModify: false }
-    );
-
-    user.cart = undefined;
-    user.password = undefined;
-    user.orders = undefined;
-
-    return user;
-  } catch (err) {
-    throw err;
+  if (!user) {
+    return {
+      err: "User does not exists.",
+      status: 404,
+    };
   }
+
+  // Updates the user Object with the changed values
+  user = await User.findByIdAndUpdate(
+    id,
+    { $set: userFields },
+    { omitUndefined: true, new: true, useFindAndModify: false }
+  );
+
+  user = await userProfile(id);
+
+  return user;
 };
 // const createUserBasket = async (userId, basketMeta) => { DEPRECATED
 //   // baskets should be initialized for users
