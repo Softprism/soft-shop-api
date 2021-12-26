@@ -111,7 +111,6 @@ const verifyUserSignupParam = async (req, res, next) => {
       });
     }
   } catch (error) {
-    console.log(error);
     error.message = "Some fields are missing, please try again.";
     next(error);
   }
