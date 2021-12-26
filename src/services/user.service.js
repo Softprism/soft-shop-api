@@ -51,8 +51,9 @@ const registerUser = async (userParam) => {
   const {
     first_name, last_name, email, phone_number, password
   } = userParam;
-  let user = await User.findOne({ email });
 
+  // check if user exists
+  let user = await User.findOne({ email });
   if (user) {
     return { err: "User with this email already exists.", status: 409 };
   }
@@ -66,23 +67,19 @@ const registerUser = async (userParam) => {
     password,
   });
 
-  const salt = await bcrypt.genSalt(10);
-
-  // Replace password from user object with encrypted one
-  user.password = await bcrypt.hash(password, salt);
-
   // verify user's signup token
-  let signupToken = await Token.findById(userParam.token);
-
+  let signupToken = await Token.findOne({ _id: userParam.token, email: user.email });
   if (signupToken) {
     user.isVerified = true;
+  } else {
+    return { err: "Email Authentication failed. Please try again.", status: 409 };
   }
 
   // Save user to db
   let newUser = await user.save();
 
   // delete sign up token
-  if (newUser._id) await Token.findByIdAndDelete(userParam.token);
+  Token.findByIdAndDelete(userParam.token);
 
   // delete user on creation, uncomment to test registration without populating your database
   // await User.findByIdAndDelete(newUser._id);

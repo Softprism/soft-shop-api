@@ -25,11 +25,11 @@ const errorHandler = (err, req, res, next) => {
   }
 
   if (err.status) {
-    return res.status(err.status).json({ success: false, msg: err.err });
+    return res.status(err.status).json({ success: false, msg: err.err, status: err.status });
   }
 
   // default to 500 server error
-  return res.status(500).json({ success: false, msg: "server error" });
+  return res.status(500).json({ success: false, msg: "server error", status: 500 });
 };
 
 export default errorHandler;
