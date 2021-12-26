@@ -40,7 +40,7 @@ router.post("/verify", verifyEmailAddressChecker, verifyEmailAddress);
 // @route   POST /users/register
 // @desc    Register a User
 // @access  Public
-router.post("/", verifyUserSignupParam, registerUser);
+router.post("/", verifyUserSignupParam, hashPassword, registerUser);
 
 // @route   POST /user/login
 // @desc    Login a User & get token

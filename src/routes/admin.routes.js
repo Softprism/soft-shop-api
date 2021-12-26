@@ -1,3 +1,4 @@
+/* eslint-disable import/named */
 import express from "express";
 import { check } from "express-validator";
 import { isAdmin } from "../middleware/Permissions";
@@ -59,6 +60,6 @@ router.get("/", auth, isAdmin, getLoggedInAdmin);
 // @access  Private
 router.put("/", auth, isAdmin, updateAdmin);
 
-router.patch("/password-reset/store/:email", isAdmin, resetStorePassword);
+router.patch("/password-reset/store/:email", auth, isAdmin, resetStorePassword);
 
 export default router;

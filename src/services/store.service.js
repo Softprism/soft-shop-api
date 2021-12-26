@@ -368,10 +368,6 @@ const createStore = async (StoreParam) => {
   }
 
   const newStore = new Store(StoreParam);
-  const salt = await bcrypt.genSalt(10);
-
-  // Replace password from store object with encrypted one
-  newStore.password = await bcrypt.hash(password, salt);
 
   await newStore.save();
 
@@ -465,7 +461,6 @@ const updateStore = async (storeID, updateParam) => {
     }
     storeUpdate.closingTime = closingTime;
   }
-  if (phone_number) storeUpdate.email = phone_number;
   // if (category) storeUpdate.category = category;
   // if (labels) storeUpdate.labels = labels;
   if (password) {
