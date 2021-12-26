@@ -134,7 +134,14 @@ const verifyEmailAddressChecker = async (req, res, next) => {
   next();
 };
 
+const hashPassword = async (req, res, next) => {
+  // encrypting password
+  const salt = await bcrypt.genSalt(10);
+  req.body.password = await bcrypt.hash(req.body.password, salt);
+  next();
+};
+
 // eslint-disable-next-line import/prefer-default-export
 export {
-  isUserVerified, verifyEmailAddressChecker, verifyUserLoginParams, verifyUserSignupParam
+  isUserVerified, verifyEmailAddressChecker, verifyUserLoginParams, verifyUserSignupParam, hashPassword
 };
