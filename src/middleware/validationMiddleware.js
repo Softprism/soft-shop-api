@@ -1,5 +1,6 @@
 import validator from "validator";
 import capitalize from "capitalize";
+import bcrypt from "bcryptjs";
 import User from "../models/user.model";
 
 const verifyUserLoginParams = async (req, res, next) => {
@@ -57,6 +58,9 @@ const verifyUserSignupParam = async (req, res, next) => {
         status: 400
       });
     }
+    // hash password
+    const salt = await bcrypt.genSalt(10);
+    req.body.password = await bcrypt.hash(req.body.password, salt);
 
     if (validator.isEmpty(req.body.first_name)) {
       return res.status(400).json({
