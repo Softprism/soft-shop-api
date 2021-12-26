@@ -440,10 +440,6 @@ const createNewPassword = async ({ token, email, password }) => {
     };
   }
 
-  // encrypting password
-  const salt = await bcrypt.genSalt(10);
-  password = await bcrypt.hash(password, salt);
-
   // update new password
   let user = await User.findOneAndUpdate(
     { email },
