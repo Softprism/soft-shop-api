@@ -20,7 +20,10 @@ import {
 
 import auth from "../middleware/auth";
 import checkPagination from "../middleware/checkPagination";
-import { isUserVerified, userLogin, verifyEmailAddressChecker } from "../middleware/validationMiddleware";
+import {
+  isUserVerified, verifyUserSignupParam, verifyEmailAddressChecker, verifyUserLoginParams
+// eslint-disable-next-line import/named
+} from "../middleware/validationMiddleware";
 
 const router = express.Router();
 
@@ -37,13 +40,13 @@ router.post("/verify", verifyEmailAddressChecker, verifyEmailAddress);
 // @route   POST /users/register
 // @desc    Register a User
 // @access  Public
-router.post("/", registerUser);
+router.post("/", verifyUserSignupParam, registerUser);
 
 // @route   POST /user/login
 // @desc    Login a User & get token
 // @access  Public
 
-router.post("/login", userLogin, isUserVerified, loginUser);
+router.post("/login", verifyUserLoginParams, isUserVerified, loginUser);
 
 // @route   GET /user/login
 // @desc    Get logged in user
