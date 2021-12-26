@@ -6,7 +6,7 @@ const router = express.Router();
 
 // ========================================================================== //
 
-const getUsers = async (req, res) => {
+const getUsers = async (req, res, next) => {
   try {
     const users = await userService.getUsers(req.query);
 
@@ -102,7 +102,7 @@ const getLoggedInUser = async (req, res, next) => {
 
 // ========================================================================== //
 
-const updateUser = async (req, res) => {
+const updateUser = async (req, res, next) => {
   try {
     let userID;
 
@@ -228,7 +228,7 @@ const deleteAllBasketItems = async (req, res, next) => {
 
 // ========================================================================== //
 
-const forgotPassword = async (req, res) => {
+const forgotPassword = async (req, res, next) => {
   try {
     const action = await userService.forgotPassword(req.body);
 
@@ -246,7 +246,7 @@ const forgotPassword = async (req, res) => {
 
 // ========================================================================== //
 
-const validateToken = async (req, res) => {
+const validateToken = async (req, res, next) => {
   try {
     const action = await userService.validateToken(req.body);
 
@@ -264,8 +264,9 @@ const validateToken = async (req, res) => {
 
 // ========================================================================== //
 
-const createNewPassword = async (req, res) => {
+const createNewPassword = async (req, res, next) => {
   try {
+    console.log(req.body);
     const action = await userService.createNewPassword(req.body);
     if (action.err) {
       return res

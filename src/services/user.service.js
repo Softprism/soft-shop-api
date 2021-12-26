@@ -431,8 +431,7 @@ const validateToken = async ({ type, otp, email }) => {
 
 const createNewPassword = async ({ token, email, password }) => {
   // validates token
-  let requestToken = await Token.findById(token);
-
+  let requestToken = await Token.findOne({ email, _id: token });
   // cancel operation if new password request doesn't have a token
   if (!requestToken) {
     return {
@@ -454,16 +453,12 @@ const createNewPassword = async ({ token, email, password }) => {
 
   await Token.findByIdAndDelete(token);
 
-  // Unsetting unneeded fields
-  user.cart = undefined;
-  user.password = undefined;
-  user.orders = undefined;
-
   // send confirmation email
   let email_subject = "Password Reset Successful";
   let email_message = "Password has been reset successfully";
   await sendEmail(email, email_subject, email_message);
 
+  user = await userProfile(user.id);
   return user;
 };
 
