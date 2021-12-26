@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import Store from "../models/store.model";
 import Order from "../models/order.model";
 import Product from "../models/product.model";
+import getJwt from "../utils/jwtGenerator";
 
 const getStores = async (urlParams) => {
   // declare fields to exclude from response
@@ -367,20 +368,7 @@ const createStore = async (StoreParam) => {
 
   await newStore.save();
 
-  const payload = {
-    store: {
-      id: newStore.id,
-    },
-  };
-
-  // Generate and return token to server
-  const token = jwt.sign(payload, process.env.JWT_SECRET, {
-    expiresIn: "365 days",
-  });
-
-  if (!token) {
-    return { err: "Missing Token." };
-  }
+  let token = await getJwt(newStore.id, "store");
 
   return token;
 };
@@ -404,16 +392,7 @@ const loginStore = async (StoreParam) => {
     return { err: "The password entered is invalid, please try again.", status: 401 };
   }
 
-  const payload = {
-    store: {
-      id: store.id,
-    },
-  };
-
-  // Generate and return token to server
-  const token = jwt.sign(payload, process.env.JWT_SECRET, {
-    expiresIn: "365 days",
-  });
+  let token = await getJwt(store.id, "store");
 
   store.password = undefined;
   return { token, store };

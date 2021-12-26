@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import Admin from "../models/admin.model";
 import Store from "../models/store.model";
 import sendEmail from "../utils/sendMail";
+import getJwt from "../utils/jwtGenerator";
 
 const getAdmins = async () => {
   const admins = await Admin.find();
@@ -33,17 +34,7 @@ const registerAdmin = async (params) => {
   // Save user to db
   await admin.save();
 
-  // Define payload for token
-  const payload = {
-    admin: {
-      id: admin.id,
-    },
-  };
-
-  // Generate and return token to server
-  const token = jwt.sign(payload, process.env.JWT_SECRET, {
-    expiresIn: 36000,
-  });
+  let token = await getJwt(admin.id, "admin");
 
   return token;
 };
@@ -64,21 +55,7 @@ const loginAdmin = async (loginParam) => {
     return { err: "The password entered is invalid, please try again.", status: 401 };
   }
 
-  // Define payload for token
-  const payload = {
-    admin: {
-      id: admin.id,
-    },
-  };
-
-  // Generate and return token to server
-  const token = jwt.sign(payload, process.env.JWT_SECRET, {
-    expiresIn: 36000,
-  });
-
-  if (!token) {
-    return { err: "Missing Token", status: 400 };
-  }
+  let token = await getJwt(admin.id, "admin");
 
   return token;
 };

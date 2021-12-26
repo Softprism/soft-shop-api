@@ -9,6 +9,7 @@ import Basket from "../models/user-cart.model";
 
 import sendEmail from "../utils/sendMail";
 import getOTP from "../utils/sendOTP";
+import getJwt from "../utils/jwtGenerator";
 
 // Get all Users
 const getUsers = async (urlParams) => {
@@ -115,16 +116,7 @@ const registerUser = async (userParam) => {
   // await User.findByIdAndDelete(newUser._id);
 
   // Define payload for token
-  const payload = {
-    user: {
-      id: user.id,
-    },
-  };
-
-  // Generate and return token to server
-  const token = jwt.sign(payload, process.env.JWT_SECRET, {
-    expiresIn: "36000 days",
-  });
+  let token = await getJwt(user.id, "user");
 
   // get user details
   user = await userProfile(user.id);
@@ -160,23 +152,7 @@ const loginUser = async (loginParam) => {
   user.password = undefined;
 
   // Define payload for token
-  const payload = {
-    user: {
-      id: user.id,
-    },
-  };
-
-  // Generate and return token to server
-  const token = jwt.sign(payload, process.env.JWT_SECRET, {
-    expiresIn: "36000 days",
-  });
-
-  if (!token) {
-    return {
-      err: "Session expired, please try logging in.",
-      status: 401,
-    };
-  }
+  let token = await getJwt(user.id, "user");
 
   // get user details
   const userDetails = await userProfile(user.id);
