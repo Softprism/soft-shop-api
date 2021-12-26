@@ -58,9 +58,6 @@ const verifyUserSignupParam = async (req, res, next) => {
         status: 400
       });
     }
-    // hash password
-    const salt = await bcrypt.genSalt(10);
-    req.body.password = await bcrypt.hash(req.body.password, salt);
 
     if (validator.isEmpty(req.body.first_name)) {
       return res.status(400).json({
@@ -135,13 +132,86 @@ const verifyEmailAddressChecker = async (req, res, next) => {
 };
 
 const hashPassword = async (req, res, next) => {
-  // encrypting password
+  // hashing password
   const salt = await bcrypt.genSalt(10);
   req.body.password = await bcrypt.hash(req.body.password, salt);
   next();
 };
 
+const verifyStoreSignupParam = async (req, res, next) => {
+  try {
+    req.body.email = validator.trim(req.body.email);
+    console.log(` "${req.body.password}"`);
+    req.body.password = validator.trim(req.body.password);
+    console.log(` "${req.body.password}"`);
+    req.body.first_name = validator.trim(req.body.name);
+    req.body.last_name = validator.trim(req.body.address);
+    req.body.phone_number = validator.trim(req.body.phone_number);
+
+    if (validator.isEmpty(req.body.email)) {
+      return res.status(400).json({
+        success: false,
+        msg: "Please enter your email address.",
+        status: 400
+      });
+    }
+
+    if (!validator.isEmail(req.body.email)) {
+      return res.status(400).json({
+        success: false,
+        msg: "Email entered is invalid, please try again.",
+        status: 400
+      });
+    }
+
+    if (validator.isEmpty(req.body.password)) {
+      return res.status(400).json({
+        success: false,
+        msg: "Password field is missing.",
+        status: 400
+      });
+    }
+    if (validator.isEmpty(req.body.name)) {
+      return res.status(400).json({
+        success: false,
+        msg: "Please enter your business name.",
+        status: 400
+      });
+    }
+    // capitalize last name field
+    req.body.name = capitalize.words(req.body.name);
+
+    if (validator.isEmpty(req.body.phone_number)) {
+      return res.status(400).json({
+        success: false,
+        msg: "Please enter your phone number.",
+        status: 400
+      });
+    }
+
+    if (!validator.isInt(req.body.phone_number)) {
+      return res.status(400).json({
+        success: false,
+        msg: "Please enter a valid phone number.",
+        status: 400
+      });
+    }
+
+    if (validator.isEmpty(req.body.address)) {
+      return res.status(400).json({
+        success: false,
+        msg: "Please enter your business address.",
+        status: 400
+      });
+    }
+    next();
+  } catch (error) {
+    error.message = "Some fields are missing, please try again.";
+    next(error);
+  }
+};
+
 // eslint-disable-next-line import/prefer-default-export
 export {
-  isUserVerified, verifyEmailAddressChecker, verifyUserLoginParams, verifyUserSignupParam, hashPassword
+  isUserVerified, verifyEmailAddressChecker, verifyUserLoginParams, verifyUserSignupParam, hashPassword, verifyStoreSignupParam
 };

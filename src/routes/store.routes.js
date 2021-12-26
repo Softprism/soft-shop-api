@@ -1,3 +1,4 @@
+/* eslint-disable import/named */
 import express from "express";
 import { check } from "express-validator";
 import checkFeedbackRangeTypes from "../utils/checkParamTypes";
@@ -21,6 +22,7 @@ import {
 import auth from "../middleware/auth";
 import checkPagination from "../middleware/checkPagination";
 import { isStoreAdmin } from "../middleware/Permissions";
+import { hashPassword, verifyStoreSignupParam, verifyUserLoginParams } from "../middleware/validationMiddleware";
 
 const router = express.Router();
 
@@ -69,19 +71,8 @@ router.get("/:storeId", auth, getStore);
 // @access  Public
 router.post(
   "/",
-  [
-    check("name", "Please Enter Store Name").not().isEmpty(),
-    // check('images', 'Please add images for your store').not().isEmpty(),
-    check("address", "Please Enter Stores Address").not().isEmpty(),
-    check("openingTime", "Please Enter Opening Time").not().isEmpty(),
-    check("closingTime", "Please Enter Closing Time").not().isEmpty(),
-    check("email", "Please Enter Valid Email").isEmail(),
-    check("phone_number", "Please Enter Valid Phone Number").isMobilePhone(),
-    check(
-      "password",
-      "Please Enter Password with 6 or more characters"
-    ).isLength({ min: 6 }),
-  ],
+  verifyStoreSignupParam,
+  hashPassword,
   createStore
 );
 
@@ -90,14 +81,7 @@ router.post(
 // @access  Public
 router.post(
   "/login",
-  [
-    check("email", "Please enter store email").not().isEmpty(),
-    check(
-      "password",
-      "Please Enter Password with 6 or more characters"
-    ).isLength({ min: 6 }),
-    check("password", "Password is Required").exists(),
-  ],
+  verifyUserLoginParams,
   loginStore
 );
 
