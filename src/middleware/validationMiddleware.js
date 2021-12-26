@@ -204,6 +204,14 @@ const verifyStoreSignupParam = async (req, res, next) => {
         status: 400
       });
     }
+
+    if (!req.body.openingTime.includes(":") || !req.body.closingTime.includes(":")) {
+      return res.status(400).json({
+        success: false,
+        msg: "Invalid time format.",
+        status: 400
+      });
+    }
     next();
   } catch (error) {
     error.message = "Some fields are missing, please try again.";

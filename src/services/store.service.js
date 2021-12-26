@@ -363,10 +363,6 @@ const createStore = async (StoreParam) => {
     return { err: "A store with this email already exists.", status: 400 };
   }
 
-  if (!openingTime.includes(":") || !closingTime.includes(":")) {
-    return { err: "Invalid time format.", status: 400 };
-  }
-
   const newStore = new Store(StoreParam);
 
   await newStore.save();
