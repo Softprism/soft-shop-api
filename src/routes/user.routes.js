@@ -1,3 +1,4 @@
+/* eslint-disable import/named */
 import express from "express";
 
 import {
@@ -21,8 +22,7 @@ import {
 import auth from "../middleware/auth";
 import checkPagination from "../middleware/checkPagination";
 import {
-  isUserVerified, verifyUserSignupParam, verifyEmailAddressChecker, verifyUserLoginParams
-// eslint-disable-next-line import/named
+  isUserVerified, verifyUserSignupParam, verifyEmailAddressChecker, verifyUserLoginParams, hashPassword
 } from "../middleware/validationMiddleware";
 
 const router = express.Router();
@@ -98,6 +98,6 @@ router.post("/token", validateToken);
 // @route   PATCH /password
 // @desc    creates new password for user after forget password
 // @access  Public
-router.patch("/password", createNewPassword);
+router.patch("/password", hashPassword, createNewPassword);
 
 export default router;
