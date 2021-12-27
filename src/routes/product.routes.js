@@ -32,13 +32,6 @@ router.get("/", auth, checkPagination, getProducts);
 // @access  Private
 router.post(
   "/",
-  [
-    check("product_name", "Please Enter Product Name").not().isEmpty(),
-    // check('images', 'Please add images for your store').not().isEmpty(),
-    check("category", "Please select Category").not().isEmpty(),
-    check("price", "Please enter price of product").not().isEmpty(),
-    // check('rating', 'Please Enter Stores Address').not().isEmpty(),
-  ],
   auth,
   isStoreAdmin,
   createProduct
