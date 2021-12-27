@@ -341,7 +341,6 @@ const getStore = async (storeId) => {
       })
       .append(pipeline);
   }
-  console.log(store);
   return store[0];
 };
 
@@ -378,7 +377,7 @@ const loginStore = async (StoreParam) => {
   let store = await Store.findOne({ email }).select("password isVerified resetPassword");
 
   if (!store) {
-    return { err: "Invalid email.", status: 400 };
+    return { err: "Invalid email. Please try again.", status: 400 };
   }
 
   if (process.env.NODE_ENV === "production" && store.isVerified === false) {
@@ -439,7 +438,7 @@ const updateStore = async (storeID, updateParam) => {
     { omitUndefined: true, new: true, useFindAndModify: false }
   );
 
-  let storeRes = await getLoggedInStore(storeID);
+  let storeRes = await getStore(storeID);
 
   return storeRes;
 };
