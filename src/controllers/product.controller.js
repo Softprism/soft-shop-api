@@ -129,6 +129,7 @@ const addVariantItem = async (req, res, next) => {
     if (req.query.storeID && req.admin) storeID = req.query.storeID;
 
     const addVariantItem = await productService.addVariantItem(
+      storeID,
       req.params.variantId,
       req.body
     );
@@ -150,6 +151,19 @@ const getStoreVariants = async (req, res, next) => {
     if (req.query.storeID && req.admin) storeID = req.query.storeID;
 
     const storeVariants = await productService.getStoreVariants(storeID);
+
+    if (storeVariants.err) {
+      res.status(storeVariants.status).json({ success: false, msg: storeVariants.err, status: storeVariants.status });
+    } else {
+      res.status(200).json({ success: true, result: storeVariants, status: 200 });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+const getStoreVariantsForUsers = async (req, res, next) => {
+  try {
+    const storeVariants = await productService.getStoreVariants(req.params.storeId);
 
     if (storeVariants.err) {
       res.status(storeVariants.status).json({ success: false, msg: storeVariants.err, status: storeVariants.status });
@@ -226,4 +240,5 @@ export {
   addCustomFee,
   deleteCustomFee,
   getStoreVariants,
+  getStoreVariantsForUsers
 };

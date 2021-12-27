@@ -242,7 +242,7 @@ const createVariant = async (storeId, variantParam) => {
 
   const { variantTitle, multiSelect } = variantParam;
 
-  let newVariant = new Variant({ variantTitle, multiSelect });
+  let newVariant = new Variant({ variantTitle, multiSelect, store: storeId });
   await newVariant.save();
 
   return newVariant;
@@ -262,10 +262,10 @@ const updateVariant = async (variantId, updateParam) => {
   return updateVariant;
 };
 
-const addVariantItem = async (variantId, variantParam) => {
+const addVariantItem = async (storeId, variantId, variantParam) => {
   // add items to a variant label
   // find variant
-  let variant = await Variant.findById(variantId);
+  let variant = await Variant.findOne({ _id: variantId, store: storeId });
   if (!variant) return { err: "Variant not found.", status: 404 };
 
   // push new variant item and save
@@ -280,7 +280,7 @@ const getStoreVariants = async (storeId) => {
   let storeVariants = await Variant.find({
     store: storeId,
     active: true,
-  }).select("variantTitle");
+  }).select("variantTitle active multiSelect");
   if (!storeVariants) return { err: "Variants not found.", status: 404 };
   let size = storeVariants.length;
 
@@ -297,11 +297,9 @@ const getVariantItem = async (variantId, pagingParam) => {
     })
     .unwind("$variantItems")
     .replaceRoot("$variantItems")
-    .sort("itemPrice")
+    .sort("_id")
     .skip(skip)
     .limit(limit);
-
-  if (!variant) return { err: "Variant not found.", status: 404 };
 
   return variant;
 };
