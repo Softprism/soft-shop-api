@@ -62,7 +62,7 @@ router.put("/variants/:variantId", auth, isStoreAdmin, updateVariant);
 // @route   GET /stores/variants
 // @desc   gets variants belonging to store
 // @access  Private
-router.get("/variants/", auth, isStoreAdmin, getStoreVariants);
+router.get("/variants/", auth, getStoreVariants);
 
 // @route   GET /stores/variantsItems
 // @desc   gets variant items
@@ -70,7 +70,6 @@ router.get("/variants/", auth, isStoreAdmin, getStoreVariants);
 router.get(
   "/variants/:variantId",
   auth,
-  isStoreAdmin,
   checkPagination,
   getVariantItem
 );

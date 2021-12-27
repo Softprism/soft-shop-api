@@ -132,10 +132,14 @@ const verifyEmailAddressChecker = async (req, res, next) => {
 };
 
 const hashPassword = async (req, res, next) => {
-  // hashing password
-  const salt = await bcrypt.genSalt(10);
-  req.body.password = await bcrypt.hash(req.body.password, salt);
-  next();
+  try {
+    // hashing password
+    const salt = await bcrypt.genSalt(10);
+    req.body.password = await bcrypt.hash(req.body.password, salt);
+    next();
+  } catch (error) {
+    next();
+  }
 };
 
 const verifyStoreSignupParam = async (req, res, next) => {
@@ -219,7 +223,29 @@ const verifyStoreSignupParam = async (req, res, next) => {
   }
 };
 
+const storeUpdateProfileParam = async (req, res, next) => {
+  try {
+    if (!req.body.openingTime.includes(":")) {
+      return res.status(400).json({
+        success: false,
+        msg: "Invalid time format.",
+        status: 400
+      });
+    }
+    if (!req.body.closingTime.includes(":")) {
+      return res.status(400).json({
+        success: false,
+        msg: "Invalid time format.",
+        status: 400
+      });
+    }
+    next();
+  } catch (error) {
+    next();
+  }
+};
+
 // eslint-disable-next-line import/prefer-default-export
 export {
-  isUserVerified, verifyEmailAddressChecker, verifyUserLoginParams, verifyUserSignupParam, hashPassword, verifyStoreSignupParam
+  isUserVerified, verifyEmailAddressChecker, verifyUserLoginParams, verifyUserSignupParam, hashPassword, verifyStoreSignupParam, storeUpdateProfileParam
 };

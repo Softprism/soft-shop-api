@@ -258,8 +258,6 @@ const getStore = async (storeId) => {
         "products",
         "productReview",
         "password",
-        "email",
-        "phone_number",
         "orders",
         "orderReview",
       ],
@@ -343,6 +341,7 @@ const getStore = async (storeId) => {
       })
       .append(pipeline);
   }
+  console.log(store);
   return store[0];
 };
 
@@ -394,6 +393,7 @@ const loginStore = async (StoreParam) => {
 
   let token = await getJwt(store.id, "store");
 
+  // remove store password
   store.password = undefined;
   return { token, store };
 };
@@ -424,24 +424,11 @@ const updateStore = async (storeID, updateParam) => {
   if (isActive === true || isActive === false || isActive !== undefined) {
     storeUpdate.isActive = isActive;
   }
-  if (openingTime) {
-    if (!openingTime.includes(":")) {
-      return { err: "Invalid time format.", status: 400 };
-    }
-    storeUpdate.openingTime = openingTime;
-  }
-  if (closingTime) {
-    if (!closingTime.includes(":")) {
-      return { err: "Invalid time format.", status: 400 };
-    }
-    storeUpdate.closingTime = closingTime;
-  }
+  if (openingTime) storeUpdate.openingTime = openingTime;
+  if (closingTime) storeUpdate.closingTime = closingTime;
   // if (category) storeUpdate.category = category;
   // if (labels) storeUpdate.labels = labels;
-  if (password) {
-    const salt = await bcrypt.genSalt(10);
-    storeUpdate.password = await bcrypt.hash(password, salt);
-  }
+  if (password) storeUpdate.password = password;
 
   let store = await Store.findById(storeID);
 
@@ -452,7 +439,7 @@ const updateStore = async (storeID, updateParam) => {
     { omitUndefined: true, new: true, useFindAndModify: false }
   );
 
-  let storeRes = await Store.findById(storeID).select("-password, -__v");
+  let storeRes = await getLoggedInStore(storeID);
 
   return storeRes;
 };
@@ -464,7 +451,7 @@ const addLabel = async (storeId, labelParam) => {
   const { labelTitle, labelThumb } = labelParam;
   store.labels.push({ labelTitle, labelThumb });
   await store.save();
-  const newStore = await Store.findById(storeId).select("-password, -__v");
+  const newStore = await Store.findById(storeId).select("labels");
   return newStore;
 };
 
@@ -477,7 +464,8 @@ const getLabels = async (storeId) => {
 };
 
 const getStoreSalesStats = async (storeId, days) => {
-  if (!days) return { err: "Please, specify amount of days to get stats for." };
+  if (!days) return { err: "Please, specify amount of days to get stats for.", status: 400 };
+
   let d = new Date();
   d.setDate(d.getDate() - days);
 

@@ -18,11 +18,14 @@ import {
   getStoreFeedback,
   getInventoryList,
 } from "../controllers/store.controller";
+import { getStoreVariantsForUsers } from "../controllers/product.controller";
 
 import auth from "../middleware/auth";
 import checkPagination from "../middleware/checkPagination";
 import { isStoreAdmin } from "../middleware/Permissions";
-import { hashPassword, verifyStoreSignupParam, verifyUserLoginParams } from "../middleware/validationMiddleware";
+import {
+  hashPassword, storeUpdateProfileParam, verifyStoreSignupParam, verifyUserLoginParams
+} from "../middleware/validationMiddleware";
 
 const router = express.Router();
 
@@ -61,6 +64,11 @@ router.get(
   getStoreFeedback
 );
 
+// @route   GET /stores/variants
+// @desc   gets variants belonging to store for users
+// @access  Private
+router.get("/variants/:storeId", auth, getStoreVariantsForUsers);
+
 // @route   GET /store
 // @desc    Get store data, used when a store is being checked, produces store data like name, rating/reviews, menu labels, address, delivery time, and products
 // @access  Private
@@ -88,7 +96,7 @@ router.post(
 // @route   PUT /store/
 // @desc    Update a store
 // @access  Private
-router.put("/", auth, isStoreAdmin, updateStore);
+router.put("/", auth, isStoreAdmin, storeUpdateProfileParam, hashPassword, updateStore);
 
 // @route   PUT /stores/label
 // @desc    add label to store
