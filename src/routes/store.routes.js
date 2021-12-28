@@ -8,7 +8,7 @@ import {
   createStore,
   loginStore,
   getLoggedInStore,
-  updateStore,
+  updateStoreRequest,
   addLabel,
   getLabels,
   getStore,
@@ -17,6 +17,7 @@ import {
   bestSellers,
   getStoreFeedback,
   getInventoryList,
+  updateStore
 } from "../controllers/store.controller";
 import { getStoreVariantsForUsers } from "../controllers/product.controller";
 
@@ -92,6 +93,11 @@ router.post(
   verifyUserLoginParams,
   loginStore
 );
+
+// @route   PUT /store/
+// @desc    request for a store profile update
+// @access  Private
+router.put("/change-request", auth, isStoreAdmin, updateStoreRequest);
 
 // @route   PUT /store/
 // @desc    Update a store

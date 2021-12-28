@@ -457,6 +457,43 @@ const updateStoreRequest = async (storeID, updateParam) => {
   return storeRes;
 };
 
+const updateStore = async (storeID, updateParam) => {
+  // this service is used to update insensitive store data
+
+  // get fields to update
+  const {
+    images,
+    openingTime,
+    closingTime,
+    password,
+    deliveryTime,
+    isActive,
+    prepTime
+  } = updateParam;
+
+  const newDetails = {};
+
+  // Check for fields
+  if (images) newDetails.images = images;
+  if (openingTime) newDetails.openingTime = openingTime;
+  if (closingTime) newDetails.closingTime = closingTime;
+  if (password) newDetails.password = password;
+  if (deliveryTime) newDetails.deliveryTime = deliveryTime;
+  if (isActive) newDetails.isActive = isActive;
+  if (prepTime) newDetails.prepTime = prepTime;
+
+  const checkStoreUpdate = await Store.findByIdAndUpdate(
+    storeID,
+    { $set: newDetails },
+    { omitUndefined: true, new: true, useFindAndModify: false }
+  );
+  if (!checkStoreUpdate) return { err: "An error occurred while updating profile, please try again.", status: 400 };
+
+  let storeRes = await getStore(storeID);
+
+  return storeRes;
+};
+
 const addLabel = async (storeId, labelParam) => {
   let store = await Store.findById(storeId);
 
@@ -654,4 +691,5 @@ export {
   bestSellers,
   getStoreFeedback,
   getInventoryList,
+  updateStore
 };
