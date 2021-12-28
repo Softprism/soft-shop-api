@@ -121,11 +121,14 @@ const resetStorePassword = async (storeEmail) => {
   return "Password has been reset for store";
 };
 
-const updateStore = async (storeID) => {
+const confirmStoreUpdate = async (storeID) => {
   // use service to update store profile
   // also use for legacy admin store profile update action
 
   let updateParams = await StoreUpdate.findOne({ store: storeID }).select("newDetails");
+
+  // check if there are inputs to update
+  if (!updateParams) return { err: "You haven't specified a field to update. Please try again.", status: 400 };
   const { newDetails } = updateParams;
 
   // get fields to update
@@ -150,9 +153,6 @@ const updateStore = async (storeID) => {
   if (email) updateParam.email = email;
   if (tax) updateParam.tax = tax;
 
-  // check if there are inputs to update
-  if (!address && !location && !phone_number && !category && !name && !tax && !email) return { err: "You haven't specified a field to update. Please try again.", status: 400 };
-
   // apply update to store
   let storeUpdateRequest = await Store.findByIdAndUpdate(
     storeID,
@@ -170,5 +170,5 @@ const updateStore = async (storeID) => {
 };
 
 export {
-  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin, resetStorePassword, updateStore
+  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin, resetStorePassword, confirmStoreUpdate
 };
