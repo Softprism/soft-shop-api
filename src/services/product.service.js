@@ -4,6 +4,7 @@ import Store from "../models/store.model";
 import Review from "../models/review.model";
 import Variant from "../models/variant.model";
 import CustomFee from "../models/customFees.model";
+import Category from "../models/category.model";
 
 const getProducts = async (getParam) => {
   // get limit and skip from url parameters
@@ -147,7 +148,7 @@ const createProduct = async (productParam, storeId) => {
   // validate store, we have to make sure we're assigning a product to a store
   const storeChecker = await Store.findById(storeId);
   if (!storeChecker) {
-    return { err: "Store not found.", status: 404 };
+    return { err: "Store not found. Please try.", status: 404 };
   }
 
   // add store ID to productParam
@@ -163,7 +164,11 @@ const createProduct = async (productParam, storeId) => {
     variants,
     store,
   } = productParam;
-    // create new product
+
+  // check if category exists
+  const catChecker = await Category.findById(category);
+  if (!catChecker) return { err: "Category not found. Please try again.", status: 404 };
+  // create new product
   const newProduct = new Product({
     product_name,
     product_description,
@@ -242,7 +247,7 @@ const createVariant = async (storeId, variantParam) => {
 
   const { variantTitle, multiSelect } = variantParam;
 
-  let newVariant = new Variant({ variantTitle, multiSelect });
+  let newVariant = new Variant({ variantTitle, multiSelect, store: storeId });
   await newVariant.save();
 
   return newVariant;
@@ -262,10 +267,10 @@ const updateVariant = async (variantId, updateParam) => {
   return updateVariant;
 };
 
-const addVariantItem = async (variantId, variantParam) => {
+const addVariantItem = async (storeId, variantId, variantParam) => {
   // add items to a variant label
   // find variant
-  let variant = await Variant.findById(variantId);
+  let variant = await Variant.findOne({ _id: variantId, store: storeId });
   if (!variant) return { err: "Variant not found.", status: 404 };
 
   // push new variant item and save
@@ -280,7 +285,7 @@ const getStoreVariants = async (storeId) => {
   let storeVariants = await Variant.find({
     store: storeId,
     active: true,
-  }).select("variantTitle");
+  }).select("variantTitle active multiSelect");
   if (!storeVariants) return { err: "Variants not found.", status: 404 };
   let size = storeVariants.length;
 
@@ -297,11 +302,9 @@ const getVariantItem = async (variantId, pagingParam) => {
     })
     .unwind("$variantItems")
     .replaceRoot("$variantItems")
-    .sort("itemPrice")
+    .sort("_id")
     .skip(skip)
     .limit(limit);
-
-  if (!variant) return { err: "Variant not found.", status: 404 };
 
   return variant;
 };

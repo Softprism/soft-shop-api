@@ -1,13 +1,13 @@
 import mongoose from "mongoose";
 
 const VariantSchema = mongoose.Schema({
-  variantTitle: { type: String },
+  variantTitle: { type: String, required: true, },
   variantItems: [
     {
       itemName: { type: String },
       itemThumbnail: { type: String },
       itemPrice: { type: Number },
-      required: { type: Boolean },
+      required: { type: Boolean, default: false },
       quantityOpt: { type: Boolean },
     },
   ],

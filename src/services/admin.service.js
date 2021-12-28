@@ -3,7 +3,10 @@ import bcrypt from "bcryptjs";
 
 import Admin from "../models/admin.model";
 import Store from "../models/store.model";
+import StoreUpdate from "../models/store-update.model";
+
 import sendEmail from "../utils/sendMail";
+import getJwt from "../utils/jwtGenerator";
 
 const getAdmins = async () => {
   const admins = await Admin.find();
@@ -33,17 +36,7 @@ const registerAdmin = async (params) => {
   // Save user to db
   await admin.save();
 
-  // Define payload for token
-  const payload = {
-    admin: {
-      id: admin.id,
-    },
-  };
-
-  // Generate and return token to server
-  const token = jwt.sign(payload, process.env.JWT_SECRET, {
-    expiresIn: 36000,
-  });
+  let token = await getJwt(admin.id, "admin");
 
   return token;
 };
@@ -64,21 +57,7 @@ const loginAdmin = async (loginParam) => {
     return { err: "The password entered is invalid, please try again.", status: 401 };
   }
 
-  // Define payload for token
-  const payload = {
-    admin: {
-      id: admin.id,
-    },
-  };
-
-  // Generate and return token to server
-  const token = jwt.sign(payload, process.env.JWT_SECRET, {
-    expiresIn: 36000,
-  });
-
-  if (!token) {
-    return { err: "Missing Token", status: 400 };
-  }
+  let token = await getJwt(admin.id, "admin");
 
   return token;
 };
@@ -142,6 +121,54 @@ const resetStorePassword = async (storeEmail) => {
   return "Password has been reset for store";
 };
 
+const confirmStoreUpdate = async (storeID) => {
+  // use service to update store profile
+  // also use for legacy admin store profile update action
+
+  let updateParams = await StoreUpdate.findOne({ store: storeID }).select("newDetails");
+
+  // check if there are inputs to update
+  if (!updateParams) return { err: "You haven't specified a field to update. Please try again.", status: 400 };
+  const { newDetails } = updateParams;
+
+  // get fields to update
+  const {
+    address,
+    location,
+    email,
+    name,
+    phone_number,
+    category,
+    tax
+  } = newDetails;
+
+  const updateParam = {};
+
+  // Check for fields
+  if (address) updateParam.address = address;
+  if (location.type && location.coordinates) updateParam.location = location;
+  if (phone_number) updateParam.phone_number = phone_number;
+  if (category) updateParam.category = category;
+  if (name) updateParam.name = name;
+  if (email) updateParam.email = email;
+  if (tax) updateParam.tax = tax;
+
+  // apply update to store
+  let storeUpdateRequest = await Store.findByIdAndUpdate(
+    storeID,
+    { $set: updateParam },
+    { omitUndefined: true, new: true, useFindAndModify: false }
+  );
+  // change updateDetails checker in store model to false if update request was successful
+  if (storeUpdateRequest) {
+    storeUpdateRequest.pendingUpdates = false;
+    storeUpdateRequest.save();
+    await StoreUpdate.findByIdAndDelete(updateParams._id);
+  }
+
+  return storeUpdateRequest;
+};
+
 export {
-  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin, resetStorePassword
+  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin, resetStorePassword, confirmStoreUpdate
 };

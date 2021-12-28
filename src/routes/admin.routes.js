@@ -1,3 +1,4 @@
+/* eslint-disable import/named */
 import express from "express";
 import { check } from "express-validator";
 import { isAdmin } from "../middleware/Permissions";
@@ -7,7 +8,8 @@ import {
   loginAdmin,
   getLoggedInAdmin,
   updateAdmin,
-  resetStorePassword
+  resetStorePassword,
+  confirmStoreUpdate
 } from "../controllers/admin.controller";
 
 import auth from "../middleware/auth";
@@ -59,6 +61,11 @@ router.get("/", auth, isAdmin, getLoggedInAdmin);
 // @access  Private
 router.put("/", auth, isAdmin, updateAdmin);
 
-router.patch("/password-reset/store/:email", isAdmin, resetStorePassword);
+router.patch("/password-reset/store/:email", auth, isAdmin, resetStorePassword);
+
+// @route   PUT /store/
+// @desc    Update a store
+// @access  Private
+router.put("/store/:storeID", auth, isAdmin, confirmStoreUpdate);
 
 export default router;

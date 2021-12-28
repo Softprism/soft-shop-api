@@ -66,6 +66,24 @@ const getLoggedInStore = async (req, res, next) => {
   }
 };
 
+const updateStoreRequest = async (req, res, next) => {
+  try {
+    let storeID;
+    if (req.store) storeID = req.store.id;
+    if (req.query.storeID && req.admin) storeID = req.query.storeID;
+
+    const store = await storeService.updateStoreRequest(storeID, req.body);
+
+    if (store.err) {
+      res.status(store.status).json({ success: false, msg: store.err, status: store.status });
+    } else {
+      res.status(200).json({ success: true, result: store, status: 200 });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
 const updateStore = async (req, res, next) => {
   try {
     let storeID;
@@ -185,7 +203,7 @@ export {
   createStore,
   loginStore,
   getLoggedInStore,
-  updateStore,
+  updateStoreRequest,
   addLabel,
   getLabels,
   getStore,
@@ -194,4 +212,5 @@ export {
   bestSellers,
   getStoreFeedback,
   getInventoryList,
+  updateStore
 };

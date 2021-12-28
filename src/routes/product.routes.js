@@ -32,13 +32,6 @@ router.get("/", auth, checkPagination, getProducts);
 // @access  Private
 router.post(
   "/",
-  [
-    check("product_name", "Please Enter Product Name").not().isEmpty(),
-    // check('images', 'Please add images for your store').not().isEmpty(),
-    check("category", "Please select Category").not().isEmpty(),
-    check("price", "Please enter price of product").not().isEmpty(),
-    // check('rating', 'Please Enter Stores Address').not().isEmpty(),
-  ],
   auth,
   isStoreAdmin,
   createProduct
@@ -62,7 +55,7 @@ router.put("/variants/:variantId", auth, isStoreAdmin, updateVariant);
 // @route   GET /stores/variants
 // @desc   gets variants belonging to store
 // @access  Private
-router.get("/variants/", auth, isStoreAdmin, getStoreVariants);
+router.get("/variants/", auth, getStoreVariants);
 
 // @route   GET /stores/variantsItems
 // @desc   gets variant items
@@ -70,7 +63,6 @@ router.get("/variants/", auth, isStoreAdmin, getStoreVariants);
 router.get(
   "/variants/:variantId",
   auth,
-  isStoreAdmin,
   checkPagination,
   getVariantItem
 );

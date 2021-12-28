@@ -5,6 +5,9 @@ import mongoose from "mongoose";
 import Store from "../models/store.model";
 import Order from "../models/order.model";
 import Product from "../models/product.model";
+import StoreUpdate from "../models/store-update.model";
+
+import getJwt from "../utils/jwtGenerator";
 
 const getStores = async (urlParams) => {
   // declare fields to exclude from response
@@ -257,8 +260,6 @@ const getStore = async (storeId) => {
         "products",
         "productReview",
         "password",
-        "email",
-        "phone_number",
         "orders",
         "orderReview",
       ],
@@ -363,32 +364,11 @@ const createStore = async (StoreParam) => {
     return { err: "A store with this email already exists.", status: 400 };
   }
 
-  if (!openingTime.includes(":") || !closingTime.includes(":")) {
-    return { err: "Invalid time format.", status: 400 };
-  }
-
   const newStore = new Store(StoreParam);
-  const salt = await bcrypt.genSalt(10);
-
-  // Replace password from store object with encrypted one
-  newStore.password = await bcrypt.hash(password, salt);
 
   await newStore.save();
 
-  const payload = {
-    store: {
-      id: newStore.id,
-    },
-  };
-
-  // Generate and return token to server
-  const token = jwt.sign(payload, process.env.JWT_SECRET, {
-    expiresIn: "365 days",
-  });
-
-  if (!token) {
-    return { err: "Missing Token." };
-  }
+  let token = await getJwt(newStore.id, "store");
 
   return token;
 };
@@ -396,11 +376,14 @@ const createStore = async (StoreParam) => {
 const loginStore = async (StoreParam) => {
   const { email, password } = StoreParam;
 
-
-    let store = await Store.findOne({ email }).select("password isVerified resetPassword");
+  let store = await Store.findOne({ email }).select("password isVerified resetPassword pendingUpdates");
 
   if (!store) {
-    return { err: "Invalid email.", status: 400 };
+    return { err: "Invalid email. Please try again.", status: 400 };
+  }
+
+  if (process.env.NODE_ENV === "production" && store.isVerified === false) {
+    return { err: "Please complete your verification.", status: 401 };
   }
   // Check if password matches with stored hash
   const isMatch = await bcrypt.compare(password, store.password);
@@ -409,19 +392,11 @@ const loginStore = async (StoreParam) => {
     return { err: "The password entered is invalid, please try again.", status: 401 };
   }
 
-  const payload = {
-    store: {
-      id: store.id,
-    },
-  };
+  let token = await getJwt(store.id, "store");
 
-  // Generate and return token to server
-  const token = jwt.sign(payload, process.env.JWT_SECRET, {
-    expiresIn: "365 days",
-  });
-
-    store.password = undefined;
-    return { token, store };
+  // remove store password
+  store.password = undefined;
+  return { token, store };
 };
 
 const getLoggedInStore = async (storeId) => {
@@ -429,57 +404,92 @@ const getLoggedInStore = async (storeId) => {
   return store;
 };
 
-const updateStore = async (storeID, updateParam) => {
+const updateStoreRequest = async (storeID, updateParam) => {
+  // this service is used to update sensitive store data
+  // successful request sends a update profile request to admin panel
+
+  // get fields to update
   const {
-    password,
+    address,
+    location,
+    email,
+    name,
+    phone_number,
+    category,
+    tax
+  } = updateParam;
+
+  const newDetails = {};
+
+  // Check for fields
+  if (address) newDetails.address = address;
+  if (location) newDetails.location = location;
+  if (phone_number) newDetails.phone_number = phone_number;
+  if (category) newDetails.category = category;
+  if (name) newDetails.name = name;
+  if (email) newDetails.email = email;
+  if (tax) newDetails.tax = tax;
+
+  if (!address && !location && !phone_number && !category && !name && !tax && !email) return { err: "You haven't specified a field to update. Please try again.", status: 400 };
+
+  // check if store has a pending update
+  const checkStoreUpdate = await Store.findById(storeID);
+  if (checkStoreUpdate.pendingUpdates === true) {
+    // append new updates to existing update document
+    let storeUpdate = await StoreUpdate.findOne({ store: storeID });
+    storeUpdate.newDetails = { ...storeUpdate.newDetails, ...newDetails };
+    storeUpdate.save();
+  } else {
+    // create new update document
+    let newUpdate = new StoreUpdate({ store: storeID, newDetails });
+
+    if (newUpdate) {
+      let update = { pendingUpdates: true };
+      await Store.findByIdAndUpdate(storeID, update);
+      newUpdate.save();
+    } else {
+      return { err: "Update Request Failed, please try again.", status: 400 };
+    }
+  }
+
+  let storeRes = await getStore(storeID);
+
+  return storeRes;
+};
+
+const updateStore = async (storeID, updateParam) => {
+  // this service is used to update insensitive store data
+
+  // get fields to update
+  const {
     images,
     openingTime,
     closingTime,
-    isActive,
+    password,
     deliveryTime,
-    prepTime,
+    isActive,
+    prepTime
   } = updateParam;
 
-  const storeUpdate = {};
+  const newDetails = {};
 
   // Check for fields
-  // if (address) storeUpdate.address = address;
-  if (images) storeUpdate.images = images;
-  if (deliveryTime) storeUpdate.deliveryTime = deliveryTime;
-  if (prepTime) storeUpdate.prepTime = prepTime;
-  if (isActive === true || isActive === false || isActive !== undefined) {
-    storeUpdate.isActive = isActive;
-  }
-  if (openingTime) {
-    if (!openingTime.includes(":")) {
-      return { err: "Invalid time format.", status: 400 };
-    }
-    storeUpdate.openingTime = openingTime;
-  }
-  if (closingTime) {
-    if (!closingTime.includes(":")) {
-      return { err: "Invalid time format.", status: 400 };
-    }
-    storeUpdate.closingTime = closingTime;
-  }
-  if (phone_number) storeUpdate.email = phone_number;
-  // if (category) storeUpdate.category = category;
-  // if (labels) storeUpdate.labels = labels;
-  if (password) {
-    const salt = await bcrypt.genSalt(10);
-    storeUpdate.password = await bcrypt.hash(password, salt);
-  }
+  if (images) newDetails.images = images;
+  if (openingTime) newDetails.openingTime = openingTime;
+  if (closingTime) newDetails.closingTime = closingTime;
+  if (password) newDetails.password = password;
+  if (deliveryTime) newDetails.deliveryTime = deliveryTime;
+  if (isActive) newDetails.isActive = isActive;
+  if (prepTime) newDetails.prepTime = prepTime;
 
-  let store = await Store.findById(storeID);
-
-  if (!store) throw { err: "Store not found." };
-  store = await Store.findByIdAndUpdate(
+  const checkStoreUpdate = await Store.findByIdAndUpdate(
     storeID,
-    { $set: storeUpdate },
+    { $set: newDetails },
     { omitUndefined: true, new: true, useFindAndModify: false }
   );
+  if (!checkStoreUpdate) return { err: "An error occurred while updating profile, please try again.", status: 400 };
 
-  let storeRes = await Store.findById(storeID).select("-password, -__v");
+  let storeRes = await getStore(storeID);
 
   return storeRes;
 };
@@ -491,7 +501,7 @@ const addLabel = async (storeId, labelParam) => {
   const { labelTitle, labelThumb } = labelParam;
   store.labels.push({ labelTitle, labelThumb });
   await store.save();
-  const newStore = await Store.findById(storeId).select("-password, -__v");
+  const newStore = await Store.findById(storeId).select("labels");
   return newStore;
 };
 
@@ -504,7 +514,8 @@ const getLabels = async (storeId) => {
 };
 
 const getStoreSalesStats = async (storeId, days) => {
-  if (!days) return { err: "Please, specify amount of days to get stats for." };
+  if (!days) return { err: "Please, specify amount of days to get stats for.", status: 400 };
+
   let d = new Date();
   d.setDate(d.getDate() - days);
 
@@ -537,16 +548,7 @@ const getStoreSalesStats = async (storeId, days) => {
 
 const bestSellers = async (storeId, pagingParam) => {
   const { limit, skip } = pagingParam;
-  // or pass an array
-  const pipeline1 = [
-    {
-      $filter: {
-        input: "$orders.orderItems",
-        as: "orderItem",
-        cond: { $eq: ["$$orderItem.product_name", "$product_name"] },
-      },
-    },
-  ];
+
   let bestSellingItems = Order.aggregate()
     .match({ store: mongoose.Types.ObjectId(storeId) })
     .lookup({
@@ -680,7 +682,7 @@ export {
   createStore,
   loginStore,
   getLoggedInStore,
-  updateStore,
+  updateStoreRequest,
   addLabel,
   getStore,
   getLabels,
@@ -689,4 +691,5 @@ export {
   bestSellers,
   getStoreFeedback,
   getInventoryList,
+  updateStore
 };

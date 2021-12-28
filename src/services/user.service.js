@@ -9,6 +9,7 @@ import Basket from "../models/user-cart.model";
 
 import sendEmail from "../utils/sendMail";
 import getOTP from "../utils/sendOTP";
+import getJwt from "../utils/jwtGenerator";
 
 // Get all Users
 const getUsers = async (urlParams) => {
@@ -46,13 +47,44 @@ const verifyEmailAddress = async ({ email }) => {
   return "OTP sent!";
 };
 
+const userProfile = async (userId) => {
+  const pipeline = [
+    { $unset: ["userReviews", "userOrders", "cart", "password", "orders"] },
+  ];
+
+  const userDetails = await User.aggregate()
+    .match({
+      _id: mongoose.Types.ObjectId(userId),
+    })
+    .lookup({
+      from: "reviews",
+      localField: "_id",
+      foreignField: "user",
+      as: "userReviews",
+    })
+    .lookup({
+      from: "orders",
+      localField: "_id",
+      foreignField: "user",
+      as: "userOrders",
+    })
+    .addFields({
+      totalReviews: { $size: "$userReviews" },
+      totalOrders: { $size: "$userOrders" },
+    })
+    .append(pipeline);
+
+  return userDetails;
+};
+
 // Register User
 const registerUser = async (userParam) => {
   const {
     first_name, last_name, email, phone_number, password
   } = userParam;
-  let user = await User.findOne({ email });
 
+  // check if user exists
+  let user = await User.findOne({ email });
   if (user) {
     return { err: "User with this email already exists.", status: 409 };
   }
@@ -66,44 +98,28 @@ const registerUser = async (userParam) => {
     password,
   });
 
-  const salt = await bcrypt.genSalt(10);
-
-  // Replace password from user object with encrypted one
-  user.password = await bcrypt.hash(password, salt);
-
   // verify user's signup token
-  let signupToken = await Token.findById(userParam.token);
-
+  let signupToken = await Token.findOne({ _id: userParam.token, email: user.email });
   if (signupToken) {
     user.isVerified = true;
+  } else {
+    return { err: "Email Authentication failed. Please try again.", status: 409 };
   }
 
   // Save user to db
   let newUser = await user.save();
 
   // delete sign up token
-  if (newUser._id) await Token.findByIdAndDelete(userParam.token);
+  Token.findByIdAndDelete(userParam.token);
 
   // delete user on creation, uncomment to test registration without populating your database
   // await User.findByIdAndDelete(newUser._id);
 
   // Define payload for token
-  const payload = {
-    user: {
-      id: user.id,
-    },
-  };
+  let token = await getJwt(user.id, "user");
 
-  // Generate and return token to server
-  const token = jwt.sign(payload, process.env.JWT_SECRET, {
-    expiresIn: "36000 days",
-  });
-
-  // unset user pass****d
-  user.password = undefined;
-
-  // set user token
-  // user.set("token", token, { strict: false });
+  // get user details
+  user = await userProfile(user.id);
 
   return { user, token };
 };
@@ -136,80 +152,17 @@ const loginUser = async (loginParam) => {
   user.password = undefined;
 
   // Define payload for token
-  const payload = {
-    user: {
-      id: user.id,
-    },
-  };
+  let token = await getJwt(user.id, "user");
 
-  // Generate and return token to server
-  const token = jwt.sign(payload, process.env.JWT_SECRET, {
-    expiresIn: "36000 days",
-  });
-
-  if (!token) {
-    return {
-      err: "Session expired, please try logging in.",
-      status: 401,
-    };
-  }
-
-  const pipeline = [
-    { $unset: ["userReviews", "userOrders", "cart", "password", "orders"] },
-  ];
-
-  const userDetails = await User.aggregate()
-    .match({
-      _id: mongoose.Types.ObjectId(user._id),
-    })
-    .lookup({
-      from: "reviews",
-      localField: "_id",
-      foreignField: "user",
-      as: "userReviews",
-    })
-    .lookup({
-      from: "orders",
-      localField: "_id",
-      foreignField: "user",
-      as: "userOrders",
-    })
-    .addFields({
-      totalReviews: { $size: "$userReviews" },
-      totalOrders: { $size: "$userOrders" },
-    })
-    .append(pipeline);
+  // get user details
+  const userDetails = await userProfile(user.id);
 
   return { userDetails, token };
 };
 
 // Get Logged in User info
-const getLoggedInUser = async (userParam) => {
-  const pipeline = [
-    { $unset: ["userReviews", "userOrders", "cart", "password", "orders"] },
-  ];
-  const user = User.aggregate()
-    .match({
-      _id: mongoose.Types.ObjectId(userParam),
-    })
-    .lookup({
-      from: "reviews",
-      localField: "_id",
-      foreignField: "user",
-      as: "userReviews",
-    })
-    .lookup({
-      from: "orders",
-      localField: "_id",
-      foreignField: "user",
-      as: "userOrders",
-    })
-    .addFields({
-      totalReviews: { $size: "$userReviews" },
-      totalOrders: { $size: "$userOrders" },
-    })
-    .append(pipeline);
-
+const getLoggedInUser = async (userId) => {
+  const user = await userProfile(userId);
   return user;
 };
 
@@ -235,32 +188,26 @@ const updateUser = async (updateParam, id) => {
     userFields.password = await bcrypt.hash(password, salt);
   }
 
-  try {
-    // Find user from DB Collection
-    let user = await User.findById(id);
+  // Find user from DB Collection
+  let user = await User.findById(id);
 
-    if (!user) {
-      return {
-        err: "User does not exists.",
-        status: 404,
-      };
-    }
-
-    // Updates the user Object with the changed values
-    user = await User.findByIdAndUpdate(
-      id,
-      { $set: userFields },
-      { omitUndefined: true, new: true, useFindAndModify: false }
-    );
-
-    user.cart = undefined;
-    user.password = undefined;
-    user.orders = undefined;
-
-    return user;
-  } catch (err) {
-    throw err;
+  if (!user) {
+    return {
+      err: "User does not exists.",
+      status: 404,
+    };
   }
+
+  // Updates the user Object with the changed values
+  user = await User.findByIdAndUpdate(
+    id,
+    { $set: userFields },
+    { omitUndefined: true, new: true, useFindAndModify: false }
+  );
+
+  user = await userProfile(id);
+
+  return user;
 };
 // const createUserBasket = async (userId, basketMeta) => { DEPRECATED
 //   // baskets should be initialized for users
@@ -460,8 +407,7 @@ const validateToken = async ({ type, otp, email }) => {
 
 const createNewPassword = async ({ token, email, password }) => {
   // validates token
-  let requestToken = await Token.findById(token);
-
+  let requestToken = await Token.findOne({ email, _id: token });
   // cancel operation if new password request doesn't have a token
   if (!requestToken) {
     return {
@@ -469,10 +415,6 @@ const createNewPassword = async ({ token, email, password }) => {
       status: 409,
     };
   }
-
-  // encrypting password
-  const salt = await bcrypt.genSalt(10);
-  password = await bcrypt.hash(password, salt);
 
   // update new password
   let user = await User.findOneAndUpdate(
@@ -483,16 +425,12 @@ const createNewPassword = async ({ token, email, password }) => {
 
   await Token.findByIdAndDelete(token);
 
-  // Unsetting unneeded fields
-  user.cart = undefined;
-  user.password = undefined;
-  user.orders = undefined;
-
   // send confirmation email
   let email_subject = "Password Reset Successful";
   let email_message = "Password has been reset successfully";
   await sendEmail(email, email_subject, email_message);
 
+  user = await userProfile(user.id);
   return user;
 };
 

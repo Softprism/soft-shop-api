@@ -6,7 +6,6 @@ const userSchema = mongoose.Schema({
     type: String,
     required: true,
     trim: true,
-    lowercase: true,
     minLength: [3, "first name field should be atleast more than 3 characters"],
     validate: [
       validator({
@@ -19,7 +18,6 @@ const userSchema = mongoose.Schema({
     type: String,
     required: true,
     trim: true,
-    owercase: true,
     minLength: [3, "last name field should be atleast more than 3 characters"],
     validate: [
       validator({
@@ -49,6 +47,7 @@ const userSchema = mongoose.Schema({
     type: String,
     unique: true,
     required: true,
+    lowercase: true,
     trim: true,
     validate: [
       validator({
@@ -60,7 +59,6 @@ const userSchema = mongoose.Schema({
   password: {
     type: String,
     required: true,
-    minLength: [6, "Your password should be atleast 6 character long"],
   },
   orders: [{ type: mongoose.Types.ObjectId, ref: "Order" }], // array to store multiple orders
   isVerified: { type: Boolean, required: true, default: false },

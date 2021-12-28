@@ -1,5 +1,5 @@
+/* eslint-disable import/named */
 import express from "express";
-import userLogin from "../middleware/validationMiddleware";
 
 import {
   getUsers,
@@ -21,6 +21,9 @@ import {
 
 import auth from "../middleware/auth";
 import checkPagination from "../middleware/checkPagination";
+import {
+  isUserVerified, verifyUserSignupParam, verifyEmailAddressChecker, verifyUserLoginParams, hashPassword
+} from "../middleware/validationMiddleware";
 
 const router = express.Router();
 
@@ -32,18 +35,18 @@ router.get("/", checkPagination, getUsers);
 // @route   POST /verify
 // @desc    send OTP to verify new user signup email
 // @access  Public
-router.post("/verify", verifyEmailAddress);
+router.post("/verify", verifyEmailAddressChecker, verifyEmailAddress);
 
 // @route   POST /users/register
 // @desc    Register a User
 // @access  Public
-router.post("/", registerUser);
+router.post("/", verifyUserSignupParam, hashPassword, registerUser);
 
 // @route   POST /user/login
 // @desc    Login a User & get token
 // @access  Public
 
-router.post("/login", userLogin, loginUser);
+router.post("/login", verifyUserLoginParams, isUserVerified, loginUser);
 
 // @route   GET /user/login
 // @desc    Get logged in user
@@ -95,6 +98,6 @@ router.post("/token", validateToken);
 // @route   PATCH /password
 // @desc    creates new password for user after forget password
 // @access  Public
-router.patch("/password", createNewPassword);
+router.patch("/password", hashPassword, createNewPassword);
 
 export default router;
