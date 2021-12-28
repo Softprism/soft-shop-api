@@ -8,7 +8,8 @@ import {
   loginAdmin,
   getLoggedInAdmin,
   updateAdmin,
-  resetStorePassword
+  resetStorePassword,
+  updateStore
 } from "../controllers/admin.controller";
 
 import auth from "../middleware/auth";
@@ -61,5 +62,10 @@ router.get("/", auth, isAdmin, getLoggedInAdmin);
 router.put("/", auth, isAdmin, updateAdmin);
 
 router.patch("/password-reset/store/:email", auth, isAdmin, resetStorePassword);
+
+// @route   PUT /store/
+// @desc    Update a store
+// @access  Private
+router.put("/store/:storeID", auth, isAdmin, updateStore);
 
 export default router;

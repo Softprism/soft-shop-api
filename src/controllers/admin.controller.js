@@ -70,6 +70,21 @@ const resetStorePassword = async (req, res, next) => {
   res.status(200).json({ success: true, result: request, status: 200 });
 };
 
+const updateStore = async (req, res, next) => {
+  try {
+    const store = await adminService.updateStore(req.params.storeID);
+
+    if (store.err) {
+      res.status(store.status).json({ success: false, msg: store.err, status: store.status });
+    } else {
+      res.status(200).json({ success: true, result: store, status: 200 });
+    }
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
+
 export {
-  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin, resetStorePassword
+  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin, resetStorePassword, updateStore
 };

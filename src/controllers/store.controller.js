@@ -72,7 +72,7 @@ const updateStore = async (req, res, next) => {
     if (req.store) storeID = req.store.id;
     if (req.query.storeID && req.admin) storeID = req.query.storeID;
 
-    const store = await storeService.updateStore(storeID, req.body);
+    const store = await storeService.updateStoreRequest(storeID, req.body);
 
     if (store.err) {
       res.status(store.status).json({ success: false, msg: store.err, status: store.status });
@@ -80,6 +80,7 @@ const updateStore = async (req, res, next) => {
       res.status(200).json({ success: true, result: store, status: 200 });
     }
   } catch (error) {
+    console.log(error);
     next(error);
   }
 };

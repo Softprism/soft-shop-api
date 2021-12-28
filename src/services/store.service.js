@@ -5,6 +5,8 @@ import mongoose from "mongoose";
 import Store from "../models/store.model";
 import Order from "../models/order.model";
 import Product from "../models/product.model";
+import StoreUpdate from "../models/store-update.model";
+
 import getJwt from "../utils/jwtGenerator";
 
 const getStores = async (urlParams) => {
@@ -374,7 +376,7 @@ const createStore = async (StoreParam) => {
 const loginStore = async (StoreParam) => {
   const { email, password } = StoreParam;
 
-  let store = await Store.findOne({ email }).select("password isVerified resetPassword");
+  let store = await Store.findOne({ email }).select("password isVerified resetPassword pendingUpdates");
 
   if (!store) {
     return { err: "Invalid email. Please try again.", status: 400 };
@@ -402,41 +404,53 @@ const getLoggedInStore = async (storeId) => {
   return store;
 };
 
-const updateStore = async (storeID, updateParam) => {
+const updateStoreRequest = async (storeID, updateParam) => {
+  // this service is used to update sensitive store data
+  // successful request sends a update profile request to admin panel
+
+  // get fields to update
   const {
-    password,
-    images,
-    openingTime,
-    closingTime,
-    isActive,
-    deliveryTime,
-    prepTime,
+    address,
+    location,
+    email,
+    name,
+    phone_number,
+    category,
+    tax
   } = updateParam;
 
-  const storeUpdate = {};
+  const newDetails = {};
 
   // Check for fields
-  // if (address) storeUpdate.address = address;
-  if (images) storeUpdate.images = images;
-  if (deliveryTime) storeUpdate.deliveryTime = deliveryTime;
-  if (prepTime) storeUpdate.prepTime = prepTime;
-  if (isActive === true || isActive === false || isActive !== undefined) {
-    storeUpdate.isActive = isActive;
+  if (address) newDetails.address = address;
+  if (location) newDetails.location = location;
+  if (phone_number) newDetails.phone_number = phone_number;
+  if (category) newDetails.category = category;
+  if (name) newDetails.name = name;
+  if (email) newDetails.email = email;
+  if (tax) newDetails.tax = tax;
+
+  if (!address && !location && !phone_number && !category && !name && !tax && !email) return { err: "You haven't specified a field to update. Please try again.", status: 400 };
+
+  // check if store has a pending update
+  const checkStoreUpdate = await Store.findById(storeID);
+  if (checkStoreUpdate.pendingUpdates === true) {
+    // append new updates to existing update document
+    let storeUpdate = await StoreUpdate.findOne({ store: storeID });
+    storeUpdate.newDetails = { ...storeUpdate.newDetails, ...newDetails };
+    storeUpdate.save();
+  } else {
+    // create new update document
+    let newUpdate = new StoreUpdate({ store: storeID, newDetails });
+
+    if (newUpdate) {
+      let update = { pendingUpdates: true };
+      await Store.findByIdAndUpdate(storeID, update);
+      newUpdate.save();
+    } else {
+      return { err: "Update Request Failed, please try again.", status: 400 };
+    }
   }
-  if (openingTime) storeUpdate.openingTime = openingTime;
-  if (closingTime) storeUpdate.closingTime = closingTime;
-  // if (category) storeUpdate.category = category;
-  // if (labels) storeUpdate.labels = labels;
-  if (password) storeUpdate.password = password;
-
-  let store = await Store.findById(storeID);
-
-  if (!store) throw { err: "Store not found." };
-  store = await Store.findByIdAndUpdate(
-    storeID,
-    { $set: storeUpdate },
-    { omitUndefined: true, new: true, useFindAndModify: false }
-  );
 
   let storeRes = await getStore(storeID);
 
@@ -631,7 +645,7 @@ export {
   createStore,
   loginStore,
   getLoggedInStore,
-  updateStore,
+  updateStoreRequest,
   addLabel,
   getStore,
   getLabels,
