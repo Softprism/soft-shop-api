@@ -225,6 +225,14 @@ const verifyStoreSignupParam = async (req, res, next) => {
 
 const storeUpdateProfileParam = async (req, res, next) => {
   try {
+    // return an error if there are no parameters to update
+    if (!req.body.images && !req.body.openingTime && !req.body.closingTime && !req.body.password && !req.body.deliveryTime && !req.body.isActive && !req.body.prepTime) {
+      return res.status(400).json({
+        success: false,
+        msg: "You haven't specified a field to update. Please try again.",
+        status: 400
+      });
+    }
     if (!req.body.openingTime.includes(":")) {
       return res.status(400).json({
         success: false,
