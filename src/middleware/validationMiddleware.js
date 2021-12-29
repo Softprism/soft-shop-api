@@ -145,9 +145,7 @@ const hashPassword = async (req, res, next) => {
 const verifyStoreSignupParam = async (req, res, next) => {
   try {
     req.body.email = validator.trim(req.body.email);
-    console.log(` "${req.body.password}"`);
     req.body.password = validator.trim(req.body.password);
-    console.log(` "${req.body.password}"`);
     req.body.first_name = validator.trim(req.body.name);
     req.body.last_name = validator.trim(req.body.address);
     req.body.phone_number = validator.trim(req.body.phone_number);
