@@ -54,7 +54,7 @@ const deleteCategory = async (req, res, next) => {
     const request = await categoryService.deleteCategory(req.params.id);
 
     if (request.err) {
-      res.status(equest.status).json({ success: false, msg: request.err, status: request.status });
+      res.status(request.status).json({ success: false, msg: request.err, status: request.status });
     } else {
       res.status(200).json({ success: true, result: request, status: 200 });
     }

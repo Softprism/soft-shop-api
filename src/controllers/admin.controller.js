@@ -80,7 +80,6 @@ const confirmStoreUpdate = async (req, res, next) => {
       res.status(200).json({ success: true, result: store, status: 200 });
     }
   } catch (error) {
-    console.log(error);
     next(error);
   }
 };

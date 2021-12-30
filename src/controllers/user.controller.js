@@ -266,7 +266,6 @@ const validateToken = async (req, res, next) => {
 
 const createNewPassword = async (req, res, next) => {
   try {
-    console.log(req.body);
     const action = await userService.createNewPassword(req.body);
     if (action.err) {
       return res

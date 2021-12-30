@@ -1,8 +1,6 @@
 import nodemailer from "nodemailer";
 
 const sendEmail = async (toEmail, mailSubj, mailBody) => {
-  console.log(1, toEmail);
-
   let transporter = nodemailer.createTransport({
     host: "mail.soft-shop.app",
     port: 465,
