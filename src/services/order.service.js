@@ -3,6 +3,7 @@ import Order from "../models/order.model";
 import User from "../models/user.model";
 import Store from "../models/store.model";
 import Review from "../models/review.model";
+import { bankTransfer, verifyTransaction } from "../middleware/payment";
 
 const getOrders = async (urlParams) => {
   // initialize match parameters, get limit, skip & sort values
@@ -254,7 +255,33 @@ const createOrder = async (orderParam) => {
     { omitUndefined: true, new: true, useFindAndModify: false }
   );
 
+  const payload = {
+    tx_ref: neworder[0].orderId,
+    amount: 100,
+    email: neworder[0].user.email,
+    phone_number: neworder[0].user.phone_number,
+    currency: "NGN",
+    fullname: `${neworder[0].user.first_name} ${neworder[0].user.last_name}`,
+    // subaccounts: [
+    //   {
+    //     id: "RS_D87A9EE339AE28BFA2AE86041C6DE70E"
+    //   }
+    // ],
+    frequency: 10,
+    narration: `softshop payment - ${neworder[0].orderId}`,
+    is_permanent: 0,
+  };
+  if (neworder[0].paymentMethod === "Transfer") {
+    // eslint-disable-next-line no-use-before-define
+    neworder[0].paymentResult = await bankTransfer(payload);
+  }
+
   return neworder[0];
+};
+
+const verifyOrderPayment = async (payload) => {
+  const response = await verifyTransaction(payload);
+  return response;
 };
 
 const toggleFavorite = async (orderID) => {
@@ -534,6 +561,7 @@ export {
   getCartItems,
   editOrder,
   reviewOrder,
+  verifyOrderPayment
 };
 
 // Updates
