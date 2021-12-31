@@ -51,7 +51,7 @@ router.put("/review/:orderId?", auth, reviewOrder);
 // @route   PUT /review
 // @desc    user adds review to their order
 // @access  Private
-router.post("/payment/verify", auth, verifyOrderPayment);
+router.post("/payment/verify", verifyOrderPayment);
 
 // @route   GET /:orderID
 // @desc    toggles an order's detail
