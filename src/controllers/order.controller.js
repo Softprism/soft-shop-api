@@ -95,7 +95,7 @@ const reviewOrder = async (req, res, next) => {
 
 const verifyOrderPayment = async (req, res, next) => {
   try {
-    console.log(req.query);
+    console.log(req.query, req.body, req.params, req);
     const request = await orderService.verifyOrderPayment(req.body);
 
     if (request.err) {
