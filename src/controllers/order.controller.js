@@ -93,6 +93,22 @@ const reviewOrder = async (req, res, next) => {
   }
 };
 
+const verifyOrderPayment = async (req, res, next) => {
+  try {
+    console.log(req.query);
+    const request = await orderService.verifyOrderPayment(req.body);
+
+    if (request.err) {
+      return res.status(request.status).json({ success: false, msg: request.err, status: request.status });
+    }
+
+    res.status(200).json({ success: true, result: request, status: 200 });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
+
 export {
   getOrders,
   createOrder,
@@ -100,4 +116,5 @@ export {
   getOrderDetails,
   editOrder,
   reviewOrder,
+  verifyOrderPayment
 };
