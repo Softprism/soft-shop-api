@@ -294,13 +294,13 @@ const verifyOrderPayment = async (payload) => {
   console.log("starting payment validation");
   console.log(payload);
   const {
-    id, txRef, flwRef, orderRef, amount, charged_amount, status, customer, entity
+    id, tx_ref, flw_ref, processor_response, amount, narration, status, customer, payment_type, account_id
   } = payload.data;
-  let order = await Order.findOne({ orderId: txRef });
-  console.log(id, txRef, flwRef, orderRef, amount, charged_amount, status, customer, entity);
+  let order = await Order.findOne({ orderId: tx_ref });
+  console.log(id, tx_ref, flw_ref, processor_response, amount, narration, status, customer, payment_type, account_id);
   console.log(order);
   order.paymentResult = {
-    id, txRef, flwRef, orderRef, amount, charged_amount, status, customer, entity
+    id, tx_ref, flw_ref, processor_response, amount, narration, status, customer, payment_type, account_id
   };
   order.markModified("paymentResult");
   order.save();
