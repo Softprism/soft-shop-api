@@ -285,7 +285,7 @@ const createOrder = async (orderParam) => {
 const verifyOrderPayment = async (payload) => {
   if (payload.softshop === true) {
     let order = await Order.findOne({ orderId });
-    return order.paymentResult;
+    return order;
   }
   console.log("starting payment validation");
   const {
