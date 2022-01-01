@@ -283,29 +283,20 @@ const createOrder = async (orderParam) => {
 };
 
 const verifyOrderPayment = async (payload) => {
-  if (payload.softshop == true) {
-    console.log(payload);
+  if (payload.softshop === true) {
     const { orderId } = payload;
     let order = await Order.findOne({ orderId });
-    return order;
+    return order.paymentResult;
   }
-  console.log(false);
-
-  console.log("starting payment validation");
-  console.log(payload);
   const {
     id, tx_ref, flw_ref, processor_response, amount, narration, status, customer, payment_type, account_id
   } = payload.data;
   let order = await Order.findOne({ orderId: tx_ref });
-  console.log(id, tx_ref, flw_ref, processor_response, amount, narration, status, customer, payment_type, account_id);
-  console.log(order);
   order.paymentResult = {
     id, tx_ref, flw_ref, processor_response, amount, narration, status, customer, payment_type, account_id
   };
   order.markModified("paymentResult");
   order.save();
-  console.log("ending payment validation");
-
   return order;
 };
 
