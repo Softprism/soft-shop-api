@@ -94,18 +94,13 @@ const reviewOrder = async (req, res, next) => {
 };
 
 const verifyOrderPayment = async (req, res, next) => {
-  try {
-    console.log(req.query, req.body, req.params, req);
-    const request = await orderService.verifyOrderPayment(req.body);
+  const request = await orderService.verifyOrderPayment(req.body);
 
-    if (request.err) {
-      return res.status(request.status).json({ success: false, msg: request.err, status: request.status });
+  if (req.body.softshop === true) {
+    if (!request) {
+      return res.status(400).json({ success: false, msg: "error validating payment", status: 400 });
     }
-
     res.status(200).json({ success: true, result: request, status: 200 });
-  } catch (error) {
-    console.log(error);
-    next(error);
   }
 };
 

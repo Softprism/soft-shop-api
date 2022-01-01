@@ -24,7 +24,7 @@ const OrderSchema = mongoose.Schema(
       type: String,
       required: true,
     },
-    paymentResult: { type: String },
+    paymentResult: {},
     taxPrice: {
       type: Number,
       required: true,
