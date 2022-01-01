@@ -21,8 +21,11 @@ const verifyTransaction = async (payload) => {
 };
 
 const acknowledgeFlwWebhook = async (req, res, next) => {
-  res.status(200).json({ success: true });
-  console.log("webhook acknowledge");
+  if (req.body.softshop !== true) {
+    res.status(200).json({ success: true });
+    console.log("webhook acknowledge");
+  }
+
   next();
 };
 
