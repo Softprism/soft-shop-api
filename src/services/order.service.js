@@ -287,6 +287,7 @@ const verifyOrderPayment = async (payload) => {
     let order = await Order.findOne({ orderId });
     return order.paymentResult;
   }
+  console.log("starting payment validation");
   const {
     id, txRef, flwRef, orderRef, amount, charged_amount, status, customer, entity
   } = payload;
@@ -296,6 +297,7 @@ const verifyOrderPayment = async (payload) => {
   };
   order.markModified("paymentResult");
   order.save();
+  console.log("ending payment validation");
 
   return order;
 };
