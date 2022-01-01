@@ -1,11 +1,14 @@
 import axios from "axios";
 import dotenv from "dotenv";
+import forge from "node-forge";
 
 import Flutterwave from "flutterwave-node-v3";
 
 dotenv.config();
 
-const { FLUTTERWAVE_SECRET_KEY, FLUTTERWAVE_BASE_URL, PUBLIC_KEY } = process.env;
+const {
+  FLUTTERWAVE_SECRET_KEY, FLW_ENCKEY, FLUTTERWAVE_BASE_URL, PUBLIC_KEY
+} = process.env;
 const flw = new Flutterwave(PUBLIC_KEY, FLUTTERWAVE_SECRET_KEY);
 
 const bankTransfer = async (payload) => {
@@ -17,7 +20,15 @@ const verifyTransaction = async (payload) => {
   return response;
 };
 
-export { bankTransfer, verifyTransaction };
+const acknowledgeFlwWebhook = async (req, res, next) => {
+  res.status(200).json({ success: true });
+  console.log("webhook acknowledge");
+  next();
+};
+
+export {
+  bankTransfer, verifyTransaction, acknowledgeFlwWebhook
+};
 
 // static async initializePayment(params) {
 //   try {
