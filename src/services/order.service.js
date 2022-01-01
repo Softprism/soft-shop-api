@@ -292,10 +292,12 @@ const verifyOrderPayment = async (payload) => {
   console.log(false);
 
   console.log("starting payment validation");
+  console.log(payload);
   const {
     id, txRef, flwRef, orderRef, amount, charged_amount, status, customer, entity
   } = payload;
   let order = await Order.findOne({ orderId: payload.txRef });
+  console.log(order);
   order.paymentResult = {
     id, txRef, flwRef, orderRef, amount, charged_amount, status, customer, entity
   };
