@@ -296,7 +296,7 @@ const verifyOrderPayment = async (payload) => {
   const {
     id, txRef, flwRef, orderRef, amount, charged_amount, status, customer, entity
   } = payload.data;
-  let order = await Order.findOne({ orderId: payload.txRef });
+  let order = await Order.findOne({ orderId: txRef });
   console.log(id, txRef, flwRef, orderRef, amount, charged_amount, status, customer, entity);
   console.log(order);
   order.paymentResult = {
