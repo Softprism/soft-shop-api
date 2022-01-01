@@ -284,10 +284,13 @@ const createOrder = async (orderParam) => {
 
 const verifyOrderPayment = async (payload) => {
   if (payload.softshop === true) {
+    console.log(true);
     const { orderId } = payload;
     let order = await Order.findOne({ orderId });
     return order;
   }
+  console.log(false);
+
   console.log("starting payment validation");
   const {
     id, txRef, flwRef, orderRef, amount, charged_amount, status, customer, entity
