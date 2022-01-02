@@ -15,8 +15,8 @@ const ProductSchema = mongoose.Schema({
     {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Variants",
-      required: function () {
-        return this.variantOpt == true;
+      required() {
+        return this.variantOpt === true;
       },
     },
   ],
