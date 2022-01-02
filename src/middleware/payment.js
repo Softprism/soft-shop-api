@@ -15,6 +15,10 @@ const bankTransfer = async (payload) => {
   const response = await flw.Charge.bank_transfer(payload);
   return response;
 };
+const ussdPayment = async (payload) => {
+  const response = await flw.Charge.ussd(payload);
+  return response;
+};
 const verifyTransaction = async (payload) => {
   const response = await flw.Transaction.fetch(payload);
   return response;
@@ -29,8 +33,24 @@ const acknowledgeFlwWebhook = async (req, res, next) => {
   next();
 };
 
+const encryptCard = async (text) => {
+  let cipher = forge.cipher.createCipher(
+    "3DES-ECB",
+    forge.util.createBuffer(FLW_ENCKEY)
+  );
+  cipher.start({ iv: "" });
+  cipher.update(forge.util.createBuffer(JSON.stringify(text), "utf-8"));
+  cipher.finish();
+  let encrypted = cipher.output;
+  let clientCode = forge.util.encode64(encrypted.getBytes());
+  let payload = {
+    client: clientCode
+  };
+  return clientCode;
+};
+
 export {
-  bankTransfer, verifyTransaction, acknowledgeFlwWebhook
+  bankTransfer, verifyTransaction, acknowledgeFlwWebhook, encryptCard, ussdPayment
 };
 
 // static async initializePayment(params) {

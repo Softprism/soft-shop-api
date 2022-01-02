@@ -4,7 +4,7 @@ import User from "../models/user.model";
 import Store from "../models/store.model";
 import Review from "../models/review.model";
 import {
-  bankTransfer, verifyTransaction
+  bankTransfer, encryptCard, verifyTransaction, ussdPayment
 } from "../middleware/payment";
 
 const getOrders = async (urlParams) => {
@@ -86,7 +86,6 @@ const getOrders = async (urlParams) => {
 };
 
 const createOrder = async (orderParam) => {
-  console.log("payload2");
   const { store, user } = orderParam;
 
   // validate user
@@ -267,6 +266,18 @@ const createOrder = async (orderParam) => {
   }
   if (neworder[0].paymentMethod === "Card") {
     //
+  }
+  if (neworder[0].paymentMethod === "Ussd") {
+    const payload = {
+      tx_ref: neworder[0].orderId,
+      account_bank: orderParam.bankCode,
+      amount: "100",
+      currency: "NGN",
+      email: neworder[0].user.email,
+      phone_number: neworder[0].user.phone_number,
+      fullname: `${neworder[0].user.first_name} ${neworder[0].user.last_name}`
+    };
+    neworder[0].paymentResult = await ussdPayment(payload);
   }
 
   let orderUpdate = await Order.findById(neworder[0]._id);
@@ -569,6 +580,11 @@ const reviewOrder = async (review) => {
   return newReview;
 };
 
+const encryptDetails = async (cardDetails) => {
+  let result = await encryptCard(cardDetails);
+  return result;
+};
+
 export {
   getOrders,
   createOrder,
@@ -577,7 +593,8 @@ export {
   getCartItems,
   editOrder,
   reviewOrder,
-  verifyOrderPayment
+  verifyOrderPayment,
+  encryptDetails
 };
 
 // Updates

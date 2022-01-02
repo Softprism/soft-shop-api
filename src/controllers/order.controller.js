@@ -104,6 +104,11 @@ const verifyOrderPayment = async (req, res, next) => {
   }
 };
 
+const encryptDetails = async (req, res, next) => {
+  const result = await orderService.encryptDetails(req.body);
+  return res.status(200).json({ success: true, result, status: 200 });
+};
+
 export {
   getOrders,
   createOrder,
@@ -111,5 +116,6 @@ export {
   getOrderDetails,
   editOrder,
   reviewOrder,
-  verifyOrderPayment
+  verifyOrderPayment,
+  encryptDetails
 };

@@ -10,7 +10,8 @@ import {
   getOrderDetails,
   editOrder,
   reviewOrder,
-  verifyOrderPayment
+  verifyOrderPayment,
+  encryptDetails
 } from "../controllers/order.controller";
 import { acknowledgeFlwWebhook } from "../middleware/payment";
 
@@ -53,6 +54,11 @@ router.put("/review/:orderId?", auth, reviewOrder);
 // @desc    user adds review to their order
 // @access  Private
 router.post("/payment/verify", acknowledgeFlwWebhook, verifyOrderPayment);
+
+// @route   PUT /review
+// @desc    user adds review to their order
+// @access  Private
+router.post("/card/encrypt", encryptDetails);
 
 // @route   GET /:orderID
 // @desc    toggles an order's detail
