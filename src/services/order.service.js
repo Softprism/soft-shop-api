@@ -3,6 +3,9 @@ import Order from "../models/order.model";
 import User from "../models/user.model";
 import Store from "../models/store.model";
 import Review from "../models/review.model";
+import {
+  bankTransfer, verifyTransaction
+} from "../middleware/payment";
 
 const getOrders = async (urlParams) => {
   // initialize match parameters, get limit, skip & sort values
@@ -83,6 +86,7 @@ const getOrders = async (urlParams) => {
 };
 
 const createOrder = async (orderParam) => {
+  console.log("payload2");
   const { store, user } = orderParam;
 
   // validate user
@@ -241,20 +245,59 @@ const createOrder = async (orderParam) => {
     })
     .append(pipeline);
 
-  await Order.findOneAndUpdate(
-    { _id: neworder[0]._id },
-    {
-      $set: {
-        orderItems: neworder[0].orderItems,
-        totalPrice: neworder[0].totalPrice,
-        taxPrice: neworder[0].taxPrice,
-        subtotal: neworder[0].subtotal,
-      },
-    },
-    { omitUndefined: true, new: true, useFindAndModify: false }
-  );
+  if (neworder[0].paymentMethod === "Transfer") {
+    const payload = {
+      tx_ref: neworder[0].orderId,
+      amount: 100,
+      email: neworder[0].user.email,
+      phone_number: neworder[0].user.phone_number,
+      currency: "NGN",
+      fullname: `${neworder[0].user.first_name} ${neworder[0].user.last_name}`,
+      // subaccounts: [
+      //   {
+      //     id: "RS_D87A9EE339AE28BFA2AE86041C6DE70E"
+      //   }
+      // ],
+      frequency: 10,
+      narration: `softshop payment - ${neworder[0].orderId}`,
+      is_permanent: 0,
+    };
+      // eslint-disable-next-line no-use-before-define
+    neworder[0].paymentResult = await bankTransfer(payload);
+  }
+  if (neworder[0].paymentMethod === "Card") {
+    //
+  }
+
+  let orderUpdate = await Order.findById(neworder[0]._id);
+
+  orderUpdate.orderItems = neworder[0].orderItems;
+  orderUpdate.totalPrice = neworder[0].totalPrice;
+  orderUpdate.taxPrice = neworder[0].taxPrice;
+  orderUpdate.subtotal = neworder[0].subtotal;
+  orderUpdate.paymentResult = neworder[0].paymentResult;
+  orderUpdate.markModified("paymentResult");
+  orderUpdate.save();
 
   return neworder[0];
+};
+
+const verifyOrderPayment = async (payload) => {
+  if (payload.softshop === true) {
+    const { orderId } = payload;
+    let order = await Order.findOne({ orderId });
+    return order.paymentResult;
+  }
+  const {
+    id, tx_ref, flw_ref, processor_response, amount, narration, status, customer, payment_type, account_id
+  } = payload.data;
+  let order = await Order.findOne({ orderId: tx_ref });
+  order.paymentResult = {
+    id, tx_ref, flw_ref, processor_response, amount, narration, status, customer, payment_type, account_id
+  };
+  order.markModified("paymentResult");
+  order.save();
+  return order;
 };
 
 const toggleFavorite = async (orderID) => {
@@ -534,6 +577,7 @@ export {
   getCartItems,
   editOrder,
   reviewOrder,
+  verifyOrderPayment
 };
 
 // Updates

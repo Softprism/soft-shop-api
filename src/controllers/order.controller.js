@@ -93,6 +93,17 @@ const reviewOrder = async (req, res, next) => {
   }
 };
 
+const verifyOrderPayment = async (req, res, next) => {
+  const request = await orderService.verifyOrderPayment(req.body);
+
+  if (req.body.softshop === true) {
+    if (!request) {
+      return res.status(400).json({ success: false, msg: "error validating payment", status: 400 });
+    }
+    return res.status(200).json({ success: true, result: request, status: 200 });
+  }
+};
+
 export {
   getOrders,
   createOrder,
@@ -100,4 +111,5 @@ export {
   getOrderDetails,
   editOrder,
   reviewOrder,
+  verifyOrderPayment
 };

@@ -10,7 +10,9 @@ import {
   getOrderDetails,
   editOrder,
   reviewOrder,
+  verifyOrderPayment
 } from "../controllers/order.controller";
+import { acknowledgeFlwWebhook } from "../middleware/payment";
 
 const router = express.Router();
 
@@ -46,6 +48,11 @@ router.put("/user/edit/:orderID", auth, editOrder);
 // @desc    user adds review to their order
 // @access  Private
 router.put("/review/:orderId?", auth, reviewOrder);
+
+// @route   PUT /review
+// @desc    user adds review to their order
+// @access  Private
+router.post("/payment/verify", acknowledgeFlwWebhook, verifyOrderPayment);
 
 // @route   GET /:orderID
 // @desc    toggles an order's detail
