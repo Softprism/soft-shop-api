@@ -4,8 +4,8 @@ import User from "../models/user.model";
 import Store from "../models/store.model";
 import Review from "../models/review.model";
 import {
-  bankTransfer, encryptCard, verifyTransaction, ussdPayment
-} from "../middleware/payment";
+  bankTransfer, ussdPayment, cardPayment
+} from "./payment";
 
 const getOrders = async (urlParams) => {
   // initialize match parameters, get limit, skip & sort values
@@ -293,24 +293,6 @@ const createOrder = async (orderParam) => {
   return neworder[0];
 };
 
-const verifyOrderPayment = async (payload) => {
-  if (payload.softshop === true) {
-    const { orderId } = payload;
-    let order = await Order.findOne({ orderId });
-    return order.paymentResult;
-  }
-  const {
-    id, tx_ref, flw_ref, processor_response, amount, narration, status, customer, payment_type, account_id
-  } = payload.data;
-  let order = await Order.findOne({ orderId: tx_ref });
-  order.paymentResult = {
-    id, tx_ref, flw_ref, processor_response, amount, narration, status, customer, payment_type, account_id
-  };
-  order.markModified("paymentResult");
-  order.save();
-  return order;
-};
-
 const toggleFavorite = async (orderID) => {
   // adds or remove users favorite order
   const order = await Order.findById(orderID);
@@ -581,8 +563,11 @@ const reviewOrder = async (review) => {
 };
 
 const encryptDetails = async (cardDetails) => {
-  let result = await encryptCard(cardDetails);
-  return result;
+  // let result = await encryptCard(cardDetails);
+  // console.log(result);
+  let charge = await cardPayment(cardDetails);
+  console.log(charge);
+  return charge;
 };
 
 export {
@@ -593,7 +578,6 @@ export {
   getCartItems,
   editOrder,
   reviewOrder,
-  verifyOrderPayment,
   encryptDetails
 };
 

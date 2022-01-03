@@ -1,8 +1,10 @@
 import axios from "axios";
 import dotenv from "dotenv";
 import forge from "node-forge";
-
 import Flutterwave from "flutterwave-node-v3";
+
+import User from "../models/user.model";
+import Order from "../models/order.model";
 
 dotenv.config();
 
@@ -19,15 +21,61 @@ const ussdPayment = async (payload) => {
   const response = await flw.Charge.ussd(payload);
   return response;
 };
-const verifyTransaction = async (payload) => {
-  const response = await flw.Transaction.fetch(payload);
+const cardPayment = async (payload) => {
+  const response = await flw.Charge.card(payload);
   return response;
+};
+const verifyTransaction = async (paymentDetails) => {
+  // this verifies a transaction with flutter
+  // if it's a new card transaction, it adds the cards details to the user profile
+  // if it's a order transaction, it adds the payment details to the order payment result
+
+  const response = await flw.Transaction.verify({ id: paymentDetails.data.id });
+
+  if (response.status !== "success") {
+    return { err: response.message, status: 400 };
+  }
+  const { tx_ref } = response.data;
+  if (tx_ref.includes("card")) {
+    // user is adding a new card
+
+    // create card index
+    let card_index = () => {
+      let s4 = () => {
+        return Math.floor((1 + Math.random()) * 0x10000)
+          .toString(16)
+          .substring(1);
+      };
+        // return id of format 'soft - aaaaa'
+      return `cindex-${s4()}`;
+    };
+
+    // find user from payment initiated
+    let user = await User.findById(response.data.meta.user_id).select("-orders -cards.token");
+
+    // add card index to initiated payment card details
+    response.data.card.card_index = card_index();
+
+    // add card details to user
+    user.cards.push(response.data.card);
+    user.save();
+    return user;
+  }
+  if (tx_ref.includes("soft")) {
+    // user is paying for an order
+
+    let order = await Order.findOne({ orderId: "soft-8517" });
+
+    order.paymentResult = response.data;
+    order.markModified("paymentResult");
+    order.save();
+    return order;
+  }
 };
 
 const acknowledgeFlwWebhook = async (req, res, next) => {
-  if (req.body.softshop !== true) {
+  if (req.body.softshop !== "true") {
     res.status(200).json({ success: true });
-    console.log("webhook acknowledge");
   }
 
   next();
@@ -46,11 +94,23 @@ const encryptCard = async (text) => {
   let payload = {
     client: clientCode
   };
+  let charge = await cardPayment(payload);
   return clientCode;
 };
 
+const verifyCardRequest = async (payload) => {
+  let config = {
+    headers: {
+      Authorization: `Bearer ${FLUTTERWAVE_SECRET_KEY}`,
+    }
+  };
+  let flwRequest = await axios.post("https://api.flutterwave.com/v3/payments", payload, config);
+  if (flwRequest.data.status === "error") throw { err: flwRequest.data.message, status: 400 };
+  return flwRequest.data;
+};
+
 export {
-  bankTransfer, verifyTransaction, acknowledgeFlwWebhook, encryptCard, ussdPayment
+  bankTransfer, verifyTransaction, acknowledgeFlwWebhook, encryptCard, ussdPayment, cardPayment, verifyCardRequest
 };
 
 // static async initializePayment(params) {
