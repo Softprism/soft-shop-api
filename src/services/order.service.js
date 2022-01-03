@@ -294,6 +294,7 @@ const createOrder = async (orderParam) => {
 };
 
 const verifyOrderPayment = async (payload) => {
+  console.log(payload);
   if (payload.softshop === true) {
     const { orderId } = payload;
     let order = await Order.findOne({ orderId });
