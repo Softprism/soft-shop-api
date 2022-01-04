@@ -77,6 +77,7 @@ const verifyTransaction = async (paymentDetails) => {
     response.data.card.card_index = card_index();
 
     // add new card details to user
+    console.log(user);
     user.cards.push(response.data.card);
     user.save();
     user.cards = undefined;
