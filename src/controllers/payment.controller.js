@@ -1,4 +1,4 @@
-import * as paymentService from "../services/payment";
+import * as paymentService from "../services/payment.service";
 
 const verifyTransaction = async (req, res, next) => {
   try {
@@ -10,4 +10,11 @@ const verifyTransaction = async (req, res, next) => {
   }
 };
 
-export { verifyTransaction };
+const acknowledgeFlwWebhook = async (req, res, next) => {
+  if (req.body.softshop !== "true") {
+    res.status(200).json({ success: true });
+  }
+  next();
+};
+
+export { verifyTransaction, acknowledgeFlwWebhook };

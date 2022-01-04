@@ -11,7 +11,7 @@ import Basket from "../models/user-cart.model";
 import sendEmail from "../utils/sendMail";
 import getOTP from "../utils/sendOTP";
 import getJwt from "../utils/jwtGenerator";
-import { verifyCardRequest } from "./payment";
+import { verifyCardRequest } from "./payment.service";
 
 // Get all Users
 const getUsers = async (urlParams) => {

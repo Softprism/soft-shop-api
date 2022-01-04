@@ -6,12 +6,14 @@ import Flutterwave from "flutterwave-node-v3";
 import User from "../models/user.model";
 import Order from "../models/order.model";
 
+// initial env variables
 dotenv.config();
 
+// initialize flutterwave
 const {
-  FLUTTERWAVE_SECRET_KEY, FLW_ENCKEY, FLUTTERWAVE_BASE_URL, PUBLIC_KEY
+  FLUTTERWAVE_SECRET_KEY_LIVE, FLUTTERWAVE_PUBLIC_KEY_LIVE, FLUTTERWAVE_ENCKEY_LIVE
 } = process.env;
-const flw = new Flutterwave(PUBLIC_KEY, FLUTTERWAVE_SECRET_KEY);
+const flw = new Flutterwave(FLUTTERWAVE_PUBLIC_KEY_LIVE, FLUTTERWAVE_SECRET_KEY_LIVE);
 
 const bankTransfer = async (payload) => {
   const response = await flw.Charge.bank_transfer(payload);
@@ -32,9 +34,12 @@ const verifyTransaction = async (paymentDetails) => {
 
   const response = await flw.Transaction.verify({ id: paymentDetails.data.id });
 
+  // return an error if response isn't succesful
   if (response.status !== "success") {
     return { err: response.message, status: 400 };
   }
+
+  // continue operations if transaction has been verified
   const { tx_ref } = response.data;
   if (tx_ref.includes("card")) {
     // user is adding a new card
@@ -46,9 +51,23 @@ const verifyTransaction = async (paymentDetails) => {
           .toString(16)
           .substring(1);
       };
-        // return id of format 'soft - aaaaa'
+        // return id of format 'card - aaaaa'
       return `cindex-${s4()}`;
     };
+
+    // check if card has already been added
+    let checker = await User.findOne({
+      _id: response.data.meta.user_id,
+      "cards.first_6digits": response.data.card.first_6digits,
+      "cards.last_4digits": response.data.card.last_4digits,
+      "cards.token": response.data.card.token
+    });
+    if (checker) {
+      // cancel operation and refund user
+      const refund = await flw.Transaction.refund({ id: response.data.id, amount: response.data.amount });
+      console.log(refund);
+      return { err: "This card has been added already. Transaction would be refunded.", status: 409 };
+    }
 
     // find user from payment initiated
     let user = await User.findById(response.data.meta.user_id).select("-orders -cards.token");
@@ -56,7 +75,7 @@ const verifyTransaction = async (paymentDetails) => {
     // add card index to initiated payment card details
     response.data.card.card_index = card_index();
 
-    // add card details to user
+    // add new card details to user
     user.cards.push(response.data.card);
     user.save();
     return user;
@@ -64,21 +83,13 @@ const verifyTransaction = async (paymentDetails) => {
   if (tx_ref.includes("soft")) {
     // user is paying for an order
 
-    let order = await Order.findOne({ orderId: "soft-8517" });
+    let order = await Order.findOne({ orderId: tx_ref });
 
     order.paymentResult = response.data;
     order.markModified("paymentResult");
     order.save();
     return order;
   }
-};
-
-const acknowledgeFlwWebhook = async (req, res, next) => {
-  if (req.body.softshop !== "true") {
-    res.status(200).json({ success: true });
-  }
-
-  next();
 };
 
 const encryptCard = async (text) => {
@@ -110,50 +121,5 @@ const verifyCardRequest = async (payload) => {
 };
 
 export {
-  bankTransfer, verifyTransaction, acknowledgeFlwWebhook, encryptCard, ussdPayment, cardPayment, verifyCardRequest
+  bankTransfer, verifyTransaction, encryptCard, ussdPayment, cardPayment, verifyCardRequest
 };
-
-// static async initializePayment(params) {
-//   try {
-//     const options = {
-//       url: `${FLUTTERWAVE_BASE_URL}/payments`,
-//       headers: {
-//         authorization: `Bearer ${FLUTTERWAVE_SECRET_KEY}`,
-//         "content-type": "application/json",
-//         "cache-control": "no-cache",
-//       },
-//       method: "POST",
-//       data: params,
-//     };
-
-//     const response = await axios.request(options);
-//     return response;
-//   } catch (error) {
-//     throw error;
-//   }
-// }
-
-// /**
-//  * Verify all transactions before updating their status in the DB
-//  * @param {String} trxref The reference String to verify the transaction. It will be gotten after successfully
-//  * initializing a transaction.
-//  */
-
-// static async verifyPayment(reference) {
-//   try {
-//     const options = {
-//       url: `${FLUTTERWAVE_BASE_URL}/transactions/${reference}/verify`,
-//       headers: {
-//         authorization: `Bearer ${process.env.FLUTTERWAVE_SECRET_KEY}`,
-//         "content-type": "application/json",
-//         "cache-control": "no-cache",
-//       },
-//       method: "GET",
-//     };
-
-//     const data = await axios.request(options);
-//     return data;
-//   } catch (error) {
-//     throw error;
-//   }
-// }

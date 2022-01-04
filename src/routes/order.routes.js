@@ -12,7 +12,6 @@ import {
   reviewOrder,
   encryptDetails
 } from "../controllers/order.controller";
-import { acknowledgeFlwWebhook } from "../services/payment";
 
 const router = express.Router();
 

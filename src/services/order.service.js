@@ -5,7 +5,7 @@ import Store from "../models/store.model";
 import Review from "../models/review.model";
 import {
   bankTransfer, ussdPayment, cardPayment
-} from "./payment";
+} from "./payment.service";
 
 const getOrders = async (urlParams) => {
   // initialize match parameters, get limit, skip & sort values
