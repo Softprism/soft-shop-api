@@ -1,7 +1,8 @@
 import RiderServices from "../services/rider.service";
 
 const {
-  getAllRiders, verifyEmailAddress, registerRider, loginRider, validateToken
+  getAllRiders, verifyEmailAddress, registerRider, loginRider,
+  validateToken, requestPasswordToken, resetPassword
 } = RiderServices;
 
 /**
@@ -101,6 +102,41 @@ export default class RiderController {
       return res.status(200).json({
         success: true, result: riders, size: riders.length, status: 200
       });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // ========================================================================== //
+
+  static async forgotPassword(req, res, next) {
+    try {
+      const action = await requestPasswordToken(req.body);
+
+      if (action.err) {
+        return res
+          .status(action.status)
+          .json({ success: false, msg: action.err, status: action.status });
+      }
+
+      return res.status(200).json({ success: true, result: action, status: 200 });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // ========================================================================== //
+
+  static async resetPassword(req, res, next) {
+    try {
+      const action = await resetPassword(req.body);
+      if (action.err) {
+        return res
+          .status(action.status)
+          .json({ success: false, msg: action.err, status: action.status });
+      }
+
+      return res.status(200).json({ success: true, result: action, status: 200 });
     } catch (error) {
       next(error);
     }

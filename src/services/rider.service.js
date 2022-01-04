@@ -135,4 +135,53 @@ export default class RiderServices {
 
     return userToken;
   }
+
+  static async requestPasswordToken({ email }) {
+  // verify if user exists, throws error if not
+    let findUser = await Rider.findOne({ email });
+    if (!findUser) {
+      return {
+        err: "User does not exists.",
+        status: 404,
+      };
+    }
+
+    let token = await getOTP("user-forgot-password", email);
+
+    // send otp
+    let email_subject = "forgot password";
+    let email_message = token.otp;
+    await sendEmail(email, email_subject, email_message);
+
+    return "OTP sent!";
+  }
+
+  static async resetPassword({ token, email, password }) {
+  // validates token
+    let requestToken = await Token.findOne({ email, _id: token });
+    // cancel operation if new password request doesn't have a token
+    if (!requestToken) {
+      return {
+        err: "The OTP entered is incorrect, please try again.",
+        status: 409,
+      };
+    }
+
+    // update new password
+    await Rider.findOneAndUpdate(
+      { email },
+      { $set: { password } },
+      { omitUndefined: true, new: true, useFindAndModify: false }
+    );
+
+    await Token.findByIdAndDelete(token);
+
+    // send confirmation email
+    let email_subject = "Password Reset Successful";
+    let email_message = "Password has been reset successfully";
+    await sendEmail(email, email_subject, email_message);
+
+    const rider = await Rider.findOne({ email }).select("-password");
+    return rider;
+  }
 }
