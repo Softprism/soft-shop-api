@@ -33,6 +33,7 @@ const verifyTransaction = async (paymentDetails) => {
   // if it's a order transaction, it adds the payment details to the order payment result
 
   const response = await flw.Transaction.verify({ id: paymentDetails.data.id });
+  console.log(response);
 
   // return an error if response isn't succesful
   if (response.status !== "success") {
