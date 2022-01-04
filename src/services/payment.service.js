@@ -112,7 +112,7 @@ const encryptCard = async (text) => {
 const verifyCardRequest = async (payload) => {
   let config = {
     headers: {
-      Authorization: `Bearer ${FLUTTERWAVE_SECRET_KEY}`,
+      Authorization: `Bearer ${FLUTTERWAVE_SECRET_KEY_LIVE}`,
     }
   };
   let flwRequest = await axios.post("https://api.flutterwave.com/v3/payments", payload, config);
