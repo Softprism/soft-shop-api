@@ -100,6 +100,16 @@ const getLoggedInUser = async (req, res, next) => {
   }
 };
 
+const addCard = async (req, res, next) => {
+  try {
+    const action = await userService.addCard(req.user.id);
+
+    res.status(200).json({ success: true, result: action, status: 200 });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // ========================================================================== //
 
 const updateUser = async (req, res, next) => {
@@ -297,4 +307,5 @@ export {
   editBasketItems,
   deleteBasketItem,
   deleteAllBasketItems,
+  addCard
 };

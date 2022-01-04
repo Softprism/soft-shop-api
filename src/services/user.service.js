@@ -1,3 +1,4 @@
+/* eslint-disable quote-props */
 /* eslint-disable no-param-reassign */
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
@@ -10,6 +11,7 @@ import Basket from "../models/user-cart.model";
 import sendEmail from "../utils/sendMail";
 import getOTP from "../utils/sendOTP";
 import getJwt from "../utils/jwtGenerator";
+import { verifyCardRequest } from "./payment.service";
 
 // Get all Users
 const getUsers = async (urlParams) => {
@@ -160,6 +162,44 @@ const loginUser = async (loginParam) => {
   return { userDetails, token };
 };
 
+const addCard = async (userId) => {
+  const user = await User.findById(userId);
+  // generates random tx_ref ;
+  let tx_ref = () => {
+    let s4 = () => {
+      return Math.floor((1 + Math.random()) * 0x10000)
+        .toString(16)
+        .substring(1);
+    };
+      // return id of format 'soft - aaaaa'
+    return `card-${s4()}`;
+  };
+  const payload = {
+    "tx_ref": tx_ref(),
+    "amount": "100",
+    "currency": "NGN",
+    "redirect_url": "https://app.soft-shop.app",
+    "payment_options": "card",
+    "meta": {
+      "user_id": userId,
+    },
+    "customer": {
+      "user_id": userId,
+      "email": user.email,
+      "phone_number": user.phone_number,
+      "address": user.address,
+      "name": `${user.first_name} ${user.last_name}`
+    },
+    "customizations": {
+      "title": "Softshop Card Validation",
+      "description": "This is just to validate card and add it to your profile. You'll be charged 100 NGN one time payment for this.",
+      "logo": "https://softprism.org/intranet/files/general/team_members/3/_file61a52392d6e32-Softprism-Logo.jpg"
+    }
+  };
+
+  let verifyCardReq = await verifyCardRequest(payload);
+  return verifyCardReq;
+};
 // Get Logged in User info
 const getLoggedInUser = async (userId) => {
   const user = await userProfile(userId);
@@ -450,4 +490,5 @@ export {
   editBasketItems,
   deleteBasketItem,
   deleteAllBasketItems,
+  addCard
 };

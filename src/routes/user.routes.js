@@ -17,6 +17,7 @@ import {
   editBasketItems,
   deleteBasketItem,
   deleteAllBasketItems,
+  addCard
 } from "../controllers/user.controller";
 
 import auth from "../middleware/auth";
@@ -47,6 +48,11 @@ router.post("/", verifyUserSignupParam, hashPassword, registerUser);
 // @access  Public
 
 router.post("/login", verifyUserLoginParams, isUserVerified, loginUser);
+
+// @route   POST /user/card
+// @desc    returns a link to user to continue card addition
+// @access  Public
+router.get("/card", auth, addCard);
 
 // @route   GET /user/login
 // @desc    Get logged in user
