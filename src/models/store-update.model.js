@@ -15,6 +15,14 @@ const StoreUpdateSchema = mongoose.Schema(
       },
       updateDetails: { type: Boolean },
       tax: { type: Number },
+      account_details: {
+        id: { type: String },
+        account_number: { type: String },
+        account_bank: { type: String },
+        full_name: { type: String },
+        subaccount_id: { type: String },
+        bank_name: { type: String }
+      }
     }
   },
   { timestamps: true }

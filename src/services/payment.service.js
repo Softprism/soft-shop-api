@@ -5,6 +5,8 @@ import Flutterwave from "flutterwave-node-v3";
 
 import User from "../models/user.model";
 import Order from "../models/order.model";
+import Store from "../models/store.model";
+import StoreUpdate from "../models/store-update.model";
 
 // initial env variables
 dotenv.config();
@@ -122,6 +124,32 @@ const verifyCardRequest = async (payload) => {
   return flwRequest.data;
 };
 
+const createStoreSubaccount = async (payload) => {
+  payload.split_type = "flat";
+  payload.split_value = 0.5;
+  const response = await flw.Subaccount.create(payload);
+  return response;
+};
+
+const getAllBanks = async () => {
+  const payload = {
+    country: "NG"
+  };
+  const response = await flw.Bank.country(payload);
+
+  return response;
+};
+
+const updateSubaccount = async (payload) => {
+  const response = await flw.Subaccount.update(payload);
+  return response;
+};
+
+const getBankDetails = async (payload) => {
+  const response = await flw.Misc.verify_Account(payload);
+  return response;
+};
+
 export {
-  bankTransfer, verifyTransaction, encryptCard, ussdPayment, cardPayment, verifyCardRequest
+  bankTransfer, verifyTransaction, encryptCard, ussdPayment, cardPayment, verifyCardRequest, createStoreSubaccount, getAllBanks, updateSubaccount, getBankDetails
 };
