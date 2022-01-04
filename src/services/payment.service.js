@@ -71,7 +71,7 @@ const verifyTransaction = async (paymentDetails) => {
     }
 
     // find user from payment initiated
-    let user = await User.findById(response.data.meta.user_id).select("-orders -cards.token");
+    let user = await User.findById(response.data.meta.user_id).select("-orders");
 
     // add card index to initiated payment card details
     response.data.card.card_index = card_index();
@@ -79,6 +79,7 @@ const verifyTransaction = async (paymentDetails) => {
     // add new card details to user
     user.cards.push(response.data.card);
     user.save();
+    user.cards = undefined;
     return user;
   }
   if (tx_ref.includes("soft")) {
