@@ -564,9 +564,7 @@ const reviewOrder = async (review) => {
 
 const encryptDetails = async (cardDetails) => {
   // let result = await encryptCard(cardDetails);
-  // console.log(result);
   let charge = await cardPayment(cardDetails);
-  console.log(charge);
   return charge;
 };
 

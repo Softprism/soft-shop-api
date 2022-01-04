@@ -33,7 +33,6 @@ const verifyTransaction = async (paymentDetails) => {
   // if it's a order transaction, it adds the payment details to the order payment result
 
   const response = await flw.Transaction.verify({ id: paymentDetails.data.id });
-  console.log(response);
 
   // return an error if response isn't succesful
   if (response.status !== "success") {
@@ -66,18 +65,18 @@ const verifyTransaction = async (paymentDetails) => {
     if (checker) {
       // cancel operation and refund user
       const refund = await flw.Transaction.refund({ id: response.data.id, amount: response.data.amount });
-      console.log(refund);
       return { err: "This card has been added already. Transaction would be refunded.", status: 409 };
     }
 
     // find user from payment initiated
     let user = await User.findById(response.data.meta.user_id).select("-orders");
-
+    if (!user) {
+      return { err: "Payment not initialized by user. Please login and try again.", status: 500 };
+    }
     // add card index to initiated payment card details
     response.data.card.card_index = card_index();
 
     // add new card details to user
-    console.log(user);
     user.cards.push(response.data.card);
     user.save();
     user.cards = undefined;
