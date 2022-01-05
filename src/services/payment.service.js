@@ -3,8 +3,11 @@ import dotenv from "dotenv";
 import forge from "node-forge";
 import Flutterwave from "flutterwave-node-v3";
 
+import { response } from "express";
 import User from "../models/user.model";
 import Order from "../models/order.model";
+import Store from "../models/store.model";
+import StoreUpdate from "../models/store-update.model";
 
 // initial env variables
 dotenv.config();
@@ -122,6 +125,20 @@ const verifyCardRequest = async (payload) => {
   return flwRequest.data;
 };
 
+const getAllBanks = async () => {
+  const payload = {
+    country: "NG"
+  };
+  const response = await flw.Bank.country(payload);
+
+  return response;
+};
+
+const getBankDetails = async (payload) => {
+  const response = await flw.Misc.verify_Account(payload);
+  return response;
+};
+
 export {
-  bankTransfer, verifyTransaction, encryptCard, ussdPayment, cardPayment, verifyCardRequest
+  flw, bankTransfer, verifyTransaction, encryptCard, ussdPayment, cardPayment, verifyCardRequest, getAllBanks, getBankDetails
 };

@@ -252,11 +252,6 @@ const createOrder = async (orderParam) => {
       phone_number: neworder[0].user.phone_number,
       currency: "NGN",
       fullname: `${neworder[0].user.first_name} ${neworder[0].user.last_name}`,
-      // subaccounts: [
-      //   {
-      //     id: "RS_D87A9EE339AE28BFA2AE86041C6DE70E"
-      //   }
-      // ],
       frequency: 10,
       narration: `softshop payment - ${neworder[0].orderId}`,
       is_permanent: 0,
