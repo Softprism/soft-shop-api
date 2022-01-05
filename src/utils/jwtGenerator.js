@@ -24,6 +24,14 @@ const getJwt = async (id, type) => {
     };
   }
 
+  if (type === "rider") {
+    payload = {
+      rider: {
+        id,
+      },
+    };
+  }
+
   // Generate and return token to server
   const token = jwt.sign(payload, process.env.JWT_SECRET, {
     expiresIn: "365 days",

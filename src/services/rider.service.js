@@ -34,12 +34,12 @@ export default class RiderServices {
   // send otp to Verify user email before sign up
   static async verifyEmailAddress({ email }) {
   // check if user exists
-    let user = await Rider.findOne({ email });
-    if (user) {
-      return { err: "This email is being used by another user.", status: 409 };
+    let rider = await Rider.findOne({ email });
+    if (rider) {
+      return { err: "This email is being used by another rider.", status: 409 };
     }
 
-    let token = await getOTP("user-signup", email);
+    let token = await getOTP("rider-signup", email);
 
     // send otp
     let email_subject = "OTP For Account Creation";
@@ -54,14 +54,14 @@ export default class RiderServices {
       first_name, last_name, email, phone_number, password
     } = userParam;
 
-    // check if user exists
-    let user = await Rider.findOne({ email });
-    if (user) {
-      return { err: "User with this email already exists.", status: 409 };
+    // check if rider exists
+    let rider = await Rider.findOne({ email });
+    if (rider) {
+      return { err: "Rider with this email already exists.", status: 409 };
     }
 
     let isVerified;
-    // verify user's signup token
+    // verify rider's signup token
     let signupToken = await Token.findOne({ _id: userParam.token, email });
     if (signupToken) {
       isVerified = true;
@@ -69,7 +69,7 @@ export default class RiderServices {
       return { err: "Email Authentication failed. Please try again.", status: 409 };
     }
     // Create User Object
-    const User = {
+    const newRider = {
       first_name,
       last_name,
       email,
@@ -78,25 +78,25 @@ export default class RiderServices {
       isVerified
     };
     // Save user to db
-    const newUser = await Rider.create(User);
+    const createdRider = await Rider.create(newRider);
 
     // delete sign up token
     await Token.findByIdAndDelete(userParam.token);
 
-    let token = await getJwt(newUser.id, "user");
+    let token = await getJwt(createdRider._id, "rider");
 
-    return { newUser, token };
+    return { createdRider, token };
   }
 
   // Login User
   static async loginRider(loginParam) {
     const { email, password } = loginParam;
 
-    // Find user with email
-    let user = await Rider.findOne({
+    // Find rider with email
+    let rider = await Rider.findOne({
       $or: [{ email }, { phone: email }],
     });
-    if (!user) {
+    if (!rider) {
       return {
         err: "The email entered is not registered, please try again.",
         status: 401,
@@ -113,9 +113,9 @@ export default class RiderServices {
       };
     }
     // Define payload for token
-    let token = await getJwt(user._id, "user");
+    let token = await getJwt(rider._id, "rider");
 
-    return { user, token };
+    return { rider, token };
   }
 
   static async validateToken({ type, otp, email }) {
