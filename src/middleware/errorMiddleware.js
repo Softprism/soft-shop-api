@@ -1,28 +1,27 @@
 const errorHandler = (err, req, res, next) => {
-  console.log(err);
   if (typeof err === "string") {
     // custom application error
-    return res.status(400).json({ success: false, msg: err });
+    return res.status(400).json({ success: false, msg: err, status: 400 });
   }
 
   if (err.name === "ValidationError") {
     // mongoose validation error
-    return res.status(400).json({ success: false, msg: err.message });
+    return res.status(400).json({ success: false, msg: err.message, status: 400 });
   }
 
   if (err.name === "CastError") {
     // mongoose cast error
-    return res.status(400).json({ success: false, msg: err.message });
+    return res.status(400).json({ success: false, msg: err.message, status: 400 });
   }
 
   if (err.name === "UnauthorizedError") {
     // jwt authentication error
-    return res.status(401).json({ success: false, msg: "Invalid Token" });
+    return res.status(401).json({ success: false, msg: "Invalid Token", status: 401 });
   }
 
   if (err.name === "TypeError") {
     // jwt authentication error
-    return res.status(401).json({ success: false, msg: err.message });
+    return res.status(400).json({ success: false, msg: err.message, status: 400 });
   }
 
   if (err.status) {

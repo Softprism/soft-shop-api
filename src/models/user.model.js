@@ -60,6 +60,18 @@ const userSchema = mongoose.Schema({
     type: String,
     required: true,
   },
+  cards: [
+    {
+      card_index: { type: String },
+      first_6digits: { type: String },
+      last_4digits: { type: String },
+      issuer: { type: String },
+      country: { type: String },
+      type: { type: String },
+      token: { type: String },
+      expiry: { type: String },
+    }
+  ],
   orders: [{ type: mongoose.Types.ObjectId, ref: "Order" }], // array to store multiple orders
   isVerified: { type: Boolean, required: true, default: false },
   createdDate: { type: Date, default: Date.now },

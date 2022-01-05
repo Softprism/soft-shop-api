@@ -6,6 +6,7 @@ import productRoutes from "./product.routes";
 import storeRoutes from "./store.routes";
 import orderRoutes from "./order.routes";
 import categoryRoutes from "./category.routes";
+import paymentRoutes from "./payment.routes";
 
 const router = new Router();
 // api routes
@@ -16,5 +17,6 @@ router.use("/products", productRoutes);
 router.use("/stores", storeRoutes);
 router.use("/order", orderRoutes);
 router.use("/category", categoryRoutes);
+router.use("/payment", paymentRoutes);
 
 export default router;
