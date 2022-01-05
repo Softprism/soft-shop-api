@@ -35,7 +35,6 @@ const getBankDetails = async (req, res, next) => {
       success: true, result: details, status: 200
     });
   } catch (error) {
-    console.log(error);
     next(error);
   }
   next();

@@ -8,7 +8,6 @@ import Product from "../models/product.model";
 import StoreUpdate from "../models/store-update.model";
 
 import getJwt from "../utils/jwtGenerator";
-import { flw } from "./payment.service";
 
 const getStores = async (urlParams) => {
   // declare fields to exclude from response
@@ -401,8 +400,7 @@ const loginStore = async (StoreParam) => {
 };
 
 const getLoggedInStore = async (storeId) => {
-  let store = await getStore(storeId);
-
+  const store = await getStore(storeId);
   return store;
 };
 
