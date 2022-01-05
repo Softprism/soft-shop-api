@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import forge from "node-forge";
 import Flutterwave from "flutterwave-node-v3";
 
+import { response } from "express";
 import User from "../models/user.model";
 import Order from "../models/order.model";
 import Store from "../models/store.model";
@@ -124,13 +125,6 @@ const verifyCardRequest = async (payload) => {
   return flwRequest.data;
 };
 
-const createStoreSubaccount = async (payload) => {
-  payload.split_type = "flat";
-  payload.split_value = 0.5;
-  const response = await flw.Subaccount.create(payload);
-  return response;
-};
-
 const getAllBanks = async () => {
   const payload = {
     country: "NG"
@@ -140,16 +134,11 @@ const getAllBanks = async () => {
   return response;
 };
 
-const updateSubaccount = async (payload) => {
-  const response = await flw.Subaccount.update(payload);
-  return response;
-};
-
 const getBankDetails = async (payload) => {
   const response = await flw.Misc.verify_Account(payload);
   return response;
 };
 
 export {
-  bankTransfer, verifyTransaction, encryptCard, ussdPayment, cardPayment, verifyCardRequest, createStoreSubaccount, getAllBanks, updateSubaccount, getBankDetails
+  flw, bankTransfer, verifyTransaction, encryptCard, ussdPayment, cardPayment, verifyCardRequest, getAllBanks, getBankDetails
 };

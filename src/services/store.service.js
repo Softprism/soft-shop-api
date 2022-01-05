@@ -8,7 +8,7 @@ import Product from "../models/product.model";
 import StoreUpdate from "../models/store-update.model";
 
 import getJwt from "../utils/jwtGenerator";
-import { updateSubaccount } from "./payment.service";
+import { flw } from "./payment.service";
 
 const getStores = async (urlParams) => {
   // declare fields to exclude from response
@@ -401,7 +401,8 @@ const loginStore = async (StoreParam) => {
 };
 
 const getLoggedInStore = async (storeId) => {
-  const store = await getStore(storeId);
+  let store = await getStore(storeId);
+
   return store;
 };
 
@@ -431,11 +432,7 @@ const updateStoreRequest = async (storeID, updateParam) => {
   if (name) newDetails.name = name;
   if (email) newDetails.email = email;
   if (tax) newDetails.tax = tax;
-  if (account_details) {
-    // this function ain't working for now, payment provider bug
-    let subaccountUpdate = await updateSubaccount(account_details);
-    newDetails.account_details = subaccountUpdate.data;
-  }
+  if (account_details) newDetails.account_details = account_details;
   if (!address && !location && !phone_number && !category && !name && !tax && !email && !account_details) return { err: "You haven't specified a field to update. Please try again.", status: 400 };
 
   // check if store has a pending update

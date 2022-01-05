@@ -28,30 +28,6 @@ const getAllBanks = async (req, res, next) => {
   next();
 };
 
-const createStoreSubaccount = async (req, res, next) => {
-  try {
-    let subaccount = await paymentService.createStoreSubaccount(req.body);
-    return res.status(200).json({
-      success: true, result: subaccount, status: 200
-    });
-  } catch (error) {
-    next(error);
-  }
-  next();
-};
-
-const updateSubaccount = async (req, res, next) => {
-  try {
-    let subaccount = await paymentService.updateSubaccount(req.body);
-    return res.status(200).json({
-      success: true, result: subaccount, status: 200
-    });
-  } catch (error) {
-    next(error);
-  }
-  next();
-};
-
 const getBankDetails = async (req, res, next) => {
   try {
     let details = await paymentService.getBankDetails(req.body);
@@ -66,5 +42,5 @@ const getBankDetails = async (req, res, next) => {
 };
 
 export {
-  verifyTransaction, acknowledgeFlwWebhook, getAllBanks, createStoreSubaccount, updateSubaccount, getBankDetails
+  verifyTransaction, acknowledgeFlwWebhook, getAllBanks, getBankDetails
 };
