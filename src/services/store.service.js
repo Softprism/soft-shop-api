@@ -266,7 +266,7 @@ const getStore = async (storeId) => {
     },
   ];
 
-  // aggregating stores
+  // aggregating stores with active products
   let store = await Store.aggregate()
   // matching with requested store
     .match({
@@ -308,9 +308,13 @@ const getStore = async (storeId) => {
     .addFields({
       averageRating: { $ifNull: ["$averageRating", 0] },
     })
+    .addFields({
+      storeMoney: { $sum: "$orders.subtotal" },
+    })
   // appending excludes
     .append(pipeline);
 
+  // aggregating stores without active products
   if (store.length < 1) {
     store = await Store.aggregate()
     // matching with requested store
@@ -340,6 +344,9 @@ const getStore = async (storeId) => {
       })
       .addFields({
         averageRating: { $ifNull: ["$averageRating", 0] },
+      })
+      .addFields({
+        storeMoney: { $sum: "$orders.subtotal" },
       })
       .append(pipeline);
   }

@@ -44,10 +44,10 @@ router.post("/signin", verifyUserLoginParams, isUserVerified, signin);
 // @route   POST /password
 // @desc    reset a forget password
 // @access  Public
-router.post("/forgot-password", forgotPassword);
+// router.post("/forgot-password", forgotPassword);
 
 // @route   PATCH /password
 // @desc    creates new password for user after forget password
 // @access  Public
-router.patch("/password", hashPassword, createNewPassword);
+// router.patch("/password", hashPassword, createNewPassword);
 export default router;

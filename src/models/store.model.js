@@ -31,7 +31,6 @@ const StoreSchema = mongoose.Schema({
   createdDate: { type: Date, default: Date.now },
   tax: { type: String },
   account_details: {
-    account_balance: { type: String },
     account_number: { type: String },
     full_name: { type: String },
     bank_name: { type: String }
