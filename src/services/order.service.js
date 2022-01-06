@@ -73,6 +73,7 @@ const getOrders = async (urlParams) => {
     .project({
       status: 1,
       totalPrice: 1,
+      subtotal: 1,
       "orderItems.productName": 1,
       orderId: 1,
       createdAt: 1,
@@ -161,6 +162,7 @@ const createOrder = async (orderParam) => {
     .addFields({
       user: { $arrayElemAt: ["$user", 0] },
       store: { $arrayElemAt: ["$store", 0] },
+      // operations to calculate total price in each order item
       orderItems: {
         $map: {
           input: "$orderItems",
@@ -172,6 +174,7 @@ const createOrder = async (orderParam) => {
                 totalPrice: {
                   $multiply: ["$$orderItem.qty", "$$orderItem.price"],
                 },
+                // operations to calculate total price in each selected variants in each order items
                 selectedVariants: {
                   $map: {
                     input: "$$orderItem.selectedVariants",
@@ -197,6 +200,7 @@ const createOrder = async (orderParam) => {
         },
       },
     })
+  // operations to calculate total price of all products' totalPrice field
     .addFields({
       totalProductPrice: {
         $sum: {
@@ -209,6 +213,7 @@ const createOrder = async (orderParam) => {
           },
         },
       },
+      // operations to calculate total price of all selectedVariants' totalPrice field
       totalVariantPrice: {
         $sum: {
           $map: {
@@ -232,6 +237,7 @@ const createOrder = async (orderParam) => {
         ],
       },
     })
+    // calculate total price for the order
     .addFields({
       totalPrice: {
         $add: [
@@ -247,7 +253,7 @@ const createOrder = async (orderParam) => {
   if (neworder[0].paymentMethod === "Transfer") {
     const payload = {
       tx_ref: neworder[0].orderId,
-      amount: 100,
+      amount: neworder[0].subtotal,
       email: neworder[0].user.email,
       phone_number: neworder[0].user.phone_number,
       currency: "NGN",
@@ -260,13 +266,24 @@ const createOrder = async (orderParam) => {
     neworder[0].paymentResult = await bankTransfer(payload);
   }
   if (neworder[0].paymentMethod === "Card") {
-    //
+    const payload = {
+      token: orderParam.card, // This is the card token returned from the transaction verification endpoint as data.card.token
+      currency: "NGN",
+      country: "NG",
+      amount: neworder[0].subtotal,
+      email: neworder[0].user.email,
+      first_name: neworder[0].user.first_name,
+      last_name: neworder[0].user.last_name,
+      narration: `softshop payment - ${neworder[0].orderId}`,
+      tx_ref: neworder[0].orderId
+    };
+    neworder[0].paymentResult = await cardPayment(payload);
   }
   if (neworder[0].paymentMethod === "Ussd") {
     const payload = {
       tx_ref: neworder[0].orderId,
       account_bank: orderParam.bankCode,
-      amount: "100",
+      amount: neworder[0].subtotal,
       currency: "NGN",
       email: neworder[0].user.email,
       phone_number: neworder[0].user.phone_number,

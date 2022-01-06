@@ -27,7 +27,7 @@ const ussdPayment = async (payload) => {
   return response;
 };
 const cardPayment = async (payload) => {
-  const response = await flw.Charge.card(payload);
+  const response = flw.Tokenized.charge(payload);
   return response;
 };
 const verifyTransaction = async (paymentDetails) => {
@@ -89,9 +89,11 @@ const verifyTransaction = async (paymentDetails) => {
     // user is paying for an order
 
     let order = await Order.findOne({ orderId: tx_ref });
-
+    let store = await Store.findById(order.store);
     order.paymentResult = response.data;
     order.markModified("paymentResult");
+    order.status = "sent";
+    store.account_details.account_balance += order.subtotal;
     order.save();
     return order;
   }
