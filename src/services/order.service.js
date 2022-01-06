@@ -292,15 +292,16 @@ const createOrder = async (orderParam) => {
     neworder[0].paymentResult = await ussdPayment(payload);
   }
 
+  if (neworder[0].paymentResult.status === "error") {
+    return { err: neworder[0].paymentResult.message, status: 400 };
+  }
+
   let orderUpdate = await Order.findById(neworder[0]._id);
 
   orderUpdate.orderItems = neworder[0].orderItems;
   orderUpdate.totalPrice = neworder[0].totalPrice;
   orderUpdate.taxPrice = neworder[0].taxPrice;
   orderUpdate.subtotal = neworder[0].subtotal;
-  if (orderUpdate.paymentResult.status === "error") {
-    return { err: orderUpdate.paymentResult.message, status: 400 };
-  }
   orderUpdate.paymentResult = neworder[0].paymentResult;
   orderUpdate.markModified("paymentResult");
   orderUpdate.save();
