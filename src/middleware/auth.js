@@ -35,6 +35,13 @@ const auth = async (req, res, next) => {
         req.admin = decoded.admin;
       }
 
+      if (decoded.rider) {
+        const { rider } = decoded;
+        let verifyRider = await Admin.findById(rider.id);
+        if (!verifyRider) res.status(404).json({ success: false, msg: "rider doesn't exist", status: 404 });
+        req.rider = verifyRider;
+      }
+
       next();
     } catch (err) {
       res
