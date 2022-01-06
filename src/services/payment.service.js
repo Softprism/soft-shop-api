@@ -31,6 +31,7 @@ const cardPayment = async (payload) => {
   return response;
 };
 const verifyTransaction = async (paymentDetails) => {
+  console.log(paymentDetails);
   // this verifies a transaction with flutter
   // if it's a new card transaction, it adds the cards details to the user profile
   // if it's a order transaction, it adds the payment details to the order payment result

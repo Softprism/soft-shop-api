@@ -1,9 +1,7 @@
 import express from "express";
 import {
-  acknowledgeFlwWebhook, getAllBanks, getBankDetails
+  verifyTransaction, acknowledgeFlwWebhook, getAllBanks, getBankDetails
 } from "../controllers/payment.controller";
-
-import { verifyTransaction } from "../services/payment.service";
 
 const router = express.Router();
 
