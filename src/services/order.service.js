@@ -298,6 +298,9 @@ const createOrder = async (orderParam) => {
   orderUpdate.totalPrice = neworder[0].totalPrice;
   orderUpdate.taxPrice = neworder[0].taxPrice;
   orderUpdate.subtotal = neworder[0].subtotal;
+  if (orderUpdate.paymentResult.status === "error") {
+    return { err: orderUpdate.paymentResult.message, status: 400 };
+  }
   orderUpdate.paymentResult = neworder[0].paymentResult;
   orderUpdate.markModified("paymentResult");
   orderUpdate.save();
