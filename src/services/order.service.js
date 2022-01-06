@@ -253,7 +253,7 @@ const createOrder = async (orderParam) => {
   if (neworder[0].paymentMethod === "Transfer") {
     const payload = {
       tx_ref: neworder[0].orderId,
-      amount: `${neworder[0].totalPrice}`,
+      amount: neworder[0].subtotal,
       email: neworder[0].user.email,
       phone_number: neworder[0].user.phone_number,
       currency: "NGN",
@@ -266,13 +266,24 @@ const createOrder = async (orderParam) => {
     neworder[0].paymentResult = await bankTransfer(payload);
   }
   if (neworder[0].paymentMethod === "Card") {
-    //
+    const payload = {
+      token: orderParam.card, // This is the card token returned from the transaction verification endpoint as data.card.token
+      currency: "NGN",
+      country: "NG",
+      amount: neworder[0].subtotal,
+      email: neworder[0].user.email,
+      first_name: neworder[0].user.first_name,
+      last_name: neworder[0].user.last_name,
+      narration: `softshop payment - ${neworder[0].orderId}`,
+      tx_ref: neworder[0].orderId
+    };
+    neworder[0].paymentResult = await cardPayment(payload);
   }
   if (neworder[0].paymentMethod === "Ussd") {
     const payload = {
       tx_ref: neworder[0].orderId,
       account_bank: orderParam.bankCode,
-      amount: "100",
+      amount: neworder[0].subtotal,
       currency: "NGN",
       email: neworder[0].user.email,
       phone_number: neworder[0].user.phone_number,
