@@ -1,8 +1,9 @@
 import express from "express";
-import auth from "../middleware/auth";
 import {
-  verifyTransaction, acknowledgeFlwWebhook, getAllBanks, getBankDetails
+  acknowledgeFlwWebhook, getAllBanks, getBankDetails
 } from "../controllers/payment.controller";
+
+import { verifyTransaction } from "../services/payment.service";
 
 const router = express.Router();
 

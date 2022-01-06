@@ -90,10 +90,12 @@ const verifyTransaction = async (paymentDetails) => {
 
     let order = await Order.findOne({ orderId: tx_ref });
     let store = await Store.findById(order.store);
+    console.log(store);
     order.paymentResult = response.data;
     order.markModified("paymentResult");
     order.status = "sent";
     store.account_details.account_balance += order.subtotal;
+    console.log(store.account_details);
     order.save();
     return order;
   }
