@@ -3,4 +3,4 @@ deployment:
   tasks:
     - export DEPLOYPATH=/home/shopsoftprism/public_html/
     - /bin/cp -r * $DEPLOYPATH
-    - npm install
+    - /opt/cpanel/ea-nodejs16/bin/npm install
