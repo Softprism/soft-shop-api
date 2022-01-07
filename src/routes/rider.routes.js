@@ -2,9 +2,10 @@
 import express from "express";
 
 import RiderController from "../controllers/rider.controller";
-
 // import auth from "../middleware/auth";
+import validator from "../middleware/validator";
 import checkPagination from "../middleware/checkPagination";
+import { createRider } from "../validations/riderValidation";
 import {
   isUserVerified, verifyUserSignupParam,
   verifyEmailAddressChecker, verifyUserLoginParams, hashPassword
@@ -34,7 +35,7 @@ router.post("/verify", verifyToken);
 // @route   POST /riders/register
 // @desc    Register a rider
 // @access  Public
-router.post("/register", verifyUserSignupParam, hashPassword, signup);
+router.post("/register", hashPassword, validator(createRider, false), signup);
 
 // @route   POST /riders/login
 // @desc    Login a User & get token
