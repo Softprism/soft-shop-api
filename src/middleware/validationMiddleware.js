@@ -251,7 +251,38 @@ const storeUpdateProfileParam = async (req, res, next) => {
   }
 };
 
+const verifyNotification = async (req, res, next) => {
+  try {
+    req.body.title = validator.trim(req.body.title);
+    req.body.message = validator.trim(req.body.message);
+    req.body.description = validator.trim(req.body.description);
+    if (!validator.isEmpty(req.body.title)) {
+      return res.status(400).json({
+        success: false,
+        msg: "Title field is missing!",
+      });
+    }
+
+    if (validator.isEmpty(req.body.message)) {
+      return res.status(400).json({
+        success: false,
+        msg: "Message field is missing!",
+      });
+    }
+
+    if (validator.isEmpty(req.body.description)) {
+      return res.status(400).json({
+        success: false,
+        msg: "Description field is missing!",
+      });
+    }
+    next();
+  } catch (error) {
+    error.message = "Some fields are missing, please try again.";
+    next(error);
+  }
+};
 // eslint-disable-next-line import/prefer-default-export
 export {
-  isUserVerified, verifyEmailAddressChecker, verifyUserLoginParams, verifyUserSignupParam, hashPassword, verifyStoreSignupParam, storeUpdateProfileParam
+  isUserVerified, verifyEmailAddressChecker, verifyUserLoginParams, verifyUserSignupParam, hashPassword, verifyNotification, verifyStoreSignupParam, storeUpdateProfileParam
 };

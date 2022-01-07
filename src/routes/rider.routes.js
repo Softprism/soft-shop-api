@@ -11,7 +11,7 @@ import {
 } from "../middleware/validationMiddleware";
 
 const {
-  getRiders, verifyToken, signup, signin, requestToken
+  getRiders, verifyToken, signup, signin, requestToken, forgotPassword, createNewPassword,
 } = RiderController;
 
 const router = express.Router();

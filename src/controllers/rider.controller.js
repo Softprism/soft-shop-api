@@ -127,7 +127,7 @@ export default class RiderController {
 
   // ========================================================================== //
 
-  static async resetPassword(req, res, next) {
+  static async createNewPassword(req, res, next) {
     try {
       const action = await resetPassword(req.body);
       if (action.err) {

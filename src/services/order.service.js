@@ -3,9 +3,13 @@ import Order from "../models/order.model";
 import User from "../models/user.model";
 import Store from "../models/store.model";
 import Review from "../models/review.model";
+import Rider from "../models/rider.model";
 import {
   bankTransfer, ussdPayment, cardPayment
 } from "./payment.service";
+import NotificationServices from "./notification.service";
+
+const { createNotification } = NotificationServices;
 
 const getOrders = async (urlParams) => {
   // initialize match parameters, get limit, skip & sort values
@@ -289,6 +293,15 @@ const createOrder = async (orderParam) => {
   orderUpdate.paymentResult = neworder[0].paymentResult;
   orderUpdate.markModified("paymentResult");
   orderUpdate.save();
+
+  let riders = await Rider.find();
+  let ridersId = [];
+  if (riders) {
+    ridersId = riders.map((rider) => {
+      return rider._id;
+    });
+  }
+  await createNotification(ridersId, newOrder._id);
 
   return neworder[0];
 };
