@@ -1,6 +1,5 @@
 /node_modules
 .gitignore
-.env
 .vscode/
 package-lock.json
 /build
