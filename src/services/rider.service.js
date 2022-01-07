@@ -102,9 +102,8 @@ export default class RiderServices {
         status: 401,
       };
     }
-
     // Check if password matches with stored hash
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(password, rider.password);
 
     if (!isMatch) {
       return {
@@ -112,6 +111,7 @@ export default class RiderServices {
         status: 401,
       };
     }
+
     // Define payload for token
     let token = await getJwt(rider._id, "rider");
 

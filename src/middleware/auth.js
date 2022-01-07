@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import User from "../models/user.model";
 import Admin from "../models/admin.model";
 import Store from "../models/store.model";
+import Rider from "../models/rider.model";
 
 const auth = async (req, res, next) => {
   let token;
@@ -37,7 +38,7 @@ const auth = async (req, res, next) => {
 
       if (decoded.rider) {
         const { rider } = decoded;
-        let verifyRider = await Admin.findById(rider.id);
+        let verifyRider = await Rider.findById(rider.id);
         if (!verifyRider) res.status(404).json({ success: false, msg: "rider doesn't exist", status: 404 });
         req.rider = verifyRider;
       }
