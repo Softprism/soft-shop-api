@@ -1,5 +1,4 @@
 ---  
-deployment:    
-  tasks:  
-    - PATH=/opt/cpanel/ea-nodejs16/bin/:$PATH  
+deployment:
+  tasks: 
     - npm i
