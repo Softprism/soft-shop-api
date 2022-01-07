@@ -3,4 +3,3 @@ deployment:
   tasks:  
     - PATH=/opt/cpanel/ea-nodejs16/bin/:$PATH  
     - npm i
-    - npm run start
