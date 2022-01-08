@@ -28,7 +28,7 @@ app.use("/", router);
 app.all("*", (req, res, next) => {
   res
     .status(200)
-    .json({ success: true, msg: "server is fine. Kindly jazz up if you're lost." });
+    .json({ success: true, msg: "server is fine. please jazz up if you're lost." });
   next();
 });
 
