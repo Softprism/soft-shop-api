@@ -27,8 +27,8 @@ app.use(hpp());
 app.use("/", router);
 app.all("*", (req, res, next) => {
   res
-    .status(200)
-    .json({ success: true, msg: "Server is fine. Kindly jazz up if you're lost." });
+    .status(404)
+    .json({ success: true, msg: "Resource not found, please try logging in" });
   next();
 });
 
