@@ -84,6 +84,20 @@ const confirmStoreUpdate = async (req, res, next) => {
   }
 };
 
+const createNotification = async (req, res, next) => {
+  try {
+    const result = await adminService.createNotification(req.body);
+
+    if (store.err) {
+      res.status(store.status).json({ success: false, msg: result.err, status: result.status });
+    } else {
+      res.status(200).json({ success: true, result: result.notification, status: 200 });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
 export {
-  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin, resetStorePassword, confirmStoreUpdate
+  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin, resetStorePassword, confirmStoreUpdate, createNotification
 };

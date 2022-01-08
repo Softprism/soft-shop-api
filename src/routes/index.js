@@ -7,6 +7,8 @@ import storeRoutes from "./store.routes";
 import orderRoutes from "./order.routes";
 import categoryRoutes from "./category.routes";
 import paymentRoutes from "./payment.routes";
+import dashboardRoutes from "./dashboard.routes";
+import notificationRoutes from "./notification.routes";
 
 const router = new Router();
 // api routes
@@ -18,5 +20,7 @@ router.use("/stores", storeRoutes);
 router.use("/order", orderRoutes);
 router.use("/category", categoryRoutes);
 router.use("/payment", paymentRoutes);
+router.use("/dashboards", dashboardRoutes);
+router.use("/riders/notifications", notificationRoutes);
 
 export default router;

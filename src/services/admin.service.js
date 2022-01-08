@@ -68,6 +68,15 @@ const getLoggedInAdmin = async (adminParam) => {
   return admin;
 };
 
+const createNotification = async (body) => {
+  // const {
+  //   title, message, description, rider
+  // } = req.body;
+  const notification = await Notification.create(body);
+
+  return { notification };
+};
+
 const updateAdmin = async (updateParam, id) => {
   const { username, password } = updateParam;
 
@@ -170,5 +179,5 @@ const confirmStoreUpdate = async (storeID) => {
 };
 
 export {
-  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin, resetStorePassword, confirmStoreUpdate
+  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin, resetStorePassword, confirmStoreUpdate, createNotification
 };
