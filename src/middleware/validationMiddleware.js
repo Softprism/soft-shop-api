@@ -3,7 +3,7 @@ import capitalize from "capitalize";
 import bcrypt from "bcryptjs";
 import User from "../models/user.model";
 
-const verifyUserLoginParams = async (req, res, next) =>  {
+const verifyUserLoginParams = async (req, res, next) => {
   try {
     req.body.email = validator.trim(req.body.email);
     req.body.password = validator.trim(req.body.password);
