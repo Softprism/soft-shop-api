@@ -31,7 +31,6 @@ const cardPayment = async (payload) => {
   return response;
 };
 const verifyTransaction = async (paymentDetails) => {
-  console.log(paymentDetails);
   // this verifies a transaction with flutter
   // if it's a new card transaction, it adds the cards details to the user profile
   // if it's a order transaction, it adds the payment details to the order payment result
@@ -91,12 +90,14 @@ const verifyTransaction = async (paymentDetails) => {
 
     let order = await Order.findOne({ orderId: tx_ref });
     let store = await Store.findById(order.store);
-    console.log(store);
     order.paymentResult = response.data;
     order.markModified("paymentResult");
     order.status = "sent";
-    store.account_details.account_balance += order.subtotal;
-    console.log(store.account_details);
+    // credit store's account balalnce
+    store.account_details.total_credit = Number(store.account_details.total_credit);
+    store.account_details.total_debit = Number(store.account_details.total_debit);
+    store.account_details.account_balance = store.account_details.total_credit - store.account_details.total_debit;
+
     order.save();
     return order;
   }
