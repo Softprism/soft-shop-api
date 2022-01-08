@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import capitalize from "capitalize";
 import Rider from "../models/rider.model";
 import Token from "../models/tokens.model";
 
@@ -70,8 +71,8 @@ export default class RiderServices {
     }
     // Create User Object
     const newRider = {
-      first_name,
-      last_name,
+      first_name: capitalize(first_name),
+      last_name: capitalize(last_name),
       email,
       phone_number,
       password,
@@ -83,9 +84,9 @@ export default class RiderServices {
     // delete sign up token
     await Token.findByIdAndDelete(userParam.token);
 
-    let token = await getJwt(createdRider._id, "rider");
+    let riderToken = await getJwt(createdRider._id, "rider");
 
-    return { createdRider, token };
+    return { createdRider, riderToken };
   }
 
   // Login User

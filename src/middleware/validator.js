@@ -17,6 +17,7 @@ const validationMiddleware = (requestSchema, auth = true) => (req, res, next) =>
       success: false,
       msg: "Some parameters failed validation",
       errors: validationResult.error,
+      status: 422
     });
   } return next();
 };
