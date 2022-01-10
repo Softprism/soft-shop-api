@@ -1,12 +1,14 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 
+import mongoose from "mongoose";
 import Admin from "../models/admin.model";
 import Store from "../models/store.model";
 import StoreUpdate from "../models/store-update.model";
 
 import sendEmail from "../utils/sendMail";
 import getJwt from "../utils/jwtGenerator";
+import Transaction from "../models/transaction.model";
 
 const getAdmins = async () => {
   const admins = await Admin.find();
@@ -176,6 +178,37 @@ const confirmStoreUpdate = async (storeID) => {
   }
 
   return storeUpdateRequest;
+};
+
+const confirmStorePayout = async (storeId) => {
+  let store = await Store.findById(storeId);
+  let transactions = Transaction.aggregate()
+    .match({
+      receiver: mongoose.Types.ObjectId(storeId),
+      type: "Credit"
+    })
+    .addFields({
+      totalCredit: {
+        $sum: {
+          $cond:
+         [{ $eq: ["$type", "Credit"] }, "$amount", 0]
+        }
+      },
+      totalDebit: {
+        $sum: {
+          $cond:
+         [{ $eq: ["$type", "Debit"] }, "$amount", 0]
+        }
+      }
+    });
+
+  let totalStoreCredits = store.account_details.total_credit;
+  let totalStoreDebits = store.account_details.total_debit;
+
+  let approval = await Transaction.findOne({ receiver: storeId, status: "pending" });
+  approval.status = "completed";
+  approval.save();
+  return approval;
 };
 
 export {
