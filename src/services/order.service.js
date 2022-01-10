@@ -296,6 +296,8 @@ const createOrder = async (orderParam) => {
     neworder[0].paymentResult = await ussdPayment(payload);
   }
 
+  console.log(neworder[0].paymentResult);
+
   if (neworder[0].paymentResult.status === "error") {
     return { err: neworder[0].paymentResult.message, status: 400 };
   }
