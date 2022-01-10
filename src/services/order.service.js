@@ -298,12 +298,21 @@ const createOrder = async (orderParam) => {
 
   console.log(neworder[0].paymentResult);
 
-  if (neworder[0].paymentResult.status === "error") {
-    return { err: neworder[0].paymentResult.message, status: 400 };
+  if (neworder[0].paymentResult.status === "error" || neworder[0].paymentResult.data.status === "failed") {
+    // Update order with more details regardless of failed payment
+    let orderUpdate = await Order.findById(neworder[0]._id);
+    orderUpdate.orderItems = neworder[0].orderItems;
+    orderUpdate.totalPrice = neworder[0].totalPrice;
+    orderUpdate.taxPrice = neworder[0].taxPrice;
+    orderUpdate.subtotal = neworder[0].subtotal;
+    orderUpdate.paymentResult = neworder[0].paymentResult;
+    orderUpdate.markModified("paymentResult");
+    orderUpdate.save();
+    return { err: `${neworder[0].paymentResult.message} Order has been created, please try paying again or select another payment method.`, status: 400 };
   }
 
+  // update order
   let orderUpdate = await Order.findById(neworder[0]._id);
-
   orderUpdate.orderItems = neworder[0].orderItems;
   orderUpdate.totalPrice = neworder[0].totalPrice;
   orderUpdate.taxPrice = neworder[0].taxPrice;
