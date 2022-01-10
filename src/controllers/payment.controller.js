@@ -11,6 +11,7 @@ const verifyTransaction = async (req, res, next) => {
 };
 
 const acknowledgeFlwWebhook = async (req, res, next) => {
+  console.log("acknowledgeFlwWebhook", req.body);
   if (req.body.softshop !== "true") {
     return res.status(200).json({ success: true });
   }
