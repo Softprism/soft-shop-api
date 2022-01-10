@@ -103,6 +103,8 @@ const verifyTransaction = async (paymentDetails) => {
     // get store balance
     store.account_details.account_balance = store.account_details.total_credit - store.account_details.total_debit;
 
+    console.log("All operations done");
+
     store.save();
     order.save();
     return order;
