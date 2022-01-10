@@ -298,7 +298,7 @@ const createOrder = async (orderParam) => {
 
   console.log(neworder[0].paymentResult);
 
-  if (neworder[0].paymentResult.status === "error" || neworder[0].paymentResult.data.status === "failed") {
+  if (neworder[0].paymentResult.status === "error") {
     // Update order with more details regardless of failed payment
     let orderUpdate = await Order.findById(neworder[0]._id);
     orderUpdate.orderItems = neworder[0].orderItems;
