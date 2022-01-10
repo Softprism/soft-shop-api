@@ -90,12 +90,15 @@ const verifyTransaction = async (paymentDetails) => {
 
     let order = await Order.findOne({ orderId: tx_ref });
     let store = await Store.findById(order.store);
+    if (!order || !store) throw { err: "Payment could not be resolved, please contact support.", status: 400 };
+
     order.paymentResult = response.data;
     order.markModified("paymentResult");
     order.status = "sent";
     // credit store's account balalnce
-    store.account_details.total_credit = Number(store.account_details.total_credit);
-    store.account_details.total_debit = Number(store.account_details.total_debit);
+    order.subtotal = Number(order.subtotal);
+    store.account_details.total_credit += order.subtotal;
+    // get store balance
     store.account_details.account_balance = store.account_details.total_credit - store.account_details.total_debit;
 
     store.save();
