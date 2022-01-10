@@ -257,7 +257,7 @@ const createOrder = async (orderParam) => {
   if (neworder[0].paymentMethod === "Transfer") {
     const payload = {
       tx_ref: neworder[0].orderId,
-      amount: neworder[0].subtotal,
+      amount: neworder[0].totalPrice,
       email: neworder[0].user.email,
       phone_number: neworder[0].user.phone_number,
       currency: "NGN",
@@ -275,7 +275,7 @@ const createOrder = async (orderParam) => {
       token: orderParam.card, // This is the card token returned from the transaction verification endpoint as data.card.token
       currency: "NGN",
       country: "NG",
-      amount: neworder[0].subtotal,
+      amount: neworder[0].totalPrice,
       email: neworder[0].user.email,
       first_name: neworder[0].user.first_name,
       last_name: neworder[0].user.last_name,
@@ -289,7 +289,7 @@ const createOrder = async (orderParam) => {
     const payload = {
       tx_ref: neworder[0].orderId,
       account_bank: orderParam.bankCode,
-      amount: neworder[0].subtotal,
+      amount: neworder[0].totalPrice,
       currency: "NGN",
       email: neworder[0].user.email,
       phone_number: neworder[0].user.phone_number,
