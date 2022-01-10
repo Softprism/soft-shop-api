@@ -96,8 +96,7 @@ const verifyTransaction = async (paymentDetails) => {
     if (response.data.status === "successful" && paymentDetails.softshop !== "true") {
       order.status = "sent";
       // credit store's account balalnce
-      order.subtotal = Number(order.subtotal);
-      store.account_details.total_credit += order.subtotal;
+      store.account_details.total_credit += Number(order.subtotal);
       // get store balance
       store.account_details.account_balance = store.account_details.total_credit - store.account_details.total_debit;
     }
