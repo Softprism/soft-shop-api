@@ -278,6 +278,7 @@ const createOrder = async (orderParam) => {
       email: neworder[0].user.email,
       first_name: neworder[0].user.first_name,
       last_name: neworder[0].user.last_name,
+      duration: 2,
       narration: `softshop payment - ${neworder[0].orderId}`,
       tx_ref: neworder[0].orderId
     };
