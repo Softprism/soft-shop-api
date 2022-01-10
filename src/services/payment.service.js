@@ -39,7 +39,7 @@ const verifyTransaction = async (paymentDetails) => {
   console.log(1, response);
 
   // return an error if response isn't succesful
-  if (response.status !== "success") {
+  if (response.data.status !== "successful") {
     console.log(2, response);
     return { err: response.message, status: 400 };
   }
