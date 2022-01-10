@@ -5,7 +5,7 @@ import Store from "../models/store.model";
 import Review from "../models/review.model";
 import Rider from "../models/rider.model";
 import {
-  bankTransfer, ussdPayment, cardPayment
+  bankTransfer, ussdPayment, cardPayment, verifyTransaction
 } from "./payment.service";
 import NotificationServices from "./notification.service";
 
