@@ -2,7 +2,6 @@ import * as paymentService from "../services/payment.service";
 
 const verifyTransaction = async (req, res, next) => {
   try {
-    console.log(req.body);
     let verify = await paymentService.verifyTransaction(req.body);
     return res.status(200).json({ success: true, result: verify, status: 200 });
   } catch (error) {
@@ -13,7 +12,7 @@ const verifyTransaction = async (req, res, next) => {
 const acknowledgeFlwWebhook = async (req, res, next) => {
   console.log("acknowledgeFlwWebhook", req.body);
   if (req.body.softshop !== "true") {
-    return res.status(200).json({ success: true });
+    res.status(200).json({ success: true });
   }
   next();
 };
