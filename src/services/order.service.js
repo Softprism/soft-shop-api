@@ -5,7 +5,7 @@ import Store from "../models/store.model";
 import Review from "../models/review.model";
 import Rider from "../models/rider.model";
 import {
-  bankTransfer, ussdPayment, cardPayment
+  bankTransfer, ussdPayment, cardPayment, verifyTransaction
 } from "./payment.service";
 import NotificationServices from "./notification.service";
 
@@ -77,6 +77,7 @@ const getOrders = async (urlParams) => {
     .project({
       status: 1,
       totalPrice: 1,
+      subtotal: 1,
       "orderItems.productName": 1,
       orderId: 1,
       createdAt: 1,
@@ -165,6 +166,7 @@ const createOrder = async (orderParam) => {
     .addFields({
       user: { $arrayElemAt: ["$user", 0] },
       store: { $arrayElemAt: ["$store", 0] },
+      // operations to calculate total price in each order item
       orderItems: {
         $map: {
           input: "$orderItems",
@@ -176,6 +178,7 @@ const createOrder = async (orderParam) => {
                 totalPrice: {
                   $multiply: ["$$orderItem.qty", "$$orderItem.price"],
                 },
+                // operations to calculate total price in each selected variants in each order items
                 selectedVariants: {
                   $map: {
                     input: "$$orderItem.selectedVariants",
@@ -201,6 +204,7 @@ const createOrder = async (orderParam) => {
         },
       },
     })
+  // operations to calculate total price of all products' totalPrice field
     .addFields({
       totalProductPrice: {
         $sum: {
@@ -213,6 +217,7 @@ const createOrder = async (orderParam) => {
           },
         },
       },
+      // operations to calculate total price of all selectedVariants' totalPrice field
       totalVariantPrice: {
         $sum: {
           $map: {
@@ -236,6 +241,7 @@ const createOrder = async (orderParam) => {
         ],
       },
     })
+    // calculate total price for the order
     .addFields({
       totalPrice: {
         $add: [
@@ -251,17 +257,13 @@ const createOrder = async (orderParam) => {
   if (neworder[0].paymentMethod === "Transfer") {
     const payload = {
       tx_ref: neworder[0].orderId,
-      amount: 100,
+      amount: neworder[0].totalPrice,
       email: neworder[0].user.email,
       phone_number: neworder[0].user.phone_number,
       currency: "NGN",
       fullname: `${neworder[0].user.first_name} ${neworder[0].user.last_name}`,
-      // subaccounts: [
-      //   {
-      //     id: "RS_D87A9EE339AE28BFA2AE86041C6DE70E"
-      //   }
-      // ],
-      frequency: 10,
+      frequency: 10, // account will expire after 10 transactions o
+      duration: 10, // account will expire after 10 days
       narration: `softshop payment - ${neworder[0].orderId}`,
       is_permanent: 0,
     };
@@ -269,13 +271,25 @@ const createOrder = async (orderParam) => {
     neworder[0].paymentResult = await bankTransfer(payload);
   }
   if (neworder[0].paymentMethod === "Card") {
-    //
+    const payload = {
+      token: orderParam.card, // This is the card token returned from the transaction verification endpoint as data.card.token
+      currency: "NGN",
+      country: "NG",
+      amount: neworder[0].totalPrice,
+      email: neworder[0].user.email,
+      first_name: neworder[0].user.first_name,
+      last_name: neworder[0].user.last_name,
+      frequency: 10,
+      narration: `softshop payment - ${neworder[0].orderId}`,
+      tx_ref: neworder[0].orderId
+    };
+    neworder[0].paymentResult = await cardPayment(payload);
   }
   if (neworder[0].paymentMethod === "Ussd") {
     const payload = {
       tx_ref: neworder[0].orderId,
       account_bank: orderParam.bankCode,
-      amount: "100",
+      amount: neworder[0].totalPrice,
       currency: "NGN",
       email: neworder[0].user.email,
       phone_number: neworder[0].user.phone_number,
@@ -284,8 +298,23 @@ const createOrder = async (orderParam) => {
     neworder[0].paymentResult = await ussdPayment(payload);
   }
 
-  let orderUpdate = await Order.findById(neworder[0]._id);
+  console.log(neworder[0].paymentResult);
 
+  if (neworder[0].paymentResult.status === "error") {
+    // Update order with more details regardless of failed payment
+    let orderUpdate = await Order.findById(neworder[0]._id);
+    orderUpdate.orderItems = neworder[0].orderItems;
+    orderUpdate.totalPrice = neworder[0].totalPrice;
+    orderUpdate.taxPrice = neworder[0].taxPrice;
+    orderUpdate.subtotal = neworder[0].subtotal;
+    orderUpdate.paymentResult = neworder[0].paymentResult;
+    orderUpdate.markModified("paymentResult");
+    orderUpdate.save();
+    return { err: `${neworder[0].paymentResult.message} Order has been created, please try paying again or select another payment method.`, status: 400 };
+  }
+
+  // update order
+  let orderUpdate = await Order.findById(neworder[0]._id);
   orderUpdate.orderItems = neworder[0].orderItems;
   orderUpdate.totalPrice = neworder[0].totalPrice;
   orderUpdate.taxPrice = neworder[0].taxPrice;

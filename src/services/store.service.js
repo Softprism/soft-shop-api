@@ -266,7 +266,7 @@ const getStore = async (storeId) => {
     },
   ];
 
-  // aggregating stores
+  // aggregating stores with active products
   let store = await Store.aggregate()
   // matching with requested store
     .match({
@@ -308,9 +308,13 @@ const getStore = async (storeId) => {
     .addFields({
       averageRating: { $ifNull: ["$averageRating", 0] },
     })
+    .addFields({
+      storeMoney: { $sum: "$orders.subtotal" },
+    })
   // appending excludes
     .append(pipeline);
 
+  // aggregating stores without active products
   if (store.length < 1) {
     store = await Store.aggregate()
     // matching with requested store
@@ -340,6 +344,9 @@ const getStore = async (storeId) => {
       })
       .addFields({
         averageRating: { $ifNull: ["$averageRating", 0] },
+      })
+      .addFields({
+        storeMoney: { $sum: "$orders.subtotal" },
       })
       .append(pipeline);
   }
@@ -376,7 +383,7 @@ const createStore = async (StoreParam) => {
 const loginStore = async (StoreParam) => {
   const { email, password } = StoreParam;
 
-  let store = await Store.findOne({ email }).select("password isVerified resetPassword pendingUpdates");
+  let store = await Store.findOne({ email }).select("password isVerified resetPassword pendingUpdates name");
 
   if (!store) {
     return { err: "Invalid email. Please try again.", status: 400 };
@@ -416,7 +423,8 @@ const updateStoreRequest = async (storeID, updateParam) => {
     name,
     phone_number,
     category,
-    tax
+    tax,
+    account_details
   } = updateParam;
 
   const newDetails = {};
@@ -429,8 +437,8 @@ const updateStoreRequest = async (storeID, updateParam) => {
   if (name) newDetails.name = name;
   if (email) newDetails.email = email;
   if (tax) newDetails.tax = tax;
-
-  if (!address && !location && !phone_number && !category && !name && !tax && !email) return { err: "You haven't specified a field to update. Please try again.", status: 400 };
+  if (account_details) newDetails.account_details = account_details;
+  if (!address && !location && !phone_number && !category && !name && !tax && !email && !account_details) return { err: "You haven't specified a field to update. Please try again.", status: 400 };
 
   // check if store has a pending update
   const checkStoreUpdate = await Store.findById(storeID);

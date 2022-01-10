@@ -156,7 +156,7 @@ const confirmStoreUpdate = async (storeID) => {
 
   // Check for fields
   if (address) updateParam.address = address;
-  if (location.type && location.coordinates) updateParam.location = location;
+  if (location.type && location.coordinates.length > 0) updateParam.location = location;
   if (phone_number) updateParam.phone_number = phone_number;
   if (category) updateParam.category = category;
   if (name) updateParam.name = name;

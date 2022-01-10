@@ -30,6 +30,14 @@ const StoreSchema = mongoose.Schema({
   pendingUpdates: { type: Boolean, default: false },
   createdDate: { type: Date, default: Date.now },
   tax: { type: String },
+  account_details: {
+    account_balance: { type: Number, default: 0.00 },
+    total_credit: { type: Number, default: 0.00 },
+    total_debit: { type: Number, default: 0.00 },
+    account_number: { type: String },
+    full_name: { type: String },
+    bank_name: { type: String }
+  }
 });
 
 const Store = mongoose.model("Store", StoreSchema);

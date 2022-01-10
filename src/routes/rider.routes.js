@@ -22,30 +22,31 @@ router.get("/", checkPagination, getRiders);
 // @route   POST /riders/verify
 // @desc    send OTP to verify new rider signup email
 // @access  Public
-router.post("/token", validator(emailValidation, false), requestToken);
+router.post("/token", validator(emailValidation), requestToken);
 
 // @route   GET /riders/token
 // @desc    validates a token
 // @access  Public
-router.post("/verify", validator(tokenValidation, false), verifyToken);
+router.post("/verify", validator(tokenValidation), verifyToken);
 
 // @route   POST /riders/register
 // @desc    Register a rider
 // @access  Public
-router.post("/register", hashPassword, validator(registerValidation, false), signup);
+router.post("/register", hashPassword, validator(registerValidation), signup);
 
 // @route   POST /riders/login
 // @desc    Login a User & get token
 // @access  Public
-router.post("/signin", validator(loginValidation, false), signin);
+router.post("/signin", validator(loginValidation), signin);
 
 // @route   POST /password
 // @desc    reset a forget password
 // @access  Public
-router.post("/forgot-password", validator(emailValidation, false), forgotPassword);
+router.post("/forgot-password", validator(emailValidation), forgotPassword);
 
 // @route   PATCH /password
 // @desc    creates new password for user after forget password
 // @access  Public
-router.patch("/reset-password", hashPassword, validator(resetValidation, false), createNewPassword);
+router.patch("/reset-password", hashPassword, validator(resetValidation), createNewPassword);
+
 export default router;
