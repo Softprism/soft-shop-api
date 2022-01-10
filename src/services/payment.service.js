@@ -45,6 +45,7 @@ const verifyTransaction = async (paymentDetails) => {
   // continue operations if transaction has been verified
   const { tx_ref } = response.data;
   if (tx_ref.includes("card")) {
+    console.log("adding card");
     // user is adding a new card
 
     // create card index
@@ -86,6 +87,7 @@ const verifyTransaction = async (paymentDetails) => {
     return user;
   }
   if (tx_ref.includes("soft")) {
+    console.log("new order");
     // user is paying for an order
 
     let order = await Order.findOne({ orderId: tx_ref });
