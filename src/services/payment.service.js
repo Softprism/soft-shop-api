@@ -31,21 +31,20 @@ const cardPayment = async (payload) => {
   return response;
 };
 const verifyTransaction = async (paymentDetails) => {
-  // this verifies a transaction with flutter
+  // this verifies a transaction with flutterwave
   // if it's a new card transaction, it adds the cards details to the user profile
-  // if it's a order transaction, it adds the payment details to the order payment result
+  // if it's a order transaction, it adds the payment details to the order payment result and credit store balance
 
   const response = await flw.Transaction.verify({ id: paymentDetails.data.id });
 
-  // return an error if response isn't succesful
-  if (response.status !== "success") {
-    return { err: response.message, status: 400 };
-  }
-
-  // continue operations if transaction has been verified
   const { tx_ref } = response.data;
   if (tx_ref.includes("card")) {
     // user is adding a new card
+
+    // return an error if response isn't succesful
+    if (response.data.status !== "successful") {
+      return { err: response.message, status: 400 };
+    }
 
     // create card index
     let card_index = () => {
@@ -73,27 +72,36 @@ const verifyTransaction = async (paymentDetails) => {
 
     // find user from payment initiated
     let user = await User.findById(response.data.meta.user_id).select("-orders");
-    if (!user) {
-      return { err: "Payment not initialized by user. Please login and try again.", status: 500 };
-    }
     // add card index to initiated payment card details
     response.data.card.card_index = card_index();
 
     // add new card details to user
     user.cards.push(response.data.card);
     user.save();
-    user.cards = undefined;
+    // unset cards
+    // user.cards = undefined;
     return user;
   }
+
   if (tx_ref.includes("soft")) {
     // user is paying for an order
 
     let order = await Order.findOne({ orderId: tx_ref });
     let store = await Store.findById(order.store);
+
     order.paymentResult = response.data;
     order.markModified("paymentResult");
-    order.status = "sent";
-    store.account_details.account_balance += order.subtotal;
+
+    // Update order status to sent and credit store balance when payment has been validated by flutterwave. Hitting this endpoint from softshop app will not update details.
+    if (response.data.status === "successful" && paymentDetails.softshop !== "true") {
+      order.status = "sent";
+      // credit store's account balalnce
+      store.account_details.total_credit += Number(order.subtotal);
+      // get store balance
+      store.account_details.account_balance = store.account_details.total_credit - store.account_details.total_debit;
+    }
+
+    store.save();
     order.save();
     return order;
   }

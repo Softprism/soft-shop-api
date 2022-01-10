@@ -5,13 +5,16 @@ const verifyTransaction = async (req, res, next) => {
     let verify = await paymentService.verifyTransaction(req.body);
     return res.status(200).json({ success: true, result: verify, status: 200 });
   } catch (error) {
+    console.log(error);
     next(error);
   }
 };
 
 const acknowledgeFlwWebhook = async (req, res, next) => {
   if (req.body.softshop !== "true") {
-    res.status(200).json({ success: true });
+    console.log("acknowledgeFlwWebhook", req.body);
+    paymentService.verifyTransaction(req.body);
+    return res.status(200).json({ success: true });
   }
   next();
 };
