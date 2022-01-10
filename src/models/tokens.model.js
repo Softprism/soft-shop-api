@@ -12,8 +12,8 @@ const tokenSchema = mongoose.Schema(
       required: true,
     },
     type: {
-      type: String, // user-forgot-password, user-signup
-      enum: ["user-forgot-password", "user-signup", "rider-signup"],
+      type: String,
+      enum: ["user-forgot-password", "rider-forgot-password", "user-signup", "rider-signup"],
       required: true,
     },
     createdAt: {

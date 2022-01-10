@@ -147,7 +147,7 @@ export default class RiderServices {
       };
     }
 
-    let token = await getOTP("user-forgot-password", email);
+    let token = await getOTP("rider-forgot-password", email);
 
     // send otp
     let email_subject = "forgot password";
