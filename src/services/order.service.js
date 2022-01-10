@@ -263,6 +263,7 @@ const createOrder = async (orderParam) => {
       currency: "NGN",
       fullname: `${neworder[0].user.first_name} ${neworder[0].user.last_name}`,
       frequency: 10,
+      duration: 2,
       narration: `softshop payment - ${neworder[0].orderId}`,
       is_permanent: 0,
     };

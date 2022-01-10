@@ -10,6 +10,11 @@ const router = express.Router();
 // @access  Private
 router.post("/verify", acknowledgeFlwWebhook, verifyTransaction);
 
+// @route   POST /
+// @desc    verify transaction
+// @access  Private
+router.post("/acknw", acknowledgeFlwWebhook);
+
 // @route   GET /
 // @desc    get all available banks
 // @access  Private
