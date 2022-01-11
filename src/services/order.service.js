@@ -7,9 +7,7 @@ import Rider from "../models/rider.model";
 import {
   bankTransfer, ussdPayment, cardPayment, verifyTransaction
 } from "./payment.service";
-import NotificationServices from "./notification.service";
-
-const { createNotification } = NotificationServices;
+import { createNotification } from "./notification.service";
 
 const getOrders = async (urlParams) => {
   // initialize match parameters, get limit, skip & sort values
