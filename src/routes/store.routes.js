@@ -17,7 +17,9 @@ import {
   bestSellers,
   getStoreFeedback,
   getInventoryList,
-  updateStore
+  updateStore,
+  requestPayout,
+  getPayoutHistory
 } from "../controllers/store.controller";
 import { getStoreVariantsForUsers } from "../controllers/product.controller";
 
@@ -55,6 +57,8 @@ router.get("/stats/sales", auth, getStoreSalesStats);
 router.get("/stats/best-sellers", auth, checkPagination, bestSellers);
 
 router.get("/inventory", auth, isStoreAdmin, checkPagination, getInventoryList);
+router.get("/payout", auth, requestPayout);
+router.get("/payout/history", auth, getPayoutHistory);
 
 router.get(
   "/stats/feedback",

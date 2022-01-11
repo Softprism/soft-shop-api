@@ -690,26 +690,35 @@ const getInventoryList = async (queryParam) => {
 const requestPayout = async (storeId) => {
   // get store details
   const store = await Store.findById(storeId);
+  console.log(store.account_details);
 
   // set payout variable
   let payout = store.account_details.account_balance;
 
   // create transaction
-  let newTransaction = await createTransaction(payout, "Debit", "Store", storeId);
+  let newTransaction = createTransaction({
+    amount: payout,
+    type: "Debit",
+    to: "Store",
+    receiver: storeId,
+    request: true
+  });
 
   // check for error while creating new transaction
   if (!newTransaction) return { err: "Error requesting payout. Please try again", status: 400 };
 
   // update store account details
-  store.account_details.total_debit += Number(store.account_details.total_debit);
+  store.account_details.total_debit += Number(payout);
   store.account_details.account_balance = store.account_details.total_credit - store.account_details.total_debit;
+  console.log(store.account_details);
   store.save();
   return newTransaction;
 };
 
 const getPayoutHistory = async (storeId, type) => {
   const payoutHistory = await Transaction.find({
-    $or: [{ from: storeId }, { to: storeId }],
+    receiver: storeId,
+    type
   });
   return payoutHistory;
 };

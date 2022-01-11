@@ -182,35 +182,40 @@ const confirmStoreUpdate = async (storeID) => {
 
 const confirmStorePayout = async (storeId) => {
   let store = await Store.findById(storeId);
-  let transactions = Transaction.aggregate()
+  let transactions = await Transaction.aggregate()
     .match({
       receiver: mongoose.Types.ObjectId(storeId),
-      type: "Credit"
     })
-    .addFields({
+    .group({
+      _id: "$receiver",
       totalCredit: {
         $sum: {
           $cond:
-         [{ $eq: ["$type", "Credit"] }, "$amount", 0]
+       [{ $eq: ["$type", "Credit"] }, "$amount", 0]
         }
       },
       totalDebit: {
         $sum: {
           $cond:
-         [{ $eq: ["$type", "Debit"] }, "$amount", 0]
+       [{ $eq: ["$type", "Debit"] }, "$amount", 0]
         }
       }
     });
 
-  let totalStoreCredits = store.account_details.total_credit;
-  let totalStoreDebits = store.account_details.total_debit;
+  let totalStoreCredits = Number(store.account_details.total_credit);
+  let totalStoreDebits = Number(store.account_details.total_debit);
+  let totalTransactionCredits = Number(transactions[0].totalCredit);
+  let totalTransactionDebits = Number(transactions[0].totalDebit);
 
-  let approval = await Transaction.findOne({ receiver: storeId, status: "pending" });
-  approval.status = "completed";
-  approval.save();
-  return approval;
+  if (totalStoreCredits === totalTransactionCredits && totalTransactionDebits === totalStoreDebits) {
+    let approval = await Transaction.findOne({ receiver: storeId, status: "pending" });
+    approval.status = "completed";
+    approval.save();
+    return approval;
+  }
+  return { err: "Store money not consistent. Please pull transaction records.", status: 400 };
 };
 
 export {
-  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin, resetStorePassword, confirmStoreUpdate, createNotification
+  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin, resetStorePassword, confirmStoreUpdate, createNotification, confirmStorePayout
 };

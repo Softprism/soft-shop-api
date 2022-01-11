@@ -298,8 +298,6 @@ const createOrder = async (orderParam) => {
     neworder[0].paymentResult = await ussdPayment(payload);
   }
 
-  console.log(neworder[0].paymentResult);
-
   if (neworder[0].paymentResult.status === "error") {
     // Update order with more details regardless of failed payment
     let orderUpdate = await Order.findById(neworder[0]._id);

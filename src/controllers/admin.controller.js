@@ -1,6 +1,7 @@
 import { validationResult } from "express-validator";
 
 import * as adminService from "../services/admin.service";
+import * as transactionService from "../services/transaction.service";
 
 const getAdmins = async (req, res) => {
   try {
@@ -98,6 +99,34 @@ const createNotification = async (req, res, next) => {
   }
 };
 
+const createTransaction = async (req, res, next) => {
+  try {
+    const transaction = await transactionService.createTransaction(req.body);
+
+    if (transaction.err) {
+      res.status(transaction.status).json({ success: false, msg: transaction.err, status: transaction.status });
+    } else {
+      res.status(200).json({ success: true, result: transaction, status: 200 });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+const confirmStorePayout = async (req, res, next) => {
+  try {
+    const transaction = await adminService.confirmStorePayout(req.params.storeID);
+
+    if (transaction.err) {
+      res.status(transaction.status).json({ success: false, msg: transaction.err, status: transaction.status });
+    } else {
+      res.status(200).json({ success: true, result: transaction, status: 200 });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
 export {
-  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin, resetStorePassword, confirmStoreUpdate, createNotification
+  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin, resetStorePassword, confirmStoreUpdate, createNotification, createTransaction, confirmStorePayout
 };
