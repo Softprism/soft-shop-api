@@ -178,7 +178,7 @@ const addCard = async (userId) => {
     "tx_ref": tx_ref(),
     "amount": "0",
     "currency": "NGN",
-    "redirect_url": "https://mobile.soft-shop.app/",
+    "redirect_url": "https://mobile.soft-shop.app/card",
     "payment_options": "card",
     "meta": {
       "user_id": userId,
