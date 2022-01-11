@@ -4,29 +4,19 @@ import { check } from "express-validator";
 import checkFeedbackRangeTypes from "../utils/checkParamTypes";
 
 import {
-  getStores,
-  createStore,
-  loginStore,
-  getLoggedInStore,
-  updateStoreRequest,
-  addLabel,
-  getLabels,
-  getStore,
-  getStoresNoGeo,
-  getStoreSalesStats,
-  bestSellers,
-  getStoreFeedback,
-  getInventoryList,
-  updateStore
+  getStores, createStore, loginStore, getLoggedInStore,
+  updateStoreRequest, addLabel, getLabels, getStore,
+  getStoresNoGeo, getStoreSalesStats, bestSellers,
+  getStoreFeedback, getInventoryList, updateStore
 } from "../controllers/store.controller";
 import { getStoreVariantsForUsers } from "../controllers/product.controller";
 
 import auth from "../middleware/auth";
 import checkPagination from "../middleware/checkPagination";
 import { isStoreAdmin } from "../middleware/Permissions";
-import {
-  hashPassword, storeUpdateProfileParam, verifyStoreSignupParam, verifyUserLoginParams
-} from "../middleware/validationMiddleware";
+import { hashPassword } from "../middleware/validationMiddleware";
+import validator from "../middleware/validator";
+import { registerStore, updateStoreValidation, loginStoreValidation } from "../validations/storeValidation";
 
 const router = express.Router();
 
@@ -78,21 +68,12 @@ router.get("/:storeId", auth, getStore);
 // @route   POST /store/create
 // @desc    Register a store
 // @access  Public
-router.post(
-  "/",
-  verifyStoreSignupParam,
-  hashPassword,
-  createStore
-);
+router.post("/", validator(registerStore), hashPassword, createStore);
 
 // @route   POST /store/login
 // @desc    Login a store
 // @access  Public
-router.post(
-  "/login",
-  verifyUserLoginParams,
-  loginStore
-);
+router.post("/login", validator(loginStoreValidation), loginStore);
 
 // @route   PUT /store/
 // @desc    request for a store profile update
@@ -102,7 +83,7 @@ router.put("/change-request", auth, isStoreAdmin, updateStoreRequest);
 // @route   PUT /store/
 // @desc    Update a store
 // @access  Private
-router.put("/", auth, isStoreAdmin, storeUpdateProfileParam, hashPassword, updateStore);
+router.put("/", auth, isStoreAdmin, validator(updateStoreValidation), hashPassword, updateStore);
 
 // @route   PUT /stores/label
 // @desc    add label to store

@@ -1,30 +1,17 @@
 /* eslint-disable import/named */
 import express from "express";
-
 import {
-  getUsers,
-  registerUser,
-  loginUser,
-  getLoggedInUser,
-  updateUser,
-  addItemToBasket,
-  forgotPassword,
-  validateToken,
-  createNewPassword,
-  verifyEmailAddress,
-  getUserBasketItems,
+  getUsers, registerUser, loginUser, getLoggedInUser,
+  updateUser, addItemToBasket, forgotPassword, validateToken,
+  createNewPassword, verifyEmailAddress, getUserBasketItems,
   // createUserBasket,
-  editBasketItems,
-  deleteBasketItem,
-  deleteAllBasketItems,
-  addCard
+  editBasketItems, deleteBasketItem, deleteAllBasketItems, addCard
 } from "../controllers/user.controller";
-
+import validator from "../middleware/validator";
 import auth from "../middleware/auth";
 import checkPagination from "../middleware/checkPagination";
-import {
-  isUserVerified, verifyUserSignupParam, verifyEmailAddressChecker, verifyUserLoginParams, hashPassword
-} from "../middleware/validationMiddleware";
+import { isUserVerified, hashPassword } from "../middleware/validationMiddleware";
+import { registerValidation, emailValidation, loginValidation } from "../validations/userValidation";
 
 const router = express.Router();
 
@@ -36,18 +23,18 @@ router.get("/", checkPagination, getUsers);
 // @route   POST /verify
 // @desc    send OTP to verify new user signup email
 // @access  Public
-router.post("/verify", verifyEmailAddressChecker, verifyEmailAddress);
+router.post("/verify", validator(emailValidation), verifyEmailAddress);
 
 // @route   POST /users/register
 // @desc    Register a User
 // @access  Public
-router.post("/", verifyUserSignupParam, hashPassword, registerUser);
+router.post("/", validator(registerValidation), hashPassword, registerUser);
 
 // @route   POST /user/login
 // @desc    Login a User & get token
 // @access  Public
 
-router.post("/login", verifyUserLoginParams, isUserVerified, loginUser);
+router.post("/login", validator(loginValidation), isUserVerified, loginUser);
 
 // @route   POST /user/card
 // @desc    returns a link to user to continue card addition

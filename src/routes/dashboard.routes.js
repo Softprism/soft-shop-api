@@ -2,12 +2,8 @@
 import express from "express";
 
 import auth from "../middleware/auth";
-import DashboardController from "../controllers/dashboard.controller";
+import getRiderDashboard from "../controllers/dashboard.controller";
 import checkPagination from "../middleware/checkPagination";
-
-const {
-  getRiderDashboard
-} = DashboardController;
 
 const router = express.Router();
 

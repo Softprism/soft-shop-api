@@ -1,5 +1,7 @@
 import express from "express";
-import RiderController from "../controllers/rider.controller";
+import {
+  getRiders, verifyToken, signup, signin, requestToken, forgotPassword, createNewPassword,
+} from "../controllers/rider.controller";
 import validator from "../middleware/validator";
 import checkPagination from "../middleware/checkPagination";
 import {
@@ -7,10 +9,6 @@ import {
   resetValidation, loginValidation
 } from "../validations/riderValidation";
 import { hashPassword } from "../middleware/validationMiddleware";
-
-const {
-  getRiders, verifyToken, signup, signin, requestToken, forgotPassword, createNewPassword,
-} = RiderController;
 
 const router = express.Router();
 
