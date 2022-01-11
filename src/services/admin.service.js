@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 
 import Admin from "../models/admin.model";
 import Store from "../models/store.model";
+import Notification from "../models/notification.models";
 import StoreUpdate from "../models/store-update.model";
 
 import sendEmail from "../utils/sendMail";

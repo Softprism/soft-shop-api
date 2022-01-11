@@ -31,7 +31,13 @@ export default class NotificationServices {
    * @returns {object} An instance of the Riders class
    */
   static async getRiderNotificationById(notificationId, riderId) {
-    const notification = await Notification.findOne({ _id: notificationId, rider: riderId });
+    await Notification.findOneAndUpdate(
+      { _id: notificationId, rider: riderId },
+      { status: "read" },
+      { new: true }
+    );
+    const notification = await Notification.findOne({ _id: notificationId, rider: riderId })
+      .populate([{ path: "extra_data", populate: "store" }]);
     if (!notification) {
       return {
         err: "Notification does not exists.",
