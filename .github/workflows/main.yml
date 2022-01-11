@@ -1,20 +1,17 @@
 name: CI
 
-on: 
-    push:
-        branches: [ cpanel "push"] 
+on: ["push"]
     
 jobs:
     build:
         name: Build
-        runs-on: self-hosted
-
-        # deploy:
-        #     runs-on: self-hosted
+        
+        runs-on: ubuntu-latest
         
         strategy: 
             matrix:
                 node-version: [16.x]
+                mongodb-version: [4.4]
             
         steps:
         - uses: actions/checkout@v2
