@@ -2,8 +2,9 @@
 import express from "express";
 import { isAdmin } from "../middleware/Permissions";
 import {
-  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin,
-  updateAdmin, resetStorePassword, confirmStoreUpdate, createNotification
+  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin,
+  resetStorePassword, confirmStoreUpdate, createTransaction, confirmStorePayout,
+  createNotification
 } from "../controllers/admin.controller";
 import validator from "../middleware/validator";
 import { register, login } from "../validations/adminValidation";
@@ -56,5 +57,9 @@ router.patch("/password-reset/store/:email", auth, isAdmin, resetStorePassword);
 // @desc    Update a store
 // @access  Private
 router.put("/store/:storeID", auth, isAdmin, confirmStoreUpdate);
+
+router.post("/transactions", auth, isAdmin, createTransaction);
+
+router.put("/transactions/:storeID", auth, isAdmin, confirmStorePayout);
 
 export default router;

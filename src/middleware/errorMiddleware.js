@@ -27,7 +27,7 @@ const errorHandler = (err, req, res, next) => {
   if (err.status) {
     return res.status(err.status).json({ success: false, msg: err.err, status: err.status });
   }
-
+  console.log(err);
   // default to 500 server error
   return res.status(500).json({ success: false, msg: "server error", status: 500 });
 };

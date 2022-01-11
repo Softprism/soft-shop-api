@@ -8,6 +8,7 @@ import User from "../models/user.model";
 import Order from "../models/order.model";
 import Store from "../models/store.model";
 import StoreUpdate from "../models/store-update.model";
+import { createTransaction } from "./transaction.service";
 
 // initial env variables
 dotenv.config();
@@ -99,6 +100,9 @@ const verifyTransaction = async (paymentDetails) => {
       store.account_details.total_credit += Number(order.subtotal);
       // get store balance
       store.account_details.account_balance = store.account_details.total_credit - store.account_details.total_debit;
+
+      // create a credit transaction
+      await createTransaction(order.subtotal, "Credit", "Store", store._id);
     }
 
     store.save();
