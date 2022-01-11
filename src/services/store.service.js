@@ -8,6 +8,8 @@ import Product from "../models/product.model";
 import StoreUpdate from "../models/store-update.model";
 
 import getJwt from "../utils/jwtGenerator";
+import { createTransaction } from "./transaction.service";
+import Transaction from "../models/transaction.model";
 
 const getStores = async (urlParams) => {
   // declare fields to exclude from response
@@ -685,6 +687,42 @@ const getInventoryList = async (queryParam) => {
   return inventoryList;
 };
 
+const requestPayout = async (storeId) => {
+  // get store details
+  const store = await Store.findById(storeId);
+  console.log(store.account_details);
+
+  // set payout variable
+  let payout = store.account_details.account_balance;
+
+  // create transaction
+  let newTransaction = createTransaction({
+    amount: payout,
+    type: "Debit",
+    to: "Store",
+    receiver: storeId,
+    request: true
+  });
+
+  // check for error while creating new transaction
+  if (!newTransaction) return { err: "Error requesting payout. Please try again", status: 400 };
+
+  // update store account details
+  store.account_details.total_debit += Number(payout);
+  store.account_details.account_balance = store.account_details.total_credit - store.account_details.total_debit;
+  console.log(store.account_details);
+  store.save();
+  return newTransaction;
+};
+
+const getPayoutHistory = async (storeId, type) => {
+  const payoutHistory = await Transaction.find({
+    receiver: storeId,
+    type
+  });
+  return payoutHistory;
+};
+
 export {
   getStores,
   createStore,
@@ -699,5 +737,7 @@ export {
   bestSellers,
   getStoreFeedback,
   getInventoryList,
-  updateStore
+  updateStore,
+  requestPayout,
+  getPayoutHistory
 };

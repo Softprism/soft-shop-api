@@ -10,6 +10,8 @@ import {
   updateAdmin,
   resetStorePassword,
   confirmStoreUpdate,
+  createTransaction,
+  confirmStorePayout,
   createNotification
 } from "../controllers/admin.controller";
 
@@ -73,5 +75,9 @@ router.patch("/password-reset/store/:email", auth, isAdmin, resetStorePassword);
 // @desc    Update a store
 // @access  Private
 router.put("/store/:storeID", auth, isAdmin, confirmStoreUpdate);
+
+router.post("/transactions", auth, isAdmin, createTransaction);
+
+router.put("/transactions/:storeID", auth, isAdmin, confirmStorePayout);
 
 export default router;

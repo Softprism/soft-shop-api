@@ -149,7 +149,11 @@ const getStoreSalesStats = async (req, res, next) => {
       req.query.days
     );
 
-    if (salesStats.err) { return res.status(salesStats.status).json({ success: false, msg: salesStats.err, status: salesStats.status }); }
+    if (salesStats.err) {
+      return res.status(salesStats.status).json(
+        { success: false, msg: salesStats.err, status: salesStats.status }
+      );
+    }
 
     return res.status(200).json({ success: true, result: salesStats, status: 200 });
   } catch (error) {
@@ -192,6 +196,42 @@ const getInventoryList = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       result: { inventoryList, size: inventoryList.length },
+      status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const requestPayout = async (req, res, next) => {
+  try {
+    const payout = await storeService.requestPayout(req.store.id);
+
+    if (payout.err) {
+      return res.status(payout.status).json(
+        { success: false, msg: payout.err, status: payout.status }
+      );
+    }
+
+    return res.status(200).json({
+      success: true,
+      result: payout,
+      status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getPayoutHistory = async (req, res, next) => {
+  try {
+    const payouts = await storeService.getPayoutHistory(req.store.id, req.query.type);
+
+    return res.status(200).json({
+      success: true,
+      result: payouts,
+      size: payouts.length,
+      status: 200
     });
   } catch (error) {
     next(error);
@@ -212,5 +252,7 @@ export {
   bestSellers,
   getStoreFeedback,
   getInventoryList,
-  updateStore
+  updateStore,
+  requestPayout,
+  getPayoutHistory
 };

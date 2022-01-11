@@ -28,7 +28,6 @@ const StoreSchema = mongoose.Schema({
   isActive: { type: Boolean, default: true }, // this shows if a store is available to receive orders
   resetPassword: { type: Boolean, default: false },
   pendingUpdates: { type: Boolean, default: false },
-  createdDate: { type: Date, default: Date.now },
   tax: { type: String },
   account_details: {
     account_balance: { type: Number, default: 0.00 },
@@ -36,7 +35,10 @@ const StoreSchema = mongoose.Schema({
     total_debit: { type: Number, default: 0.00 },
     account_number: { type: String },
     full_name: { type: String },
-    bank_name: { type: String }
+    bank_name: { type: String },
+    pending_payout: { type: Boolean },
+    createdDate: { type: Date, default: Date.now },
+
   }
 });
 
