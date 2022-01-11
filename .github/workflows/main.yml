@@ -1,8 +1,8 @@
 name: CI
 
-on:
+on: 
     push:
-        branches: [ cpanel ]
+        branches: [ cpanel "push"] 
     
 jobs:
     build:
