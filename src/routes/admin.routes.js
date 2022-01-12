@@ -11,7 +11,8 @@ import {
   resetStorePassword,
   confirmStoreUpdate,
   createTransaction,
-  confirmStorePayout
+  confirmStorePayout,
+  createNotification
 } from "../controllers/admin.controller";
 
 import auth from "../middleware/auth";
@@ -52,6 +53,11 @@ router.post(
   ],
   loginAdmin
 );
+
+// @route   POST admins create notification
+// @desc    create notification for riders
+// @access  Private
+router.post("/notifications", createNotification);
 
 // @route   GET admins/login
 // @desc    Get logged in user
