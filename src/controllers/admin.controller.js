@@ -127,6 +127,15 @@ const confirmStorePayout = async (req, res, next) => {
   }
 };
 
+const createCompayLedger = async (req, res, next) => {
+  try {
+    const ledger = await adminService.createCompayLedger(req.params.storeID);
+    res.status(200).json({ success: true, result: ledger, status: 200 });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export {
-  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin, resetStorePassword, confirmStoreUpdate, createNotification, createTransaction, confirmStorePayout
+  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin, resetStorePassword, confirmStoreUpdate, createNotification, createTransaction, confirmStorePayout, createCompayLedger
 };

@@ -10,6 +10,8 @@ import StoreUpdate from "../models/store-update.model";
 import sendEmail from "../utils/sendMail";
 import getJwt from "../utils/jwtGenerator";
 import Transaction from "../models/transaction.model";
+import Ledger from "../models/ledger.model";
+import { createTransaction } from "./transaction.service";
 
 const getAdmins = async () => {
   const admins = await Admin.find();
@@ -218,11 +220,33 @@ const confirmStorePayout = async (storeId) => {
     if (!approval) return { err: "Cannot find store's withdrawal request", status: 400 };
     approval.status = "completed";
     approval.save();
+
+    // create transaction
+    let ledger = Ledger.findOne({});
+    let request = {
+      amount: approval.amount,
+      type: "Debit",
+      to: "Ledger",
+      receiver: ledger._id,
+      status: "completed",
+      ref: approval.ref
+    };
+    await createTransaction(request);
+
     return approval;
   }
   return { err: "Store money not consistent. Please pull transaction records.", status: 400 };
 };
 
+const createCompayLedger = async () => {
+  let details = {
+    account_name: "SoftShop Ledger",
+  };
+  let newLedger = new Ledger(details);
+  newLedger.save();
+  return newLedger;
+};
+
 export {
-  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin, resetStorePassword, confirmStoreUpdate, createNotification, confirmStorePayout
+  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin, resetStorePassword, confirmStoreUpdate, createNotification, confirmStorePayout, createCompayLedger
 };
