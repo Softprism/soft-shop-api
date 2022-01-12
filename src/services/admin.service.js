@@ -185,6 +185,7 @@ const confirmStoreUpdate = async (storeID) => {
 
 const confirmStorePayout = async (storeId) => {
   let store = await Store.findById(storeId);
+  let ledger = Ledger.findOne({});
 
   /* get total credit and total debit transactions for stores
     so we can compare with the total credit and total debit fields
@@ -214,7 +215,7 @@ const confirmStorePayout = async (storeId) => {
   let totalTransactionCredits = Number(transactions[0].totalCredit);
   let totalTransactionDebits = Number(transactions[0].totalDebit);
 
-  if (totalStoreCredits === totalTransactionCredits && totalTransactionDebits === totalStoreDebits) {
+  if (totalStoreCredits === totalTransactionCredits && totalTransactionDebits === totalStoreDebits && ledger.account_balance >= store.account_details.account_balance) {
     // store can only have one  withdrawal request
     let approval = await Transaction.findOne({ receiver: storeId, status: "pending" });
     if (!approval) return { err: "Cannot find store's withdrawal request", status: 400 };
@@ -222,7 +223,6 @@ const confirmStorePayout = async (storeId) => {
     approval.save();
 
     // create transaction
-    let ledger = Ledger.findOne({});
     let request = {
       amount: approval.amount,
       type: "Debit",
