@@ -181,6 +181,11 @@ const getBankDetails = async (payload) => {
   return response;
 };
 
+const getTransactions = async () => {
+  const response = await flw.Transaction.fetch({});
+  return response;
+};
+
 export {
-  flw, bankTransfer, verifyTransaction, encryptCard, ussdPayment, cardPayment, verifyCardRequest, getAllBanks, getBankDetails
+  flw, bankTransfer, verifyTransaction, encryptCard, ussdPayment, cardPayment, verifyCardRequest, getAllBanks, getBankDetails, getTransactions
 };

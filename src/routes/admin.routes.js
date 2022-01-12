@@ -11,6 +11,7 @@ import validator from "../middleware/validator";
 import { register, login } from "../validations/adminValidation";
 
 import auth from "../middleware/auth";
+import { getTransactions } from "../controllers/payment.controller";
 
 const router = express.Router();
 
@@ -63,6 +64,7 @@ router.post("/transactions", auth, isAdmin, createTransaction);
 
 router.put("/transactions/:storeID", auth, isAdmin, confirmStorePayout);
 
-router.post("/ledger/", auth, isAdmin, createCompayLedger);
+router.post("/ledger", auth, isAdmin, createCompayLedger);
+router.get("/transactions", auth, isAdmin, getTransactions);
 
 export default router;
