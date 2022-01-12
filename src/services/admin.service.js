@@ -10,6 +10,8 @@ import StoreUpdate from "../models/store-update.model";
 import sendEmail from "../utils/sendMail";
 import getJwt from "../utils/jwtGenerator";
 import Transaction from "../models/transaction.model";
+import Ledger from "../models/ledger.model";
+import { createTransaction } from "./transaction.service";
 
 const getAdmins = async () => {
   const admins = await Admin.find();
@@ -183,6 +185,7 @@ const confirmStoreUpdate = async (storeID) => {
 
 const confirmStorePayout = async (storeId) => {
   let store = await Store.findById(storeId);
+  let ledger = Ledger.findOne({});
 
   /* get total credit and total debit transactions for stores
     so we can compare with the total credit and total debit fields
@@ -212,17 +215,38 @@ const confirmStorePayout = async (storeId) => {
   let totalTransactionCredits = Number(transactions[0].totalCredit);
   let totalTransactionDebits = Number(transactions[0].totalDebit);
 
-  if (totalStoreCredits === totalTransactionCredits && totalTransactionDebits === totalStoreDebits) {
+  if (totalStoreCredits === totalTransactionCredits && totalTransactionDebits === totalStoreDebits && ledger.account_balance >= store.account_details.account_balance) {
     // store can only have one  withdrawal request
     let approval = await Transaction.findOne({ receiver: storeId, status: "pending" });
     if (!approval) return { err: "Cannot find store's withdrawal request", status: 400 };
     approval.status = "completed";
     approval.save();
+
+    // create transaction
+    let request = {
+      amount: approval.amount,
+      type: "Debit",
+      to: "Ledger",
+      receiver: ledger._id,
+      status: "completed",
+      ref: approval.ref
+    };
+    await createTransaction(request);
+
     return approval;
   }
   return { err: "Store money not consistent. Please pull transaction records.", status: 400 };
 };
 
+const createCompayLedger = async () => {
+  let details = {
+    account_name: "SoftShop Ledger",
+  };
+  let newLedger = new Ledger(details);
+  newLedger.save();
+  return newLedger;
+};
+
 export {
-  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin, resetStorePassword, confirmStoreUpdate, createNotification, confirmStorePayout
+  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin, resetStorePassword, confirmStoreUpdate, createNotification, confirmStorePayout, createCompayLedger
 };

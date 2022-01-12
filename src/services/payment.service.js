@@ -9,6 +9,7 @@ import Order from "../models/order.model";
 import Store from "../models/store.model";
 import StoreUpdate from "../models/store-update.model";
 import { createTransaction } from "./transaction.service";
+import Ledger from "../models/ledger.model";
 
 // initial env variables
 dotenv.config();
@@ -79,6 +80,19 @@ const verifyTransaction = async (paymentDetails) => {
     // add new card details to user
     user.cards.push(response.data.card);
     user.save();
+
+    // create credit transaction for Ledger
+    let ledger = Ledger.findOne({});
+    let request = {
+      amount: 100,
+      type: "Credit",
+      to: "Ledger",
+      receiver: ledger._id,
+      status: "completed",
+      ref: card_index()
+    };
+    await createTransaction(request);
+
     // unset cards
     // user.cards = undefined;
     return user;
@@ -89,6 +103,7 @@ const verifyTransaction = async (paymentDetails) => {
 
     let order = await Order.findOne({ orderId: tx_ref });
     let store = await Store.findById(order.store);
+    let ledger = Ledger.findOne({});
 
     order.paymentResult = response.data;
     order.markModified("paymentResult");
@@ -96,13 +111,26 @@ const verifyTransaction = async (paymentDetails) => {
     // Update order status to sent and credit store balance when payment has been validated by flutterwave. Hitting this endpoint from softshop app will not update details.
     if (response.data.status === "successful" && paymentDetails.softshop !== "true") {
       order.status = "sent";
-      // credit store's account balalnce
-      store.account_details.total_credit += Number(order.subtotal);
-      // get store balance
-      store.account_details.account_balance = store.account_details.total_credit - store.account_details.total_debit;
 
-      // create a credit transaction
-      await createTransaction(order.subtotal, "Credit", "Store", store._id);
+      // create a credit transaction for store and softshop
+      let storeReq = {
+        amount: order.subtotal,
+        type: "Credit",
+        to: "Store",
+        receiver: store._id,
+        status: "completed",
+        ref: order._id
+      };
+      await createTransaction(storeReq);
+      let ledgerReq = {
+        amount: order.totalPrice,
+        type: "Credit",
+        to: "Ledger",
+        receiver: ledger._id,
+        status: "completed",
+        ref: order._id
+      };
+      await createTransaction(ledgerReq);
     }
 
     store.save();

@@ -16,6 +16,7 @@ const transactionSchema = mongoose.Schema({
     enum: ["completed", "pending", "failed"],
     default: "pending"
   },
+  ref: { type: String },
   createdDate: { type: Date, default: Date.now },
 });
 const Transaction = mongoose.model("Transaction", transactionSchema);
