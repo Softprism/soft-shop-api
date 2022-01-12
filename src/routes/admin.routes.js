@@ -1,19 +1,13 @@
 /* eslint-disable import/named */
 import express from "express";
-import { check } from "express-validator";
 import { isAdmin } from "../middleware/Permissions";
 import {
-  getAdmins,
-  registerAdmin,
-  loginAdmin,
-  getLoggedInAdmin,
-  updateAdmin,
-  resetStorePassword,
-  confirmStoreUpdate,
-  createTransaction,
-  confirmStorePayout,
+  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin,
+  resetStorePassword, confirmStoreUpdate, createTransaction, confirmStorePayout,
   createNotification
 } from "../controllers/admin.controller";
+import validator from "../middleware/validator";
+import { register, login } from "../validations/adminValidation";
 
 import auth from "../middleware/auth";
 
@@ -29,13 +23,7 @@ router.get("/all", auth, isAdmin, getAdmins);
 // @access  Public
 router.post(
   "/register",
-  [
-    check("username", "Please Enter Username").not().isEmpty(),
-    check(
-      "password",
-      "Please Enter Password with 6 or more characters"
-    ).isLength({ min: 6 }),
-  ],
+  validator(register),
   registerAdmin
 );
 
@@ -44,13 +32,7 @@ router.post(
 // @access  Public
 router.post(
   "/login",
-  [
-    check("username", "Please enter a Username").exists(),
-    check("password", "Password should be 6 characters or more").isLength({
-      min: 6,
-    }),
-    check("password", "Password is Required").exists(),
-  ],
+  validator(login),
   loginAdmin
 );
 

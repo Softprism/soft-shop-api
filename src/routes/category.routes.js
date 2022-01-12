@@ -9,6 +9,8 @@ import {
   deleteCategory,
   createCategory,
 } from "../controllers/category.controller";
+import validator from "../middleware/validator";
+import create_category from "../validations/categoryValidation";
 
 const router = express.Router();
 
@@ -22,12 +24,9 @@ router.get("/", auth, getCategories);
 // @access  Public
 router.post(
   "/",
-  [
-    check("name", "Please enter valid category name").isString(),
-    check("image", "Please upload Image").exists(),
-  ],
   auth,
   isStoreAdmin,
+  validator(create_category),
   createCategory
 );
 

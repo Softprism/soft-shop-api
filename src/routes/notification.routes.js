@@ -1,13 +1,11 @@
 import express from "express";
 import validator from "../middleware/validator";
 import auth from "../middleware/auth";
-import NotificationController from "../controllers/notification.contoller";
+import {
+  getNotifications, getNotificationById
+} from "../controllers/notification.contoller";
 import checkPagination from "../middleware/checkPagination";
 import notificationValidation from "../validations/notificationValidation";
-
-const {
-  getNotifications, getNotificationById
-} = NotificationController;
 
 const router = express.Router();
 

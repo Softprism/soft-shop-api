@@ -5,20 +5,13 @@ import { isStoreAdmin } from "../middleware/Permissions";
 import checkPagination from "../middleware/checkPagination";
 
 import {
-  deleteProduct,
-  updateProduct,
-  createProduct,
-  getProducts,
-  reviewProduct,
-  getProductDetails,
-  createVariant,
-  updateVariant,
-  addVariantItem,
-  getVariantItem,
-  addCustomFee,
-  deleteCustomFee,
+  deleteProduct, updateProduct, createProduct, getProducts,
+  reviewProduct, getProductDetails, createVariant, updateVariant,
+  addVariantItem, getVariantItem, addCustomFee, deleteCustomFee,
   getStoreVariants,
 } from "../controllers/product.controller";
+import validator from "../middleware/validator";
+import createProducts from "../validations/productValidation";
 
 const router = express.Router();
 
@@ -34,6 +27,7 @@ router.post(
   "/",
   auth,
   isStoreAdmin,
+  validator(createProducts),
   createProduct
 );
 
