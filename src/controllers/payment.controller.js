@@ -43,6 +43,18 @@ const getBankDetails = async (req, res, next) => {
   next();
 };
 
+const getTransactions = async (req, res, next) => {
+  try {
+    let transaction = await paymentService.getTransactions();
+    return res.status(200).json({
+      success: true, result: transaction, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+  next();
+};
+
 export {
-  verifyTransaction, acknowledgeFlwWebhook, getAllBanks, getBankDetails
+  verifyTransaction, acknowledgeFlwWebhook, getAllBanks, getBankDetails, getTransactions
 };

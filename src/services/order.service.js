@@ -260,8 +260,6 @@ const createOrder = async (orderParam) => {
       phone_number: neworder[0].user.phone_number,
       currency: "NGN",
       fullname: `${neworder[0].user.first_name} ${neworder[0].user.last_name}`,
-      frequency: 10, // account will expire after 10 transactions o
-      duration: 10, // account will expire after 10 days
       narration: `softshop payment - ${neworder[0].orderId}`,
       is_permanent: 0,
     };
