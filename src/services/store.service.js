@@ -690,28 +690,30 @@ const getInventoryList = async (queryParam) => {
 const requestPayout = async (storeId) => {
   // get store details
   const store = await Store.findById(storeId);
-  console.log(store.account_details);
 
-  // set payout variable
+  // set payout variable and check if there's sufficient funds
   let payout = store.account_details.account_balance;
+  if (payout === 0) return { err: "Insufficent Funds.", status: 400 };
+
+  // check for pending request
+  let oldRequest = await Transaction.findOne({
+    type: "Debit",
+    receiver: storeId
+  });
+
+  if (oldRequest) return { err: "You have a pending payout request. Please wait for its approval", status: 400 };
 
   // create transaction
   let newTransaction = createTransaction({
     amount: payout,
     type: "Debit",
     to: "Store",
-    receiver: storeId,
-    request: true
+    receiver: storeId
   });
 
   // check for error while creating new transaction
   if (!newTransaction) return { err: "Error requesting payout. Please try again", status: 400 };
 
-  // update store account details
-  store.account_details.total_debit += Number(payout);
-  store.account_details.account_balance = store.account_details.total_credit - store.account_details.total_debit;
-  console.log(store.account_details);
-  store.save();
   return newTransaction;
 };
 
