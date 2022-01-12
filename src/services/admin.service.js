@@ -182,6 +182,10 @@ const confirmStoreUpdate = async (storeID) => {
 
 const confirmStorePayout = async (storeId) => {
   let store = await Store.findById(storeId);
+
+  /* get total credit and total debit transactions for stores
+    so we can compare with the total credit and total debit fields
+    in store profile */
   let transactions = await Transaction.aggregate()
     .match({
       receiver: mongoose.Types.ObjectId(storeId),
@@ -208,7 +212,9 @@ const confirmStorePayout = async (storeId) => {
   let totalTransactionDebits = Number(transactions[0].totalDebit);
 
   if (totalStoreCredits === totalTransactionCredits && totalTransactionDebits === totalStoreDebits) {
+    // store can only have one  withdrawal request
     let approval = await Transaction.findOne({ receiver: storeId, status: "pending" });
+    if (!approval) return { err: "Cannot find store's withdrawal request", status: 400 };
     approval.status = "completed";
     approval.save();
     return approval;
