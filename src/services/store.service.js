@@ -410,6 +410,11 @@ const loginStore = async (StoreParam) => {
 
 const getLoggedInStore = async (storeId) => {
   const store = await getStore(storeId);
+  let completedOrder = await Order.find({
+    store: storeId,
+    status: "sent"
+  });
+  store.completedOrder = completedOrder.length;
   return store;
 };
 
@@ -708,7 +713,8 @@ const requestPayout = async (storeId) => {
     amount: payout,
     type: "Debit",
     to: "Store",
-    receiver: storeId
+    receiver: storeId,
+    ref: storeId
   });
 
   // check for error while creating new transaction
