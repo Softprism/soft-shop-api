@@ -704,6 +704,9 @@ const getPayoutHistory = async (storeId) => {
     receiver: storeId,
     type: "Debit",
     status: "completed"
+  }).populate({
+    path: "receiver",
+    select: "account_details"
   });
   return payoutHistory;
 };
