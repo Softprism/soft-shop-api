@@ -22,10 +22,10 @@ const updateStoreValidation = {
     images: Joi.string().required(),
     openingTime: Joi.date(),
     closingTime: Joi.date(),
-    password: Joi.string().required(),
+    password: Joi.string().required().required(),
     deliveryTime: Joi.number().positive().required(),
     isActive: Joi.boolean(),
-    prepTime: Joi.number().positive().required(),
+    prepTime: Joi.number().positive().r,
   }).required(),
 };
 
