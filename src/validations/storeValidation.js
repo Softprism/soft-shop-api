@@ -3,12 +3,16 @@ import objectId from "./common";
 
 const registerStore = {
   body: Joi.object({
-    first_name: Joi.string().min(2).required(),
-    last_name: Joi.string().min(2).required(),
+    first_name: Joi.string().min(2),
+    last_name: Joi.string().min(2),
     email: Joi.string().email().required(),
     phone_number: Joi.string().min(11).required(),
     password: Joi.string().min(5).required(),
-  }).required(),
+    openingTime: Joi.string(),
+    closingTime: Joi.string(),
+    name: Joi.string().min(2),
+    address: Joi.string().min(2),
+  }),
 };
 
 const loginStoreValidation = {
@@ -17,16 +21,21 @@ const loginStoreValidation = {
     password: Joi.string().min(5).required(),
   }).required(),
 };
+
 const updateStoreValidation = {
   body: Joi.object({
-    images: Joi.string().required(),
-    openingTime: Joi.date(),
-    closingTime: Joi.date(),
-    password: Joi.string().required(),
-    deliveryTime: Joi.number().positive().required(),
+    name: Joi.string().min(2),
+    address: Joi.string().min(2),
+    email: Joi.string().email(),
+    phone_number: Joi.string().min(11),
+    images: Joi.string(),
+    openingTime: Joi.string(),
+    closingTime: Joi.string(),
+    password: Joi.string(),
+    deliveryTime: Joi.number().positive(),
     isActive: Joi.boolean(),
-    prepTime: Joi.number().positive().required(),
-  }).required(),
+    prepTime: Joi.number().positive(),
+  })
 };
 
 export {

@@ -372,7 +372,6 @@ const createStore = async (StoreParam) => {
   if (store) {
     return { err: "A store with this email already exists.", status: 400 };
   }
-
   const newStore = new Store(StoreParam);
 
   await newStore.save();
@@ -474,33 +473,10 @@ const updateStoreRequest = async (storeID, updateParam) => {
 
 const updateStore = async (storeID, updateParam) => {
   // this service is used to update insensitive store data
-
-  // get fields to update
-  const {
-    images,
-    openingTime,
-    closingTime,
-    password,
-    deliveryTime,
-    isActive,
-    prepTime
-  } = updateParam;
-
-  const newDetails = {};
-
-  // Check for fields
-  if (images) newDetails.images = images;
-  if (openingTime) newDetails.openingTime = openingTime;
-  if (closingTime) newDetails.closingTime = closingTime;
-  if (password) newDetails.password = password;
-  if (deliveryTime) newDetails.deliveryTime = deliveryTime;
-  if (isActive) newDetails.isActive = isActive;
-  if (prepTime) newDetails.prepTime = prepTime;
-
   const checkStoreUpdate = await Store.findByIdAndUpdate(
     storeID,
-    { $set: newDetails },
-    { omitUndefined: true, new: true, useFindAndModify: false }
+    updateParam,
+    { new: true }
   );
   if (!checkStoreUpdate) return { err: "An error occurred while updating profile, please try again.", status: 400 };
 

@@ -88,8 +88,7 @@ const updateStore = async (req, res, next) => {
   try {
     let storeID;
     if (req.store) storeID = req.store.id;
-    if (req.query.storeID && req.admin) storeID = req.query.storeID;
-
+    if (req.query.storeId && req.admin) storeID = req.query.storeId;
     const store = await storeService.updateStore(storeID, req.body);
 
     if (store.err) {
