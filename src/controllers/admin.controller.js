@@ -73,7 +73,7 @@ const resetStorePassword = async (req, res, next) => {
 
 const confirmStoreUpdate = async (req, res, next) => {
   try {
-    const store = await adminService.confirmStoreUpdate(req.params.storeID);
+    const store = await adminService.confirmStoreUpdate(req.params.storeId);
 
     if (store.err) {
       res.status(store.status).json({ success: false, msg: store.err, status: store.status });

@@ -62,7 +62,7 @@ router.put("/store/:storeId", auth, isAdmin, confirmStoreUpdate);
 
 router.post("/transactions", auth, isAdmin, createTransaction);
 
-router.put("/transactions/:storeID", auth, isAdmin, confirmStorePayout);
+router.put("/transactions/:storeId", auth, isAdmin, confirmStorePayout);
 
 router.post("/ledger/:storeId", auth, isAdmin, createCompayLedger);
 router.get("/transactions", auth, isAdmin, getTransactions);
