@@ -723,10 +723,11 @@ const requestPayout = async (storeId) => {
   return newTransaction;
 };
 
-const getPayoutHistory = async (storeId, type) => {
+const getPayoutHistory = async (storeId) => {
   const payoutHistory = await Transaction.find({
     receiver: storeId,
-    type
+    type: "Debit",
+    status: "completed"
   });
   return payoutHistory;
 };
