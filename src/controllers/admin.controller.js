@@ -115,7 +115,7 @@ const createTransaction = async (req, res, next) => {
 
 const confirmStorePayout = async (req, res, next) => {
   try {
-    const transaction = await adminService.confirmStorePayout(req.params.storeID);
+    const transaction = await adminService.confirmStorePayout(req.params.storeId);
 
     if (transaction.err) {
       res.status(transaction.status).json({ success: false, msg: transaction.err, status: transaction.status });
@@ -129,7 +129,7 @@ const confirmStorePayout = async (req, res, next) => {
 
 const createCompayLedger = async (req, res, next) => {
   try {
-    const ledger = await adminService.createCompayLedger(req.params.storeID);
+    const ledger = await adminService.createCompayLedger(req.params.storeId);
     res.status(200).json({ success: true, result: ledger, status: 200 });
   } catch (error) {
     next(error);

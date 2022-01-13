@@ -58,13 +58,13 @@ router.patch("/password-reset/store/:email", auth, isAdmin, resetStorePassword);
 // @route   PUT /store/
 // @desc    Update a store
 // @access  Private
-router.put("/store/:storeID", auth, isAdmin, confirmStoreUpdate);
+router.put("/store/:storeId", auth, isAdmin, confirmStoreUpdate);
 
 router.post("/transactions", auth, isAdmin, createTransaction);
 
 router.put("/transactions/:storeID", auth, isAdmin, confirmStorePayout);
 
-router.post("/ledger", auth, isAdmin, createCompayLedger);
+router.post("/ledger/:storeId", auth, isAdmin, createCompayLedger);
 router.get("/transactions", auth, isAdmin, getTransactions);
 
 export default router;
