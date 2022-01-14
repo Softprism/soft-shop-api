@@ -112,7 +112,7 @@ const registerUser = async (userParam) => {
   let newUser = await user.save();
 
   // delete sign up token
-  Token.findByIdAndDelete(userParam.token);
+  await Token.findByIdAndDelete(userParam.token);
 
   // delete user on creation, uncomment to test registration without populating your database
   // await User.findByIdAndDelete(newUser._id);
