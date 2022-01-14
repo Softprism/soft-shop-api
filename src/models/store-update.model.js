@@ -18,6 +18,7 @@ const StoreUpdateSchema = mongoose.Schema(
       account_details: {
         account_number: { type: String },
         full_name: { type: String },
+        bank_code: { type: String },
         bank_name: { type: String }
       }
     }

@@ -137,6 +137,27 @@ const verifyTransaction = async (paymentDetails) => {
     order.save();
     return order;
   }
+
+  if (tx_ref.includes("")) {
+    // store can only have one  withdrawal request
+    let approval = await Transaction.findOne({ receiver: storeId, status: "pending" });
+    if (!approval) return { err: "Cannot find store's withdrawal request", status: 400 };
+    approval.status = "completed";
+    approval.save();
+
+    // create transaction
+    let request = {
+      amount: approval.amount,
+      type: "Debit",
+      to: "Ledger",
+      receiver: ledger._id,
+      status: "completed",
+      ref: approval.ref
+    };
+    await createTransaction(request);
+
+    return approval;
+  }
 };
 
 const encryptCard = async (text) => {
@@ -186,6 +207,9 @@ const getTransactions = async () => {
   return response;
 };
 
+const initiateTransfer = async (payload) => {
+  const response = await flw.Transfer.initiate(payload);
+};
 export {
-  flw, bankTransfer, verifyTransaction, encryptCard, ussdPayment, cardPayment, verifyCardRequest, getAllBanks, getBankDetails, getTransactions
+  flw, bankTransfer, verifyTransaction, encryptCard, ussdPayment, cardPayment, verifyCardRequest, getAllBanks, getBankDetails, getTransactions, initiateTransfer
 };
