@@ -5,13 +5,15 @@ import {
   getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin,
   resetStorePassword, confirmStoreUpdate, createTransaction, confirmStorePayout,
   createNotification,
-  createCompayLedger
+  createCompayLedger,
+  getAllStoresUpdateRequests
 } from "../controllers/admin.controller";
 import validator from "../middleware/validator";
 import { register, login } from "../validations/adminValidation";
 
 import auth from "../middleware/auth";
 import { getTransactions } from "../controllers/payment.controller";
+import checkPagination from "../middleware/checkPagination";
 
 const router = express.Router();
 
@@ -55,10 +57,15 @@ router.put("/", auth, isAdmin, updateAdmin);
 
 router.patch("/password-reset/store/:email", auth, isAdmin, resetStorePassword);
 
-// @route   PUT /store/
-// @desc    Update a store
+// @route   PUT /store/:storeId
+// @desc    confirm a store update request
 // @access  Private
 router.put("/store/:storeId", auth, isAdmin, confirmStoreUpdate);
+
+// @route   GET /stores
+// @desc    Get all update requests from all stores.
+// @access  Private
+router.get("/stores/updates", auth, checkPagination, getAllStoresUpdateRequests);
 
 router.post("/transactions", auth, isAdmin, createTransaction);
 

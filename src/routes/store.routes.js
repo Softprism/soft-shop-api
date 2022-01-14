@@ -47,7 +47,7 @@ router.get("/stats/best-sellers", auth, checkPagination, bestSellers);
 
 router.get("/inventory", auth, isStoreAdmin, checkPagination, getInventoryList);
 router.get("/payout", auth, requestPayout);
-router.get("/payout/history", auth, getPayoutHistory);
+router.get("/payout/history", auth, checkPagination, getPayoutHistory);
 
 router.get(
   "/stats/feedback",
