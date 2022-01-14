@@ -135,6 +135,18 @@ const resetStorePassword = async (storeEmail) => {
   return "Password has been reset for store";
 };
 
+const getAllStoresUpdateRequests = async (urlParams) => {
+  const limit = Number(urlParams.limit);
+  const skip = Number(urlParams.skip);
+  let requests = await StoreUpdate.find({})
+    .sort("createdAt")
+    .skip(skip)
+    .limit(limit)
+    .populate({ path: "store", select: "name" });
+
+  return requests;
+};
+
 const confirmStoreUpdate = async (storeID) => {
   // use service to update store profile
   // also use for legacy admin store profile update action
@@ -153,13 +165,16 @@ const confirmStoreUpdate = async (storeID) => {
     name,
     phone_number,
     category,
-    tax
+    tax,
+    account_details
   } = newDetails;
 
   const updateParam = {};
 
   // Check for fields
   if (address) updateParam.address = address;
+  if (account_details) updateParam.account_details = account_details;
+
   if (location.type && location.coordinates.length > 0) updateParam.location = location;
   if (phone_number) updateParam.phone_number = phone_number;
   if (category) updateParam.category = category;
@@ -248,5 +263,5 @@ const createCompayLedger = async () => {
 };
 
 export {
-  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin, resetStorePassword, confirmStoreUpdate, createNotification, confirmStorePayout, createCompayLedger
+  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin, resetStorePassword, confirmStoreUpdate, createNotification, confirmStorePayout, createCompayLedger, getAllStoresUpdateRequests
 };
