@@ -77,7 +77,7 @@ const userProfile = async (userId) => {
           }
         }
       ],
-      as: "orders",
+      as: "userOrders",
     })
     .addFields({
       totalReviews: { $size: "$userReviews" },
