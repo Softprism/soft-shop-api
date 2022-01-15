@@ -12,6 +12,11 @@ const OrderSchema = mongoose.Schema(
       required: true,
       ref: "Store",
     },
+    rider: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: "Rider",
+    },
     orderId: {
       type: String,
       unique: true,
@@ -22,6 +27,7 @@ const OrderSchema = mongoose.Schema(
     },
     paymentMethod: {
       type: String,
+      enum: ["Card", "Transfer", "USSD"],
       required: true,
     },
     paymentResult: {},
@@ -45,15 +51,6 @@ const OrderSchema = mongoose.Schema(
       required: true,
       default: 0.0,
     },
-    isPaid: {
-      type: Boolean,
-      default: true,
-    },
-    isDelivered: {
-      type: Boolean,
-      required: true,
-      default: false,
-    },
     isFavorite: {
       type: Boolean,
       required: true,
@@ -64,7 +61,7 @@ const OrderSchema = mongoose.Schema(
       type: String,
       required: true,
       default: "initiated",
-      enum: ["initiated", "canceled", "sent", "ready", "accepted", "enroute", "delivered", "completed"]
+      enum: ["initiated", "sent", "canceled", "ready", "accepted", "enroute", "delivered", "completed"]
     },
     orderItems: [
       {
