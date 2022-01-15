@@ -16,6 +16,10 @@ const getOrders = async (urlParams) => {
   const skip = Number(urlParams.skip);
   let { sort } = urlParams;
 
+  // match for order status
+  if (urlParams.status) {
+    matchParam.status = urlParams.status;
+  }
   // check and add to match paramters if request is matching for store, convert string to objectId
   if (urlParams.store) { matchParam.store = mongoose.Types.ObjectId(urlParams.store); }
 
@@ -41,7 +45,6 @@ const getOrders = async (urlParams) => {
       $lte: 999999999,
     };
   }
-
   const pipeline = [
     {
       $unset: [
