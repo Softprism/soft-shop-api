@@ -15,11 +15,7 @@ const tokenSchema = mongoose.Schema(
       type: String,
       enum: ["user-forgot-password", "rider-forgot-password", "user-signup", "rider-signup"],
       required: true,
-    },
-    createdAt: {
-      type: Date,
-      default: Date.now
-    },
+    }
   },
   {
     timestamps: true,
