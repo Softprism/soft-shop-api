@@ -101,8 +101,17 @@ const getStores = async (urlParams) => {
   // looking up the order collection for each stores
     .lookup({
       from: "orders",
-      localField: "_id",
-      foreignField: "store",
+      let: { storeId: "$_id" },
+      pipeline: [
+        {
+          $match: {
+            status: "completed",
+            $expr: {
+              $eq: ["$$storeId", "$store"]
+            }
+          }
+        }
+      ],
       as: "orders",
     })
   // looking up each product on the review collection
@@ -214,8 +223,17 @@ const getStoresNoGeo = async (urlParams) => {
   // looking up the order collection for each stores
     .lookup({
       from: "orders",
-      localField: "_id",
-      foreignField: "store",
+      let: { storeId: "$_id" },
+      pipeline: [
+        {
+          $match: {
+            status: "completed",
+            $expr: {
+              $eq: ["$$storeId", "$store"]
+            }
+          }
+        }
+      ],
       as: "orders",
     })
   // looking up each product on the review collection
@@ -288,8 +306,17 @@ const getStore = async (storeId) => {
   // looking up the order collection for each stores
     .lookup({
       from: "orders",
-      localField: "_id",
-      foreignField: "store",
+      let: { storeId: "$_id" },
+      pipeline: [
+        {
+          $match: {
+            status: "completed",
+            $expr: {
+              $eq: ["$$storeId", "$store"]
+            }
+          }
+        }
+      ],
       as: "orders",
     })
   // looking up each product on the review collection
@@ -326,8 +353,17 @@ const getStore = async (storeId) => {
     // looking up the order collection for each stores
       .lookup({
         from: "orders",
-        localField: "_id",
-        foreignField: "store",
+        let: { storeId: "$_id" },
+        pipeline: [
+          {
+            $match: {
+              status: "completed",
+              $expr: {
+                $eq: ["$$storeId", "$store"]
+              }
+            }
+          }
+        ],
         as: "orders",
       })
     // looking up each product on the review collection

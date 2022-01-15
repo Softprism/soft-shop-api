@@ -66,9 +66,18 @@ const userProfile = async (userId) => {
     })
     .lookup({
       from: "orders",
-      localField: "_id",
-      foreignField: "user",
-      as: "userOrders",
+      let: { userId: "$_id" },
+      pipeline: [
+        {
+          $match: {
+            status: "completed",
+            $expr: {
+              $eq: ["$$userId", "$user"]
+            }
+          }
+        }
+      ],
+      as: "orders",
     })
     .addFields({
       totalReviews: { $size: "$userReviews" },
