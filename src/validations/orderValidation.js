@@ -3,7 +3,7 @@ import objectId from "./common";
 
 const order_validation = {
   body: Joi.object({
-    user: objectId.required(),
+    // user: objectId.required(),
     store: objectId.required(),
     paymentMethod: Joi.string().required(),
     deliveryAddress: Joi.string().required(),
