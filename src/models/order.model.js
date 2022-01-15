@@ -14,7 +14,6 @@ const OrderSchema = mongoose.Schema(
     },
     rider: {
       type: mongoose.Schema.Types.ObjectId,
-      required: true,
       ref: "Rider",
     },
     orderId: {
