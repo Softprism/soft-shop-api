@@ -116,7 +116,7 @@ const getStores = async (urlParams) => {
     .addFields({
       sumOfStars: { $sum: "$orderReview.star" },
       numOfReviews: { $size: "$orderReview" },
-      averageRating: { $ceil: { $avg: "$orderReview.star" } },
+      averageRating: { $floor: { $avg: "$orderReview.star" } },
       productCount: { $size: "$products" },
       orderCount: { $size: "$orders" },
     })
@@ -229,7 +229,7 @@ const getStoresNoGeo = async (urlParams) => {
     .addFields({
       sumOfStars: { $sum: "$orderReview.star" },
       numOfReviews: { $size: "$orderReview" },
-      averageRating: { $ceil: { $avg: "$orderReview.star" } },
+      averageRating: { $floor: { $avg: "$orderReview.star" } },
       productCount: { $size: "$products" },
       orderCount: { $size: "$orders" },
     })
@@ -303,7 +303,7 @@ const getStore = async (storeId) => {
     .addFields({
       sumOfStars: { $sum: "$orderReview.star" },
       numOfReviews: { $size: "$orderReview" },
-      averageRating: { $ceil: { $avg: "$orderReview.star" } },
+      averageRating: { $floor: { $avg: "$orderReview.star" } },
       productCount: { $size: "$products" },
       orderCount: { $size: "$orders" },
     })
@@ -341,7 +341,7 @@ const getStore = async (storeId) => {
       .addFields({
         sumOfStars: { $sum: "$orderReview.star" },
         numOfReviews: { $size: "$orderReview" },
-        averageRating: { $ceil: { $avg: "$orderReview.star" } },
+        averageRating: { $floor: { $avg: "$orderReview.star" } },
         orderCount: { $size: "$orders" },
       })
       .addFields({

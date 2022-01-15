@@ -77,7 +77,7 @@ const getProducts = async (getParam) => {
     .addFields({
       totalRates: { $sum: "$productReview.star" },
       ratingAmount: { $size: "$productReview" },
-      averageRating: { $ceil: { $avg: "$productReview.star" } },
+      averageRating: { $floor: { $avg: "$productReview.star" } },
     })
     .addFields({
       averageRating: { $ifNull: ["$averageRating", 0] },
