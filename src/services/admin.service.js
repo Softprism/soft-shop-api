@@ -12,6 +12,7 @@ import getJwt from "../utils/jwtGenerator";
 import Transaction from "../models/transaction.model";
 import Ledger from "../models/ledger.model";
 import { createTransaction } from "./transaction.service";
+import { initiateTransfer } from "./payment.service";
 
 const getAdmins = async () => {
   const admins = await Admin.find();
@@ -135,6 +136,18 @@ const resetStorePassword = async (storeEmail) => {
   return "Password has been reset for store";
 };
 
+const getAllStoresUpdateRequests = async (urlParams) => {
+  const limit = Number(urlParams.limit);
+  const skip = Number(urlParams.skip);
+  let requests = await StoreUpdate.find({})
+    .sort("createdAt")
+    .skip(skip)
+    .limit(limit)
+    .populate({ path: "store", select: "name" });
+
+  return requests;
+};
+
 const confirmStoreUpdate = async (storeID) => {
   // use service to update store profile
   // also use for legacy admin store profile update action
@@ -153,13 +166,16 @@ const confirmStoreUpdate = async (storeID) => {
     name,
     phone_number,
     category,
-    tax
+    tax,
+    account_details
   } = newDetails;
 
   const updateParam = {};
 
   // Check for fields
   if (address) updateParam.address = address;
+  if (account_details) updateParam.account_details = account_details;
+
   if (location.type && location.coordinates.length > 0) updateParam.location = location;
   if (phone_number) updateParam.phone_number = phone_number;
   if (category) updateParam.category = category;
@@ -216,24 +232,29 @@ const confirmStorePayout = async (storeId) => {
   let totalTransactionDebits = Number(transactions[0].totalDebit);
 
   if (totalStoreCredits === totalTransactionCredits && totalTransactionDebits === totalStoreDebits && ledger.account_balance >= store.account_details.account_balance) {
-    // store can only have one  withdrawal request
-    let approval = await Transaction.findOne({ receiver: storeId, status: "pending" });
-    if (!approval) return { err: "Cannot find store's withdrawal request", status: 400 };
-    approval.status = "completed";
-    approval.save();
-
-    // create transaction
-    let request = {
-      amount: approval.amount,
-      type: "Debit",
-      to: "Ledger",
-      receiver: ledger._id,
-      status: "completed",
-      ref: approval.ref
+    // create withdrwal request code
+    // create card index
+    let withdrawalRequest = () => {
+      let s4 = () => {
+        return Math.floor((1 + Math.random()) * 0x10000)
+          .toString(16)
+          .substring(1);
+      };
+        // return id of format 'card - aaaaa'
+      return `wtdrqt-${s4()}`;
     };
-    await createTransaction(request);
-
-    return approval;
+    // initiate transfer
+    let payload = {
+      account_bank: store.account_details.bank_code,
+      account_number: store.account_details.account_number,
+      amount: store.account_details.account_balance,
+      narration: `Softshop - ${store.name} Withdrawal`,
+      currency: "NGN",
+      reference: withdrawalRequest(),
+      debit_currency: "NGN"
+    };
+    let request = await initiateTransfer(payload);
+    return request;
   }
   return { err: "Store money not consistent. Please pull transaction records.", status: 400 };
 };
@@ -248,5 +269,5 @@ const createCompayLedger = async () => {
 };
 
 export {
-  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin, resetStorePassword, confirmStoreUpdate, createNotification, confirmStorePayout, createCompayLedger
+  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin, resetStorePassword, confirmStoreUpdate, createNotification, confirmStorePayout, createCompayLedger, getAllStoresUpdateRequests
 };

@@ -224,7 +224,7 @@ const requestPayout = async (req, res, next) => {
 
 const getPayoutHistory = async (req, res, next) => {
   try {
-    const payouts = await storeService.getPayoutHistory(req.store.id, req.query.type);
+    const payouts = await storeService.getPayoutHistory(req.store.id, req.query);
 
     return res.status(200).json({
       success: true,

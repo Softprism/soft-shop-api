@@ -699,15 +699,22 @@ const requestPayout = async (storeId) => {
   return newTransaction;
 };
 
-const getPayoutHistory = async (storeId) => {
-  const payoutHistory = await Transaction.find({
-    receiver: storeId,
-    type: "Debit",
-    status: "completed"
-  }).populate({
-    path: "receiver",
-    select: "account_details"
-  });
+const getPayoutHistory = async (storeId, urlParams) => {
+  const limit = Number(urlParams.limit);
+  const skip = Number(urlParams.skip);
+  const payoutHistory = await Transaction
+    .find({
+      receiver: storeId,
+      type: "Debit",
+      status: "completed"
+    })
+    .populate({
+      path: "receiver",
+      select: "account_details"
+    })
+    .sort("createdDate")
+    .skip(skip)
+    .limit(limit);
   return payoutHistory;
 };
 

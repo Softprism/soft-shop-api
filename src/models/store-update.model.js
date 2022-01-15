@@ -13,11 +13,11 @@ const StoreUpdateSchema = mongoose.Schema(
         type: { type: String, default: "Point", enum: ["Point"] },
         coordinates: [Number],
       },
-      updateDetails: { type: Boolean },
       tax: { type: Number },
       account_details: {
         account_number: { type: String },
         full_name: { type: String },
+        bank_code: { type: String },
         bank_name: { type: String }
       }
     }
