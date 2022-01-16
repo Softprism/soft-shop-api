@@ -445,11 +445,6 @@ const loginStore = async (StoreParam) => {
 
 const getLoggedInStore = async (storeId) => {
   const store = await getStore(storeId);
-  let completedOrder = await Order.find({
-    store: storeId,
-    status: "sent"
-  });
-  store.completedOrder = completedOrder.length;
   return store;
 };
 
@@ -541,6 +536,7 @@ const getLabels = async (storeId) => {
 };
 
 const getStoreSalesStats = async (storeId, days) => {
+  console.log(storeId);
   if (!days) return { err: "Please, specify amount of days to get stats for.", status: 400 };
 
   let d = new Date();
@@ -549,7 +545,7 @@ const getStoreSalesStats = async (storeId, days) => {
   let salesStats = await Order.aggregate()
     .match({
       store: mongoose.Types.ObjectId(storeId),
-      status: "delivered",
+      status: { $in: ["sent", "ready", "accepted", "enroute", "delivered", "completed"] },
       createdAt: { $gt: d },
     })
     .addFields({
@@ -577,7 +573,12 @@ const bestSellers = async (storeId, pagingParam) => {
   const { limit, skip } = pagingParam;
 
   let bestSellingItems = Order.aggregate()
-    .match({ store: mongoose.Types.ObjectId(storeId) })
+    .match(
+      {
+        store: mongoose.Types.ObjectId(storeId),
+        status: { $in: ["sent", "ready", "accepted", "enroute", "delivered", "completed"] }
+      }
+    )
     .lookup({
       from: "products",
       localField: "orderItems.product",
@@ -659,6 +660,7 @@ const getStoreFeedback = async (storeId, pagingParam) => {
   const feedbacks = await Order.aggregate()
     .match({
       store: mongoose.Types.ObjectId(storeId),
+      status: "completed"
     })
     .lookup({
       from: "reviews",
