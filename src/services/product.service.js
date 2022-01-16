@@ -34,8 +34,9 @@ const getProducts = async (getParam) => {
     matchParam.status = getParam.status;
   }
   if (getParam.label) {
-    matchParam.label = mongoose.Types.ObjectId(getParam.label);
+    matchParam.labels = mongoose.Types.ObjectId(getParam.label);
   }
+  console.log(matchParam);
 
   const pipeline = [
     {

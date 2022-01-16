@@ -9,7 +9,9 @@ const getProducts = async (req, res, next) => {
 
   const allProducts = await productService.getProducts(req.query);
 
-  return res.status(200).json({ success: true, result: allProducts, status: 200 });
+  return res.status(200).json({
+    success: true, result: allProducts, status: 200, size: allProducts.length
+  });
 };
 
 const createProduct = async (req, res, next) => {
