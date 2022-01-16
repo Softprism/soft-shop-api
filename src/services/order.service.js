@@ -15,10 +15,14 @@ const getOrders = async (urlParams) => {
   const limit = Number(urlParams.limit);
   const skip = Number(urlParams.skip);
   let { sort } = urlParams;
+  console.log(urlParams);
 
   // match for order status
   if (urlParams.status) {
-    matchParam.status = urlParams.status;
+    urlParams.status = urlParams.status.split(",");
+    matchParam.status = {
+      $in: urlParams.status
+    };
   }
   // check and add to match paramters if request is matching for store, convert string to objectId
   if (urlParams.store) { matchParam.store = mongoose.Types.ObjectId(urlParams.store); }
@@ -583,6 +587,7 @@ const reviewOrder = async (review) => {
   const order = await Order.findOne({
     _id: mongoose.Types.ObjectId(review.order),
     user: mongoose.Types.ObjectId(review.user),
+    status: "completed"
   });
   if (!order) return { err: "Order not found.", status: 404 };
 
