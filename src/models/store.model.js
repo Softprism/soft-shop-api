@@ -12,8 +12,8 @@ const StoreSchema = mongoose.Schema({
   category: { type: mongoose.Schema.Types.ObjectId, ref: "Category" },
   openingTime: { type: String, required: true },
   closingTime: { type: String, required: true },
-  deliveryTime: { type: Number },
-  prepTime: { type: Number },
+  deliveryTime: { type: String },
+  prepTime: { type: String },
   location: {
     type: { type: String, default: "Point", enum: ["Point"] },
     coordinates: [Number],
@@ -39,7 +39,6 @@ const StoreSchema = mongoose.Schema({
     bank_name: { type: String },
     pending_payout: { type: Boolean },
     createdDate: { type: Date, default: Date.now },
-
   }
 });
 
