@@ -24,9 +24,9 @@ const getAllRiders = async (urlParams) => {
   return riders;
 };
 
-// send otp to Verify user email before sign up
+// send otp to Verify rider email before sign up
 const verifyEmailAddress = async ({ email }) => {
-  // check if user exists
+  // check if rider exists
   let rider = await Rider.findOne({ email });
   if (rider) {
     return { err: "This email is being used by another rider.", status: 409 };
@@ -42,10 +42,10 @@ const verifyEmailAddress = async ({ email }) => {
   return "OTP sent!";
 };
 
-const registerRider = async (userParam) => {
+const registerRider = async (riderParam) => {
   const {
     first_name, last_name, email, phone_number, password
-  } = userParam;
+  } = riderParam;
 
   // check if rider exists
   let rider = await Rider.findOne({ email });
@@ -61,7 +61,7 @@ const registerRider = async (userParam) => {
   } else {
     return { err: "Email Authentication failed. Please try again.", status: 409 };
   }
-  // Create User Object
+  // Create rider Object
   const newRider = {
     first_name: capitalize(first_name),
     last_name: capitalize(last_name),
@@ -70,18 +70,18 @@ const registerRider = async (userParam) => {
     password,
     isVerified
   };
-    // Save user to db
+    // Save rider to db
   const createdRider = await Rider.create(newRider);
 
   // delete sign up token
-  await Token.findByIdAndDelete(userParam.token);
+  await Token.findByIdAndDelete(riderParam.token);
 
   let riderToken = await getJwt(createdRider._id, "rider");
 
   return { createdRider, riderToken };
 };
 
-// Login User
+// Login rider
 const loginRider = async (loginParam) => {
   const { email, password } = loginParam;
 
@@ -113,28 +113,28 @@ const loginRider = async (loginParam) => {
 
 const validateToken = async ({ type, otp, email }) => {
   // find token
-  let userToken = await Token.findOne({
+  let riderToken = await Token.findOne({
     otp,
     email,
     type,
   });
 
-  if (!userToken) {
+  if (!riderToken) {
     return {
       err: "The OTP entered is incorrect, please try again.",
       status: 406,
     };
   }
 
-  return userToken;
+  return riderToken;
 };
 
 const requestPasswordToken = async (email) => {
-  // verify if user exists, throws error if not
-  let findUser = await Rider.findOne({ email });
-  if (!findUser) {
+  // verify if rider exists, throws error if not
+  let findRider = await Rider.findOne({ email });
+  if (!findRider) {
     return {
-      err: "User does not exists.",
+      err: "Rider does not exists.",
       status: 404,
     };
   }
