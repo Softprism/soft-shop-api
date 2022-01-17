@@ -7,7 +7,7 @@ const registerStore = {
     email: Joi.string().email().required(),
     phone_number: Joi.string().min(11).required(),
     images: Joi.array(),
-    password: Joi.string().min(5).required(),
+    password: Joi.string().min(6).required(),
     openingTime: Joi.string(),
     closingTime: Joi.string(),
     address: Joi.string().min(2),
@@ -16,8 +16,8 @@ const registerStore = {
 
 const loginStoreValidation = {
   body: Joi.object({
-    email: Joi.string().min(5).required(),
-    password: Joi.string().min(5).required(),
+    email: Joi.string().email().required(),
+    password: Joi.string().min(6).required(),
   }).required(),
 };
 
@@ -30,7 +30,7 @@ const updateStoreValidation = {
     images: Joi.array(),
     openingTime: Joi.string(),
     closingTime: Joi.string(),
-    password: Joi.string(),
+    password: Joi.string().min(6),
     deliveryTime: Joi.number().positive(),
     isActive: Joi.boolean(),
     prepTime: Joi.number().positive(),

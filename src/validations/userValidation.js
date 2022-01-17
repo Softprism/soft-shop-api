@@ -7,15 +7,15 @@ const registerValidation = {
     last_name: Joi.string().min(2).required(),
     email: Joi.string().email().required(),
     phone_number: Joi.string().min(11).required(),
-    password: Joi.string().min(5).required(),
+    password: Joi.string().min(6).required(),
     token: objectId.required(),
   }).required(),
 };
 
 const loginValidation = {
   body: Joi.object({
-    email: Joi.string().min(5).required(),
-    password: Joi.string().min(5).required(),
+    email: Joi.string().email().required(),
+    password: Joi.string().min(6).required(),
   }).required(),
 };
 const emailValidation = {
