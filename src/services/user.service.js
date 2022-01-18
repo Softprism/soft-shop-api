@@ -154,7 +154,7 @@ const loginUser = async (loginParam) => {
 
   if (!isMatch) {
     return {
-      err: "The password entered in incorrect, please try again.",
+      err: "The password entered is incorrect, please try again.",
       status: 401,
     };
   }
