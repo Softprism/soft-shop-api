@@ -151,7 +151,8 @@ const createProduct = async (productParam, storeId) => {
   if (!storeChecker) {
     return { err: "Store not found. Please try.", status: 404 };
   }
-
+  // checl for variant option
+  if (!productParam.variantOpt) productParam.variants = undefined;
   // add store ID to productParam
   productParam.store = storeId;
   const {
@@ -168,7 +169,12 @@ const createProduct = async (productParam, storeId) => {
 
   // check if category exists
   const catChecker = await Category.findById(category);
-  if (!catChecker) return { err: "Category not found. Please try again.", status: 404 };
+  if (!catChecker) {
+    return {
+      err: "Category not found. Please try again.", status: 404
+    };
+  }
+
   // create new product
   const newProduct = new Product({
     product_name,
