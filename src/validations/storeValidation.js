@@ -35,7 +35,7 @@ const updateStoreValidation = {
     password: Joi.string().min(6),
     deliveryTime: Joi.number().positive(),
     isActive: Joi.boolean(),
-    prepTime: Joi.string(),
+    prepTime: Joi.number().positive(),
   })
 };
 

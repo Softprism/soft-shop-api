@@ -13,7 +13,7 @@ const StoreSchema = mongoose.Schema({
   openingTime: { type: String, required: true },
   closingTime: { type: String, required: true },
   deliveryTime: { type: String },
-  prepTime: { type: String },
+  prepTime: { type: Number },
   location: {
     type: { type: String, default: "Point", enum: ["Point"] },
     coordinates: [Number],
