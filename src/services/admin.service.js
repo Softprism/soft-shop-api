@@ -173,13 +173,13 @@ const confirmStoreUpdate = async (storeID) => {
 
   // Check for fields
   if (address) updateParam.address = address;
-  if (account_details) {
+  if (account_details.full_name) {
     // find store and populate account details with existing values
     let store = await Store.findById(storeID).select("account_details");
     updateParam.account_details = {
       account_balance: store.account_details.account_balance,
-      total_credit: store.account_details.total_debit,
-      total_debit: store.account_details.total_credit,
+      total_credit: store.account_details.total_credit,
+      total_debit: store.account_details.total_debit,
       account_number: account_details.account_number,
       full_name: account_details.full_name,
       bank_name: account_details.bank_name,
