@@ -201,7 +201,7 @@ const confirmStoreUpdate = async (storeID) => {
 
 const confirmStorePayout = async (storeId) => {
   let store = await Store.findById(storeId);
-  let ledger = Ledger.findOne({});
+  let ledger = await Ledger.findOne({});
 
   /* get total credit and total debit transactions for stores
     so we can compare with the total credit and total debit fields
@@ -215,13 +215,25 @@ const confirmStorePayout = async (storeId) => {
       totalCredit: {
         $sum: {
           $cond:
-       [{ $eq: ["$type", "Credit"] }, "$amount", 0]
+       [{
+         $and: [
+           { $eq: ["$type", "Credit"] },
+           { $eq: ["$status", "completed"] }
+         ]
+       },
+       "$amount", 0]
         }
       },
       totalDebit: {
         $sum: {
           $cond:
-       [{ $eq: ["$type", "Debit"] }, "$amount", 0]
+       [{
+         $and: [
+           { $eq: ["$type", "Debit"] },
+           { $eq: ["$status", "completed"] }
+         ]
+       },
+       "$amount", 0]
         }
       }
     });
@@ -253,10 +265,12 @@ const confirmStorePayout = async (storeId) => {
       reference: withdrawalRequest(),
       debit_currency: "NGN"
     };
-    let request = await initiateTransfer(payload);
-    return request;
+    // let request = await initiateTransfer(payload);
+    return payload;
   }
-  return { err: "Store money not consistent. Please pull transaction records.", status: 400 };
+  return {
+    err: "Store money not consistent. Please pull transaction records.", status: 400
+  };
 };
 
 const createCompayLedger = async () => {

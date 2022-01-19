@@ -15,7 +15,7 @@ const createTransaction = async ({
   });
 
   // credit store
-  if (newTrans && to === "Store" && type === "Credit") {
+  if (newTrans && to === "Store" && type === "Credit" && status === "completed") {
     let store = await Store.findById(receiver);
     store.account_details.total_credit += Number(amount);
     store.account_details.account_balance = Number(store.account_details.total_credit) - Number(store.account_details.total_debit);
@@ -23,7 +23,7 @@ const createTransaction = async ({
   }
 
   // debit store
-  if (newTrans && to === "Store" && type === "Debit") {
+  if (newTrans && to === "Store" && type === "Debit" && status === "completed") {
     let store = await Store.findById(receiver);
     store.account_details.total_debit += Number(amount);
     store.account_details.account_balance = Number(store.account_details.total_credit) - Number(store.account_details.total_debit);
