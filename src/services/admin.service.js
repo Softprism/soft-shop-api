@@ -254,6 +254,7 @@ const confirmStorePayout = async (storeId) => {
   let totalStoreDebits = Number(store.account_details.total_debit);
   let totalTransactionCredits = Number(transactions[0].totalCredit);
   let totalTransactionDebits = Number(transactions[0].totalDebit);
+  console.log(totalStoreCredits, totalTransactionCredits, totalTransactionDebits, totalStoreDebits, ledger.account_balance, store.account_details.account_balance);
 
   if (totalStoreCredits === totalTransactionCredits && totalTransactionDebits === totalStoreDebits && ledger.account_balance >= store.account_details.account_balance) {
     // create withdrwal request code
