@@ -239,13 +239,10 @@ const confirmStorePayout = async (storeId) => {
       totalDebit: {
         $sum: {
           $cond:
-       [{
-         $and: [
-           { $eq: ["$type", "Debit"] },
-           { $eq: ["$status", "completed"] }
-         ]
-       },
-       "$amount", 0]
+       [
+         { $eq: ["$type", "Debit"] },
+         "$amount", 0
+       ]
         }
       }
     });
