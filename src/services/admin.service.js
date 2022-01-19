@@ -214,6 +214,11 @@ const confirmStoreUpdate = async (storeID) => {
 const confirmStorePayout = async (storeId) => {
   let store = await Store.findById(storeId);
   let ledger = await Ledger.findOne({});
+  let payout = await Transaction.findOne({
+    receiver: storeId,
+    type: "Debit",
+    status: "pending"
+  });
 
   /* get total credit and total debit transactions for stores
     so we can compare with the total credit and total debit fields
@@ -268,7 +273,7 @@ const confirmStorePayout = async (storeId) => {
     let payload = {
       account_bank: store.account_details.bank_code,
       account_number: store.account_details.account_number,
-      amount: store.account_details.account_balance,
+      amount: payout.amount,
       narration: `Softshop - ${store.name} Withdrawal`,
       currency: "NGN",
       reference: withdrawalRequest(),
