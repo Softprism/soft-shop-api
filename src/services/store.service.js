@@ -731,7 +731,8 @@ const requestPayout = async (storeId) => {
   // check for pending request
   let oldRequest = await Transaction.findOne({
     type: "Debit",
-    receiver: storeId
+    receiver: storeId,
+    status: "pending"
   });
 
   if (oldRequest) return { err: "You have a pending payout request. Please wait for its approval", status: 400 };
