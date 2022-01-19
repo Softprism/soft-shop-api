@@ -152,8 +152,7 @@ const confirmStoreUpdate = async (storeID) => {
   // use service to update store profile
   // also use for legacy admin store profile update action
 
-  let updateParams = await StoreUpdate.findOne({ store: storeID }).select("newDetails");
-
+  let updateParams = await StoreUpdate.findOne({ store: storeID });
   // check if there are inputs to update
   if (!updateParams) return { err: "You haven't specified a field to update. Please try again.", status: 400 };
   const { newDetails } = updateParams;
@@ -174,7 +173,20 @@ const confirmStoreUpdate = async (storeID) => {
 
   // Check for fields
   if (address) updateParam.address = address;
-  if (account_details) updateParam.account_details = account_details;
+  if (account_details) {
+    // find store and populate account details with existing values
+    let store = await Store.findById(storeID).select("account_details");
+    updateParam.account_details = {
+      account_balance: store.account_details.account_balance,
+      total_credit: store.account_details.total_debit,
+      total_debit: store.account_details.total_credit,
+      account_number: account_details.account_number,
+      full_name: account_details.full_name,
+      bank_name: account_details.bank_name,
+      bank_code: account_details.bank_code,
+
+    };
+  }
 
   if (location.type && location.coordinates.length > 0) updateParam.location = location;
   if (phone_number) updateParam.phone_number = phone_number;
