@@ -3,25 +3,55 @@ import objectId from "./common";
 
 const registerValidation = {
   body: Joi.object({
-    first_name: Joi.string().min(2).required(),
-    last_name: Joi.string().min(2).required(),
-    email: Joi.string().email().required(),
-    phone_number: Joi.string().min(11).required(),
-    password: Joi.string().min(6).required(),
+    first_name: Joi.string().min(2).required().messages({
+      "string.min": "Sorry First name cannot be less than 2 letters",
+      "string.empty": "Sorry, First name cannot be an empty field",
+    }),
+    last_name: Joi.string().min(2).required().messages({
+      "string.min": "Sorry Last name cannot be less than 2 letters",
+      "string.empty": "Sorry, Last name cannot be an empty field",
+    }),
+    email: Joi.string().email().required().messages({
+      "string.email": "Please enter a valid email",
+      "string.empty": "Sorry, email cannot be an empty field",
+    }),
+    phone_number: Joi.string().min(11).required().messages({
+      "string.empty": "Sorry, phone number cannot be an empty field",
+      "string.min": "Phone number should be 11 numbers"
+    }),
+    password: Joi.string().min(6).required().messages({
+      "string.empty": "Sorry, password cannot be an empty field",
+      "string.min": "Password should be six characters or more"
+    }),
     token: objectId.required(),
-  }).required(),
+  }).messages({
+    "object.unknown": "You have used an invalid key."
+  })
 };
 
 const loginValidation = {
   body: Joi.object({
-    email: Joi.string().email().required(),
-    password: Joi.string().min(6).required(),
-  }).required(),
+    email: Joi.string().email().required().messages({
+      "string.email": "Please enter a valid email",
+      "string.empty": "Sorry, email cannot be an empty field",
+    }),
+    password: Joi.string().min(6).required().messages({
+      "string.empty": "Sorry, password cannot be an empty field",
+      "string.min": "Password should be six characters or more"
+    }),
+  }).messages({
+    "object.unknown": "You have used an invalid key."
+  })
 };
 const emailValidation = {
   body: Joi.object({
-    email: Joi.string().email().required(),
-  }).required(),
+    email: Joi.string().email().required().messages({
+      "string.email": "Please enter a valid email",
+      "string.empty": "Sorry, email cannot be an empty field",
+    }),
+  }).messages({
+    "object.unknown": "You have used an invalid key."
+  })
 };
 
 export {
