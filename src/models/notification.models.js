@@ -5,6 +5,8 @@ const NotificationSchema = mongoose.Schema({
   message: { type: String },
   description: { type: String },
   rider: { type: mongoose.Schema.Types.ObjectId, ref: "Rider" },
+  user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  store: { type: mongoose.Schema.Types.ObjectId, ref: "Store" },
   status: { type: String, enum: ["unread", "read"], default: "unread" },
   extra_data: { type: mongoose.Schema.Types.ObjectId, refPath: "type" },
   type: {

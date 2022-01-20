@@ -36,19 +36,17 @@ const getRiderNotificationById = async (notificationId, riderId) => {
 };
 
 const createNotification = async (userIds = [], orderId) => {
-  userIds.forEach(async (user) => {
-    try {
-      await Notification.create({
-        title: "Order request",
-        message: "You have a new delivery request",
-        rider: user,
-        extra_data: orderId,
-        type: "Order"
-      });
-    } catch (error) {
-      console.log(error);
-    }
+  let array = [];
+  array = userIds.map((user) => {
+    return {
+      title: "Order request",
+      message: "You have a new delivery request",
+      rider: user,
+      extra_data: orderId,
+      type: "Order"
+    };
   });
+  await Notification.insertMany(array);
   return true;
 };
 export { createNotification, getRiderNotificationById, getAllRiderNotification };
