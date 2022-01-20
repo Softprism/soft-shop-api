@@ -496,8 +496,10 @@ const updateStoreRequest = async (storeID, updateParam) => {
   if (checkStoreUpdate.pendingUpdates === true) {
     // append new updates to existing update document
     let storeUpdate = await StoreUpdate.findOne({ store: storeID });
-    storeUpdate.newDetails = { ...storeUpdate.newDetails, ...newDetails };
-    storeUpdate.save();
+
+    await StoreUpdate.findOneAndUpdate({ store: storeID }, { $set: { newDetails: { ...storeUpdate.newDetails, ...newDetails } } });
+    // storeUpdate.newDetails = { ...storeUpdate.newDetails, ...newDetails };
+    // storeUpdate.save();
   } else {
     // create new update document
     let newUpdate = new StoreUpdate({ store: storeID, newDetails });
