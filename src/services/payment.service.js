@@ -199,7 +199,8 @@ const getAllBanks = async () => {
 
 const getBankDetails = async (payload) => {
   const response = await flw.Misc.verify_Account(payload);
-  return response;
+  if (response.status === "error") return { err: response.message, status: 400 };
+  return response.data;
 };
 
 const getTransactions = async () => {

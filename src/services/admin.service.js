@@ -152,8 +152,7 @@ const confirmStoreUpdate = async (storeID) => {
   // use service to update store profile
   // also use for legacy admin store profile update action
 
-  let updateParams = await StoreUpdate.findOne({ store: storeID }).select("newDetails");
-
+  let updateParams = await StoreUpdate.findOne({ store: storeID });
   // check if there are inputs to update
   if (!updateParams) return { err: "You haven't specified a field to update. Please try again.", status: 400 };
   const { newDetails } = updateParams;
@@ -174,7 +173,20 @@ const confirmStoreUpdate = async (storeID) => {
 
   // Check for fields
   if (address) updateParam.address = address;
-  if (account_details) updateParam.account_details = account_details;
+  if (account_details.full_name) {
+    // find store and populate account details with existing values
+    let store = await Store.findById(storeID).select("account_details");
+    updateParam.account_details = {
+      account_balance: store.account_details.account_balance,
+      total_credit: store.account_details.total_credit,
+      total_debit: store.account_details.total_debit,
+      account_number: account_details.account_number,
+      full_name: account_details.full_name,
+      bank_name: account_details.bank_name,
+      bank_code: account_details.bank_code,
+
+    };
+  }
 
   if (location.type && location.coordinates.length > 0) updateParam.location = location;
   if (phone_number) updateParam.phone_number = phone_number;
@@ -201,7 +213,12 @@ const confirmStoreUpdate = async (storeID) => {
 
 const confirmStorePayout = async (storeId) => {
   let store = await Store.findById(storeId);
-  let ledger = Ledger.findOne({});
+  let ledger = await Ledger.findOne({});
+  let payout = await Transaction.findOne({
+    receiver: storeId,
+    type: "Debit",
+    status: "pending"
+  });
 
   /* get total credit and total debit transactions for stores
     so we can compare with the total credit and total debit fields
@@ -215,13 +232,22 @@ const confirmStorePayout = async (storeId) => {
       totalCredit: {
         $sum: {
           $cond:
-       [{ $eq: ["$type", "Credit"] }, "$amount", 0]
+       [{
+         $and: [
+           { $eq: ["$type", "Credit"] },
+           { $eq: ["$status", "completed"] }
+         ]
+       },
+       "$amount", 0]
         }
       },
       totalDebit: {
         $sum: {
           $cond:
-       [{ $eq: ["$type", "Debit"] }, "$amount", 0]
+       [
+         { $eq: ["$type", "Debit"] },
+         "$amount", 0
+       ]
         }
       }
     });
@@ -247,16 +273,18 @@ const confirmStorePayout = async (storeId) => {
     let payload = {
       account_bank: store.account_details.bank_code,
       account_number: store.account_details.account_number,
-      amount: store.account_details.account_balance,
+      amount: payout.amount,
       narration: `Softshop - ${store.name} Withdrawal`,
       currency: "NGN",
       reference: withdrawalRequest(),
       debit_currency: "NGN"
     };
-    let request = await initiateTransfer(payload);
-    return request;
+    // let request = await initiateTransfer(payload);
+    return payload;
   }
-  return { err: "Store money not consistent. Please pull transaction records.", status: 400 };
+  return {
+    err: "Store money not consistent. Please pull transaction records.", status: 400
+  };
 };
 
 const createCompayLedger = async () => {

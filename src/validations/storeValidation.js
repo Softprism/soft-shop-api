@@ -7,6 +7,8 @@ const registerStore = {
     email: Joi.string().email().required(),
     phone_number: Joi.string().min(11).required(),
     images: Joi.array(),
+    category: objectId.required(),
+    location: Joi.required(),
     password: Joi.string().min(6).required(),
     openingTime: Joi.string(),
     closingTime: Joi.string(),

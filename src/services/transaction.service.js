@@ -15,11 +15,15 @@ const createTransaction = async ({
   });
 
   // credit store
-  if (newTrans && to === "Store" && type === "Credit") {
+  if (newTrans && to === "Store" && type === "Credit" && status === "completed") {
     let store = await Store.findById(receiver);
     store.account_details.total_credit += Number(amount);
     store.account_details.account_balance = Number(store.account_details.total_credit) - Number(store.account_details.total_debit);
     store.save();
+    let ledger = await Ledger.findOne({});
+    ledger.payins += Number(amount);
+    ledger.account_balance = Number(ledger.payins) - Number(ledger.payouts);
+    ledger.save();
   }
 
   // debit store

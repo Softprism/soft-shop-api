@@ -10,6 +10,7 @@ import StoreUpdate from "../models/store-update.model";
 import getJwt from "../utils/jwtGenerator";
 import { createTransaction } from "./transaction.service";
 import Transaction from "../models/transaction.model";
+import Category from "../models/category.model";
 
 const getStores = async (urlParams) => {
   // declare fields to exclude from response
@@ -401,15 +402,28 @@ const createStore = async (StoreParam) => {
     openingTime,
     closingTime,
     location,
+    category
   } = StoreParam;
-
   let store = await Store.findOne({ email });
 
   if (store) {
     return { err: "A store with this email already exists.", status: 400 };
   }
-  const newStore = new Store(StoreParam);
 
+  // check store phone number for duplicate entry
+  let storePhoneChecker = await Store.findOne({ phone_number });
+
+  if (storePhoneChecker) {
+    return { err: "A store with this phone number already exists.", status: 400 };
+  }
+
+  // check if category exists
+  let categoryChecker = await Category.findById(category);
+
+  if (!categoryChecker) {
+    return { err: "This category does not exist.", status: 400 };
+  }
+  const newStore = new Store(StoreParam);
   await newStore.save();
 
   let token = await getJwt(newStore.id, "store");
@@ -717,7 +731,8 @@ const requestPayout = async (storeId) => {
   // check for pending request
   let oldRequest = await Transaction.findOne({
     type: "Debit",
-    receiver: storeId
+    receiver: storeId,
+    status: "pending"
   });
 
   if (oldRequest) return { err: "You have a pending payout request. Please wait for its approval", status: 400 };

@@ -34,6 +34,9 @@ const getAllBanks = async (req, res, next) => {
 const getBankDetails = async (req, res, next) => {
   try {
     let details = await paymentService.getBankDetails(req.body);
+    if (details.err) {
+      return res.status(details.status).json({ success: false, msg: details.err, status: details.status });
+    }
     return res.status(200).json({
       success: true, result: details, status: 200
     });
