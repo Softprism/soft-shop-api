@@ -21,7 +21,9 @@ const order_validation = {
         qty: Joi.number().positive().required(),
       })
     ),
-  }).required(),
+  }).messages({
+    "object.unknown": "You have used an invalid key."
+  })
 };
 
 export default order_validation;

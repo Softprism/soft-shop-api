@@ -6,7 +6,9 @@ const create_category = {
       "string.empty": "Sorry, Category name cannot be an empty field",
     }),
     image: Joi.array(),
-  }).required(),
+  }).messages({
+    "object.unknown": "You have used an invalid key."
+  })
 };
 
 export default create_category;

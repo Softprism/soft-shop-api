@@ -24,7 +24,9 @@ const registerValidation = {
       "string.min": "Password should be six characters or more"
     }),
     token: objectId.required(),
-  }).required(),
+  }).messages({
+    "object.unknown": "You have used an invalid key."
+  })
 };
 
 const loginValidation = {
@@ -37,7 +39,9 @@ const loginValidation = {
       "string.empty": "Sorry, password cannot be an empty field",
       "string.min": "Password should be six characters or more"
     }),
-  }).required(),
+  }).messages({
+    "object.unknown": "You have used an invalid key."
+  })
 };
 const emailValidation = {
   body: Joi.object({
@@ -45,7 +49,9 @@ const emailValidation = {
       "string.email": "Please enter a valid email",
       "string.empty": "Sorry, email cannot be an empty field",
     }),
-  }).required(),
+  }).messages({
+    "object.unknown": "You have used an invalid key."
+  })
 };
 
 export {

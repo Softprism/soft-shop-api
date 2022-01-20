@@ -19,7 +19,9 @@ const createProducts = {
     availability: Joi.boolean(),
     variantOpt: Joi.boolean(),
     price: Joi.number().positive().required(),
-  }),
+  }).messages({
+    "object.unknown": "You have used an invalid key."
+  })
 };
 
 export default createProducts;

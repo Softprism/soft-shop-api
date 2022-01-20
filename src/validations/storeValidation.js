@@ -32,7 +32,9 @@ const registerStore = {
       "string.empty": "Sorry, phone number cannot be an empty field",
       "string.min": "Address should be 11 numbers"
     }),
-  }),
+  }).messages({
+    "object.unknown": "You have used an invalid key."
+  })
 };
 
 const loginStoreValidation = {
@@ -45,7 +47,9 @@ const loginStoreValidation = {
       "string.empty": "Sorry, password cannot be an empty field",
       "string.min": "Password should be six characters or more"
     }),
-  }).required(),
+  }).messages({
+    "object.unknown": "You have used an invalid key."
+  })
 };
 
 const updateStoreValidation = {
@@ -76,6 +80,8 @@ const updateStoreValidation = {
     deliveryTime: Joi.number().positive(),
     isActive: Joi.boolean(),
     prepTime: Joi.number().positive(),
+  }).messages({
+    "object.unknown": "You have used an invalid key."
   })
 };
 

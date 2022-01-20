@@ -10,7 +10,9 @@ const register = {
       "string.empty": "Sorry, password cannot be an empty field",
       "string.min": "Password should be 5 characters or more"
     }),
-  }).required(),
+  }).messages({
+    "object.unknown": "You have used an invalid key."
+  })
 };
 
 const login = {
@@ -23,7 +25,9 @@ const login = {
       "string.empty": "Sorry, password cannot be an empty field",
       "string.min": "Password should be 5 characters or more"
     }),
-  }).required(),
+  }).messages({
+    "object.unknown": "You have used an invalid key."
+  })
 };
 
 export {
