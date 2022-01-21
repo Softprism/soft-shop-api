@@ -91,7 +91,7 @@ const OrderSchema = mongoose.Schema(
       },
     ],
   },
-  { timestamps: true }
+  { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } }
 );
 
 const Order = mongoose.model("Order", OrderSchema);

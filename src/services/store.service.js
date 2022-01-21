@@ -555,7 +555,6 @@ const getLabels = async (storeId) => {
 };
 
 const getStoreSalesStats = async (storeId, days) => {
-  console.log(storeId);
   if (!days) return { err: "Please, specify amount of days to get stats for.", status: 400 };
 
   let d = new Date();
@@ -576,6 +575,7 @@ const getStoreSalesStats = async (storeId, days) => {
     })
     .addFields({
       weekday: { $toInt: "$_id" },
+      createdAt: { $dayOfWeek: "$createdAt" },
       totalSales: { $sum: "$sales" },
       totalOrders: { $size: "$sales" },
     })

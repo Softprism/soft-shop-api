@@ -39,8 +39,9 @@ const StoreSchema = mongoose.Schema({
     bank_name: { type: String },
     pending_payout: { type: Boolean },
     createdDate: { type: Date, default: Date.now },
-  }
-});
+  },
+},
+{ timestamps: { createdAt: "created_at", updatedAt: "updated_at" } });
 
 const Store = mongoose.model("Store", StoreSchema);
 
