@@ -9,6 +9,8 @@ import {
   reviewProduct, getProductDetails, createVariant, updateVariant,
   addVariantItem, getVariantItem, addCustomFee, deleteCustomFee,
   getStoreVariants,
+  deleteStoreVariant,
+  deleteStoreVariantItem,
 } from "../controllers/product.controller";
 import validator from "../middleware/validator";
 import createProducts from "../validations/productValidation";
@@ -45,6 +47,16 @@ router.put("/variants/:variantId/item", auth, isStoreAdmin, addVariantItem);
 // @desc    update store variant
 // @access  Private
 router.put("/variants/:variantId", auth, isStoreAdmin, updateVariant);
+
+// @route   DELETE /products/variants/:variantId
+// @desc    delete store variant
+// @access  Private
+router.delete("/variants/:variantId", auth, isStoreAdmin, deleteStoreVariant);
+
+// @route   DELETE /products/variants/:variantId/:itemId
+// @desc    delete store variant
+// @access  Private
+router.delete("/variants/item/:itemId", auth, isStoreAdmin, deleteStoreVariantItem);
 
 // @route   GET /stores/variants
 // @desc   gets variants belonging to store

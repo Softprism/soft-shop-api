@@ -228,6 +228,35 @@ const deleteCustomFee = async (req, res, next) => {
     res.status(200).json({ success: true, result: deleteCustomFee });
   }
 };
+
+const deleteStoreVariant = async (req, res, next) => {
+  let storeID;
+  if (req.store) storeID = req.store.id;
+  if (req.query.storeID && req.admin) storeID = req.query.storeID;
+
+  const deleteStoreVariant = await productService.deleteStoreVariant(
+    req.params.variantId
+  );
+  if (deleteStoreVariant.err) {
+    res.status(deleteStoreVariant.status).json({ success: false, msg: deleteStoreVariant.err, status: deleteStoreVariant.status });
+  } else {
+    res.status(200).json({ success: true, result: deleteStoreVariant });
+  }
+};
+const deleteStoreVariantItem = async (req, res, next) => {
+  let storeID;
+  if (req.store) storeID = req.store.id;
+  if (req.query.storeID && req.admin) storeID = req.query.storeID;
+
+  const deleteStoreVariantItem = await productService.deleteVariantItem(
+    req.params
+  );
+  if (deleteStoreVariantItem.err) {
+    res.status(deleteStoreVariantItem.status).json({ success: false, msg: deleteStoreVariantItem.err, status: deleteStoreVariantItem.status });
+  } else {
+    res.status(200).json({ success: true, result: deleteStoreVariantItem });
+  }
+};
 export {
   deleteProduct,
   updateProduct,
@@ -242,5 +271,7 @@ export {
   addCustomFee,
   deleteCustomFee,
   getStoreVariants,
-  getStoreVariantsForUsers
+  getStoreVariantsForUsers,
+  deleteStoreVariant,
+  deleteStoreVariantItem
 };
