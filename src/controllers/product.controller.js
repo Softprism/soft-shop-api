@@ -240,7 +240,7 @@ const deleteStoreVariant = async (req, res, next) => {
   if (deleteStoreVariant.err) {
     res.status(deleteStoreVariant.status).json({ success: false, msg: deleteStoreVariant.err, status: deleteStoreVariant.status });
   } else {
-    res.status(200).json({ success: true, result: deleteStoreVariant });
+    res.status(200).json({ success: true, message: "Store Variant deleted successfully." });
   }
 };
 const deleteStoreVariantItem = async (req, res, next) => {
@@ -254,7 +254,7 @@ const deleteStoreVariantItem = async (req, res, next) => {
   if (deleteStoreVariantItem.err) {
     res.status(deleteStoreVariantItem.status).json({ success: false, msg: deleteStoreVariantItem.err, status: deleteStoreVariantItem.status });
   } else {
-    res.status(200).json({ success: true, result: deleteStoreVariantItem });
+    res.status(200).json({ success: true, message: "Store Variant item deleted successfully." });
   }
 };
 export {
