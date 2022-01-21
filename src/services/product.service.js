@@ -342,6 +342,25 @@ const deleteCustomFee = async (customFeeId) => {
   return "fee removed from product";
 };
 
+const deleteStoreVariant = async (variantId) => {
+  let variant = await Variant.findByIdAndDelete(variantId);
+  if (!variant) throw { err: "Custom fee not found." };
+  return "varaint deleted successfully";
+};
+
+const deleteVariantItem = async ({ itemId }) => {
+  let item = await Variant.findOneAndUpdate(
+    { "variantItems._id": itemId },
+    {
+      $pull: {
+        variantItems: { _id: itemId }
+      }
+    }
+  );
+  if (!item) return { err: "Item not found.", status: 400 };
+  return item;
+};
+
 export {
   getProducts,
   createProduct,
@@ -356,6 +375,8 @@ export {
   addCustomFee,
   deleteCustomFee,
   getStoreVariants,
+  deleteStoreVariant,
+  deleteVariantItem
 };
 
 // UPDATES
