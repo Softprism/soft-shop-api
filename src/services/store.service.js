@@ -568,14 +568,14 @@ const getStoreSalesStats = async (storeId, days) => {
     })
     .addFields({
       dayOfOrder: { $dayOfWeek: "$createdAt" },
-      dateOfOrder: "$createdAt"
+      dateOfOrder: { $dateToString: { format: "%Y-%m-%d", date: "$updatedAt" } }
     })
     .group({
       _id: "$dateOfOrder",
       sales: { $push: "$subtotal" },
     })
     .addFields({
-      weekday: { $dayOfWeek: "$_id" },
+      weekday: { $dayOfWeek: { $dateFromString: { dateString: "$_id" } } },
       weekdate: "$_id",
       totalSales: { $sum: "$sales" },
       totalOrders: { $size: "$sales" },
