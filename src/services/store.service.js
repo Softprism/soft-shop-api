@@ -106,7 +106,7 @@ const getStores = async (urlParams) => {
       pipeline: [
         {
           $match: {
-            status: "completed",
+            status: { $in: ["sent", "ready", "accepted", "enroute", "delivered", "completed"] },
             $expr: {
               $eq: ["$$storeId", "$store"]
             }
@@ -228,7 +228,7 @@ const getStoresNoGeo = async (urlParams) => {
       pipeline: [
         {
           $match: {
-            status: "completed",
+            status: { $in: ["sent", "ready", "accepted", "enroute", "delivered", "completed"] },
             $expr: {
               $eq: ["$$storeId", "$store"]
             }
@@ -311,7 +311,7 @@ const getStore = async (storeId) => {
       pipeline: [
         {
           $match: {
-            status: "completed",
+            status: { $in: ["sent", "ready", "accepted", "enroute", "delivered", "completed"] },
             $expr: {
               $eq: ["$$storeId", "$store"]
             }
@@ -358,7 +358,7 @@ const getStore = async (storeId) => {
         pipeline: [
           {
             $match: {
-              status: "completed",
+              status: { $in: ["sent", "ready", "accepted", "enroute", "delivered", "completed"] },
               $expr: {
                 $eq: ["$$storeId", "$store"]
               }
@@ -563,19 +563,20 @@ const getStoreSalesStats = async (storeId, days) => {
   let salesStats = await Order.aggregate()
     .match({
       store: mongoose.Types.ObjectId(storeId),
-      status: { $in: ["sent", "ready", "accepted", "enroute", "delivered", "completed"] },
+      status: { $in: ["initiated", "sent", "ready", "accepted", "enroute", "delivered", "completed"] },
       createdAt: { $gt: d },
     })
     .addFields({
       dayOfOrder: { $dayOfWeek: "$createdAt" },
+      dateOfOrder: "$createdAt"
     })
     .group({
-      _id: "$dayOfOrder",
+      _id: "$dateOfOrder",
       sales: { $push: "$subtotal" },
     })
     .addFields({
-      weekday: { $toInt: "$_id" },
-      createdAt: { $dayOfWeek: "$createdAt" },
+      weekday: { $dayOfWeek: "$_id" },
+      weekdate: "$_id",
       totalSales: { $sum: "$sales" },
       totalOrders: { $size: "$sales" },
     })
