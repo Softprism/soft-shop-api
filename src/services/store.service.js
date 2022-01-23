@@ -566,7 +566,7 @@ const getStoreSalesStats = async (storeId, days) => {
   let salesStats = await Order.aggregate()
     .match({
       store: mongoose.Types.ObjectId(storeId),
-      status: { $in: ["sent", "ready", "accepted", "enroute", "delivered", "completed"] },
+      status: "completed",
       createdAt: { $gt: d },
     })
     .addFields({
