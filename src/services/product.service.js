@@ -325,7 +325,6 @@ const addCustomFee = async (storeId, customrFeeParam) => {
 
   let newCustomFee = new CustomFee(customrFeeParam);
   await newCustomFee.save();
-
   if (newCustomFee.save()) {
     product.customFee.availability = true;
     product.customFee.items.push(newCustomFee._id);

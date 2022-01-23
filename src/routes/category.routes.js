@@ -10,7 +10,7 @@ import {
   createCategory,
 } from "../controllers/category.controller";
 import validator from "../middleware/validator";
-import create_category from "../validations/categoryValidation";
+import { create_category, updateCategory } from "../validations/categoryValidation";
 
 const router = express.Router();
 
@@ -33,7 +33,7 @@ router.post(
 // @route   PUT /category/edit/:id
 // @desc    Edit Category Category
 // @access  Public
-router.put("/:id", auth, isStoreAdmin, editCategory);
+router.put("/:id", auth, isStoreAdmin, validator(updateCategory), editCategory);
 
 // @route   DELETE /category/delete/:id
 // @desc    Create New Category

@@ -13,7 +13,10 @@ import {
   deleteStoreVariantItem,
 } from "../controllers/product.controller";
 import validator from "../middleware/validator";
-import createProducts from "../validations/productValidation";
+import {
+  createProducts, validateVariant, createFees, validateStoreProduct,
+  reviewProductValidation, addVariantItemValidation, editVariantValidation
+} from "../validations/productValidation";
 
 const router = express.Router();
 
@@ -36,17 +39,20 @@ router.post(
 // @route   PUT /review
 // @desc    user adds review to a product
 // @access  Private
-router.put("/review", auth, reviewProduct);
+router.put("/review", auth, validator(reviewProductValidation), reviewProduct);
 
 // @route   PUT /stores/variants
 // @desc    add variant to store
 // @access  Private
-router.put("/variants/:variantId/item", auth, isStoreAdmin, addVariantItem);
+router.put("/variants/:variantId/item",
+  auth, isStoreAdmin,
+  validator(addVariantItemValidation), addVariantItem);
 
 // @route   PUT /stores/variants/:variantId
 // @desc    update store variant
 // @access  Private
-router.put("/variants/:variantId", auth, isStoreAdmin, updateVariant);
+router.put("/variants/:variantId", auth, isStoreAdmin,
+  validator(editVariantValidation), updateVariant);
 
 // @route   DELETE /products/variants/:variantId
 // @desc    delete store variant
@@ -76,7 +82,9 @@ router.get(
 // @route   PUT /:id
 // @desc    update a store product, can be used by admin and stores
 // @access  Private
-router.put("/:id", auth, isStoreAdmin, updateProduct);
+router.put("/:id",
+  auth, isStoreAdmin,
+  validator(validateStoreProduct), updateProduct);
 
 // @route   GET /
 // @desc    Get a product info.
@@ -91,12 +99,18 @@ router.delete("/:id", auth, isStoreAdmin, deleteProduct);
 // @route   POST /stores/variants
 // @desc    add variant to store
 // @access  Private
-router.post("/variants", auth, isStoreAdmin, createVariant);
+router.post("/variants",
+  auth, isStoreAdmin,
+  validator(validateVariant),
+  createVariant);
 
 // @route   POST /stores/custom-fees
 // @desc    add custom fee to product
 // @access  Private
-router.post("/custom-fees", auth, isStoreAdmin, addCustomFee);
+router.post("/custom-fees",
+  auth, isStoreAdmin,
+  validator(createFees),
+  addCustomFee);
 
 // @route   DELETE /stores/custom-fees
 // @desc    delete custom fee

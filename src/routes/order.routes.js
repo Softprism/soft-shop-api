@@ -13,7 +13,7 @@ import {
   encryptDetails
 } from "../controllers/order.controller";
 import validator from "../middleware/validator";
-import order_validation from "../validations/orderValidation";
+import { order_validation, reviewValidation } from "../validations/orderValidation";
 
 const router = express.Router();
 
@@ -45,7 +45,7 @@ router.put("/user/edit/:orderID", auth, editOrder);
 // @route   PUT /review
 // @desc    user adds review to their order
 // @access  Private
-router.put("/review/:orderId?", auth, reviewOrder);
+router.put("/review/:orderId?", auth, validator(reviewValidation), reviewOrder);
 
 // @route   PUT /review
 // @desc    user adds review to their order

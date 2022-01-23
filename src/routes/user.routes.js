@@ -11,7 +11,10 @@ import validator from "../middleware/validator";
 import auth from "../middleware/auth";
 import checkPagination from "../middleware/checkPagination";
 import { isUserVerified, hashPassword } from "../middleware/validationMiddleware";
-import { registerValidation, emailValidation, loginValidation } from "../validations/userValidation";
+import {
+  registerValidation, emailValidation, loginValidation,
+  resetPassword, updateUserValidation, editbasketValidation
+} from "../validations/userValidation";
 
 const router = express.Router();
 
@@ -51,7 +54,7 @@ router.get("/login", auth, getLoggedInUser);
 // @desc    Update User Details
 // @access  Private
 
-router.put("/", auth, updateUser);
+router.put("/", auth, validator(updateUserValidation), updateUser);
 
 // @route   POST /cart
 // @desc    creates a basket for the user
@@ -66,7 +69,7 @@ router.post("/basket", auth, addItemToBasket);
 // @route   PUT /basket
 // @desc    edit an item in user's basket
 // @access  Public
-router.put("/basket", auth, editBasketItems);
+router.put("/basket", auth, validator(editbasketValidation), editBasketItems);
 
 // @route   DELETE /basket
 // @desc    delete one item from user's basket
@@ -91,6 +94,6 @@ router.post("/token", validateToken);
 // @route   PATCH /password
 // @desc    creates new password for user after forget password
 // @access  Public
-router.patch("/password", hashPassword, createNewPassword);
+router.patch("/password", hashPassword, validator(resetPassword), createNewPassword);
 
 export default router;

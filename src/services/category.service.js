@@ -92,7 +92,6 @@ const getCategoriesNogeo = async (urlParams) => {
 // Create a new Category
 const createCategory = async (categoryParams) => {
   const { name, image } = categoryParams;
-  console.log(categoryParams);
   // Check if Category exists
   let category = await Category.findOne({ name });
 

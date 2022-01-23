@@ -17,7 +17,9 @@ import checkPagination from "../middleware/checkPagination";
 import { isStoreAdmin } from "../middleware/Permissions";
 import { hashPassword } from "../middleware/validationMiddleware";
 import validator from "../middleware/validator";
-import { registerStore, updateStoreValidation, loginStoreValidation } from "../validations/storeValidation";
+import {
+  registerStore, updateStoreValidation, loginStoreValidation, storeRequest, labelValidation
+} from "../validations/storeValidation";
 
 const router = express.Router();
 
@@ -81,7 +83,7 @@ router.post("/login", validator(loginStoreValidation), loginStore);
 // @route   PUT /store/
 // @desc    request for a store profile update
 // @access  Private
-router.put("/change-request", auth, isStoreAdmin, updateStoreRequest);
+router.put("/change-request", auth, isStoreAdmin, validator(storeRequest), updateStoreRequest);
 
 // @route   PUT /store/
 // @desc    Update a store
@@ -91,5 +93,5 @@ router.put("/", auth, isStoreAdmin, validator(updateStoreValidation), hashPasswo
 // @route   PUT /stores/label
 // @desc    add label to store
 // @access  Private
-router.put("/label", auth, isStoreAdmin, addLabel);
+router.put("/label", auth, isStoreAdmin, validator(labelValidation), addLabel);
 export default router;
