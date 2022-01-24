@@ -83,7 +83,7 @@ router.post("/login", validator(loginStoreValidation), loginStore);
 // @route   PUT /store/
 // @desc    request for a store profile update
 // @access  Private
-router.put("/change-request", auth, isStoreAdmin, validator(storeRequest), updateStoreRequest);
+router.put("/change-request", auth, isStoreAdmin, updateStoreRequest);
 
 // @route   PUT /store/
 // @desc    Update a store
