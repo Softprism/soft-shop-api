@@ -549,7 +549,7 @@ const addLabel = async (storeId, labelParam) => {
 const editLabel = async (storeId, labelParam) => {
   let store = await Store.findById(storeId);
 
-  if (!store) return { err: "Store not found." };
+  if (!store) return { err: "Store not found.", status: 404 };
   const { labelTitle, labelThumb, labelId } = labelParam;
   await Store.updateOne(
     {
@@ -564,10 +564,11 @@ const editLabel = async (storeId, labelParam) => {
     },
     { new: true, }
   );
-  const newStore = await Store.findById({
+  const newStore = await Store.findOne({
     _id: storeId,
-    labels: { _id: labelId, },
-  },).select("labels");
+    labels: { $elemMatch: { _id: labelId, }, },
+  }).select("labels");
+  if (!newStore) return { err: "Store label not found.", status: 404 };
   return newStore;
 };
 
