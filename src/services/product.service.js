@@ -289,7 +289,7 @@ const addVariantItem = async (storeId, variantId, variantParam) => {
 const editVariantItem = async (storeId, variantId, variantParam) => {
   let variant = await Variant.findById({ _id: variantId, store: storeId });
 
-  if (!variant) return { err: "Variant not found." };
+  if (!variant) return { err: "Variant not found.", status: 400 };
   const {
     itemName, itemThumbnail, itemPrice, variantItemId, required, quantityOpt
   } = variantParam;
@@ -311,9 +311,10 @@ const editVariantItem = async (storeId, variantId, variantParam) => {
   );
   const newVariant = await Variant.findOne({
     _id: variantId,
-    labels: { $elemMatch: { _id: variantItemId }, },
+    variantItems: { $elemMatch: { _id: variantItemId }, },
   },).select("variantItems");
-  if (!newVariant) return { err: "Store label not found.", status: 404 };
+  console.log(newVariant);
+  if (!newVariant) return { err: "Store variant not found.", status: 404 };
   return newVariant;
 };
 

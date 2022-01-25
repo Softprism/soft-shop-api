@@ -210,10 +210,9 @@ const updateVariantItem = async (req, res, next) => {
     );
 
     if (variant.err) {
-      res.status(variant.status).json({ success: false, msg: variant.err, status: variant.status });
-    } else {
-      res.status(200).json({ success: true, result: variant, status: 200 });
+      return res.status(variant.status).json({ success: false, msg: variant.err, status: variant.status });
     }
+    return res.status(200).json({ success: true, result: variant, status: 200 });
   } catch (error) {
     next(error);
   }
