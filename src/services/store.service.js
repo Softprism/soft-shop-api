@@ -546,6 +546,46 @@ const addLabel = async (storeId, labelParam) => {
   return newStore;
 };
 
+const editLabel = async (storeId, labelParam) => {
+  let store = await Store.findById(storeId);
+
+  if (!store) return { err: "Store not found.", status: 404 };
+  const { labelTitle, labelThumb, labelId } = labelParam;
+  await Store.updateOne(
+    {
+      _id: storeId,
+      labels: { $elemMatch: { _id: labelId, }, },
+    },
+    {
+      $set: {
+        "labels.$.labelTitle": labelTitle,
+        "labels.$.labelThumb": labelThumb,
+      },
+    },
+    { new: true, }
+  );
+  const newStore = await Store.findOne({
+    _id: storeId,
+    labels: { $elemMatch: { _id: labelId, }, },
+  }).select("labels");
+  if (!newStore) return { err: "Store label not found.", status: 404 };
+  return newStore;
+};
+
+const deleteLabel = async (storeId, labelParam) => {
+  let store = await Store.findById(storeId);
+
+  if (!store) return { err: "Store not found." };
+  const { labelId } = labelParam;
+  const newStore = await Store.updateOne({ _id: storeId }, {
+    $pull: {
+      labels: { _id: labelId },
+    },
+  });
+  if (!newStore) return { err: "Store label not found.", status: 404 };
+  return "Store Label deleted successfully.";
+};
+
 const getLabels = async (storeId) => {
   let store = await Store.findById(storeId);
 
@@ -787,6 +827,8 @@ export {
   getLoggedInStore,
   updateStoreRequest,
   addLabel,
+  deleteLabel,
+  editLabel,
   getStore,
   getLabels,
   getStoresNoGeo,

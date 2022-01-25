@@ -10,12 +10,13 @@ import {
   addVariantItem, getVariantItem, addCustomFee, deleteCustomFee,
   getStoreVariants,
   deleteStoreVariant,
-  deleteStoreVariantItem,
+  deleteStoreVariantItem, updateVariantItem
 } from "../controllers/product.controller";
 import validator from "../middleware/validator";
 import {
   createProducts, validateVariant, createFees, validateStoreProduct,
-  reviewProductValidation, addVariantItemValidation, editVariantValidation
+  reviewProductValidation, addVariantItemValidation, editVariantValidation,
+  validateVariantItem
 } from "../validations/productValidation";
 
 const router = express.Router();
@@ -103,6 +104,14 @@ router.post("/variants",
   auth, isStoreAdmin,
   validator(validateVariant),
   createVariant);
+
+// @route   POST /stores/variants
+// @desc    add variant to store
+// @access  Private
+router.patch("/variants/:variantId/update-item",
+  auth, isStoreAdmin,
+  validator(validateVariantItem),
+  updateVariantItem);
 
 // @route   POST /stores/custom-fees
 // @desc    add custom fee to product

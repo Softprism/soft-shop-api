@@ -8,7 +8,8 @@ import {
   updateStoreRequest, addLabel, getLabels, getStore,
   getStoresNoGeo, getStoreSalesStats, bestSellers,
   getStoreFeedback, getInventoryList, updateStore,
-  requestPayout, getPayoutHistory
+  requestPayout, getPayoutHistory, deleteStoreLabel,
+  updateStoreLabel
 } from "../controllers/store.controller";
 import { getStoreVariantsForUsers } from "../controllers/product.controller";
 
@@ -18,7 +19,8 @@ import { isStoreAdmin } from "../middleware/Permissions";
 import { hashPassword } from "../middleware/validationMiddleware";
 import validator from "../middleware/validator";
 import {
-  registerStore, updateStoreValidation, loginStoreValidation, storeRequest, labelValidation
+  registerStore, updateStoreValidation, loginStoreValidation, storeRequest,
+  labelValidation, deleteLabelValidation, editLabelValidation
 } from "../validations/storeValidation";
 
 const router = express.Router();
@@ -89,6 +91,16 @@ router.put("/change-request", auth, isStoreAdmin, validator(storeRequest), updat
 // @desc    Update a store
 // @access  Private
 router.put("/", auth, isStoreAdmin, validator(updateStoreValidation), hashPassword, updateStore);
+
+// @route   PUT /store/
+// @desc    Update a store
+// @access  Private
+router.patch("/store-label", auth, isStoreAdmin, validator(editLabelValidation), updateStoreLabel);
+
+// @route   PUT /store/
+// @desc    Update a store
+// @access  Private
+router.delete("/store-label", auth, isStoreAdmin, validator(deleteLabelValidation), deleteStoreLabel);
 
 // @route   PUT /stores/label
 // @desc    add label to store

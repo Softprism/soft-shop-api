@@ -42,8 +42,8 @@ const createProducts = {
 };
 
 const validateVariant = {
-  variantTitle: Joi.object({
-    title: Joi.string().empty().required().messages({
+  body: Joi.object({
+    variantTitle: Joi.string().empty().required().messages({
       "any.required": "Variant title is required.",
       "string.empty": "Sorry, variantTitle cannot be an empty field",
     }),
@@ -114,28 +114,42 @@ const reviewProductValidation = {
 
 const addVariantItemValidation = {
   body: Joi.object({
-    variantTitle: Joi.string().empty().messages({
-      "string.empty": "Sorry, Variant title cannot be an empty field",
+    itemName: Joi.string().empty().messages({
+      "string.empty": "Sorry, item name cannot be an empty field",
     }),
-    variantItems: Joi.array().items(
-      Joi.object({
-        itemName: Joi.string().empty().messages({
-          "string.empty": "Sorry, item name cannot be an empty field",
-        }),
-        itemThumbnail: Joi.string().empty().messages({
-          "string.empty": "Sorry, item thumbnail cannot be an empty field",
-        }),
-        itemPrice: Joi.number().empty().positive()
-          .messages({
-            "number.empty": "Item price cannot be an empty field.",
-            "number.base": "Please provide a valid number.",
-          }),
-        required: Joi.boolean().empty(),
-        quantityOpt: Joi.boolean().empty()
-      })
-    ),
-    active: Joi.boolean().empty(),
-    multiSelect: Joi.boolean().empty()
+    itemThumbnail: Joi.string().empty().messages({
+      "string.empty": "Sorry, item thumbnail cannot be an empty field",
+    }),
+    itemPrice: Joi.number().empty().positive()
+      .messages({
+        "number.empty": "Item price cannot be an empty field.",
+        "number.base": "Please provide a valid number.",
+      }),
+    required: Joi.boolean().empty(),
+    quantityOpt: Joi.boolean().empty()
+
+  })
+};
+
+const validateVariantItem = {
+  body: Joi.object({
+    itemName: Joi.string().empty().messages({
+      "string.empty": "Sorry, item name cannot be an empty field",
+    }),
+    itemThumbnail: Joi.string().empty().messages({
+      "string.empty": "Sorry, item thumbnail cannot be an empty field",
+    }),
+    itemPrice: Joi.number().empty().positive()
+      .messages({
+        "number.empty": "Item price cannot be an empty field.",
+        "number.base": "Please provide a valid number.",
+      }),
+    variantItemId: objectId.required().empty().messages({
+      "any.required": "id is required.",
+      "string.empty": "Sorry, item id cannot be an empty field",
+      "string.length": "Variant item id must be a valid mongoose id.",
+    }),
+
   })
 };
 
@@ -167,5 +181,6 @@ const editVariantValidation = {
 };
 export {
   createProducts, validateVariant, createFees, validateStoreProduct,
-  reviewProductValidation, addVariantItemValidation, editVariantValidation
+  reviewProductValidation, addVariantItemValidation, editVariantValidation,
+  validateVariantItem
 };

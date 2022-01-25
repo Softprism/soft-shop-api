@@ -197,6 +197,28 @@ const getVariantItem = async (req, res, next) => {
   }
 };
 
+const updateVariantItem = async (req, res, next) => {
+  try {
+    let storeID;
+    if (req.store) storeID = req.store.id;
+    if (req.query.storeID && req.admin) storeID = req.query.storeID;
+
+    const variant = await productService.editVariantItem(
+      storeID,
+      req.params.variantId,
+      req.body
+    );
+
+    if (variant.err) {
+      res.status(variant.status).json({ success: false, msg: variant.err, status: variant.status });
+    } else {
+      res.status(200).json({ success: true, result: variant, status: 200 });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
 const addCustomFee = async (req, res, next) => {
   try {
     let storeID;
@@ -268,6 +290,7 @@ export {
   updateVariant,
   addVariantItem,
   getVariantItem,
+  updateVariantItem,
   addCustomFee,
   deleteCustomFee,
   getStoreVariants,

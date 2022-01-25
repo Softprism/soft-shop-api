@@ -101,6 +101,40 @@ const updateStore = async (req, res, next) => {
   }
 };
 
+const updateStoreLabel = async (req, res, next) => {
+  try {
+    let storeID;
+    if (req.store) storeID = req.store.id;
+    if (req.query.storeId && req.admin) storeID = req.query.storeId;
+    const store = await storeService.editLabel(storeID, req.body);
+
+    if (store.err) {
+      res.status(store.status).json({ success: false, msg: store.err, status: store.status });
+    } else {
+      res.status(200).json({ success: true, result: store, status: 200 });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+const deleteStoreLabel = async (req, res, next) => {
+  try {
+    let storeID;
+    if (req.store) storeID = req.store.id;
+    if (req.query.storeId && req.admin) storeID = req.query.storeId;
+    const store = await storeService.deleteLabel(storeID, req.body);
+
+    if (store.err) {
+      res.status(store.status).json({ success: false, msg: store.err, status: store.status });
+    } else {
+      res.status(200).json({ success: true, result: store, status: 200 });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
 const addLabel = async (req, res, next) => {
   let storeID;
   if (req.store) storeID = req.store.id;
@@ -245,6 +279,8 @@ export {
   updateStoreRequest,
   addLabel,
   getLabels,
+  deleteStoreLabel,
+  updateStoreLabel,
   getStore,
   getStoresNoGeo,
   getStoreSalesStats,
