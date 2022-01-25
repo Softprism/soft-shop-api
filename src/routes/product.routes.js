@@ -109,7 +109,6 @@ router.post("/variants",
 // @access  Private
 router.patch("/variants/:variantId/update-item",
   auth, isStoreAdmin,
-  validator(validateVariantItem),
   updateVariantItem);
 
 // @route   POST /stores/custom-fees
