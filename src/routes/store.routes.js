@@ -20,6 +20,7 @@ import validator from "../middleware/validator";
 import {
   registerStore, updateStoreValidation, loginStoreValidation, storeRequest, labelValidation
 } from "../validations/storeValidation";
+import getAddresses from "../utils/auto-complete-address";
 
 const router = express.Router();
 
@@ -32,6 +33,11 @@ router.get("/", auth, checkPagination, getStores);
 // @desc    Get all registered stores
 // @access  Private
 router.get("/nogeo", auth, checkPagination, getStoresNoGeo);
+
+// @route   GET /address
+// @desc    Get all registered stores
+// @access  Private
+router.get("/address", auth, getAddresses);
 
 // @route   GET /stores/login
 // @desc    Get logged in Store
