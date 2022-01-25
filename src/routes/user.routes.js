@@ -54,7 +54,7 @@ router.get("/login", auth, getLoggedInUser);
 // @desc    Update User Details
 // @access  Private
 
-router.put("/", auth, validator(updateUserValidation), updateUser);
+router.put("/", auth, updateUser);
 
 // @route   POST /cart
 // @desc    creates a basket for the user

@@ -218,7 +218,7 @@ const getLoggedInUser = async (userId) => {
 // Update User Details
 const updateUser = async (updateParam, id) => {
   const {
-    first_name, last_name, address, password, email, phone_number
+    first_name, last_name, address, original_password, password, email, phone_number, pushNotifications, smsNotifications, promotionalNotifications
   } = updateParam;
   // Build User Object
   const userFields = {};
@@ -229,17 +229,25 @@ const updateUser = async (updateParam, id) => {
   if (address) userFields.address = address;
   if (email) userFields.email = email;
   if (phone_number) userFields.phone_number = phone_number;
-
-  if (password) {
-    const salt = await bcrypt.genSalt(10);
-
-    // Replace password from user object with encrypted one
-    userFields.password = await bcrypt.hash(password, salt);
-  }
+  if (pushNotifications) userFields.pushNotifications = pushNotifications;
+  if (smsNotifications) userFields.smsNotifications = smsNotifications;
+  if (promotionalNotifications) userFields.promotionalNotifications = promotionalNotifications;
 
   // Find user from DB Collection
   let user = await User.findById(id);
 
+  if (password) {
+    if (!original_password) return { err: "please enter old password", status: 400 };
+    if (password === original_password) return { err: "Please try another password", status: 400 };
+    const salt = await bcrypt.genSalt(10);
+
+    // Replace password from user object with encrypted one
+    userFields.password = await bcrypt.hash(password, salt);
+
+    // Check if password matches with stored hash
+    const isMatch = await bcrypt.compare(original_password, user.password);
+    if (!isMatch) return { err: "Old password does not match.", status: 400 };
+  }
   if (!user) {
     return {
       err: "User does not exists.",

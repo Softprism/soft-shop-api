@@ -74,6 +74,9 @@ const userSchema = mongoose.Schema({
   ],
   orders: [{ type: mongoose.Types.ObjectId, ref: "Order" }], // array to store multiple orders
   isVerified: { type: Boolean, required: true, default: false },
+  pushNotifications: { type: Boolean, default: false },
+  smsNotifications: { type: Boolean, default: false },
+  promotionalNotifications: { type: Boolean, default: false },
   createdDate: { type: Date, default: Date.now },
 });
 
