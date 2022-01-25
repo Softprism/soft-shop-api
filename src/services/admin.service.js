@@ -280,10 +280,21 @@ const confirmStorePayout = async (storeId) => {
       debit_currency: "NGN"
     };
     // let request = await initiateTransfer(payload);
+    store.pendingWithdrawal = false;
+    store.save();
     return payload;
   }
+
   return {
-    err: "Store money not consistent. Please pull transaction records.", status: 400
+    err: "Store money not consistent. Please pull transaction records.",
+    data: {
+      totalStoreCredits,
+      totalTransactionCredits,
+      totalTransactionDebits,
+      totalStoreDebits,
+      account_balance: store.account_details.account_balance
+    },
+    status: 400
   };
 };
 

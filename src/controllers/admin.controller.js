@@ -132,7 +132,9 @@ const confirmStorePayout = async (req, res, next) => {
     const transaction = await adminService.confirmStorePayout(req.params.storeId);
 
     if (transaction.err) {
-      res.status(transaction.status).json({ success: false, msg: transaction.err, status: transaction.status });
+      res.status(transaction.status).json({
+        success: false, msg: transaction.err, data: transaction.data, status: transaction.status
+      });
     } else {
       res.status(200).json({ success: true, result: transaction, status: 200 });
     }

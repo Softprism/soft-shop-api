@@ -434,7 +434,7 @@ const createStore = async (StoreParam) => {
 const loginStore = async (StoreParam) => {
   const { email, password } = StoreParam;
 
-  let store = await Store.findOne({ email }).select("password isVerified resetPassword pendingUpdates name");
+  let store = await Store.findOne({ email }).select("password isVerified resetPassword pendingUpdates name pendingWithdrawal");
 
   if (!store) {
     return { err: "Invalid email. Please try again.", status: 400 };
@@ -788,7 +788,7 @@ const requestPayout = async (storeId) => {
     status: "pending"
   });
 
-  if (oldRequest) return { err: "You have a pending payout request. Please wait for its approval", status: 400 };
+  if (oldRequest && store.pendingWithdrawal === true) return { err: "You have a pending payout request. Please wait for its approval", status: 400 };
 
   // create transaction
   let newTransaction = createTransaction({
@@ -801,6 +801,8 @@ const requestPayout = async (storeId) => {
 
   // check for error while creating new transaction
   if (!newTransaction) return { err: "Error requesting payout. Please try again", status: 400 };
+  store.pendingWithdrawal = true;
+  store.save();
 
   return newTransaction;
 };
