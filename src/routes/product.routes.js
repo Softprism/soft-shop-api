@@ -46,13 +46,13 @@ router.put("/review", auth, validator(reviewProductValidation), reviewProduct);
 // @desc    add variant to store
 // @access  Private
 router.put("/variants/:variantId/item",
-  auth, isStoreAdmin, addVariantItem);
+  auth, isStoreAdmin,
+  validator(addVariantItemValidation), addVariantItem);
 
 // @route   PUT /stores/variants/:variantId
 // @desc    update store variant
 // @access  Private
-router.put("/variants/:variantId", auth, isStoreAdmin,
-  validator(editVariantValidation), updateVariant);
+router.put("/variants/:variantId", auth, isStoreAdmin, updateVariant);
 
 // @route   DELETE /products/variants/:variantId
 // @desc    delete store variant
