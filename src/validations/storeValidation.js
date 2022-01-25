@@ -158,6 +158,37 @@ const labelValidation = {
   })
 };
 
+const editLabelValidation = {
+  body: Joi.object({
+    labelTitle: Joi.string().empty().messages({
+      "string.empty": "Sorry, label title cannot be an empty field",
+    }),
+    labelThumb: Joi.string().empty().messages({
+      "string.empty": "Sorry, label thumb cannot be an empty field",
+    }),
+    labelId: objectId.required().empty().messages({
+      "any.required": "id is required.",
+      "string.empty": "Sorry, label id cannot be an empty field",
+      "string.length": "Label id must be a valid mongoose id.",
+    }),
+  }).messages({
+    "object.unknown": "You have used an invalid key."
+  })
+};
+
+const deleteLabelValidation = {
+  body: Joi.object({
+    labelId: objectId.required().empty().messages({
+      "any.required": "id is required.",
+      "string.empty": "Sorry, label id cannot be an empty field",
+      "string.length": "Label id must be a valid mongoose id.",
+    }),
+  }).messages({
+    "object.unknown": "You have used an invalid key."
+  })
+};
+
 export {
-  registerStore, updateStoreValidation, loginStoreValidation, storeRequest, labelValidation
+  registerStore, updateStoreValidation, loginStoreValidation,
+  storeRequest, labelValidation, deleteLabelValidation, editLabelValidation
 };

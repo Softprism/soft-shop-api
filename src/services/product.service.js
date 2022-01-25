@@ -279,12 +279,41 @@ const addVariantItem = async (storeId, variantId, variantParam) => {
   // find variant
   let variant = await Variant.findOne({ _id: variantId, store: storeId });
   if (!variant) return { err: "Variant not found.", status: 404 };
-
   // push new variant item and save
   variant.variantItems.push(variantParam);
   variant.save();
 
   return variant;
+};
+
+const editVariantItem = async (storeId, variantId, variantParam) => {
+  let variant = await Variant.findById({ _id: variantId, store: storeId });
+
+  if (!variant) return { err: "Variant not found." };
+  const {
+    itemName, itemThumbnail, itemPrice, required, quantityOpt, variantItemId
+  } = variantParam;
+  await Variant.updateOne(
+    {
+      _id: variantId,
+      variantItems: { $elemMatch: { _id: variantItemId }, },
+    },
+    {
+      $set: {
+        "variantItems.$.itemName": itemName,
+        "variantItems.$.itemThumbnail": itemThumbnail,
+        "variantItems.$.itemPrice": itemPrice,
+        "variantItems.$.required": true,
+        "variantItems.$.quantityOpt": true,
+      }
+    },
+    { new: true, }
+  );
+  const newVariant = await Variant.findById({
+    _id: variantId,
+    labels: { _id: variantItemId, },
+  },).select("variantItems");
+  return newVariant;
 };
 
 const getStoreVariants = async (storeId) => {
@@ -371,6 +400,7 @@ export {
   updateVariant,
   addVariantItem,
   getVariantItem,
+  editVariantItem,
   addCustomFee,
   deleteCustomFee,
   getStoreVariants,
