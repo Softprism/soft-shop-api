@@ -367,13 +367,13 @@ const addCustomFee = async (storeId, customrFeeParam) => {
 
 const deleteCustomFee = async (customFeeId) => {
   let customFee = await CustomFee.findByIdAndDelete(customFeeId);
-  if (!customFee) throw { err: "Custom fee not found." };
+  if (!customFee) return { err: "Custom fee not found." };
   return "fee removed from product";
 };
 
 const deleteStoreVariant = async (variantId) => {
   let variant = await Variant.findByIdAndDelete(variantId);
-  if (!variant) throw { err: "Custom fee not found." };
+  if (!variant) return { err: "variant not found.", status: 400 };
   return "varaint deleted successfully";
 };
 
