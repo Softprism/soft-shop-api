@@ -10,6 +10,7 @@ import paymentRoutes from "./payment.routes";
 import dashboardRoutes from "./dashboard.routes";
 import notificationRoutes from "./notification.routes";
 import deliveryRoutes from "./delivery.routes";
+import servicesRoutes from "./services.routes";
 
 const router = new Router();
 // api routes
@@ -24,5 +25,6 @@ router.use("/payment", paymentRoutes);
 router.use("/dashboards", dashboardRoutes);
 router.use("/riders/notifications", notificationRoutes);
 router.use("/deliveries", deliveryRoutes);
+router.use("/services", servicesRoutes);
 
 export default router;
