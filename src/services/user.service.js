@@ -351,6 +351,8 @@ const getUserBasketItems = async (userId) => {
     })
     .sort("createdAt");
 
+  if (userBasket.length < 1 && totalProductPriceInBasket.length < 1) return { userBasket: [], totalPrice: 0, count: 0 };
+
   return {
     userBasket,
     totalPrice: totalProductPriceInBasket[0].total,
