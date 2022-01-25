@@ -582,6 +582,7 @@ const deleteLabel = async (storeId, labelParam) => {
       labels: { _id: labelId },
     },
   });
+  if (!newStore) return { err: "Store label not found.", status: 404 };
   return "Store Label deleted successfully.";
 };
 
