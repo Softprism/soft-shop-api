@@ -205,7 +205,7 @@ const updateVariantItem = async (req, res, next) => {
 
     const variant = await productService.editVariantItem(
       storeID,
-      req.params.variantId,
+      req.params.variantItemId,
       req.body
     );
 

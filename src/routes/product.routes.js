@@ -107,7 +107,7 @@ router.post("/variants",
 // @route   POST /stores/variants
 // @desc    add variant to store
 // @access  Private
-router.patch("/variants/:variantId/update-item",
+router.patch("/variants/:variantItemId/update-item",
   auth, isStoreAdmin,
   updateVariantItem);
 
