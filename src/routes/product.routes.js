@@ -84,8 +84,7 @@ router.get(
 // @desc    update a store product, can be used by admin and stores
 // @access  Private
 router.put("/:id",
-  auth, isStoreAdmin,
-  validator(validateStoreProduct), updateProduct);
+  auth, isStoreAdmin, updateProduct);
 
 // @route   GET /
 // @desc    Get a product info.
