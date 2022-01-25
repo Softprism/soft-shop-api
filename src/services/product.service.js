@@ -291,7 +291,7 @@ const editVariantItem = async (storeId, variantId, variantParam) => {
 
   if (!variant) return { err: "Variant not found." };
   const {
-    itemName, itemThumbnail, itemPrice, variantItemId
+    itemName, itemThumbnail, itemPrice, variantItemId, required, quantityOpt
   } = variantParam;
   await Variant.updateOne(
     {
@@ -303,8 +303,8 @@ const editVariantItem = async (storeId, variantId, variantParam) => {
         "variantItems.$.itemName": itemName,
         "variantItems.$.itemThumbnail": itemThumbnail,
         "variantItems.$.itemPrice": itemPrice,
-        "variantItems.$.required": true,
-        "variantItems.$.quantityOpt": true,
+        "variantItems.$.required": required,
+        "variantItems.$.quantityOpt": quantityOpt,
       }
     },
     { new: true, }
