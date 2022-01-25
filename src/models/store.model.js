@@ -29,6 +29,9 @@ const StoreSchema = mongoose.Schema({
   resetPassword: { type: Boolean, default: false },
   pendingUpdates: { type: Boolean, default: false },
   pendingWithdrawal: { type: Boolean, default: false },
+  pushNotifications: { type: Boolean, default: false },
+  smsNotifications: { type: Boolean, default: false },
+  promotionalNotifications: { type: Boolean, default: false },
   tax: { type: String },
   account_details: {
     account_balance: { type: Number, default: 0.00 },

@@ -73,10 +73,6 @@ const loginStoreValidation = {
 
 const updateStoreValidation = {
   body: Joi.object({
-    name: Joi.string().min(2).messages({
-      "string.empty": "Sorry, name cannot be an empty field",
-      "string.min": "Name should be two characters or more"
-    }),
     address: Joi.string().min(2).messages({
       "string.empty": "Sorry, phone number cannot be an empty field",
       "string.min": "Address should be 11 numbers"
@@ -98,6 +94,9 @@ const updateStoreValidation = {
     }),
     deliveryTime: Joi.number().positive(),
     isActive: Joi.boolean(),
+    pushNotifications: Joi.boolean(),
+    promotionalNotifications: Joi.boolean(),
+    smsNotifications: Joi.boolean(),
     prepTime: Joi.number().positive(),
   }).messages({
     "object.unknown": "You have used an invalid key."
