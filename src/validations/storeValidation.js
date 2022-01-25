@@ -106,6 +106,30 @@ const updateStoreValidation = {
 
 const storeRequest = {
   body: Joi.object({
+    address: Joi.string().min(2).messages({
+      "string.empty": "Sorry, phone number cannot be an empty field",
+      "string.min": "Address should be 11 numbers"
+    }),
+    name: Joi.string().min(2).messages({
+      "string.empty": "Sorry, name cannot be an empty field",
+      "string.min": "Name should be two characters or more"
+    }),
+    tax: Joi.string().min(2).messages({
+      "string.empty": "Sorry, tax cannot be an empty field",
+      "string.min": "Tax should be two characters or more"
+    }),
+    email: Joi.string().email().messages({
+      "string.email": "Please enter a valid email",
+      "string.empty": "Sorry, email cannot be an empty field",
+    }),
+    phone_number: Joi.string().min(11).messages({
+      "string.empty": "Sorry, phone number cannot be an empty field",
+      "string.min": "Phone number should be 11 numbers"
+    }),
+    category: objectId.empty().messages({
+      "any.required": "Category id is required.",
+      "string.length": "Category id must be a valid mongoose id.",
+    }),
     location: Joi.object({
       type: Joi.string().empty().messages({
         "string.empty": "Sorry, type cannot be an empty field",

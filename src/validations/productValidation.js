@@ -16,11 +16,6 @@ const createProducts = {
         "string.empty": "Sorry, Product description cannot be an empty field",
         "any.required": "Product description is required.",
       }),
-    store: objectId.empty().required().messages({
-      "string.empty": "Sorry, store id cannot be an empty field",
-      "string.length": "Store id must be a valid mongoose id.",
-      "any.required": "Store id is required.",
-    }),
     labels: Joi.array().required().empty().messages({
       "any.required": "Labels is required.",
     }),
@@ -119,22 +114,28 @@ const reviewProductValidation = {
 
 const addVariantItemValidation = {
   body: Joi.object({
-    itemName: Joi.string().empty().required().messages({
-      "any.required": "Item name is required.",
-      "string.empty": "Sorry, item name cannot be an empty field",
+    variantTitle: Joi.string().empty().messages({
+      "string.empty": "Sorry, Variant title cannot be an empty field",
     }),
-    itemThumbnail: Joi.string().empty().required().messages({
-      "any.required": "Item Thumbnail is required.",
-      "string.empty": "Sorry, item thumbnail cannot be an empty field",
-    }),
-    itemPrice: Joi.number().empty().positive().required()
-      .messages({
-        "any.required": "Itme price is required.",
-        "number.empty": "Item price cannot be an empty field.",
-        "number.base": "Please provide a valid number.",
-      }),
-    required: Joi.boolean().empty(),
-    quantityOpt: Joi.boolean().empty()
+    variantItems: Joi.array().items(
+      Joi.object({
+        itemName: Joi.string().empty().messages({
+          "string.empty": "Sorry, item name cannot be an empty field",
+        }),
+        itemThumbnail: Joi.string().empty().messages({
+          "string.empty": "Sorry, item thumbnail cannot be an empty field",
+        }),
+        itemPrice: Joi.number().empty().positive()
+          .messages({
+            "number.empty": "Item price cannot be an empty field.",
+            "number.base": "Please provide a valid number.",
+          }),
+        required: Joi.boolean().empty(),
+        quantityOpt: Joi.boolean().empty()
+      })
+    ),
+    active: Joi.boolean().empty(),
+    multiSelect: Joi.boolean().empty()
   })
 };
 

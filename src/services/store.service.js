@@ -479,7 +479,6 @@ const updateStoreRequest = async (storeID, updateParam) => {
   } = updateParam;
 
   const newDetails = {};
-
   // Check for fields
   if (address) newDetails.address = address;
   if (location) newDetails.location = location;
@@ -491,6 +490,7 @@ const updateStoreRequest = async (storeID, updateParam) => {
   if (account_details) newDetails.account_details = account_details;
   if (!address && !location && !phone_number && !category && !name && !tax && !email && !account_details) return { err: "You haven't specified a field to update. Please try again.", status: 400 };
 
+  console.log(newDetails);
   // check if store has a pending update
   const checkStoreUpdate = await Store.findById(storeID);
   if (checkStoreUpdate.pendingUpdates === true) {
