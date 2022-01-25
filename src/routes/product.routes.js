@@ -46,8 +46,7 @@ router.put("/review", auth, validator(reviewProductValidation), reviewProduct);
 // @desc    add variant to store
 // @access  Private
 router.put("/variants/:variantId/item",
-  auth, isStoreAdmin,
-  validator(addVariantItemValidation), addVariantItem);
+  auth, isStoreAdmin, addVariantItem);
 
 // @route   PUT /stores/variants/:variantId
 // @desc    update store variant
