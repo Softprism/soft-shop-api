@@ -218,7 +218,7 @@ const getLoggedInUser = async (userId) => {
 // Update User Details
 const updateUser = async (updateParam, id) => {
   const {
-    first_name, last_name, address, place_id, original_password, password, email, phone_number, pushNotifications, smsNotifications, promotionalNotifications
+    first_name, last_name, address, original_password, password, email, phone_number, pushNotifications, smsNotifications, promotionalNotifications
   } = updateParam;
   // Build User Object
   const userFields = {};
@@ -226,9 +226,8 @@ const updateUser = async (updateParam, id) => {
   // Check for fields
   if (first_name) userFields.first_name = first_name;
   if (last_name) userFields.last_name = last_name;
-  if (address && place_id) {
+  if (address) {
     userFields.address = address;
-    userFields.place_id = place_id;
   }
   if (email) userFields.email = email;
   if (phone_number) userFields.phone_number = phone_number;

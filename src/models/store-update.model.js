@@ -6,6 +6,7 @@ const StoreUpdateSchema = mongoose.Schema(
     newDetails: {
       name: { type: String },
       address: { type: String },
+      place_id: { type: String },
       phone_number: { type: String },
       email: { type: String, lowercase: true, },
       category: { type: mongoose.Schema.Types.ObjectId, ref: "Category" },
