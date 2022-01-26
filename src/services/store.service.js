@@ -396,6 +396,7 @@ const createStore = async (StoreParam) => {
   const {
     name,
     address,
+    place_id,
     email,
     phone_number,
     password,
