@@ -206,9 +206,8 @@ const confirmStoreUpdate = async (storeID) => {
     { omitUndefined: true, new: true, useFindAndModify: false }
   );
   // change updateDetails checker in store model to false if update request was successful
-  if (storeUpdateRequest) {
+  if (await storeUpdateRequest.save()) {
     storeUpdateRequest.pendingUpdates = false;
-    storeUpdateRequest.save();
     await StoreUpdate.findByIdAndDelete(updateParams._id);
   }
 

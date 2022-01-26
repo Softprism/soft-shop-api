@@ -511,10 +511,9 @@ const updateStoreRequest = async (storeID, updateParam) => {
     // create new update document
     let newUpdate = new StoreUpdate({ store: storeID, newDetails });
 
-    if (newUpdate) {
+    if (await newUpdate.save()) {
       let update = { pendingUpdates: true };
       await Store.findByIdAndUpdate(storeID, update);
-      newUpdate.save();
     } else {
       return { err: "Update Request Failed, please try again.", status: 400 };
     }

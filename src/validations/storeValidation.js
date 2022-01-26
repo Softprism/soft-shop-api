@@ -106,7 +106,11 @@ const updateStoreValidation = {
 const storeRequest = {
   body: Joi.object({
     address: Joi.string().min(2).messages({
-      "string.empty": "Sorry, phone number cannot be an empty field",
+      "string.empty": "Sorry, address cannot be an empty field",
+      "string.min": "Address should be 11 numbers"
+    }),
+    place_id: Joi.string().min(2).messages({
+      "string.empty": "Sorry, place_id cannot be an empty field",
       "string.min": "Address should be 11 numbers"
     }),
     name: Joi.string().min(2).messages({
