@@ -136,6 +136,20 @@ const storeRequest = {
       coordinates: Joi.array().empty().messages({
         "string.empty": "Sorry, coordinates cannot be an empty field",
       }),
+    }),
+    account_details: Joi.object({
+      full_name: Joi.string().empty().messages({
+        "string.empty": "Sorry, full name cannot be an empty field",
+      }),
+      bank_code: Joi.string().empty().messages({
+        "string.empty": "Sorry, bank code cannot be an empty field",
+      }),
+      bank_name: Joi.string().empty().messages({
+        "string.empty": "Sorry, bank name cannot be an empty field",
+      }),
+      account_number: Joi.string().empty().messages({
+        "string.empty": "Sorry, account number cannot be an empty field",
+      }),
     })
 
   }).messages({
