@@ -41,6 +41,7 @@ const userSchema = mongoose.Schema({
     {
       address_type: { type: String, required: true },
       value: { type: String, required: true },
+      place_id: { type: String, required: true }
     },
   ],
   email: {
