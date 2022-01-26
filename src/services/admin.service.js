@@ -160,6 +160,7 @@ const confirmStoreUpdate = async (storeID) => {
   // get fields to update
   const {
     address,
+    place_id,
     location,
     email,
     name,
@@ -172,7 +173,10 @@ const confirmStoreUpdate = async (storeID) => {
   const updateParam = {};
 
   // Check for fields
-  if (address) updateParam.address = address;
+  if (address && place_id) {
+    updateParam.address = address;
+    updateParam.place_id = place_id;
+  }
   if (account_details.full_name) {
     // find store and populate account details with existing values
     let store = await Store.findById(storeID).select("account_details");
