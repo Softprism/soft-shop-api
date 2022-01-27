@@ -306,7 +306,8 @@ const getStore = async (urlParams, storeId) => {
   ];
 
   // check for user place_id
-  if (!urlParams.place_id) return { err: "Please enter user place_id.", status: 400 };
+  // setting a default value so that getLoggedIn store can run
+  if (!urlParams.place_id) urlParams.place_id = "ChIJ73FBMSH3OxARDMvAq2uA6SM"; // Victoria garden City, Lekki, Nigeria
 
   // aggregating stores with active products
   let store = await Store.aggregate()
@@ -412,7 +413,7 @@ const getStore = async (urlParams, storeId) => {
   }
   for (const aStore of store) {
     aStore.deliveryTime = await getDistance(aStore.place_id, urlParams.place_id);
-    if (store.deliveryTime.err) store.deliveryTime = "Can't resolve";
+    if (aStore.deliveryTime.err) aStore.deliveryTime = "Can't resolve";
   }
   return store[0];
 };
@@ -484,7 +485,10 @@ const loginStore = async (StoreParam) => {
 };
 
 const getLoggedInStore = async (storeId) => {
-  const store = await getStore(storeId);
+  const store = await getStore({}, storeId);
+  // the {}} argument is used here because the getStore function accepts two argument, it's not really neccessary for the getLoggedInStore function
+  store.deliveryTime = undefined;
+  // unsetting the deliveryTime field since we don't need it for the store but it has to be calculated since the getStore function requires it.
   return store;
 };
 
