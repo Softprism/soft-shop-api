@@ -108,7 +108,7 @@ const updateUserValidation = {
 
 const editbasketValidation = {
   body: Joi.object({
-    basketId: Joi.array().required().empty().messages({
+    basketId: Joi.required().empty().messages({
       "any.required": "Basket id is required.",
     }),
     product: Joi.object({
@@ -131,11 +131,15 @@ const editbasketValidation = {
         "any.required": "Product id is required.",
         "string.length": "Product id must be a valid mongoose id.",
       }),
-      price: Joi.number().empty().positive()
+      totalPrice: Joi.number().empty().positive()
         .messages({
           "number.empty": "Price cannot be an empty field.",
           "number.base": "Please provide a valid number.",
         }),
+      selectedVariants: Joi.array()
+        .messages({
+          "any.required": "selectedVariant should be an array."
+        })
     })
   }).messages({
     "object.unknown": "You have used an invalid key."
