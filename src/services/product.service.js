@@ -281,7 +281,7 @@ const addVariantItem = async (storeId, variantId, variantParam) => {
   if (!variant) return { err: "Variant not found.", status: 404 };
   // push new variant item and save
   variant.variantItems.push(variantParam);
-  variant.save();
+  await variant.save();
 
   return variant;
 };

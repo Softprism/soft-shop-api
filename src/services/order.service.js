@@ -310,7 +310,7 @@ const createOrder = async (orderParam) => {
     orderUpdate.subtotal = neworder[0].subtotal;
     orderUpdate.paymentResult = neworder[0].paymentResult;
     orderUpdate.markModified("paymentResult");
-    orderUpdate.save();
+    await orderUpdate.save();
     return { err: `${neworder[0].paymentResult.message} Order has been created, please try paying again or select another payment method.`, status: 400 };
   }
 
@@ -322,7 +322,7 @@ const createOrder = async (orderParam) => {
   orderUpdate.subtotal = neworder[0].subtotal;
   orderUpdate.paymentResult = neworder[0].paymentResult;
   orderUpdate.markModified("paymentResult");
-  orderUpdate.save();
+  await orderUpdate.save();
 
   let riders = await Rider.find();
   let ridersId = [];
@@ -345,7 +345,7 @@ const toggleFavorite = async (orderID) => {
   }
 
   order.isFavorite = !order.isFavorite;
-  order.save();
+  await order.save();
 
   if (order.isFavorite) {
     return { msg: "Order marked as favorite." };

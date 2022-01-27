@@ -45,8 +45,9 @@ const StoreSchema = mongoose.Schema({
     pending_payout: { type: Boolean },
   },
 },
-{ timestamps: { createdAt: "created_at", updatedAt: "updated_at" } });
+{ timestamps: true });
 
+StoreSchema.index({ location: "2dsphere" });
 const Store = mongoose.model("Store", StoreSchema);
 
 export default Store;

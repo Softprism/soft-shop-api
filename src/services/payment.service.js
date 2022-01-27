@@ -79,7 +79,7 @@ const verifyTransaction = async (paymentDetails) => {
 
     // add new card details to user
     user.cards.push(response.data.card);
-    user.save();
+    await user.save();
 
     // create credit transaction for Ledger
     let ledger = Ledger.findOne({});
@@ -133,8 +133,8 @@ const verifyTransaction = async (paymentDetails) => {
       await createTransaction(ledgerReq);
     }
 
-    store.save();
-    order.save();
+    await store.save();
+    await order.save();
     return order;
   }
 
@@ -143,7 +143,7 @@ const verifyTransaction = async (paymentDetails) => {
     let approval = await Transaction.findOne({ receiver: storeId, status: "pending" });
     if (!approval) return { err: "Cannot find store's withdrawal request", status: 400 };
     approval.status = "completed";
-    approval.save();
+    await approval.save();
 
     // create transaction
     let request = {

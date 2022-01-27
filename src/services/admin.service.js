@@ -284,7 +284,7 @@ const confirmStorePayout = async (storeId) => {
     };
     // let request = await initiateTransfer(payload);
     store.pendingWithdrawal = false;
-    store.save();
+    await store.save();
     return payload;
   }
 
@@ -306,7 +306,7 @@ const createCompayLedger = async () => {
     account_name: "SoftShop Ledger",
   };
   let newLedger = new Ledger(details);
-  newLedger.save();
+  await newLedger.save();
   return newLedger;
 };
 

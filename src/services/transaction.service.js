@@ -19,11 +19,11 @@ const createTransaction = async ({
     let store = await Store.findById(receiver);
     store.account_details.total_credit += Number(amount);
     store.account_details.account_balance = Number(store.account_details.total_credit) - Number(store.account_details.total_debit);
-    store.save();
+    await store.save();
     let ledger = await Ledger.findOne({});
     ledger.payins += Number(amount);
     ledger.account_balance = Number(ledger.payins) - Number(ledger.payouts);
-    ledger.save();
+    await ledger.save();
   }
 
   // debit store
@@ -31,7 +31,7 @@ const createTransaction = async ({
     let store = await Store.findById(receiver);
     store.account_details.total_debit += Number(amount);
     store.account_details.account_balance = Number(store.account_details.total_credit) - Number(store.account_details.total_debit);
-    store.save();
+    await store.save();
   }
 
   // credit store
@@ -39,7 +39,7 @@ const createTransaction = async ({
     let ledger = await Ledger.findOne({});
     ledger.payins += Number(amount);
     ledger.account_balance = Number(ledger.payins) - Number(ledger.payouts);
-    ledger.save();
+    await ledger.save();
   }
 
   // debit store
@@ -47,7 +47,7 @@ const createTransaction = async ({
     let ledger = await Ledger.findOne({});
     ledger.payouts += Number(amount);
     ledger.account_balance = Number(ledger.payins) - Number(ledger.payouts);
-    ledger.save();
+    await ledger.save();
   }
   return newTrans;
 };

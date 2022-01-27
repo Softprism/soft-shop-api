@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
@@ -11,6 +12,8 @@ import getJwt from "../utils/jwtGenerator";
 import { createTransaction } from "./transaction.service";
 import Transaction from "../models/transaction.model";
 import Category from "../models/category.model";
+
+import getDistance from "../utils/get-distance";
 
 const getStores = async (urlParams) => {
   // declare fields to exclude from response
@@ -38,6 +41,9 @@ const getStores = async (urlParams) => {
   // check for sort type
   if (urlParams.sortType === "desc") sort = `-${sort}`;
   if (!urlParams.sort) sort = "createdAt";
+
+  // check for user place_id
+  if (!urlParams.place_id) return { err: "Please enter user place_id.", status: 400 };
 
   // validating rating param
   const rating = Number(urlParams.rating);
@@ -81,7 +87,7 @@ const getStores = async (urlParams) => {
   delete urlParams.lat;
 
   // aggregating stores
-  const stores = Store.aggregate()
+  const stores = await Store.aggregate()
   // matching store with geolocation
     .match({
       location: {
@@ -148,6 +154,10 @@ const getStores = async (urlParams) => {
     });
     return storesWithRating;
   }
+  for (const store of stores) {
+    store.deliveryTime = await getDistance(store.place_id, urlParams.place_id);
+    if (store.deliveryTime.err) store.deliveryTime = "Can't resolve";
+  }
   return stores;
 };
 
@@ -177,6 +187,9 @@ const getStoresNoGeo = async (urlParams) => {
   // check for sort type
   if (urlParams.sortType === "desc") sort = `-${sort}`;
   if (!urlParams.sort) sort = "createdAt";
+
+  // check for user place_id
+  if (!urlParams.place_id) return { err: "Please enter user place_id.", status: 400 };
 
   // validating rating param
   const rating = Number(urlParams.rating);
@@ -211,7 +224,7 @@ const getStoresNoGeo = async (urlParams) => {
   delete urlParams.lat;
 
   // aggregating stores
-  const stores = Store.aggregate()
+  const stores = await Store.aggregate()
   // matching stores with matchParam
     .match(matchParam)
   // looking up the product collection for each stores
@@ -263,17 +276,22 @@ const getStoresNoGeo = async (urlParams) => {
     .limit(limit);
 
   if (rating >= 0) {
-    (await stores).forEach((store) => {
+    stores.forEach((store) => {
       if (store.averageRating === rating) {
         storesWithRating.push(store);
       }
     });
     return storesWithRating;
   }
+
+  for (const store of stores) {
+    store.deliveryTime = await getDistance(store.place_id, urlParams.place_id);
+    if (store.deliveryTime.err) store.deliveryTime = "Can't resolve";
+  }
   return stores;
 };
 
-const getStore = async (storeId) => {
+const getStore = async (urlParams, storeId) => {
   // declare fields to exclude from response
   const pipeline = [
     {
@@ -286,6 +304,9 @@ const getStore = async (storeId) => {
       ],
     },
   ];
+
+  // check for user place_id
+  if (!urlParams.place_id) return { err: "Please enter user place_id.", status: 400 };
 
   // aggregating stores with active products
   let store = await Store.aggregate()
@@ -388,6 +409,10 @@ const getStore = async (storeId) => {
         storeMoney: { $sum: "$orders.subtotal" },
       })
       .append(pipeline);
+  }
+  for (const aStore of store) {
+    aStore.deliveryTime = await getDistance(aStore.place_id, urlParams.place_id);
+    if (store.deliveryTime.err) store.deliveryTime = "Can't resolve";
   }
   return store[0];
 };
@@ -805,7 +830,7 @@ const requestPayout = async (storeId) => {
   // check for error while creating new transaction
   if (!newTransaction) return { err: "Error requesting payout. Please try again", status: 400 };
   store.pendingWithdrawal = true;
-  store.save();
+  await store.save();
 
   return newTransaction;
 };

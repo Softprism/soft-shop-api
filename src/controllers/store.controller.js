@@ -4,6 +4,7 @@ import * as storeService from "../services/store.service";
 const getStores = async (req, res, next) => {
   try {
     const stores = await storeService.getStores(req.query);
+    if (stores.err) return res.status(stores.status).json({ success: false, msg: stores.err, status: stores.status });
     return res.status(200).json({
       success: true, result: stores, size: stores.length, status: 200
     });
@@ -16,6 +17,7 @@ const getStoresNoGeo = async (req, res, next) => {
   try {
     const stores = await storeService.getStoresNoGeo(req.query);
 
+    // if (stores.err) return res.status(stores.status).json({ success: false, msg: stores.err, status: stores.status });
     return res.status(200).json({
       success: true, result: stores, size: stores.length, status: 200
     });
@@ -167,8 +169,8 @@ const getLabels = async (req, res, next) => {
 
 const getStore = async (req, res, next) => {
   try {
-    const storeDetails = await storeService.getStore(req.params.storeId);
-
+    const storeDetails = await storeService.getStore(req.query, req.params.storeId);
+    if (storeDetails.err) return res.status(storeDetails.status).json({ success: false, msg: storeDetails.err, status: storeDetails.status });
     res.status(200).json({ success: true, result: storeDetails, status: 200 });
   } catch (error) {
     next(error);
