@@ -609,16 +609,16 @@ const deleteLabel = async (storeId, labelParam) => {
 
   if (!store) return { err: "Store not found." };
   const { labelId } = labelParam;
-  const newStore = await Store.updateOne({ _id: storeId }, {
-    $pull: {
-      labels: { _id: labelId },
-    },
-  });
   const labelChecker = await Store.findOne({
     _id: storeId,
     labels: { $elemMatch: { _id: labelId, }, },
   }).select("labels");
   if (!labelChecker) return { err: "Store label not found.", status: 404 };
+  await Store.updateOne({ _id: storeId }, {
+    $pull: {
+      labels: { _id: labelId },
+    },
+  });
   return "Store Label deleted successfully.";
 };
 
