@@ -1,7 +1,7 @@
 /* eslint-disable no-await-in-loop */
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import mongoose from "mongoose";
+import mongoose, { mongo } from "mongoose";
 
 import Store from "../models/store.model";
 import Order from "../models/order.model";
@@ -596,12 +596,37 @@ const editLabel = async (storeId, labelParam) => {
     },
     { new: true, }
   );
-  const newStore = await Store.findOne({
-    _id: storeId,
-    labels: { $elemMatch: { _id: labelId, }, },
-  }).select("labels");
+  // let theLabel = await Store.findOne(
+  //   {
+  //     _id: storeId,
+  //     labels: { $elemMatch: { _id: labelId, }, },
+  //   }
+  // );
+  // console.log(theLabel);
+  let selectedLabel = mongoose.Types.ObjectId(labelId);
+  const newStore = await Store.aggregate()
+    .match({
+      _id: mongoose.Types.ObjectId(storeId),
+    })
+    .addFields({
+      label: selectedLabel
+    })
+    .project({
+      label: {
+        $filter: {
+          input: "$labels",
+          as: "labels",
+          cond: {
+            $and: {
+              $eq: ["$$labels._id", "$label"]
+            }
+          }
+        }
+      }
+    });
+
   if (!newStore) return { err: "Store label not found.", status: 404 };
-  return newStore;
+  return newStore[0].label;
 };
 
 const deleteLabel = async (storeId, labelParam) => {

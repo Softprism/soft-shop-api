@@ -145,10 +145,9 @@ const addLabel = async (req, res, next) => {
 
     const store = await storeService.addLabel(storeID, req.body);
     if (store.err) {
-      res.status(store.status).json({ success: false, msg: store.err, status: store.status });
-    } else {
-      res.status(200).json({ success: true, result: store });
+      return res.status(store.status).json({ success: false, msg: store.err, status: store.status });
     }
+    return res.status(200).json({ success: true, result: store });
   } catch (error) {
     next(error);
   }
