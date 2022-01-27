@@ -548,7 +548,7 @@ const updateStoreRequest = async (storeID, updateParam) => {
     }
   }
 
-  let storeRes = await getStore(storeID);
+  let storeRes = await getStore({}, storeID);
 
   return storeRes;
 };
@@ -562,7 +562,7 @@ const updateStore = async (storeID, updateParam) => {
   );
   if (!checkStoreUpdate) return { err: "An error occurred while updating profile, please try again.", status: 400 };
 
-  let storeRes = await getStore(storeID);
+  let storeRes = await getStore({}, storeID);
 
   return storeRes;
 };
