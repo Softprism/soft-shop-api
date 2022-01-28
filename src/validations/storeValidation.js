@@ -167,7 +167,7 @@ const labelValidation = {
       "string.empty": "Sorry, label title cannot be an empty field",
     }),
     labelThumb: Joi.string().empty().required().messages({
-      "any.required": "label title is required.",
+      "any.required": "label thumb is required.",
       "string.empty": "Sorry, label thumb cannot be an empty field",
     }),
   }).messages({
