@@ -495,7 +495,6 @@ const getLoggedInStore = async (storeId) => {
 const updateStoreRequest = async (storeID, updateParam) => {
   // this service is used to update sensitive store data
   // successful request sends a update profile request to admin panel
-
   // get fields to update
   const {
     address,
@@ -523,14 +522,13 @@ const updateStoreRequest = async (storeID, updateParam) => {
   if (tax) newDetails.tax = tax;
   if (account_details) newDetails.account_details = account_details;
   if (!address && !place_id && !location && !phone_number && !category && !name && !tax && !email && !account_details) return { err: "You haven't specified a field to update. Please try again.", status: 400 };
-
   // check if store has a pending update
   const checkStoreUpdate = await Store.findById(storeID);
   if (checkStoreUpdate.pendingUpdates === true) {
     // append new updates to existing update document
     let storeUpdate = await StoreUpdate.findOne({ store: storeID });
-
-    await StoreUpdate.findOneAndUpdate(
+    if (!storeUpdate) return { err: "Store update does not exist", status: 400 };
+    await StoreUpdate.findOneAndUpda0te(
       { store: storeID },
       {
         $set: { newDetails: { ...storeUpdate.newDetails, ...newDetails } }
