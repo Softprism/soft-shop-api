@@ -15,7 +15,6 @@ const getOrders = async (urlParams) => {
   const limit = Number(urlParams.limit);
   const skip = Number(urlParams.skip);
   let { sort } = urlParams;
-  console.log(urlParams);
 
   // match for order status
   if (urlParams.status) {

@@ -40,7 +40,6 @@ const verifyToken = async (req, res, next) => {
 // ========================================================================== //
 const signup = async (req, res, next) => {
   try {
-    console.log(req.body);
     const result = await registerRider(req.body);
 
     if (result.err) {

@@ -522,13 +522,22 @@ const updateStoreRequest = async (storeID, updateParam) => {
   if (tax) newDetails.tax = tax;
   if (account_details) newDetails.account_details = account_details;
   if (!address && !place_id && !location && !phone_number && !category && !name && !tax && !email && !account_details) return { err: "You haven't specified a field to update. Please try again.", status: 400 };
+
+  // check if store email already exist
+  const store = await Store.findOne({ email });
+  if (store) {
+    return { err: "A store with this email already exists.", status: 400 };
+  }
   // check if store has a pending update
   const checkStoreUpdate = await Store.findById(storeID);
+  if (!checkStoreUpdate) {
+    return { err: "Store does not already exists.", status: 400 };
+  }
   if (checkStoreUpdate.pendingUpdates === true) {
     // append new updates to existing update document
     let storeUpdate = await StoreUpdate.findOne({ store: storeID });
     if (!storeUpdate) return { err: "Store update does not exist", status: 400 };
-    await StoreUpdate.findOneAndUpda0te(
+    await StoreUpdate.findOneAndUpdate(
       { store: storeID },
       {
         $set: { newDetails: { ...storeUpdate.newDetails, ...newDetails } }
@@ -600,7 +609,6 @@ const editLabel = async (storeId, labelParam) => {
   //     labels: { $elemMatch: { _id: labelId, }, },
   //   }
   // );
-  // console.log(theLabel);
   let selectedLabel = mongoose.Types.ObjectId(labelId);
   const newStore = await Store.aggregate()
     .match({

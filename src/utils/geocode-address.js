@@ -3,20 +3,20 @@ import { Client } from "@googlemaps/google-maps-services-js";
 const client = new Client({});
 const getGeocode = async (req, res, next) => {
   let geoCodeParams = {};
-
+  if (req.query.place_id && req.query.latlng) {
+    return res.status(400).json({ success: false, msg: "You can only use this endpoint to geocode or reverse geocode dear.", status: 400 });
+  }
+  if (!req.query.place_id && !req.query.latlng) {
+    return res.status(400).json({ success: false, msg: "Please enter either a place_id or latlng value for this request.", status: 400 });
+  }
   if (req.query.place_id) {
     geoCodeParams.place_id = req.query.place_id;
     geoCodeParams.key = process.env.GOOGLE_MAPS_API_KEY;
-  } else if (req.query.latlng) {
+  }
+  if (req.query.latlng) {
     geoCodeParams.latlng = req.query.latlng;
     geoCodeParams.type = "street_address";
     geoCodeParams.key = process.env.GOOGLE_MAPS_API_KEY;
-  } else {
-    return res.status(400).json({ success: false, msg: "Please enter a place_id or latlng value for this request.", status: 400 });
-  }
-
-  if (req.query.place_id && req.query.latlng) {
-    return res.status(400).json({ success: false, msg: "You can only use this endpoint to geocode or reverse geocode dear.", status: 400 });
   }
 
   try {
