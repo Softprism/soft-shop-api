@@ -6,7 +6,8 @@ import {
   resetStorePassword, confirmStoreUpdate, createTransaction, confirmStorePayout,
   createNotification,
   createCompayLedger,
-  getAllStoresUpdateRequests
+  getAllStoresUpdateRequests,
+  getResetPasswordRequests
 } from "../controllers/admin.controller";
 import validator from "../middleware/validator";
 import { register, login } from "../validations/adminValidation";
@@ -54,6 +55,8 @@ router.get("/", auth, isAdmin, getLoggedInAdmin);
 // @desc    Update User Details
 // @access  Private
 router.put("/", auth, isAdmin, updateAdmin);
+
+router.get("/password-reset/store", auth, checkPagination, getResetPasswordRequests);
 
 router.patch("/password-reset/store/:email", auth, isAdmin, resetStorePassword);
 

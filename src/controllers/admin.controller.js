@@ -85,6 +85,16 @@ const getAllStoresUpdateRequests = async (req, res, next) => {
   }
 };
 
+const getResetPasswordRequests = async (req, res, next) => {
+  try {
+    const request = await adminService.getResetPasswordRequests(req.query);
+
+    res.status(200).json({ success: true, result: request, status: 200 });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const confirmStoreUpdate = async (req, res, next) => {
   try {
     const store = await adminService.confirmStoreUpdate(req.params.storeId);
@@ -153,5 +163,5 @@ const createCompayLedger = async (req, res, next) => {
 };
 
 export {
-  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin, resetStorePassword, confirmStoreUpdate, createNotification, createTransaction, confirmStorePayout, createCompayLedger, getAllStoresUpdateRequests
+  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin, resetStorePassword, confirmStoreUpdate, createNotification, createTransaction, confirmStorePayout, createCompayLedger, getAllStoresUpdateRequests, getResetPasswordRequests
 };

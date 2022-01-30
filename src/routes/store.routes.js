@@ -9,7 +9,8 @@ import {
   getStoresNoGeo, getStoreSalesStats, bestSellers,
   getStoreFeedback, getInventoryList, updateStore,
   requestPayout, getPayoutHistory, deleteStoreLabel,
-  updateStoreLabel
+  updateStoreLabel,
+  resetPassword
 } from "../controllers/store.controller";
 import { getStoreVariantsForUsers } from "../controllers/product.controller";
 
@@ -39,6 +40,8 @@ router.get("/nogeo", auth, checkPagination, getStoresNoGeo);
 // @desc    Get logged in Store
 // @access  Private
 router.get("/login", auth, getLoggedInStore);
+
+router.post("/reset-password", resetPassword);
 
 // @route   GET /store/labels
 // @desc    Get a store's labels

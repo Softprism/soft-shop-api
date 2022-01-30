@@ -889,6 +889,23 @@ const getPayoutHistory = async (storeId, urlParams) => {
   return payoutHistory;
 };
 
+const resetPassword = async ({ email }) => {
+  const checkEmail = await Store.findOne({ email });
+  if (checkEmail.resetPassword === "initiated") {
+    return { err: "Please wait for the approval of your recent password reset request, or contact support for further assistance.", status: 400 };
+  }
+  if (checkEmail.resetPassword === "done") {
+    return { err: "Your recent password reset request has just been approved. Please check your email for new password sent. Contact support for further assistance.", status: 400 };
+  }
+  if (checkEmail) {
+    // initiate reset password
+    checkEmail.resetPassword = "initiated";
+    await checkEmail.save();
+    return checkEmail;
+  }
+  return { err: "Please enter your email registered with softshop", status: 400 };
+};
+
 export {
   getStores,
   createStore,
@@ -907,5 +924,6 @@ export {
   getInventoryList,
   updateStore,
   requestPayout,
-  getPayoutHistory
+  getPayoutHistory,
+  resetPassword
 };

@@ -276,6 +276,25 @@ const getPayoutHistory = async (req, res, next) => {
   }
 };
 
+const resetPassword = async (req, res, next) => {
+  try {
+    const request = await storeService.resetPassword(req.body);
+
+    if (request.err) {
+      return res.status(request.status).json(
+        { success: false, msg: request.err, status: request.status }
+      );
+    }
+    return res.status(200).json({
+      success: true,
+      result: request,
+      status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export {
   getStores,
   createStore,
@@ -294,5 +313,6 @@ export {
   getInventoryList,
   updateStore,
   requestPayout,
-  getPayoutHistory
+  getPayoutHistory,
+  resetPassword
 };
