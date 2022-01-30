@@ -154,7 +154,7 @@ const confirmStoreUpdate = async (storeID) => {
 
   let updateParams = await StoreUpdate.findOne({ store: storeID });
   // check if there are inputs to update
-  if (!updateParams) return { err: "You haven't specified a field to update. Please try again.", status: 400 };
+  if (!updateParams) return { err: "No pending update for this store.", status: 400 };
   const { newDetails } = updateParams;
 
   // get fields to update
