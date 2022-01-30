@@ -528,7 +528,7 @@ const updateStoreRequest = async (storeID, updateParam) => {
     // append new updates to existing update document
     let storeUpdate = await StoreUpdate.findOne({ store: storeID });
     if (!storeUpdate) return { err: "Store update does not exist", status: 400 };
-    await StoreUpdate.findOneAndUpda0te(
+    await StoreUpdate.findOneAndUpdate(
       { store: storeID },
       {
         $set: { newDetails: { ...storeUpdate.newDetails, ...newDetails } }
