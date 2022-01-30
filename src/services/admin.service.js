@@ -116,13 +116,40 @@ const updateAdmin = async (updateParam, id) => {
     return err;
   }
 };
+const getResetPasswordRequests = async (urlParams) => {
+  const limit = Number(urlParams.limit);
+  const skip = Number(urlParams.skip);
+  let requests = await Store.find({
+    $or: [
+      { resetPassword: "initiated" },
+      { resetPassword: "done" }
+    ]
+  })
+    .sort("createdAt")
+    .skip(skip)
+    .limit(limit)
+    .select("name email phone_number");
+
+  return requests;
+};
 const resetStorePassword = async (storeEmail) => {
+  // generates random unique id;
+  let orderId = () => {
+    let s4 = () => {
+      return Math.floor((1 + Math.random()) * 0x10000)
+        .toString(16)
+        .substring(1);
+    };
+      // return id of format 'resetpasswordaaaa'
+    return `resetpassword${s4()}`;
+  };
   const salt = await bcrypt.genSalt(10);
-  const password = await bcrypt.hash("mysoftshopstore", salt);
+  let randomCode = orderId();
+  const password = await bcrypt.hash(randomCode, salt);
   let store = await Store
     .findOneAndUpdate(
-      { email: storeEmail },
-      { $set: { resetPassword: true, password } },
+      { email: storeEmail, resetPassword: "initiated" },
+      { $set: { resetPassword: "done", password } },
       { omitUndefined: true, new: true, useFindAndModify: false }
 
     );
@@ -131,7 +158,7 @@ const resetStorePassword = async (storeEmail) => {
   sendEmail(
     storeEmail,
     "Reset Password Successful",
-    "Your reset password request has been approved, please sign in to your account with <b> mysoftshopstore </b> as your password. Reset your password afterwards"
+    `Your reset password request has been approved, please sign in to your account with <b> ${randomCode} </b> as your password. Reset your password afterwards`
   );
   return "Password has been reset for store";
 };
@@ -312,5 +339,5 @@ const createCompayLedger = async () => {
 };
 
 export {
-  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin, resetStorePassword, confirmStoreUpdate, createNotification, confirmStorePayout, createCompayLedger, getAllStoresUpdateRequests
+  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin, resetStorePassword, confirmStoreUpdate, createNotification, confirmStorePayout, createCompayLedger, getAllStoresUpdateRequests, getResetPasswordRequests
 };
