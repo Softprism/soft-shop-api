@@ -901,7 +901,7 @@ const resetPassword = async ({ email }) => {
     // initiate reset password
     checkEmail.resetPassword = "initiated";
     await checkEmail.save();
-    return checkEmail;
+    return "Your reset password request has been sent. You'll receive a mail containing your new password soon.";
   }
   return { err: "Please enter your email registered with softshop", status: 400 };
 };
