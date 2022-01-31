@@ -233,6 +233,7 @@ const confirmStoreUpdate = async (storeID) => {
     { omitUndefined: true, new: true, useFindAndModify: false }
   );
 
+  // delete the store update
   if (storeUpdateRequest.pendingUpdates === false) {
     await StoreUpdate.deleteOne({ store: storeID });
   }
