@@ -646,10 +646,11 @@ const deleteLabel = async (storeId, labelParam) => {
   }).select("labels");
   if (!labelChecker) return { err: "Store label not found.", status: 404 };
   await Store.updateOne({ _id: storeId }, {
-    $pull: {
-      labels: { _id: labelId },
-    },
+    $pull: { labels: { _id: labelId }, },
   });
+  await Product.findOneAndUpdate(
+    { $pull: { labels: { _id: labelId } } }
+  );
   return "Store Label deleted successfully.";
 };
 
