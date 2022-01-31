@@ -40,7 +40,6 @@ const getGeocode = async (req, res, next) => {
       });
     }
   } catch (error) {
-    console.log(error);
     return res.status(400).json({ success: false, msg: error.response.data.status, status: 400 });
   }
 };

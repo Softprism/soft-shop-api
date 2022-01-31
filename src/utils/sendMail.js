@@ -14,7 +14,6 @@ const sendEmail = async (toEmail, mailSubj, mailBody) => {
   // Verify connection configuration
   transporter.verify((error, success) => {
     if (error) {
-      console.log(error);
     } else {
       console.log("Server is ready to take our messages");
     }
@@ -31,7 +30,6 @@ const sendEmail = async (toEmail, mailSubj, mailBody) => {
   // Send email
   transporter.sendMail(mailOptions, (err, data) => {
     if (err) {
-      console.log(`Error ${err}`);
     } else {
       console.log("Email sent successfully");
     }
