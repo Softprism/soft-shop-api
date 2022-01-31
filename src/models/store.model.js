@@ -4,7 +4,7 @@ const StoreSchema = mongoose.Schema({
   name: { type: String, required: true },
   images: [{ type: String, required: true }], // array to store multiple images
   address: { type: String, required: true },
-  place_id: { type: String, required: true },
+  place_id: { type: String },
   phone_number: { type: String, required: true },
   email: {
     type: String, unique: true, required: true, lowercase: true,

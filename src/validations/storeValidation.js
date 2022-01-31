@@ -47,6 +47,9 @@ const registerStore = {
       "string.empty": "Sorry, address cannot be an empty field",
       "string.min": "Address should be 11 numbers"
     }),
+    place_id: Joi.string().empty().messages({
+      "string.empty": "Sorry, place_id cannot be an empty field"
+    }),
   }).messages({
     "object.unknown": "You have used an invalid key."
   })

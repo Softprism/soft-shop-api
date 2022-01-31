@@ -103,9 +103,11 @@ const reviewProductValidation = {
       "any.required": "User id is required.",
       "string.length": "User id id must be a valid mongoose id.",
     }),
-    store: objectId.required().empty().messages({
-      "any.required": "Store id is required.",
-      "string.length": "Store id must be a valid mongoose id.",
+    product: objectId.empty().messages({
+      "string.length": "Product id must be a valid mongoose id.",
+    }),
+    order: objectId.empty().messages({
+      "string.length": "Order id must be a valid mongoose id.",
     }),
   }).messages({
     "object.unknown": "You have used an invalid key."
