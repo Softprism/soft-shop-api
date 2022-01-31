@@ -14,7 +14,7 @@ const getAddresses = async (req, res, next) => {
         location: req.query.accepted_location,
         radius: req.query.radius,
         strictbounds: true,
-        types: "geocode",
+        // types: "establishment",
         key: process.env.GOOGLE_MAPS_API_KEY
       },
       timeout: 1000
