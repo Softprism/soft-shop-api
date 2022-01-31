@@ -229,11 +229,14 @@ const confirmStoreUpdate = async (storeID) => {
   // apply update to store
   let storeUpdateRequest = await Store.findByIdAndUpdate(
     storeID,
-    { $set: updateParam },
+    { $set: updateParam, pendingUpdates: false },
     { omitUndefined: true, new: true, useFindAndModify: false }
   );
-  await Store.findByIdAndUpdate(storeID, { $set: { pendingUpdates: false } });
 
+  // delete the store update
+  if (storeUpdateRequest.pendingUpdates === false) {
+    await StoreUpdate.deleteOne({ store: storeID });
+  }
   return storeUpdateRequest;
 };
 
