@@ -894,9 +894,6 @@ const resetPassword = async ({ email }) => {
   if (checkEmail.resetPassword === "initiated") {
     return { err: "Please wait for the approval of your recent password reset request, or contact support for further assistance.", status: 400 };
   }
-  if (checkEmail.resetPassword === "done") {
-    return { err: "Your recent password reset request has just been approved. Please check your email for new password sent. Contact support for further assistance.", status: 400 };
-  }
   if (checkEmail) {
     // initiate reset password
     checkEmail.resetPassword = "initiated";
