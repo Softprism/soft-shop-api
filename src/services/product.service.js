@@ -373,7 +373,7 @@ const deleteStoreVariant = async (variantId) => {
   let variant = await Variant.findByIdAndDelete(variantId);
   if (!variant) return { err: "variant not found.", status: 400 };
   await Product.updateMany(
-    { $pullAll: { variants: { _id: [variantId] } } }
+    { $pullAll: { variants: { _id: variantId } } }
   );
   return "varaint deleted successfully";
 };
