@@ -27,7 +27,7 @@ app.use(hpp());
 // compress all responses
 app.use(compression({ level: 9 }));
 // api routes
-app.use("/api/v1", router);
+app.use("/", router);
 app.all("*", (req, res, next) => {
   res
     .status(200)

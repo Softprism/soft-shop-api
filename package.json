@@ -9,8 +9,8 @@
 		"clean": "rm -rf build && npm run build-babel",
 		"build-babel": "babel -d ./build ./src -s --copy-files",
 		"build": "npm run clean && npm run build-babel",
-		"start": " npm run build && node ./build/app.js",
-		"dev": "nodemon --exec babel-node src/app.js"
+		"start": " npm run build && pm2 start ./build/app.js",
+		"dev": "pm2 start src/app.js"
 	},
 	"dependencies": {
 		"@googlemaps/google-maps-services-js": "^3.3.6",
