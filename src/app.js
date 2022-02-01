@@ -24,7 +24,7 @@ app.use(xss());
 app.use(hpp());
 
 // api routes
-app.use("/", router);
+app.use("/api/v1", router);
 app.all("*", (req, res, next) => {
   res
     .status(404)
