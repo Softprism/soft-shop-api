@@ -77,7 +77,7 @@ const emailValidation = {
 
 const tokenValidation = {
   body: Joi.object({
-    type: Joi.string().valid("rider-signup").required(),
+    type: Joi.string().valid("rider-signup", "rider-forgot-password").required(),
     otp: Joi.string().empty().min(4).required()
       .messages({
         "string.empty": "Sorry, otp cannot be an empty field",
