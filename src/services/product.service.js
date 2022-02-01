@@ -372,8 +372,10 @@ const deleteCustomFee = async (customFeeId) => {
 const deleteStoreVariant = async (variantId) => {
   let variant = await Variant.findByIdAndDelete(variantId);
   if (!variant) return { err: "variant not found.", status: 400 };
-  await Product.updateMany(
-    { $pullAll: { variants: { _id: variantId } } }
+
+  const products = await Product.updateMany(
+    { variants: { $in: variantId } },
+    { $pull: { variants: variantId } }
   );
   return "varaint deleted successfully";
 };
