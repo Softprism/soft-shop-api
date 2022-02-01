@@ -9,6 +9,8 @@ import {
   deleteCategory,
   createCategory,
 } from "../controllers/category.controller";
+import validator from "../middleware/validator";
+import { create_category, updateCategory } from "../validations/categoryValidation";
 
 const router = express.Router();
 
@@ -22,19 +24,16 @@ router.get("/", auth, getCategories);
 // @access  Public
 router.post(
   "/",
-  [
-    check("name", "Please enter valid category name").isString(),
-    check("image", "Please upload Image").exists(),
-  ],
   auth,
   isStoreAdmin,
+  validator(create_category),
   createCategory
 );
 
 // @route   PUT /category/edit/:id
 // @desc    Edit Category Category
 // @access  Public
-router.put("/:id", auth, isStoreAdmin, editCategory);
+router.put("/:id", auth, isStoreAdmin, validator(updateCategory), editCategory);
 
 // @route   DELETE /category/delete/:id
 // @desc    Create New Category

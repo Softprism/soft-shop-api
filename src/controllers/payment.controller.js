@@ -11,7 +11,8 @@ const verifyTransaction = async (req, res, next) => {
 
 const acknowledgeFlwWebhook = async (req, res, next) => {
   if (req.body.softshop !== "true") {
-    res.status(200).json({ success: true });
+    paymentService.verifyTransaction(req.body);
+    return res.status(200).json({ success: true });
   }
   next();
 };
@@ -31,6 +32,9 @@ const getAllBanks = async (req, res, next) => {
 const getBankDetails = async (req, res, next) => {
   try {
     let details = await paymentService.getBankDetails(req.body);
+    if (details.err) {
+      return res.status(details.status).json({ success: false, msg: details.err, status: details.status });
+    }
     return res.status(200).json({
       success: true, result: details, status: 200
     });
@@ -40,6 +44,18 @@ const getBankDetails = async (req, res, next) => {
   next();
 };
 
+const getTransactions = async (req, res, next) => {
+  try {
+    let transaction = await paymentService.getTransactions();
+    return res.status(200).json({
+      success: true, result: transaction, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+  next();
+};
+
 export {
-  verifyTransaction, acknowledgeFlwWebhook, getAllBanks, getBankDetails
+  verifyTransaction, acknowledgeFlwWebhook, getAllBanks, getBankDetails, getTransactions
 };

@@ -4,6 +4,7 @@ import * as storeService from "../services/store.service";
 const getStores = async (req, res, next) => {
   try {
     const stores = await storeService.getStores(req.query);
+    if (stores.err) return res.status(stores.status).json({ success: false, msg: stores.err, status: stores.status });
     return res.status(200).json({
       success: true, result: stores, size: stores.length, status: 200
     });
@@ -16,6 +17,7 @@ const getStoresNoGeo = async (req, res, next) => {
   try {
     const stores = await storeService.getStoresNoGeo(req.query);
 
+    // if (stores.err) return res.status(stores.status).json({ success: false, msg: stores.err, status: stores.status });
     return res.status(200).json({
       success: true, result: stores, size: stores.length, status: 200
     });
@@ -88,8 +90,7 @@ const updateStore = async (req, res, next) => {
   try {
     let storeID;
     if (req.store) storeID = req.store.id;
-    if (req.query.storeID && req.admin) storeID = req.query.storeID;
-
+    if (req.query.storeId && req.admin) storeID = req.query.storeId;
     const store = await storeService.updateStore(storeID, req.body);
 
     if (store.err) {
@@ -102,16 +103,53 @@ const updateStore = async (req, res, next) => {
   }
 };
 
-const addLabel = async (req, res, next) => {
-  let storeID;
-  if (req.store) storeID = req.store.id;
-  if (req.query.storeID && req.admin) storeID = req.query.storeID;
+const updateStoreLabel = async (req, res, next) => {
+  try {
+    let storeID;
+    if (req.store) storeID = req.store.id;
+    if (req.query.storeId && req.admin) storeID = req.query.storeId;
+    const store = await storeService.editLabel(storeID, req.body);
 
-  const store = await storeService.addLabel(storeID, req.body);
-  if (store.err) {
-    res.status(store.status).json({ success: false, msg: store.err, status: store.status });
-  } else {
-    res.status(200).json({ success: true, result: store });
+    if (store.err) {
+      res.status(store.status).json({ success: false, msg: store.err, status: store.status });
+    } else {
+      res.status(200).json({ success: true, result: store, status: 200 });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+const deleteStoreLabel = async (req, res, next) => {
+  try {
+    let storeID;
+    if (req.store) storeID = req.store.id;
+    if (req.query.storeId && req.admin) storeID = req.query.storeId;
+    const store = await storeService.deleteLabel(storeID, req.body);
+
+    if (store.err) {
+      res.status(store.status).json({ success: false, msg: store.err, status: store.status });
+    } else {
+      res.status(200).json({ success: true, result: store, status: 200 });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+const addLabel = async (req, res, next) => {
+  try {
+    let storeID;
+    if (req.store) storeID = req.store.id;
+    if (req.query.storeID && req.admin) storeID = req.query.storeID;
+
+    const store = await storeService.addLabel(storeID, req.body);
+    if (store.err) {
+      return res.status(store.status).json({ success: false, msg: store.err, status: store.status });
+    }
+    return res.status(200).json({ success: true, result: store });
+  } catch (error) {
+    next(error);
   }
 };
 
@@ -134,8 +172,8 @@ const getLabels = async (req, res, next) => {
 
 const getStore = async (req, res, next) => {
   try {
-    const storeDetails = await storeService.getStore(req.params.storeId);
-
+    const storeDetails = await storeService.getStore(req.query, req.params.storeId);
+    if (storeDetails.err) return res.status(storeDetails.status).json({ success: false, msg: storeDetails.err, status: storeDetails.status });
     res.status(200).json({ success: true, result: storeDetails, status: 200 });
   } catch (error) {
     next(error);
@@ -149,7 +187,11 @@ const getStoreSalesStats = async (req, res, next) => {
       req.query.days
     );
 
-    if (salesStats.err) { return res.status(salesStats.status).json({ success: false, msg: salesStats.err, status: salesStats.status }); }
+    if (salesStats.err) {
+      return res.status(salesStats.status).json(
+        { success: false, msg: salesStats.err, status: salesStats.status }
+      );
+    }
 
     return res.status(200).json({ success: true, result: salesStats, status: 200 });
   } catch (error) {
@@ -192,6 +234,61 @@ const getInventoryList = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       result: { inventoryList, size: inventoryList.length },
+      status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const requestPayout = async (req, res, next) => {
+  try {
+    const payout = await storeService.requestPayout(req.store.id);
+
+    if (payout.err) {
+      return res.status(payout.status).json(
+        { success: false, msg: payout.err, status: payout.status }
+      );
+    }
+
+    return res.status(200).json({
+      success: true,
+      result: payout,
+      status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getPayoutHistory = async (req, res, next) => {
+  try {
+    const payouts = await storeService.getPayoutHistory(req.store.id, req.query);
+
+    return res.status(200).json({
+      success: true,
+      result: payouts,
+      size: payouts.length,
+      status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const resetPassword = async (req, res, next) => {
+  try {
+    const request = await storeService.resetPassword(req.body);
+
+    if (request.err) {
+      return res.status(request.status).json(
+        { success: false, msg: request.err, status: request.status }
+      );
+    }
+    return res.status(200).json({
+      success: true,
+      result: request,
+      status: 200
     });
   } catch (error) {
     next(error);
@@ -206,11 +303,16 @@ export {
   updateStoreRequest,
   addLabel,
   getLabels,
+  deleteStoreLabel,
+  updateStoreLabel,
   getStore,
   getStoresNoGeo,
   getStoreSalesStats,
   bestSellers,
   getStoreFeedback,
   getInventoryList,
-  updateStore
+  updateStore,
+  requestPayout,
+  getPayoutHistory,
+  resetPassword
 };

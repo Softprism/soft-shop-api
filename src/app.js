@@ -1,4 +1,5 @@
 import express from "express";
+import compression from "compression";
 import dotenv from "dotenv";
 import cors from "cors";
 import mongoSanitize from "express-mongo-sanitize";
@@ -23,6 +24,8 @@ app.use(mongoSanitize());
 app.use(xss());
 app.use(hpp());
 
+// compress all responses
+app.use(compression({ level: 9 }));
 // api routes
 app.use("/api/v1", router);
 app.all("*", (req, res, next) => {

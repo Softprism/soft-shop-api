@@ -41,6 +41,7 @@ const userSchema = mongoose.Schema({
     {
       address_type: { type: String, required: true },
       value: { type: String, required: true },
+      place_id: { type: String, required: true }
     },
   ],
   email: {
@@ -74,6 +75,9 @@ const userSchema = mongoose.Schema({
   ],
   orders: [{ type: mongoose.Types.ObjectId, ref: "Order" }], // array to store multiple orders
   isVerified: { type: Boolean, required: true, default: false },
+  pushNotifications: { type: Boolean, default: false },
+  smsNotifications: { type: Boolean, default: false },
+  promotionalNotifications: { type: Boolean, default: false },
   createdDate: { type: Date, default: Date.now },
 });
 

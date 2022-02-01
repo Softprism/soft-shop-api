@@ -1,6 +1,7 @@
+/* eslint-disable no-await-in-loop */
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import mongoose from "mongoose";
+import mongoose, { mongo } from "mongoose";
 
 import Store from "../models/store.model";
 import Order from "../models/order.model";
@@ -8,6 +9,11 @@ import Product from "../models/product.model";
 import StoreUpdate from "../models/store-update.model";
 
 import getJwt from "../utils/jwtGenerator";
+import { createTransaction } from "./transaction.service";
+import Transaction from "../models/transaction.model";
+import Category from "../models/category.model";
+
+import getDistance from "../utils/get-distance";
 
 const getStores = async (urlParams) => {
   // declare fields to exclude from response
@@ -35,6 +41,9 @@ const getStores = async (urlParams) => {
   // check for sort type
   if (urlParams.sortType === "desc") sort = `-${sort}`;
   if (!urlParams.sort) sort = "createdAt";
+
+  // check for user place_id
+  if (!urlParams.place_id) return { err: "Please enter user place_id.", status: 400 };
 
   // validating rating param
   const rating = Number(urlParams.rating);
@@ -78,7 +87,7 @@ const getStores = async (urlParams) => {
   delete urlParams.lat;
 
   // aggregating stores
-  const stores = Store.aggregate()
+  const stores = await Store.aggregate()
   // matching store with geolocation
     .match({
       location: {
@@ -99,8 +108,17 @@ const getStores = async (urlParams) => {
   // looking up the order collection for each stores
     .lookup({
       from: "orders",
-      localField: "_id",
-      foreignField: "store",
+      let: { storeId: "$_id" },
+      pipeline: [
+        {
+          $match: {
+            status: { $in: ["sent", "ready", "accepted", "enroute", "delivered", "completed"] },
+            $expr: {
+              $eq: ["$$storeId", "$store"]
+            }
+          }
+        }
+      ],
       as: "orders",
     })
   // looking up each product on the review collection
@@ -114,7 +132,7 @@ const getStores = async (urlParams) => {
     .addFields({
       sumOfStars: { $sum: "$orderReview.star" },
       numOfReviews: { $size: "$orderReview" },
-      averageRating: { $ceil: { $avg: "$orderReview.star" } },
+      averageRating: { $floor: { $avg: "$orderReview.star" } },
       productCount: { $size: "$products" },
       orderCount: { $size: "$orders" },
     })
@@ -135,6 +153,10 @@ const getStores = async (urlParams) => {
       }
     });
     return storesWithRating;
+  }
+  for (const store of stores) {
+    store.deliveryTime = await getDistance(store.place_id, urlParams.place_id);
+    if (store.deliveryTime.err) store.deliveryTime = "Can't resolve";
   }
   return stores;
 };
@@ -165,6 +187,9 @@ const getStoresNoGeo = async (urlParams) => {
   // check for sort type
   if (urlParams.sortType === "desc") sort = `-${sort}`;
   if (!urlParams.sort) sort = "createdAt";
+
+  // check for user place_id
+  if (!urlParams.place_id) return { err: "Please enter user place_id.", status: 400 };
 
   // validating rating param
   const rating = Number(urlParams.rating);
@@ -199,7 +224,7 @@ const getStoresNoGeo = async (urlParams) => {
   delete urlParams.lat;
 
   // aggregating stores
-  const stores = Store.aggregate()
+  const stores = await Store.aggregate()
   // matching stores with matchParam
     .match(matchParam)
   // looking up the product collection for each stores
@@ -212,8 +237,17 @@ const getStoresNoGeo = async (urlParams) => {
   // looking up the order collection for each stores
     .lookup({
       from: "orders",
-      localField: "_id",
-      foreignField: "store",
+      let: { storeId: "$_id" },
+      pipeline: [
+        {
+          $match: {
+            status: { $in: ["sent", "ready", "accepted", "enroute", "delivered", "completed"] },
+            $expr: {
+              $eq: ["$$storeId", "$store"]
+            }
+          }
+        }
+      ],
       as: "orders",
     })
   // looking up each product on the review collection
@@ -227,7 +261,7 @@ const getStoresNoGeo = async (urlParams) => {
     .addFields({
       sumOfStars: { $sum: "$orderReview.star" },
       numOfReviews: { $size: "$orderReview" },
-      averageRating: { $ceil: { $avg: "$orderReview.star" } },
+      averageRating: { $floor: { $avg: "$orderReview.star" } },
       productCount: { $size: "$products" },
       orderCount: { $size: "$orders" },
     })
@@ -242,17 +276,22 @@ const getStoresNoGeo = async (urlParams) => {
     .limit(limit);
 
   if (rating >= 0) {
-    (await stores).forEach((store) => {
+    stores.forEach((store) => {
       if (store.averageRating === rating) {
         storesWithRating.push(store);
       }
     });
     return storesWithRating;
   }
+
+  for (const store of stores) {
+    store.deliveryTime = await getDistance(store.place_id, urlParams.place_id);
+    if (store.deliveryTime.err) store.deliveryTime = "Can't resolve";
+  }
   return stores;
 };
 
-const getStore = async (storeId) => {
+const getStore = async (urlParams, storeId) => {
   // declare fields to exclude from response
   const pipeline = [
     {
@@ -265,6 +304,10 @@ const getStore = async (storeId) => {
       ],
     },
   ];
+
+  // check for user place_id
+  // setting a default value so that getLoggedIn store can run
+  if (!urlParams.place_id) urlParams.place_id = "ChIJ73FBMSH3OxARDMvAq2uA6SM"; // Victoria garden City, Lekki, Nigeria
 
   // aggregating stores with active products
   let store = await Store.aggregate()
@@ -286,8 +329,17 @@ const getStore = async (storeId) => {
   // looking up the order collection for each stores
     .lookup({
       from: "orders",
-      localField: "_id",
-      foreignField: "store",
+      let: { storeId: "$_id" },
+      pipeline: [
+        {
+          $match: {
+            status: { $in: ["sent", "ready", "accepted", "enroute", "delivered", "completed"] },
+            $expr: {
+              $eq: ["$$storeId", "$store"]
+            }
+          }
+        }
+      ],
       as: "orders",
     })
   // looking up each product on the review collection
@@ -301,7 +353,7 @@ const getStore = async (storeId) => {
     .addFields({
       sumOfStars: { $sum: "$orderReview.star" },
       numOfReviews: { $size: "$orderReview" },
-      averageRating: { $ceil: { $avg: "$orderReview.star" } },
+      averageRating: { $floor: { $avg: "$orderReview.star" } },
       productCount: { $size: "$products" },
       orderCount: { $size: "$orders" },
     })
@@ -324,8 +376,17 @@ const getStore = async (storeId) => {
     // looking up the order collection for each stores
       .lookup({
         from: "orders",
-        localField: "_id",
-        foreignField: "store",
+        let: { storeId: "$_id" },
+        pipeline: [
+          {
+            $match: {
+              status: { $in: ["sent", "ready", "accepted", "enroute", "delivered", "completed"] },
+              $expr: {
+                $eq: ["$$storeId", "$store"]
+              }
+            }
+          }
+        ],
         as: "orders",
       })
     // looking up each product on the review collection
@@ -339,7 +400,7 @@ const getStore = async (storeId) => {
       .addFields({
         sumOfStars: { $sum: "$orderReview.star" },
         numOfReviews: { $size: "$orderReview" },
-        averageRating: { $ceil: { $avg: "$orderReview.star" } },
+        averageRating: { $floor: { $avg: "$orderReview.star" } },
         orderCount: { $size: "$orders" },
       })
       .addFields({
@@ -350,6 +411,10 @@ const getStore = async (storeId) => {
       })
       .append(pipeline);
   }
+  for (const aStore of store) {
+    aStore.deliveryTime = await getDistance(aStore.place_id, urlParams.place_id);
+    if (aStore.deliveryTime.err) aStore.deliveryTime = "Can't resolve";
+  }
   return store[0];
 };
 
@@ -357,22 +422,35 @@ const createStore = async (StoreParam) => {
   const {
     name,
     address,
+    place_id,
     email,
     phone_number,
     password,
     openingTime,
     closingTime,
     location,
+    category
   } = StoreParam;
-
   let store = await Store.findOne({ email });
 
   if (store) {
     return { err: "A store with this email already exists.", status: 400 };
   }
 
-  const newStore = new Store(StoreParam);
+  // check store phone number for duplicate entry
+  let storePhoneChecker = await Store.findOne({ phone_number });
 
+  if (storePhoneChecker) {
+    return { err: "A store with this phone number already exists.", status: 400 };
+  }
+
+  // check if category exists
+  let categoryChecker = await Category.findById(category);
+
+  if (!categoryChecker) {
+    return { err: "This category does not exist.", status: 400 };
+  }
+  const newStore = new Store(StoreParam);
   await newStore.save();
 
   let token = await getJwt(newStore.id, "store");
@@ -383,7 +461,7 @@ const createStore = async (StoreParam) => {
 const loginStore = async (StoreParam) => {
   const { email, password } = StoreParam;
 
-  let store = await Store.findOne({ email }).select("password isVerified resetPassword pendingUpdates");
+  let store = await Store.findOne({ email }).select("password isVerified resetPassword pendingUpdates name pendingWithdrawal");
 
   if (!store) {
     return { err: "Invalid email. Please try again.", status: 400 };
@@ -407,14 +485,16 @@ const loginStore = async (StoreParam) => {
 };
 
 const getLoggedInStore = async (storeId) => {
-  const store = await getStore(storeId);
+  const store = await getStore({}, storeId);
+  // the {}} argument is used here because the getStore function accepts two argument, it's not really neccessary for the getLoggedInStore function
+  store.deliveryTime = undefined;
+  // unsetting the deliveryTime field since we don't need it for the store but it has to be calculated since the getStore function requires it.
   return store;
 };
 
 const updateStoreRequest = async (storeID, updateParam) => {
   // this service is used to update sensitive store data
   // successful request sends a update profile request to admin panel
-
   // get fields to update
   const {
     address,
@@ -424,13 +504,16 @@ const updateStoreRequest = async (storeID, updateParam) => {
     phone_number,
     category,
     tax,
-    account_details
+    account_details,
+    place_id
   } = updateParam;
 
   const newDetails = {};
-
   // Check for fields
-  if (address) newDetails.address = address;
+  if (address && place_id) {
+    newDetails.address = address;
+    newDetails.place_id = place_id;
+  }
   if (location) newDetails.location = location;
   if (phone_number) newDetails.phone_number = phone_number;
   if (category) newDetails.category = category;
@@ -438,66 +521,55 @@ const updateStoreRequest = async (storeID, updateParam) => {
   if (email) newDetails.email = email;
   if (tax) newDetails.tax = tax;
   if (account_details) newDetails.account_details = account_details;
-  if (!address && !location && !phone_number && !category && !name && !tax && !email && !account_details) return { err: "You haven't specified a field to update. Please try again.", status: 400 };
+  if (!address && !place_id && !location && !phone_number && !category && !name && !tax && !email && !account_details) return { err: "You haven't specified a field to update. Please try again.", status: 400 };
 
+  // check if store email already exist
+  const store = await Store.findOne({ email });
+  if (store) {
+    return { err: "A store with this email already exists.", status: 400 };
+  }
   // check if store has a pending update
   const checkStoreUpdate = await Store.findById(storeID);
+  if (!checkStoreUpdate) {
+    return { err: "Store does not already exists.", status: 400 };
+  }
   if (checkStoreUpdate.pendingUpdates === true) {
     // append new updates to existing update document
     let storeUpdate = await StoreUpdate.findOne({ store: storeID });
-    storeUpdate.newDetails = { ...storeUpdate.newDetails, ...newDetails };
-    storeUpdate.save();
+    if (!storeUpdate) return { err: "Store update does not exist", status: 400 };
+    await StoreUpdate.findOneAndUpdate(
+      { store: storeID },
+      {
+        $set: { newDetails: { ...storeUpdate.newDetails, ...newDetails } }
+      }
+    );
   } else {
     // create new update document
     let newUpdate = new StoreUpdate({ store: storeID, newDetails });
 
-    if (newUpdate) {
+    if (await newUpdate.save()) {
       let update = { pendingUpdates: true };
       await Store.findByIdAndUpdate(storeID, update);
-      newUpdate.save();
     } else {
       return { err: "Update Request Failed, please try again.", status: 400 };
     }
   }
 
-  let storeRes = await getStore(storeID);
+  let storeRes = await getStore({}, storeID);
 
   return storeRes;
 };
 
 const updateStore = async (storeID, updateParam) => {
   // this service is used to update insensitive store data
-
-  // get fields to update
-  const {
-    images,
-    openingTime,
-    closingTime,
-    password,
-    deliveryTime,
-    isActive,
-    prepTime
-  } = updateParam;
-
-  const newDetails = {};
-
-  // Check for fields
-  if (images) newDetails.images = images;
-  if (openingTime) newDetails.openingTime = openingTime;
-  if (closingTime) newDetails.closingTime = closingTime;
-  if (password) newDetails.password = password;
-  if (deliveryTime) newDetails.deliveryTime = deliveryTime;
-  if (isActive) newDetails.isActive = isActive;
-  if (prepTime) newDetails.prepTime = prepTime;
-
   const checkStoreUpdate = await Store.findByIdAndUpdate(
     storeID,
-    { $set: newDetails },
-    { omitUndefined: true, new: true, useFindAndModify: false }
+    updateParam,
+    { new: true }
   );
   if (!checkStoreUpdate) return { err: "An error occurred while updating profile, please try again.", status: 400 };
 
-  let storeRes = await getStore(storeID);
+  let storeRes = await getStore({}, storeID);
 
   return storeRes;
 };
@@ -513,6 +585,75 @@ const addLabel = async (storeId, labelParam) => {
   return newStore;
 };
 
+const editLabel = async (storeId, labelParam) => {
+  let store = await Store.findById(storeId);
+
+  if (!store) return { err: "Store not found.", status: 404 };
+  const { labelTitle, labelThumb, labelId } = labelParam;
+  await Store.updateOne(
+    {
+      _id: storeId,
+      labels: { $elemMatch: { _id: labelId, }, },
+    },
+    {
+      $set: {
+        "labels.$.labelTitle": labelTitle,
+        "labels.$.labelThumb": labelThumb,
+      },
+    },
+    { new: true, }
+  );
+  // let theLabel = await Store.findOne(
+  //   {
+  //     _id: storeId,
+  //     labels: { $elemMatch: { _id: labelId, }, },
+  //   }
+  // );
+  let selectedLabel = mongoose.Types.ObjectId(labelId);
+  const newStore = await Store.aggregate()
+    .match({
+      _id: mongoose.Types.ObjectId(storeId),
+    })
+    .addFields({
+      label: selectedLabel
+    })
+    .project({
+      label: {
+        $filter: {
+          input: "$labels",
+          as: "labels",
+          cond: {
+            $and: {
+              $eq: ["$$labels._id", "$label"]
+            }
+          }
+        }
+      }
+    });
+
+  if (!newStore) return { err: "Store label not found.", status: 404 };
+  return newStore[0].label;
+};
+
+const deleteLabel = async (storeId, labelParam) => {
+  let store = await Store.findById(storeId);
+
+  if (!store) return { err: "Store not found." };
+  const { labelId } = labelParam;
+  const labelChecker = await Store.findOne({
+    _id: storeId,
+    labels: { $elemMatch: { _id: labelId, }, },
+  }).select("labels");
+  if (!labelChecker) return { err: "Store label not found.", status: 404 };
+  await Store.updateMany({ _id: storeId }, {
+    $pull: { labels: { _id: labelId }, },
+  });
+  await Product.updateMany(
+    { $pull: { labels: { _id: labelId } } }
+  );
+  return "Store Label deleted successfully.";
+};
+
 const getLabels = async (storeId) => {
   let store = await Store.findById(storeId);
 
@@ -526,22 +667,27 @@ const getStoreSalesStats = async (storeId, days) => {
 
   let d = new Date();
   d.setDate(d.getDate() - days);
+  d.setHours(23);
+  d.setMinutes(59);
+  d.setSeconds(59);
 
   let salesStats = await Order.aggregate()
     .match({
       store: mongoose.Types.ObjectId(storeId),
-      status: "delivered",
+      status: "completed",
       createdAt: { $gt: d },
     })
     .addFields({
       dayOfOrder: { $dayOfWeek: "$createdAt" },
+      dateOfOrder: { $dateToString: { format: "%Y-%m-%d", date: "$updatedAt" } }
     })
     .group({
-      _id: "$dayOfOrder",
+      _id: "$dateOfOrder",
       sales: { $push: "$subtotal" },
     })
     .addFields({
-      weekday: { $toInt: "$_id" },
+      weekday: { $dayOfWeek: { $dateFromString: { dateString: "$_id" } } },
+      weekdate: "$_id",
       totalSales: { $sum: "$sales" },
       totalOrders: { $size: "$sales" },
     })
@@ -558,7 +704,12 @@ const bestSellers = async (storeId, pagingParam) => {
   const { limit, skip } = pagingParam;
 
   let bestSellingItems = Order.aggregate()
-    .match({ store: mongoose.Types.ObjectId(storeId) })
+    .match(
+      {
+        store: mongoose.Types.ObjectId(storeId),
+        status: { $in: ["sent", "ready", "accepted", "enroute", "delivered", "completed"] }
+      }
+    )
     .lookup({
       from: "products",
       localField: "orderItems.product",
@@ -640,6 +791,7 @@ const getStoreFeedback = async (storeId, pagingParam) => {
   const feedbacks = await Order.aggregate()
     .match({
       store: mongoose.Types.ObjectId(storeId),
+      status: "completed"
     })
     .lookup({
       from: "reviews",
@@ -685,6 +837,73 @@ const getInventoryList = async (queryParam) => {
   return inventoryList;
 };
 
+const requestPayout = async (storeId) => {
+  // get store details
+  const store = await Store.findById(storeId);
+
+  // set payout variable and check if there's sufficient funds
+  let payout = store.account_details.account_balance;
+  if (payout === 0) return { err: "Insufficent Funds.", status: 400 };
+
+  // check for pending request
+  let oldRequest = await Transaction.findOne({
+    type: "Debit",
+    receiver: storeId,
+    status: "pending"
+  });
+
+  if (oldRequest && store.pendingWithdrawal === true) return { err: "You have a pending payout request. Please wait for its approval", status: 400 };
+
+  // create transaction
+  let newTransaction = createTransaction({
+    amount: payout,
+    type: "Debit",
+    to: "Store",
+    receiver: storeId,
+    ref: storeId
+  });
+
+  // check for error while creating new transaction
+  if (!newTransaction) return { err: "Error requesting payout. Please try again", status: 400 };
+  store.pendingWithdrawal = true;
+  await store.save();
+
+  return newTransaction;
+};
+
+const getPayoutHistory = async (storeId, urlParams) => {
+  const limit = Number(urlParams.limit);
+  const skip = Number(urlParams.skip);
+  const payoutHistory = await Transaction
+    .find({
+      receiver: storeId,
+      type: "Debit",
+      status: "completed"
+    })
+    .populate({
+      path: "receiver",
+      select: "account_details"
+    })
+    .sort("createdDate")
+    .skip(skip)
+    .limit(limit);
+  return payoutHistory;
+};
+
+const resetPassword = async ({ email }) => {
+  const checkEmail = await Store.findOne({ email });
+  if (checkEmail.resetPassword === "initiated") {
+    return { err: "Please wait for the approval of your recent password reset request, or contact support for further assistance.", status: 400 };
+  }
+  if (checkEmail) {
+    // initiate reset password
+    checkEmail.resetPassword = "initiated";
+    await checkEmail.save();
+    return "Your reset password request has been sent. You'll receive a mail containing your new password soon.";
+  }
+  return { err: "Please enter your email registered with softshop", status: 400 };
+};
+
 export {
   getStores,
   createStore,
@@ -692,6 +911,8 @@ export {
   getLoggedInStore,
   updateStoreRequest,
   addLabel,
+  deleteLabel,
+  editLabel,
   getStore,
   getLabels,
   getStoresNoGeo,
@@ -699,5 +920,8 @@ export {
   bestSellers,
   getStoreFeedback,
   getInventoryList,
-  updateStore
+  updateStore,
+  requestPayout,
+  getPayoutHistory,
+  resetPassword
 };

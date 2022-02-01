@@ -66,8 +66,17 @@ const userProfile = async (userId) => {
     })
     .lookup({
       from: "orders",
-      localField: "_id",
-      foreignField: "user",
+      let: { userId: "$_id" },
+      pipeline: [
+        {
+          $match: {
+            status: "completed",
+            $expr: {
+              $eq: ["$$userId", "$user"]
+            }
+          }
+        }
+      ],
       as: "userOrders",
     })
     .addFields({
@@ -112,7 +121,7 @@ const registerUser = async (userParam) => {
   let newUser = await user.save();
 
   // delete sign up token
-  Token.findByIdAndDelete(userParam.token);
+  await Token.findByIdAndDelete(userParam.token);
 
   // delete user on creation, uncomment to test registration without populating your database
   // await User.findByIdAndDelete(newUser._id);
@@ -145,7 +154,7 @@ const loginUser = async (loginParam) => {
 
   if (!isMatch) {
     return {
-      err: "The password entered in incorrect, please try again.",
+      err: "The password entered is incorrect, please try again.",
       status: 401,
     };
   }
@@ -176,9 +185,9 @@ const addCard = async (userId) => {
   };
   const payload = {
     "tx_ref": tx_ref(),
-    "amount": "100",
+    "amount": "0",
     "currency": "NGN",
-    "redirect_url": "https://app.soft-shop.app",
+    "redirect_url": "https://mobile.soft-shop.app/card",
     "payment_options": "card",
     "meta": {
       "user_id": userId,
@@ -209,7 +218,7 @@ const getLoggedInUser = async (userId) => {
 // Update User Details
 const updateUser = async (updateParam, id) => {
   const {
-    first_name, last_name, address, password, email, phone_number
+    first_name, last_name, address, original_password, password, email, phone_number, pushNotifications, smsNotifications, promotionalNotifications
   } = updateParam;
   // Build User Object
   const userFields = {};
@@ -217,20 +226,30 @@ const updateUser = async (updateParam, id) => {
   // Check for fields
   if (first_name) userFields.first_name = first_name;
   if (last_name) userFields.last_name = last_name;
-  if (address) userFields.address = address;
+  if (address) {
+    userFields.address = address;
+  }
   if (email) userFields.email = email;
   if (phone_number) userFields.phone_number = phone_number;
-
-  if (password) {
-    const salt = await bcrypt.genSalt(10);
-
-    // Replace password from user object with encrypted one
-    userFields.password = await bcrypt.hash(password, salt);
-  }
+  if (pushNotifications) userFields.pushNotifications = pushNotifications;
+  if (smsNotifications) userFields.smsNotifications = smsNotifications;
+  if (promotionalNotifications) userFields.promotionalNotifications = promotionalNotifications;
 
   // Find user from DB Collection
   let user = await User.findById(id);
 
+  if (password) {
+    if (!original_password) return { err: "please enter old password", status: 400 };
+    if (password === original_password) return { err: "Please try another password", status: 400 };
+    const salt = await bcrypt.genSalt(10);
+
+    // Replace password from user object with encrypted one
+    userFields.password = await bcrypt.hash(password, salt);
+
+    // Check if password matches with stored hash
+    const isMatch = await bcrypt.compare(original_password, user.password);
+    if (!isMatch) return { err: "Old password does not match.", status: 400 };
+  }
   if (!user) {
     return {
       err: "User does not exists.",
@@ -341,6 +360,8 @@ const getUserBasketItems = async (userId) => {
       user: mongoose.Types.ObjectId(userId),
     })
     .sort("createdAt");
+
+  if (userBasket.length < 1 && totalProductPriceInBasket.length < 1) return { userBasket: [], totalPrice: 0, count: 0 };
 
   return {
     userBasket,

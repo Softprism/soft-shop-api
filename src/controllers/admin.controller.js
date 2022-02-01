@@ -1,6 +1,7 @@
 import { validationResult } from "express-validator";
 
 import * as adminService from "../services/admin.service";
+import * as transactionService from "../services/transaction.service";
 
 const getAdmins = async (req, res) => {
   try {
@@ -70,9 +71,33 @@ const resetStorePassword = async (req, res, next) => {
   res.status(200).json({ success: true, result: request, status: 200 });
 };
 
+const getAllStoresUpdateRequests = async (req, res, next) => {
+  try {
+    const store = await adminService.getAllStoresUpdateRequests(req.query);
+
+    if (store.err) {
+      res.status(store.status).json({ success: false, msg: store.err, status: store.status });
+    } else {
+      res.status(200).json({ success: true, result: store, status: 200 });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getResetPasswordRequests = async (req, res, next) => {
+  try {
+    const request = await adminService.getResetPasswordRequests(req.query);
+
+    res.status(200).json({ success: true, result: request, status: 200 });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const confirmStoreUpdate = async (req, res, next) => {
   try {
-    const store = await adminService.confirmStoreUpdate(req.params.storeID);
+    const store = await adminService.confirmStoreUpdate(req.params.storeId);
 
     if (store.err) {
       res.status(store.status).json({ success: false, msg: store.err, status: store.status });
@@ -88,8 +113,8 @@ const createNotification = async (req, res, next) => {
   try {
     const result = await adminService.createNotification(req.body);
 
-    if (store.err) {
-      res.status(store.status).json({ success: false, msg: result.err, status: result.status });
+    if (result.err) {
+      res.status(result.status).json({ success: false, msg: result.err, status: result.status });
     } else {
       res.status(200).json({ success: true, result: result.notification, status: 200 });
     }
@@ -98,6 +123,45 @@ const createNotification = async (req, res, next) => {
   }
 };
 
+const createTransaction = async (req, res, next) => {
+  try {
+    const transaction = await transactionService.createTransaction(req.body);
+
+    if (transaction.err) {
+      res.status(transaction.status).json({ success: false, msg: transaction.err, status: transaction.status });
+    } else {
+      res.status(200).json({ success: true, result: transaction, status: 200 });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+const confirmStorePayout = async (req, res, next) => {
+  try {
+    const transaction = await adminService.confirmStorePayout(req.params.storeId);
+
+    if (transaction.err) {
+      res.status(transaction.status).json({
+        success: false, msg: transaction.err, data: transaction.data, status: transaction.status
+      });
+    } else {
+      res.status(200).json({ success: true, result: transaction, status: 200 });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+const createCompayLedger = async (req, res, next) => {
+  try {
+    const ledger = await adminService.createCompayLedger(req.params.storeId);
+    res.status(200).json({ success: true, result: ledger, status: 200 });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export {
-  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin, resetStorePassword, confirmStoreUpdate, createNotification
+  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin, resetStorePassword, confirmStoreUpdate, createNotification, createTransaction, confirmStorePayout, createCompayLedger, getAllStoresUpdateRequests, getResetPasswordRequests
 };

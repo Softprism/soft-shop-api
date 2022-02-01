@@ -4,29 +4,25 @@ import { check } from "express-validator";
 import checkFeedbackRangeTypes from "../utils/checkParamTypes";
 
 import {
-  getStores,
-  createStore,
-  loginStore,
-  getLoggedInStore,
-  updateStoreRequest,
-  addLabel,
-  getLabels,
-  getStore,
-  getStoresNoGeo,
-  getStoreSalesStats,
-  bestSellers,
-  getStoreFeedback,
-  getInventoryList,
-  updateStore
+  getStores, createStore, loginStore, getLoggedInStore,
+  updateStoreRequest, addLabel, getLabels, getStore,
+  getStoresNoGeo, getStoreSalesStats, bestSellers,
+  getStoreFeedback, getInventoryList, updateStore,
+  requestPayout, getPayoutHistory, deleteStoreLabel,
+  updateStoreLabel,
+  resetPassword
 } from "../controllers/store.controller";
 import { getStoreVariantsForUsers } from "../controllers/product.controller";
 
 import auth from "../middleware/auth";
 import checkPagination from "../middleware/checkPagination";
 import { isStoreAdmin } from "../middleware/Permissions";
+import { hashPassword } from "../middleware/validationMiddleware";
+import validator from "../middleware/validator";
 import {
-  hashPassword, storeUpdateProfileParam, verifyStoreSignupParam, verifyUserLoginParams
-} from "../middleware/validationMiddleware";
+  registerStore, updateStoreValidation, loginStoreValidation, storeRequest,
+  labelValidation, deleteLabelValidation, editLabelValidation
+} from "../validations/storeValidation";
 
 const router = express.Router();
 
@@ -45,6 +41,8 @@ router.get("/nogeo", auth, checkPagination, getStoresNoGeo);
 // @access  Private
 router.get("/login", auth, getLoggedInStore);
 
+router.post("/reset-password", resetPassword);
+
 // @route   GET /store/labels
 // @desc    Get a store's labels
 // @access  Private
@@ -55,6 +53,8 @@ router.get("/stats/sales", auth, getStoreSalesStats);
 router.get("/stats/best-sellers", auth, checkPagination, bestSellers);
 
 router.get("/inventory", auth, isStoreAdmin, checkPagination, getInventoryList);
+router.get("/payout", auth, requestPayout);
+router.get("/payout/history", auth, checkPagination, getPayoutHistory);
 
 router.get(
   "/stats/feedback",
@@ -78,34 +78,35 @@ router.get("/:storeId", auth, getStore);
 // @route   POST /store/create
 // @desc    Register a store
 // @access  Public
-router.post(
-  "/",
-  verifyStoreSignupParam,
-  hashPassword,
-  createStore
-);
+router.post("/", validator(registerStore), hashPassword, createStore);
 
 // @route   POST /store/login
 // @desc    Login a store
 // @access  Public
-router.post(
-  "/login",
-  verifyUserLoginParams,
-  loginStore
-);
+router.post("/login", validator(loginStoreValidation), loginStore);
 
 // @route   PUT /store/
 // @desc    request for a store profile update
 // @access  Private
-router.put("/change-request", auth, isStoreAdmin, updateStoreRequest);
+router.put("/change-request", auth, isStoreAdmin, validator(storeRequest), updateStoreRequest);
 
 // @route   PUT /store/
 // @desc    Update a store
 // @access  Private
-router.put("/", auth, isStoreAdmin, storeUpdateProfileParam, hashPassword, updateStore);
+router.put("/", auth, isStoreAdmin, validator(updateStoreValidation), hashPassword, updateStore);
+
+// @route   PUT /store/
+// @desc    Update a store
+// @access  Private
+router.patch("/store-label", auth, isStoreAdmin, validator(editLabelValidation), updateStoreLabel);
+
+// @route   PUT /store/
+// @desc    Update a store
+// @access  Private
+router.delete("/store-label", auth, isStoreAdmin, validator(deleteLabelValidation), deleteStoreLabel);
 
 // @route   PUT /stores/label
 // @desc    add label to store
 // @access  Private
-router.put("/label", auth, isStoreAdmin, addLabel);
+router.put("/label", auth, isStoreAdmin, validator(labelValidation), addLabel);
 export default router;

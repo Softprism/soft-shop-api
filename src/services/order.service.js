@@ -5,11 +5,9 @@ import Store from "../models/store.model";
 import Review from "../models/review.model";
 import Rider from "../models/rider.model";
 import {
-  bankTransfer, ussdPayment, cardPayment
+  bankTransfer, ussdPayment, cardPayment, verifyTransaction
 } from "./payment.service";
-import NotificationServices from "./notification.service";
-
-const { createNotification } = NotificationServices;
+import { createNotification } from "./notification.service";
 
 const getOrders = async (urlParams) => {
   // initialize match parameters, get limit, skip & sort values
@@ -18,6 +16,13 @@ const getOrders = async (urlParams) => {
   const skip = Number(urlParams.skip);
   let { sort } = urlParams;
 
+  // match for order status
+  if (urlParams.status) {
+    urlParams.status = urlParams.status.split(",");
+    matchParam.status = {
+      $in: urlParams.status
+    };
+  }
   // check and add to match paramters if request is matching for store, convert string to objectId
   if (urlParams.store) { matchParam.store = mongoose.Types.ObjectId(urlParams.store); }
 
@@ -43,7 +48,6 @@ const getOrders = async (urlParams) => {
       $lte: 999999999,
     };
   }
-
   const pipeline = [
     {
       $unset: [
@@ -257,12 +261,11 @@ const createOrder = async (orderParam) => {
   if (neworder[0].paymentMethod === "Transfer") {
     const payload = {
       tx_ref: neworder[0].orderId,
-      amount: neworder[0].subtotal,
+      amount: neworder[0].totalPrice,
       email: neworder[0].user.email,
       phone_number: neworder[0].user.phone_number,
       currency: "NGN",
       fullname: `${neworder[0].user.first_name} ${neworder[0].user.last_name}`,
-      frequency: 10,
       narration: `softshop payment - ${neworder[0].orderId}`,
       is_permanent: 0,
     };
@@ -274,10 +277,11 @@ const createOrder = async (orderParam) => {
       token: orderParam.card, // This is the card token returned from the transaction verification endpoint as data.card.token
       currency: "NGN",
       country: "NG",
-      amount: neworder[0].subtotal,
+      amount: neworder[0].totalPrice,
       email: neworder[0].user.email,
       first_name: neworder[0].user.first_name,
       last_name: neworder[0].user.last_name,
+      frequency: 10,
       narration: `softshop payment - ${neworder[0].orderId}`,
       tx_ref: neworder[0].orderId
     };
@@ -287,7 +291,7 @@ const createOrder = async (orderParam) => {
     const payload = {
       tx_ref: neworder[0].orderId,
       account_bank: orderParam.bankCode,
-      amount: neworder[0].subtotal,
+      amount: neworder[0].totalPrice,
       currency: "NGN",
       email: neworder[0].user.email,
       phone_number: neworder[0].user.phone_number,
@@ -296,15 +300,28 @@ const createOrder = async (orderParam) => {
     neworder[0].paymentResult = await ussdPayment(payload);
   }
 
-  let orderUpdate = await Order.findById(neworder[0]._id);
+  if (neworder[0].paymentResult.status === "error") {
+    // Update order with more details regardless of failed payment
+    let orderUpdate = await Order.findById(neworder[0]._id);
+    orderUpdate.orderItems = neworder[0].orderItems;
+    orderUpdate.totalPrice = neworder[0].totalPrice;
+    orderUpdate.taxPrice = neworder[0].taxPrice;
+    orderUpdate.subtotal = neworder[0].subtotal;
+    orderUpdate.paymentResult = neworder[0].paymentResult;
+    orderUpdate.markModified("paymentResult");
+    await orderUpdate.save();
+    return { err: `${neworder[0].paymentResult.message} Order has been created, please try paying again or select another payment method.`, status: 400 };
+  }
 
+  // update order
+  let orderUpdate = await Order.findById(neworder[0]._id);
   orderUpdate.orderItems = neworder[0].orderItems;
   orderUpdate.totalPrice = neworder[0].totalPrice;
   orderUpdate.taxPrice = neworder[0].taxPrice;
   orderUpdate.subtotal = neworder[0].subtotal;
   orderUpdate.paymentResult = neworder[0].paymentResult;
   orderUpdate.markModified("paymentResult");
-  orderUpdate.save();
+  await orderUpdate.save();
 
   let riders = await Rider.find();
   let ridersId = [];
@@ -327,7 +344,7 @@ const toggleFavorite = async (orderID) => {
   }
 
   order.isFavorite = !order.isFavorite;
-  order.save();
+  await order.save();
 
   if (order.isFavorite) {
     return { msg: "Order marked as favorite." };
@@ -569,6 +586,7 @@ const reviewOrder = async (review) => {
   const order = await Order.findOne({
     _id: mongoose.Types.ObjectId(review.order),
     user: mongoose.Types.ObjectId(review.user),
+    status: "completed"
   });
   if (!order) return { err: "Order not found.", status: 404 };
 

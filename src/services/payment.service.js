@@ -8,6 +8,8 @@ import User from "../models/user.model";
 import Order from "../models/order.model";
 import Store from "../models/store.model";
 import StoreUpdate from "../models/store-update.model";
+import { createTransaction } from "./transaction.service";
+import Ledger from "../models/ledger.model";
 
 // initial env variables
 dotenv.config();
@@ -31,21 +33,20 @@ const cardPayment = async (payload) => {
   return response;
 };
 const verifyTransaction = async (paymentDetails) => {
-  // this verifies a transaction with flutter
+  // this verifies a transaction with flutterwave
   // if it's a new card transaction, it adds the cards details to the user profile
-  // if it's a order transaction, it adds the payment details to the order payment result
+  // if it's a order transaction, it adds the payment details to the order payment result and credit store balance
 
   const response = await flw.Transaction.verify({ id: paymentDetails.data.id });
 
-  // return an error if response isn't succesful
-  if (response.status !== "success") {
-    return { err: response.message, status: 400 };
-  }
-
-  // continue operations if transaction has been verified
   const { tx_ref } = response.data;
   if (tx_ref.includes("card")) {
     // user is adding a new card
+
+    // return an error if response isn't succesful
+    if (response.data.status !== "successful") {
+      return { err: response.message, status: 400 };
+    }
 
     // create card index
     let card_index = () => {
@@ -73,29 +74,89 @@ const verifyTransaction = async (paymentDetails) => {
 
     // find user from payment initiated
     let user = await User.findById(response.data.meta.user_id).select("-orders");
-    if (!user) {
-      return { err: "Payment not initialized by user. Please login and try again.", status: 500 };
-    }
     // add card index to initiated payment card details
     response.data.card.card_index = card_index();
 
     // add new card details to user
     user.cards.push(response.data.card);
-    user.save();
-    user.cards = undefined;
+    await user.save();
+
+    // create credit transaction for Ledger
+    let ledger = Ledger.findOne({});
+    let request = {
+      amount: 100,
+      type: "Credit",
+      to: "Ledger",
+      receiver: ledger._id,
+      status: "completed",
+      ref: card_index()
+    };
+    await createTransaction(request);
+
+    // unset cards
+    // user.cards = undefined;
     return user;
   }
+
   if (tx_ref.includes("soft")) {
     // user is paying for an order
 
     let order = await Order.findOne({ orderId: tx_ref });
     let store = await Store.findById(order.store);
+    let ledger = Ledger.findOne({});
+
     order.paymentResult = response.data;
     order.markModified("paymentResult");
-    order.status = "sent";
-    store.account_details.account_balance += order.subtotal;
-    order.save();
+
+    // Update order status to sent and credit store balance when payment has been validated by flutterwave. Hitting this endpoint from softshop app will not update details.
+    if (response.data.status === "successful" && paymentDetails.softshop !== "true") {
+      order.status = "sent";
+
+      // create a credit transaction for store and softshop
+      let storeReq = {
+        amount: order.subtotal,
+        type: "Credit",
+        to: "Store",
+        receiver: store._id,
+        status: "completed",
+        ref: order._id
+      };
+      await createTransaction(storeReq);
+      let ledgerReq = {
+        amount: order.totalPrice,
+        type: "Credit",
+        to: "Ledger",
+        receiver: ledger._id,
+        status: "completed",
+        ref: order._id
+      };
+      await createTransaction(ledgerReq);
+    }
+
+    await store.save();
+    await order.save();
     return order;
+  }
+
+  if (tx_ref.includes("")) {
+    // store can only have one  withdrawal request
+    let approval = await Transaction.findOne({ receiver: storeId, status: "pending" });
+    if (!approval) return { err: "Cannot find store's withdrawal request", status: 400 };
+    approval.status = "completed";
+    await approval.save();
+
+    // create transaction
+    let request = {
+      amount: approval.amount,
+      type: "Debit",
+      to: "Ledger",
+      receiver: ledger._id,
+      status: "completed",
+      ref: approval.ref
+    };
+    await createTransaction(request);
+
+    return approval;
   }
 };
 
@@ -138,9 +199,18 @@ const getAllBanks = async () => {
 
 const getBankDetails = async (payload) => {
   const response = await flw.Misc.verify_Account(payload);
+  if (response.status === "error") return { err: response.message, status: 400 };
+  return response.data;
+};
+
+const getTransactions = async () => {
+  const response = await flw.Transaction.fetch({});
   return response;
 };
 
+const initiateTransfer = async (payload) => {
+  const response = await flw.Transfer.initiate(payload);
+};
 export {
-  flw, bankTransfer, verifyTransaction, encryptCard, ussdPayment, cardPayment, verifyCardRequest, getAllBanks, getBankDetails
+  flw, bankTransfer, verifyTransaction, encryptCard, ussdPayment, cardPayment, verifyCardRequest, getAllBanks, getBankDetails, getTransactions, initiateTransfer
 };

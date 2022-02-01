@@ -1,4 +1,6 @@
 const errorHandler = (err, req, res, next) => {
+  console.log(1, err);
+
   if (typeof err === "string") {
     // custom application error
     return res.status(400).json({ success: false, msg: err, status: 400 });
@@ -27,7 +29,6 @@ const errorHandler = (err, req, res, next) => {
   if (err.status) {
     return res.status(err.status).json({ success: false, msg: err.err, status: err.status });
   }
-
   // default to 500 server error
   return res.status(500).json({ success: false, msg: "server error", status: 500 });
 };

@@ -34,7 +34,7 @@ const getProducts = async (getParam) => {
     matchParam.status = getParam.status;
   }
   if (getParam.label) {
-    matchParam.label = mongoose.Types.ObjectId(getParam.label);
+    matchParam.labels = mongoose.Types.ObjectId(getParam.label);
   }
 
   const pipeline = [
@@ -77,7 +77,7 @@ const getProducts = async (getParam) => {
     .addFields({
       totalRates: { $sum: "$productReview.star" },
       ratingAmount: { $size: "$productReview" },
-      averageRating: { $ceil: { $avg: "$productReview.star" } },
+      averageRating: { $floor: { $avg: "$productReview.star" } },
     })
     .addFields({
       averageRating: { $ifNull: ["$averageRating", 0] },
@@ -150,7 +150,8 @@ const createProduct = async (productParam, storeId) => {
   if (!storeChecker) {
     return { err: "Store not found. Please try.", status: 404 };
   }
-
+  // checl for variant option
+  if (!productParam.variantOpt) productParam.variants = undefined;
   // add store ID to productParam
   productParam.store = storeId;
   const {
@@ -167,7 +168,12 @@ const createProduct = async (productParam, storeId) => {
 
   // check if category exists
   const catChecker = await Category.findById(category);
-  if (!catChecker) return { err: "Category not found. Please try again.", status: 404 };
+  if (!catChecker) {
+    return {
+      err: "Category not found. Please try again.", status: 404
+    };
+  }
+
   // create new product
   const newProduct = new Product({
     product_name,
@@ -272,12 +278,41 @@ const addVariantItem = async (storeId, variantId, variantParam) => {
   // find variant
   let variant = await Variant.findOne({ _id: variantId, store: storeId });
   if (!variant) return { err: "Variant not found.", status: 404 };
-
   // push new variant item and save
   variant.variantItems.push(variantParam);
-  variant.save();
+  await variant.save();
 
   return variant;
+};
+
+const editVariantItem = async (storeId, variantItemId, variantParam) => {
+  const {
+    itemName, itemThumbnail, itemPrice, required, quantityOpt
+  } = variantParam;
+  let variantItem = await Variant.findOne({ "variantItems._id": variantItemId, store: storeId });
+
+  if (!variantItem) return { err: "Variant item not found.", status: 400 };
+  await Variant.updateOne(
+    {
+      variantItems: { $elemMatch: { _id: variantItemId }, },
+    },
+    {
+      $set: {
+        "variantItems.$.itemName": itemName,
+        "variantItems.$.itemThumbnail": itemThumbnail,
+        "variantItems.$.itemPrice": itemPrice,
+        "variantItems.$.required": required,
+        "variantItems.$.quantityOpt": quantityOpt,
+      }
+    },
+    { new: true, }
+  );
+  const newVariant = await Variant.findOne({
+    variantItems: { $elemMatch: { _id: variantItemId }, },
+  },).select("variantItems");
+
+  if (!newVariant) return { err: "Store variant not found.", status: 404 };
+  return newVariant;
 };
 
 const getStoreVariants = async (storeId) => {
@@ -318,7 +353,6 @@ const addCustomFee = async (storeId, customrFeeParam) => {
 
   let newCustomFee = new CustomFee(customrFeeParam);
   await newCustomFee.save();
-
   if (newCustomFee.save()) {
     product.customFee.availability = true;
     product.customFee.items.push(newCustomFee._id);
@@ -331,8 +365,30 @@ const addCustomFee = async (storeId, customrFeeParam) => {
 
 const deleteCustomFee = async (customFeeId) => {
   let customFee = await CustomFee.findByIdAndDelete(customFeeId);
-  if (!customFee) throw { err: "Custom fee not found." };
+  if (!customFee) return { err: "Custom fee not found." };
   return "fee removed from product";
+};
+
+const deleteStoreVariant = async (variantId) => {
+  let variant = await Variant.findByIdAndDelete(variantId);
+  if (!variant) return { err: "variant not found.", status: 400 };
+  await Product.updateMany(
+    { $pullAll: { variants: { _id: variantId } } }
+  );
+  return "varaint deleted successfully";
+};
+
+const deleteVariantItem = async ({ itemId }) => {
+  let item = await Variant.findOneAndUpdate(
+    { "variantItems._id": itemId },
+    {
+      $pull: {
+        variantItems: { _id: [itemId] }
+      }
+    }
+  );
+  if (!item) return { err: "Item not found.", status: 400 };
+  return item;
 };
 
 export {
@@ -346,9 +402,12 @@ export {
   updateVariant,
   addVariantItem,
   getVariantItem,
+  editVariantItem,
   addCustomFee,
   deleteCustomFee,
   getStoreVariants,
+  deleteStoreVariant,
+  deleteVariantItem
 };
 
 // UPDATES

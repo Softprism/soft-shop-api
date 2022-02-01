@@ -9,7 +9,9 @@ const getProducts = async (req, res, next) => {
 
   const allProducts = await productService.getProducts(req.query);
 
-  return res.status(200).json({ success: true, result: allProducts, status: 200 });
+  return res.status(200).json({
+    success: true, result: allProducts, status: 200, size: allProducts.length
+  });
 };
 
 const createProduct = async (req, res, next) => {
@@ -195,6 +197,27 @@ const getVariantItem = async (req, res, next) => {
   }
 };
 
+const updateVariantItem = async (req, res, next) => {
+  try {
+    let storeID;
+    if (req.store) storeID = req.store.id;
+    if (req.query.storeID && req.admin) storeID = req.query.storeID;
+
+    const variant = await productService.editVariantItem(
+      storeID,
+      req.params.variantItemId,
+      req.body
+    );
+
+    if (variant.err) {
+      return res.status(variant.status).json({ success: false, msg: variant.err, status: variant.status });
+    }
+    return res.status(200).json({ success: true, result: variant, status: 200 });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const addCustomFee = async (req, res, next) => {
   try {
     let storeID;
@@ -226,6 +249,35 @@ const deleteCustomFee = async (req, res, next) => {
     res.status(200).json({ success: true, result: deleteCustomFee });
   }
 };
+
+const deleteStoreVariant = async (req, res, next) => {
+  let storeID;
+  if (req.store) storeID = req.store.id;
+  if (req.query.storeID && req.admin) storeID = req.query.storeID;
+
+  const deleteStoreVariant = await productService.deleteStoreVariant(
+    req.params.variantId
+  );
+  if (deleteStoreVariant.err) {
+    res.status(deleteStoreVariant.status).json({ success: false, msg: deleteStoreVariant.err, status: deleteStoreVariant.status });
+  } else {
+    res.status(200).json({ success: true, message: "Store Variant deleted successfully." });
+  }
+};
+const deleteStoreVariantItem = async (req, res, next) => {
+  let storeID;
+  if (req.store) storeID = req.store.id;
+  if (req.query.storeID && req.admin) storeID = req.query.storeID;
+
+  const deleteStoreVariantItem = await productService.deleteVariantItem(
+    req.params
+  );
+  if (deleteStoreVariantItem.err) {
+    res.status(deleteStoreVariantItem.status).json({ success: false, msg: deleteStoreVariantItem.err, status: deleteStoreVariantItem.status });
+  } else {
+    res.status(200).json({ success: true, message: "Store Variant item deleted successfully." });
+  }
+};
 export {
   deleteProduct,
   updateProduct,
@@ -237,8 +289,11 @@ export {
   updateVariant,
   addVariantItem,
   getVariantItem,
+  updateVariantItem,
   addCustomFee,
   deleteCustomFee,
   getStoreVariants,
-  getStoreVariantsForUsers
+  getStoreVariantsForUsers,
+  deleteStoreVariant,
+  deleteStoreVariantItem
 };

@@ -12,6 +12,8 @@ import {
   reviewOrder,
   encryptDetails
 } from "../controllers/order.controller";
+import validator from "../middleware/validator";
+import { order_validation, reviewValidation } from "../validations/orderValidation";
 
 const router = express.Router();
 
@@ -26,10 +28,7 @@ router.get("/", auth, checkPagination, getOrders);
 router.post(
   "/",
   auth,
-  [
-    check("product_meta", "error with product data ").isLength({ min: 1 }),
-    check("store", "Please select a store").not().isEmpty(),
-  ],
+  validator(order_validation),
   createOrder
 );
 
@@ -46,7 +45,7 @@ router.put("/user/edit/:orderID", auth, editOrder);
 // @route   PUT /review
 // @desc    user adds review to their order
 // @access  Private
-router.put("/review/:orderId?", auth, reviewOrder);
+router.put("/review/:orderId?", auth, validator(reviewValidation), reviewOrder);
 
 // @route   PUT /review
 // @desc    user adds review to their order

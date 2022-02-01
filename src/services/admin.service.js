@@ -1,12 +1,18 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 
+import mongoose from "mongoose";
 import Admin from "../models/admin.model";
 import Store from "../models/store.model";
+import Notification from "../models/notification.models";
 import StoreUpdate from "../models/store-update.model";
 
 import sendEmail from "../utils/sendMail";
 import getJwt from "../utils/jwtGenerator";
+import Transaction from "../models/transaction.model";
+import Ledger from "../models/ledger.model";
+import { createTransaction } from "./transaction.service";
+import { initiateTransfer } from "./payment.service";
 
 const getAdmins = async () => {
   const admins = await Admin.find();
@@ -110,13 +116,40 @@ const updateAdmin = async (updateParam, id) => {
     return err;
   }
 };
+const getResetPasswordRequests = async (urlParams) => {
+  const limit = Number(urlParams.limit);
+  const skip = Number(urlParams.skip);
+  let requests = await Store.find({
+    $or: [
+      { resetPassword: "initiated" },
+      { resetPassword: "done" }
+    ]
+  })
+    .sort("createdAt")
+    .skip(skip)
+    .limit(limit)
+    .select("name email phone_number");
+
+  return requests;
+};
 const resetStorePassword = async (storeEmail) => {
+  // generates random unique id;
+  let orderId = () => {
+    let s4 = () => {
+      return Math.floor((1 + Math.random()) * 0x10000)
+        .toString(16)
+        .substring(1);
+    };
+      // return id of format 'resetpasswordaaaa'
+    return `resetpassword${s4()}`;
+  };
   const salt = await bcrypt.genSalt(10);
-  const password = await bcrypt.hash("mysoftshopstore", salt);
+  let randomCode = orderId();
+  const password = await bcrypt.hash(randomCode, salt);
   let store = await Store
     .findOneAndUpdate(
-      { email: storeEmail },
-      { $set: { resetPassword: true, password } },
+      { email: storeEmail, resetPassword: "initiated" },
+      { $set: { resetPassword: "done", password } },
       { omitUndefined: true, new: true, useFindAndModify: false }
 
     );
@@ -125,36 +158,67 @@ const resetStorePassword = async (storeEmail) => {
   sendEmail(
     storeEmail,
     "Reset Password Successful",
-    "Your reset password request has been approved, please sign in to your account with <b> mysoftshopstore </b> as your password. Reset your password afterwards"
+    `Your reset password request has been approved, please sign in to your account with <b> ${randomCode} </b> as your password. Reset your password afterwards`
   );
   return "Password has been reset for store";
+};
+
+const getAllStoresUpdateRequests = async (urlParams) => {
+  const limit = Number(urlParams.limit);
+  const skip = Number(urlParams.skip);
+  let requests = await StoreUpdate.find({})
+    .sort("createdAt")
+    .skip(skip)
+    .limit(limit)
+    .populate({ path: "store", select: "name" });
+
+  return requests;
 };
 
 const confirmStoreUpdate = async (storeID) => {
   // use service to update store profile
   // also use for legacy admin store profile update action
 
-  let updateParams = await StoreUpdate.findOne({ store: storeID }).select("newDetails");
-
+  let updateParams = await StoreUpdate.findOne({ store: storeID });
   // check if there are inputs to update
-  if (!updateParams) return { err: "You haven't specified a field to update. Please try again.", status: 400 };
+  if (!updateParams) return { err: "No pending update for this store.", status: 400 };
   const { newDetails } = updateParams;
 
   // get fields to update
   const {
     address,
+    place_id,
     location,
     email,
     name,
     phone_number,
     category,
-    tax
+    tax,
+    account_details
   } = newDetails;
 
   const updateParam = {};
 
   // Check for fields
-  if (address) updateParam.address = address;
+  if (address && place_id) {
+    updateParam.address = address;
+    updateParam.place_id = place_id;
+  }
+  if (account_details.full_name) {
+    // find store and populate account details with existing values
+    let store = await Store.findById(storeID).select("account_details");
+    updateParam.account_details = {
+      account_balance: store.account_details.account_balance,
+      total_credit: store.account_details.total_credit,
+      total_debit: store.account_details.total_debit,
+      account_number: account_details.account_number,
+      full_name: account_details.full_name,
+      bank_name: account_details.bank_name,
+      bank_code: account_details.bank_code,
+
+    };
+  }
+
   if (location.type && location.coordinates.length > 0) updateParam.location = location;
   if (phone_number) updateParam.phone_number = phone_number;
   if (category) updateParam.category = category;
@@ -165,19 +229,113 @@ const confirmStoreUpdate = async (storeID) => {
   // apply update to store
   let storeUpdateRequest = await Store.findByIdAndUpdate(
     storeID,
-    { $set: updateParam },
+    { $set: updateParam, pendingUpdates: false },
     { omitUndefined: true, new: true, useFindAndModify: false }
   );
-  // change updateDetails checker in store model to false if update request was successful
-  if (storeUpdateRequest) {
-    storeUpdateRequest.pendingUpdates = false;
-    storeUpdateRequest.save();
-    await StoreUpdate.findByIdAndDelete(updateParams._id);
-  }
 
+  // delete the store update
+  if (storeUpdateRequest.pendingUpdates === false) {
+    await StoreUpdate.deleteOne({ store: storeID });
+  }
   return storeUpdateRequest;
 };
 
+const confirmStorePayout = async (storeId) => {
+  let store = await Store.findById(storeId);
+  let ledger = await Ledger.findOne({});
+  let payout = await Transaction.findOne({
+    receiver: storeId,
+    type: "Debit",
+    status: "pending"
+  });
+
+  /* get total credit and total debit transactions for stores
+    so we can compare with the total credit and total debit fields
+    in store profile */
+  let transactions = await Transaction.aggregate()
+    .match({
+      receiver: mongoose.Types.ObjectId(storeId),
+    })
+    .group({
+      _id: "$receiver",
+      totalCredit: {
+        $sum: {
+          $cond:
+       [{
+         $and: [
+           { $eq: ["$type", "Credit"] },
+           { $eq: ["$status", "completed"] }
+         ]
+       },
+       "$amount", 0]
+        }
+      },
+      totalDebit: {
+        $sum: {
+          $cond:
+       [
+         { $eq: ["$type", "Debit"] },
+         "$amount", 0
+       ]
+        }
+      }
+    });
+
+  let totalStoreCredits = Number(store.account_details.total_credit);
+  let totalStoreDebits = Number(store.account_details.total_debit);
+  let totalTransactionCredits = Number(transactions[0].totalCredit);
+  let totalTransactionDebits = Number(transactions[0].totalDebit);
+
+  if (totalStoreCredits === totalTransactionCredits && totalTransactionDebits === totalStoreDebits && ledger.account_balance >= store.account_details.account_balance) {
+    // create withdrwal request code
+    // create card index
+    let withdrawalRequest = () => {
+      let s4 = () => {
+        return Math.floor((1 + Math.random()) * 0x10000)
+          .toString(16)
+          .substring(1);
+      };
+        // return id of format 'card - aaaaa'
+      return `wtdrqt-${s4()}`;
+    };
+    // initiate transfer
+    let payload = {
+      account_bank: store.account_details.bank_code,
+      account_number: store.account_details.account_number,
+      amount: payout.amount,
+      narration: `Softshop - ${store.name} Withdrawal`,
+      currency: "NGN",
+      reference: withdrawalRequest(),
+      debit_currency: "NGN"
+    };
+    // let request = await initiateTransfer(payload);
+    store.pendingWithdrawal = false;
+    await store.save();
+    return payload;
+  }
+
+  return {
+    err: "Store money not consistent. Please pull transaction records.",
+    data: {
+      totalStoreCredits,
+      totalTransactionCredits,
+      totalTransactionDebits,
+      totalStoreDebits,
+      account_balance: store.account_details.account_balance
+    },
+    status: 400
+  };
+};
+
+const createCompayLedger = async () => {
+  let details = {
+    account_name: "SoftShop Ledger",
+  };
+  let newLedger = new Ledger(details);
+  await newLedger.save();
+  return newLedger;
+};
+
 export {
-  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin, resetStorePassword, confirmStoreUpdate, createNotification
+  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin, resetStorePassword, confirmStoreUpdate, createNotification, confirmStorePayout, createCompayLedger, getAllStoresUpdateRequests, getResetPasswordRequests
 };

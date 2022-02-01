@@ -1,18 +1,20 @@
 /* eslint-disable import/named */
 import express from "express";
-import { check } from "express-validator";
 import { isAdmin } from "../middleware/Permissions";
 import {
-  getAdmins,
-  registerAdmin,
-  loginAdmin,
-  getLoggedInAdmin,
-  updateAdmin,
-  resetStorePassword,
-  confirmStoreUpdate
+  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin,
+  resetStorePassword, confirmStoreUpdate, createTransaction, confirmStorePayout,
+  createNotification,
+  createCompayLedger,
+  getAllStoresUpdateRequests,
+  getResetPasswordRequests
 } from "../controllers/admin.controller";
+import validator from "../middleware/validator";
+import { register, login } from "../validations/adminValidation";
 
 import auth from "../middleware/auth";
+import { getTransactions } from "../controllers/payment.controller";
+import checkPagination from "../middleware/checkPagination";
 
 const router = express.Router();
 
@@ -26,13 +28,7 @@ router.get("/all", auth, isAdmin, getAdmins);
 // @access  Public
 router.post(
   "/register",
-  [
-    check("username", "Please Enter Username").not().isEmpty(),
-    check(
-      "password",
-      "Please Enter Password with 6 or more characters"
-    ).isLength({ min: 6 }),
-  ],
+  validator(register),
   registerAdmin
 );
 
@@ -41,15 +37,14 @@ router.post(
 // @access  Public
 router.post(
   "/login",
-  [
-    check("username", "Please enter a Username").exists(),
-    check("password", "Password should be 6 characters or more").isLength({
-      min: 6,
-    }),
-    check("password", "Password is Required").exists(),
-  ],
+  validator(login),
   loginAdmin
 );
+
+// @route   POST admins create notification
+// @desc    create notification for riders
+// @access  Private
+router.post("/notifications", createNotification);
 
 // @route   GET admins/login
 // @desc    Get logged in user
@@ -61,11 +56,25 @@ router.get("/", auth, isAdmin, getLoggedInAdmin);
 // @access  Private
 router.put("/", auth, isAdmin, updateAdmin);
 
+router.get("/password-reset/store", auth, checkPagination, getResetPasswordRequests);
+
 router.patch("/password-reset/store/:email", auth, isAdmin, resetStorePassword);
 
-// @route   PUT /store/
-// @desc    Update a store
+// @route   PUT /store/:storeId
+// @desc    confirm a store update request
 // @access  Private
-router.put("/store/:storeID", auth, isAdmin, confirmStoreUpdate);
+router.put("/store/:storeId", auth, isAdmin, confirmStoreUpdate);
+
+// @route   GET /stores
+// @desc    Get all update requests from all stores.
+// @access  Private
+router.get("/stores/updates", auth, checkPagination, getAllStoresUpdateRequests);
+
+router.post("/transactions", auth, isAdmin, createTransaction);
+
+router.put("/transactions/:storeId", auth, isAdmin, confirmStorePayout);
+
+router.post("/ledger", auth, isAdmin, createCompayLedger);
+router.get("/transactions", auth, isAdmin, getTransactions);
 
 export default router;
