@@ -1,11 +1,7 @@
 {
 	"name": "soft-shop-api",
 	"version": "1.0.0",
-<<<<<<< HEAD
 	"description": "api endpoint for the softshop app",
-=======
-	"description": "api endpoint for the soft shop app....",
->>>>>>> 394bd0a0a9500f1a7d16dd5a41d4bcb07865c412
 	"engines": {
 		"node": "16.x"
 	},
