@@ -637,19 +637,21 @@ const editLabel = async (storeId, labelParam) => {
 
 const deleteLabel = async (storeId, labelParam) => {
   let store = await Store.findById(storeId);
-
   if (!store) return { err: "Store not found." };
+
   const { labelId } = labelParam;
   const labelChecker = await Store.findOne({
     _id: storeId,
     labels: { $elemMatch: { _id: labelId, }, },
   }).select("labels");
   if (!labelChecker) return { err: "Store label not found.", status: 404 };
+
   await Store.updateMany({ _id: storeId }, {
     $pull: { labels: { _id: labelId }, },
   });
-  await Product.updateMany(
-    { $pull: { labels: { _id: labelId } } }
+  const products = await Product.updateMany(
+    { labels: { $in: labelId } },
+    { $pull: { labels: labelId } }
   );
   return "Store Label deleted successfully.";
 };
