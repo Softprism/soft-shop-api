@@ -13,7 +13,7 @@ import checkPagination from "../middleware/checkPagination";
 import { isUserVerified, hashPassword } from "../middleware/validationMiddleware";
 import {
   registerValidation, emailValidation, loginValidation,
-  resetPassword, updateUserValidation, editbasketValidation
+  resetPassword, updateUserValidation, addbasketValidation, editbasketValidation
 } from "../validations/userValidation";
 
 const router = express.Router();
@@ -54,7 +54,7 @@ router.get("/login", auth, getLoggedInUser);
 // @desc    Update User Details
 // @access  Private
 
-router.put("/", auth, updateUser);
+router.put("/", auth, validator(updateUserValidation), updateUser);
 
 // @route   POST /cart
 // @desc    creates a basket for the user
@@ -64,7 +64,7 @@ router.get("/basket", auth, getUserBasketItems);
 // @route   POST /basket
 // @desc    adds a product to User's basket
 // @access  Public
-router.post("/basket", auth, addItemToBasket);
+router.post("/basket", auth, validator(addbasketValidation), addItemToBasket);
 
 // @route   PUT /basket
 // @desc    edit an item in user's basket
