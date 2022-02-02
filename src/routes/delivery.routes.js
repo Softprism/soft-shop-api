@@ -4,7 +4,7 @@ import express from "express";
 import auth from "../middleware/auth";
 import {
   create_Delivery, accept_Delivery, update_DeliveryStatus, complete_Delivery,
-  update_RiderStatus, getAll_Deliveries, get_DeliveryById, get_DeliveriesByStatus
+  update_RiderStatus, getAll_Deliveries, get_DeliveryById
 } from "../controllers/delivery.controller";
 import checkPagination from "../middleware/checkPagination";
 import { isStoreAdmin } from "../middleware/Permissions";
@@ -35,11 +35,6 @@ router.patch("/delivery-status/:deliveryId", auth, update_DeliveryStatus);
 // @desc    update rider delivery status
 // @access  Private
 router.patch("/rider-status/:deliveryId", auth, update_RiderStatus);
-
-// @route   GET /status
-// @desc    Get rider delivery by status
-// @access  Private
-router.get("/status", auth, get_DeliveriesByStatus);
 
 // @route   GET /deliveries
 // @desc    Get all rider deliveries

@@ -102,7 +102,12 @@ const updatedRiderStatus = async (deliveryId, riderId, status) => {
   if (!delivery.rider || delivery.status === "pending") {
     return { err: "Delivery hasn't been accepted.", status: 409, };
   }
-
+  if (status === "Start Delivery") {
+    await Order.findByIdAndUpdate({ _id: delivery.order }, { status: "enroute" }, { new: true });
+  }
+  if (status === "Complete Drop off") {
+    await Order.findByIdAndUpdate({ _id: delivery.order }, { status: "delivered" }, { new: true });
+  }
   const updatedstatus = await Delivery.findByIdAndUpdate(
     deliveryId,
     { riderStatus: status },
@@ -141,8 +146,12 @@ const getAllDeliveries = async (riderId, urlParams) => {
   delete urlParams.limit;
   delete urlParams.skip;
   delete urlParams.page;
-
-  const deliveries = await Delivery.find({ rider: riderId })
+  let condition = {};
+  if (urlParams.status) {
+    condition.status = urlParams.status;
+  }
+  condition.rider = riderId;
+  const deliveries = await Delivery.find(condition)
     .populate([
       { path: "rider", select: "_id first_name last_name" },
       {
@@ -153,19 +162,6 @@ const getAllDeliveries = async (riderId, urlParams) => {
     .sort({ createdDate: -1 }) // -1 for descending sort
     .skip(skip)
     .limit(limit);
-
-  return { deliveries };
-};
-
-const getDeliveriesByStatus = async (riderId, status) => {
-  const deliveries = await Delivery.find({ rider: riderId, status }).populate([
-    { path: "rider", select: "first_name last_name" },
-    {
-      path: "order", select: "deliveryAddress", populate: "store"
-    },
-    { path: "user", select: "_id first_name last_name phone_number" },
-  ])
-    .sort({ createdDate: -1 }); // -1 for descending sort
 
   return { deliveries };
 };
@@ -190,5 +186,5 @@ const getDeliveryById = async (deliveryId, riderId) => {
 
 export {
   createDelivery, acceptDelivery, updatedDeliveryStatus, updatedRiderStatus,
-  getAllDeliveries, getDeliveryById, getDeliveriesByStatus, completeDelivery
+  getAllDeliveries, getDeliveryById, completeDelivery
 };

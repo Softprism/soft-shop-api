@@ -1,6 +1,6 @@
 import {
   createDelivery, acceptDelivery, updatedDeliveryStatus, updatedRiderStatus,
-  getAllDeliveries, getDeliveryById, getDeliveriesByStatus, completeDelivery
+  getAllDeliveries, getDeliveryById, completeDelivery
 } from "../services/delivery.service";
 
 // ========================================================================== //
@@ -121,25 +121,6 @@ const getAll_Deliveries = async (req, res, next) => {
 };
 
 // ========================================================================== //
-const get_DeliveriesByStatus = async (req, res, next) => {
-  try {
-    const { _id } = req.rider;
-    const { status } = req.query;
-    const action = await getDeliveriesByStatus(_id, status);
-    if (action.err) {
-      return res
-        .status(action.status)
-        .json({
-          success: false, msg: action.err, status: action.status
-        });
-    }
-    return res.status(200).json({ success: true, result: action.deliveries, status: 200 });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// ========================================================================== //
 const get_DeliveryById = async (req, res, next) => {
   try {
     const { deliveryId } = req.params;
@@ -160,5 +141,5 @@ const get_DeliveryById = async (req, res, next) => {
 
 export {
   create_Delivery, accept_Delivery, update_DeliveryStatus, complete_Delivery,
-  update_RiderStatus, getAll_Deliveries, get_DeliveryById, get_DeliveriesByStatus
+  update_RiderStatus, getAll_Deliveries, get_DeliveryById,
 };
