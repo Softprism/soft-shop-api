@@ -55,7 +55,7 @@ const registerRider = async (riderParam) => {
 
   let isVerified;
   // verify rider's signup token
-  let signupToken = await Token.findOne({ _id: userParam.token, email });
+  let signupToken = await Token.findOne({ _id: riderParam.token, email });
   if (signupToken) {
     isVerified = true;
   } else {
@@ -129,7 +129,7 @@ const validateToken = async ({ type, otp, email }) => {
   return riderToken;
 };
 
-const requestPasswordToken = async (email) => {
+const requestPasswordToken = async ({ email }) => {
   // verify if rider exists, throws error if not
   let findRider = await Rider.findOne({ email });
   if (!findRider) {

@@ -51,7 +51,7 @@ const signup = async (req, res, next) => {
     return res
       .status(201)
       .json({
-        success: true, token: result.token, status: 201
+        success: true, result: result.createdRider, token: result.riderToken, status: 201
       });
   } catch (error) {
     next(error);
