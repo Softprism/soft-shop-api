@@ -44,7 +44,6 @@ const update_DeliveryStatus = async (req, res, next) => {
     const { deliveryId } = req.params;
     const { status } = req.query;
     const { _id } = req.rider;
-    console.log(deliveryId, _id, status);
     const action = await updatedDeliveryStatus(deliveryId, _id, status);
     if (action.err) {
       return res
