@@ -24,7 +24,7 @@ const sendEmail = async (toEmail, mailSubj, mailBody) => {
     from: "\"Nduka from Softshop\" <nduka@soft-shop.app>",
     to: toEmail,
     subject: mailSubj,
-    text: mailBody,
+    html: mailBody,
   };
 
   // Send email
