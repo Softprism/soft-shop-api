@@ -8,10 +8,13 @@ import User from "../models/user.model";
 import Token from "../models/tokens.model";
 import Basket from "../models/user-cart.model";
 
-import sendEmail from "../utils/sendMail";
+import {
+  sendEmail, sendUserSignUpMail, sendSignUpOTPmail, sendPasswordChangeMail, sendForgotPasswordMail
+} from "../utils/sendMail";
 import getOTP from "../utils/sendOTP";
 import getJwt from "../utils/jwtGenerator";
 import { verifyCardRequest } from "./payment.service";
+import { sendUserSignupSMS, sendForgotPasswordSMS } from "../utils/sendSMS";
 
 // Get all Users
 const getUsers = async (urlParams) => {
@@ -42,9 +45,7 @@ const verifyEmailAddress = async ({ email }) => {
   let token = await getOTP("user-signup", email);
 
   // send otp
-  let email_subject = "OTP For Account Creation";
-  let email_message = token.otp;
-  await sendEmail(email, email_subject, email_message);
+  await sendSignUpOTPmail(email, token.otp);
 
   return "OTP sent!";
 };
@@ -129,6 +130,12 @@ const registerUser = async (userParam) => {
   // Define payload for token
   let token = await getJwt(user.id, "user");
 
+  // send email to user
+  await sendUserSignUpMail(user.email);
+
+  // send sms to user
+  await sendUserSignupSMS(user.phone_number);
+
   // get user details
   user = await userProfile(user.id);
 
@@ -158,9 +165,6 @@ const loginUser = async (loginParam) => {
       status: 401,
     };
   }
-
-  // unset user pass***d
-  user.password = undefined;
 
   // Define payload for token
   let token = await getJwt(user.id, "user");
@@ -264,6 +268,10 @@ const updateUser = async (updateParam, id) => {
     { omitUndefined: true, new: true, useFindAndModify: false }
   );
 
+  // send mail to notify user of password change
+  if (user.password && password) {
+    sendPasswordChangeMail(user[0].email);
+  }
   user = await userProfile(id);
 
   return user;
@@ -441,9 +449,8 @@ const forgotPassword = async ({ email }) => {
   let token = await getOTP("user-forgot-password", email);
 
   // send otp
-  let email_subject = "forgot password";
-  let email_message = token.otp;
-  await sendEmail(email, email_subject, email_message);
+  await sendForgotPasswordMail(email, token.otp);
+  await sendForgotPasswordSMS(findUser.phone_number, token.otp);
 
   return "OTP sent!";
 };
@@ -487,9 +494,7 @@ const createNewPassword = async ({ token, email, password }) => {
   await Token.findByIdAndDelete(token);
 
   // send confirmation email
-  let email_subject = "Password Reset Successful";
-  let email_message = "Password has been reset successfully";
-  await sendEmail(email, email_subject, email_message);
+  await sendPasswordChangeMail(email);
 
   user = await userProfile(user.id);
   return user;
