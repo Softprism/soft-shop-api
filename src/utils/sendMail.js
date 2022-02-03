@@ -52,6 +52,7 @@ const sendSignUpOTPmail = async (toEmail, otp) => {
     console.log("signup OTP mail not sent");
   }
 };
+
 const sendUserSignUpMail = async (toEmail) => {
   let subject = "Welcome To SoftShop!";
   let body = "Thanks for signing up!";
@@ -93,11 +94,50 @@ const sendNewOrderInitiatedMail = async (toEmail, amount, store) => {
   }
 };
 
+const sendStoreSignUpMail = async (toEmail) => {
+  let subject = "Welcome To SoftShop!";
+  let body = "Thanks for signing up!";
+  let sendAction = await sendEmail(toEmail, subject, body);
+  if (!sendAction) {
+    console.log("signup mail not sent");
+  }
+};
+
+const sendStoreUpdateRequestMail = async (toEmail) => {
+  let subject = "Request To Change Sensitive Data";
+  let body = "We've received your request to make certain changes to your account, just to be safe, these changes won't be applied yet as we'll need further confirmation from you. Please Reply this mail with your acknowledgement to get started or disconfirmation if you didn't initiate this request. ";
+  let sendAction = await sendEmail(toEmail, subject, body);
+  if (!sendAction) {
+    console.log("signup mail not sent");
+  }
+};
+
+const sendStorePayoutRequestMail = async (toEmail, amount) => {
+  let subject = "Payout Request";
+  let body = `We've received your request to withdraw ₦${amount} from your SoftShop account, just some checks here and there and your funds will be released to you in no time. `;
+  let sendAction = await sendEmail(toEmail, subject, body);
+  if (!sendAction) {
+    console.log("signup mail not sent");
+  }
+};
+
+const sendStorePasswordResetRequestMail = async (toEmail) => {
+  let subject = "Request To Reset Password";
+  let body = "We've received your request to make a sensitive change to your account, in a few moment from now, you'll receive another mail containing instructions on how to get back into your account. ";
+  let sendAction = await sendEmail(toEmail, subject, body);
+  if (!sendAction) {
+    console.log("signup mail not sent");
+  }
+};
 export {
   sendEmail,
   sendUserSignUpMail,
   sendSignUpOTPmail,
   sendPasswordChangeMail,
   sendForgotPasswordMail,
-  sendNewOrderInitiatedMail
+  sendNewOrderInitiatedMail,
+  sendStoreSignUpMail,
+  sendStoreUpdateRequestMail,
+  sendStorePayoutRequestMail,
+  sendStorePasswordResetRequestMail
 };
