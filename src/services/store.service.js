@@ -450,6 +450,10 @@ const createStore = async (StoreParam) => {
   if (!categoryChecker) {
     return { err: "This category does not exist.", status: 400 };
   }
+  StoreParam.labels = [{
+    labelTitle: "General",
+    labelThumb: "https://soft-shop.app/uploads/label/434764-nasco.png"
+  }];
   const newStore = new Store(StoreParam);
   await newStore.save();
 
@@ -645,6 +649,13 @@ const deleteLabel = async (storeId, labelParam) => {
     labels: { $elemMatch: { _id: labelId, }, },
   }).select("labels");
   if (!labelChecker) return { err: "Store label not found.", status: 404 };
+
+  // check if the General label is being deletred
+  const genLabelChecker = await Store.findOne({
+    _id: storeId,
+    labels: { $elemMatch: { _id: labelId, labelTitle: "General" }, },
+  });
+  if (genLabelChecker) return { err: "You can't delete the General Label.", status: 400 };
 
   await Store.updateMany({ _id: storeId }, {
     $pull: { labels: { _id: labelId }, },
