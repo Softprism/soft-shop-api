@@ -47,8 +47,8 @@ router.put("/user/edit/:orderID", auth, editOrder);
 // @access  Private
 router.put("/review/:orderId?", auth, validator(reviewValidation), reviewOrder);
 
-// @route   PUT /review
-// @desc    user adds review to their order
+// @route   POST /card/encrypt
+// @desc
 // @access  Private
 router.post("/card/encrypt", encryptDetails);
 

@@ -36,6 +36,7 @@
 		"otp-generator": "^3.0.0",
 		"path": "^0.12.7",
 		"rootpath": "^0.1.2",
+		"twilio": "^3.73.1",
 		"validator": "^13.7.0",
 		"xss-clean": "^0.1.1"
 	},
