@@ -178,7 +178,51 @@ const resetPassword = async ({ token, email, password }) => {
   return rider;
 };
 
+// Update Rider Details
+const updateRider = async (updateParam, id) => {
+  const {
+    first_name, last_name, original_password, password, phone_number
+  } = updateParam;
+  // Build Rider Object
+  const riderFields = {};
+
+  // Check for fields
+  if (first_name) riderFields.first_name = first_name;
+  if (last_name) riderFields.last_name = last_name;
+  if (phone_number) riderFields.phone_number = phone_number;
+
+  // Find rider from DB Collection
+  let rider = await Rider.findById(id);
+
+  if (password) {
+    if (!original_password) return { err: "please enter old password", status: 400 };
+    // Check if password matches with stored hash
+    const isMatch = await bcrypt.compare(original_password, rider.password);
+    if (!isMatch) return { err: "Old password does not match.", status: 400 };
+    if (password === original_password) return { err: "Please try another password", status: 400 };
+    const salt = await bcrypt.genSalt(10);
+
+    // Replace password from rider object with encrypted one
+    riderFields.password = await bcrypt.hash(password, salt);
+  }
+  if (!rider) {
+    return {
+      err: "Rider does not exists.",
+      status: 404,
+    };
+  }
+
+  // Updates the rider Object with the changed values
+  const updatedRider = await Rider.findByIdAndUpdate(
+    id,
+    { $set: riderFields },
+    { omitUndefined: true, new: true, useFindAndModify: false }
+  ).select("-password");
+
+  return updatedRider;
+};
+
 export {
   resetPassword, requestPasswordToken, verifyEmailAddress,
-  validateToken, getAllRiders, registerRider, loginRider
+  validateToken, getAllRiders, registerRider, loginRider, updateRider
 };

@@ -1,12 +1,13 @@
 import express from "express";
 import {
-  getRiders, verifyToken, signup, signin, requestToken, forgotPassword, createNewPassword,
+  getRiders, verifyToken, signup, signin, requestToken, forgotPassword, createNewPassword, updateRiderProfile
 } from "../controllers/rider.controller";
+import auth from "../middleware/auth";
 import validator from "../middleware/validator";
 import checkPagination from "../middleware/checkPagination";
 import {
   registerValidation, emailValidation, tokenValidation,
-  resetValidation, loginValidation
+  resetValidation, loginValidation, updateRiderValidation
 } from "../validations/riderValidation";
 import { hashPassword } from "../middleware/validationMiddleware";
 
@@ -46,5 +47,10 @@ router.post("/forgot-password", validator(emailValidation), forgotPassword);
 // @desc    creates new password for user after forget password
 // @access  Public
 router.patch("/reset-password", hashPassword, validator(resetValidation), createNewPassword);
+
+// @route   PATCH /password
+// @desc    creates new password for user after forget password
+// @access  Public
+router.patch("/profile", auth, validator(updateRiderValidation), updateRiderProfile);
 
 export default router;

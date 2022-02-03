@@ -1,6 +1,6 @@
 import {
   getAllRiders, verifyEmailAddress, registerRider, loginRider,
-  validateToken, requestPasswordToken, resetPassword
+  validateToken, requestPasswordToken, resetPassword, updateRider
 } from "../services/rider.service";
 
 // ========================================================================== //
@@ -126,7 +126,25 @@ const createNewPassword = async (req, res, next) => {
     next(error);
   }
 };
+
+// ========================================================================== //
+const updateRiderProfile = async (req, res, next) => {
+  try {
+    const { id } = req.rider;
+    const action = await updateRider(req.body, id);
+    if (action.err) {
+      return res
+        .status(action.status)
+        .json({ success: false, msg: action.err, status: action.status });
+    }
+
+    return res.status(200).json({ success: true, result: action, status: 200 });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export {
   createNewPassword, forgotPassword, getRiders,
-  signin, signup, verifyToken, requestToken
+  signin, signup, verifyToken, requestToken, updateRiderProfile
 };

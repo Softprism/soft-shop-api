@@ -114,7 +114,35 @@ const resetValidation = {
   })
 };
 
+const updateRiderValidation = {
+  body: Joi.object({
+    password: Joi.string().min(6).empty()
+      .messages({
+        "string.empty": "Sorry, password cannot be an empty field",
+        "string.min": "Password should be six characters or more"
+      }),
+    original_password: Joi.string().min(6).empty()
+      .messages({
+        "string.empty": "Sorry, original password cannot be an empty field",
+        "string.min": "Original password should be six characters or more"
+      }),
+    first_name: Joi.string().empty().messages({
+      "string.empty": "Sorry, First name cannot be an empty field",
+    }),
+    last_name: Joi.string().empty().messages({
+      "string.empty": "Sorry, Last name cannot be an empty field",
+    }),
+    phone_number: Joi.string().min(11).empty()
+      .messages({
+        "string.empty": "Sorry, phone number cannot be an empty field",
+        "string.min": "Phone number should be 11 numbers"
+      }),
+  }).messages({
+    "object.unknown": "You have used an invalid key."
+  })
+};
+
 export {
   registerValidation, emailValidation, tokenValidation,
-  resetValidation, loginValidation
+  resetValidation, loginValidation, updateRiderValidation
 };
