@@ -583,6 +583,14 @@ const addLabel = async (storeId, labelParam) => {
 
   if (!store) return { err: "Store not found." };
   const { labelTitle, labelThumb } = labelParam;
+
+  // check if the General label is being deletred
+  const genLabelChecker = await Store.findOne({
+    _id: storeId,
+    labels: { $elemMatch: { labelTitle: "General" }, },
+  });
+  if (genLabelChecker && labelTitle === "General") return { err: "You can't add label titled 'General'.", status: 400 };
+
   store.labels.push({ labelTitle, labelThumb });
   await store.save();
   const newStore = await Store.findById(storeId).select("labels");
