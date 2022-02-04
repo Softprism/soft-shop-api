@@ -39,4 +39,22 @@ const sendForgotPasswordSMS = async (phone, otp) => {
   }
 };
 
-export { sendSMS, sendUserSignupSMS, sendForgotPasswordSMS };
+const sendUserOrderPickedUpSMS = async (phone, dropoff) => {
+  let body = `Your order has been picked up for delivery, please be available at ${dropoff}`;
+  let action = await sendSMS(phone, body);
+  if (action.err) {
+    console.log("could not send sms");
+  }
+};
+
+const sendUserOrderDeliveredSMS = async (phone, dropoff) => {
+  let body = `Your order has arrived at ${dropoff}`;
+  let action = await sendSMS(phone, body);
+  if (action.err) {
+    console.log("could not send sms");
+  }
+};
+
+export {
+  sendSMS, sendUserSignupSMS, sendForgotPasswordSMS, sendUserOrderPickedUpSMS, sendUserOrderDeliveredSMS
+};

@@ -10,7 +10,7 @@ import {
 } from "./payment.service";
 import { createNotification } from "./notification.service";
 
-import { sendNewOrderInitiatedMail } from "../utils/sendMail";
+import { sendNewOrderInitiatedMail, sendUserNewOrderAcceptedMail, sendUserNewOrderRejectedMail } from "../utils/sendMail";
 
 const getOrders = async (urlParams) => {
   // initialize match parameters, get limit, skip & sort values
@@ -567,6 +567,15 @@ const editOrder = async (orderID, orderParam) => {
     },
     { omitUndefined: true, new: true, useFindAndModify: false }
   );
+  // send email to user once store accepts order
+  if (orderParam.status === "accepted") {
+    await sendUserNewOrderAcceptedMail(newOrder[0].store.email, newOrder[0].store.name);
+  }
+  // send email to user once store rejects order
+
+  if (orderParam.status === "canceled") {
+    await sendUserNewOrderRejectedMail(newOrder[0].store.email, newOrder[0].store.name);
+  }
   return newOrder[0];
 };
 
