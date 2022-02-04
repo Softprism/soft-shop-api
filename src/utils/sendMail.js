@@ -229,10 +229,16 @@ const sendStorePasswordResetConfirmationMail = async (toEmail, randomCode) => {
 };
 export {
   sendEmail,
-  sendUserSignUpMail,
   sendSignUpOTPmail,
   sendPasswordChangeMail,
   sendForgotPasswordMail,
+  sendUserSignUpMail,
+  sendUserNewOrderAcceptedMail,
+  sendUserNewOrderRejectedMail,
+  sendUserNewOrderSentMail,
+  sendUserOrderReadyMail,
+  sendUserOrderPickedUpMail,
+  sendUserOrderDeliveredMail,
   sendNewOrderInitiatedMail,
   sendStoreSignUpMail,
   sendStoreUpdateRequestMail,
@@ -241,12 +247,6 @@ export {
   sendStorePasswordResetConfirmationMail,
   sendStoreUpdateRequestApprovalMail,
   sendStorePayoutApprovalMail,
-  sendUserNewOrderAcceptedMail,
-  sendUserNewOrderRejectedMail,
-  sendUserNewOrderSentMail,
-  sendUserOrderReadyMail,
-  sendUserOrderPickedUpMail,
-  sendUserOrderDeliveredMail,
   sendStoreCreditMail,
   sendStoreDebitMail
 };
