@@ -112,6 +112,15 @@ const sendStoreUpdateRequestMail = async (toEmail) => {
   }
 };
 
+const sendStoreUpdateRequestApprovalMail = async (toEmail) => {
+  let subject = "Request To Change Sensitive Data Approved";
+  let body = "We've approved your request to make certain changes to your account. ";
+  let sendAction = await sendEmail(toEmail, subject, body);
+  if (!sendAction) {
+    console.log("signup mail not sent");
+  }
+};
+
 const sendStorePayoutRequestMail = async (toEmail, amount) => {
   let subject = "Payout Request";
   let body = `We've received your request to withdraw ₦${amount} from your SoftShop account, just some checks here and there and your funds will be released to you in no time. `;
@@ -121,9 +130,27 @@ const sendStorePayoutRequestMail = async (toEmail, amount) => {
   }
 };
 
+const sendStorePayoutApprovalMail = async (toEmail, amount) => {
+  let subject = "Payout Request Approved!";
+  let body = `We've approved your request to withdraw ₦${amount} from your SoftShop account. `;
+  let sendAction = await sendEmail(toEmail, subject, body);
+  if (!sendAction) {
+    console.log("signup mail not sent");
+  }
+};
+
 const sendStorePasswordResetRequestMail = async (toEmail) => {
   let subject = "Request To Reset Password";
   let body = "We've received your request to make a sensitive change to your account, in a few moment from now, you'll receive another mail containing instructions on how to get back into your account. ";
+  let sendAction = await sendEmail(toEmail, subject, body);
+  if (!sendAction) {
+    console.log("signup mail not sent");
+  }
+};
+
+const sendStorePasswordResetConfirmationMail = async (toEmail, randomCode) => {
+  let subject = "Reset Password Successful";
+  let body = `Your reset password request has been approved, please sign in to your account with <b> ${randomCode} </b> as your password. Reset your password afterwards`;
   let sendAction = await sendEmail(toEmail, subject, body);
   if (!sendAction) {
     console.log("signup mail not sent");
@@ -139,5 +166,8 @@ export {
   sendStoreSignUpMail,
   sendStoreUpdateRequestMail,
   sendStorePayoutRequestMail,
-  sendStorePasswordResetRequestMail
+  sendStorePasswordResetRequestMail,
+  sendStorePasswordResetConfirmationMail,
+  sendStoreUpdateRequestApprovalMail,
+  sendStorePayoutApprovalMail
 };
