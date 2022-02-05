@@ -90,14 +90,6 @@ const updatedDeliveryStatus = async (deliveryId, riderId, status) => {
   if (!delivery.rider || delivery.status === "pending") {
     return { err: "Delivery hasn't been accepted.", status: 409, };
   }
-  // update order Status
-  if (status === "Start Delivery") {
-    await Order.findByIdAndUpdate({ _id: delivery.order }, { status: "enroute" }, { new: true });
-  }
-  // update order Status
-  if (status === "Complete Drop off") {
-    await Order.findByIdAndUpdate({ _id: delivery.order }, { status: "delivered" }, { new: true });
-  }
   // update delivery Status
   const updatedstatus = await Delivery.findByIdAndUpdate(
     deliveryId,
