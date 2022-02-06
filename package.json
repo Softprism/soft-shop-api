@@ -1,9 +1,9 @@
 {
 	"name": "soft-shop-api",
 	"version": "1.0.0",
-	"description": "api endpoint for the soft shop app....",
+	"description": "api endpoint for the softshop app",
 	"engines": {
-		"node": "14.x"
+		"node": "16.x"
 	},
 	"scripts": {
 		"clean": "rm -rf build && npm run build-babel",
@@ -36,6 +36,7 @@
 		"otp-generator": "^3.0.0",
 		"path": "^0.12.7",
 		"rootpath": "^0.1.2",
+		"twilio": "^3.73.1",
 		"validator": "^13.7.0",
 		"xss-clean": "^0.1.1"
 	},

@@ -10,6 +10,7 @@ import Store from "../models/store.model";
 import StoreUpdate from "../models/store-update.model";
 import { createTransaction } from "./transaction.service";
 import Ledger from "../models/ledger.model";
+import { sendUserNewOrderSentMail } from "../utils/sendMail";
 
 // initial env variables
 dotenv.config();
@@ -101,7 +102,7 @@ const verifyTransaction = async (paymentDetails) => {
   if (tx_ref.includes("soft")) {
     // user is paying for an order
 
-    let order = await Order.findOne({ orderId: tx_ref });
+    let order = await Order.findOne({ orderId: tx_ref }).populate("user");
     let store = await Store.findById(order.store);
     let ledger = Ledger.findOne({});
 
@@ -111,6 +112,8 @@ const verifyTransaction = async (paymentDetails) => {
     // Update order status to sent and credit store balance when payment has been validated by flutterwave. Hitting this endpoint from softshop app will not update details.
     if (response.data.status === "successful" && paymentDetails.softshop !== "true") {
       order.status = "sent";
+      // send email to user to notify them of sent order
+      await sendUserNewOrderSentMail(order.user.email);
 
       // create a credit transaction for store and softshop
       let storeReq = {

@@ -1,12 +1,14 @@
 import Rider from "../models/rider.model";
 import Order from "../models/order.model";
 import Delivery from "../models/delivery.model";
+import { sendUserOrderReadyMail } from "../utils/sendMail";
+import { sendUserOrderPickedUpSMS } from "../utils/sendSMS";
 
 const createDelivery = async (orderId, storeId) => {
   // find the order
   const order = await Order.findById(orderId).populate([
     { path: "store", select: "_id name address" },
-    { path: "user", select: "_id first_name last_name phone_number" },
+    { path: "user", select: "_id first_name last_name phone_number email" },
   ]);
   // check for if order exist
   if (!order) {
@@ -25,7 +27,7 @@ const createDelivery = async (orderId, storeId) => {
     return { err: "You're not permitted to carry out this action", status: 403, };
   }
   const {
-    orderItems, user, store, deliveryAddress
+    orderItems, user, store, deliveryAddress,
   } = order;
   let items = [];
   // create item name and quantity
@@ -50,6 +52,7 @@ const createDelivery = async (orderId, storeId) => {
     { status: "ready" },
     { new: true }
   );
+  await sendUserOrderReadyMail(user.email);
   return { delivery };
 };
 

@@ -4,10 +4,13 @@ import User from "../models/user.model";
 import Store from "../models/store.model";
 import Review from "../models/review.model";
 import Rider from "../models/rider.model";
+
 import {
   bankTransfer, ussdPayment, cardPayment, verifyTransaction
 } from "./payment.service";
 import { createNotification } from "./notification.service";
+
+import { sendNewOrderInitiatedMail, sendUserNewOrderAcceptedMail, sendUserNewOrderRejectedMail } from "../utils/sendMail";
 
 const getOrders = async (urlParams) => {
   // initialize match parameters, get limit, skip & sort values
@@ -310,7 +313,7 @@ const createOrder = async (orderParam) => {
     orderUpdate.paymentResult = neworder[0].paymentResult;
     orderUpdate.markModified("paymentResult");
     await orderUpdate.save();
-    return { err: `${neworder[0].paymentResult.message} Order has been created, please try paying again or select another payment method.`, status: 400 };
+    return { err: `${neworder[0].paymentResult.message} Order has been initiated, please try paying again or select another payment method.`, status: 400 };
   }
 
   // update order
@@ -323,6 +326,8 @@ const createOrder = async (orderParam) => {
   orderUpdate.markModified("paymentResult");
   await orderUpdate.save();
 
+  // send email notification on order initiated
+  await sendNewOrderInitiatedMail(neworder[0].user.email, neworder[0].totalPrice, neworder[0].store.name);
   let riders = await Rider.find();
   let ridersId = [];
   if (riders) {
@@ -562,6 +567,15 @@ const editOrder = async (orderID, orderParam) => {
     },
     { omitUndefined: true, new: true, useFindAndModify: false }
   );
+  // send email to user once store accepts order
+  if (orderParam.status === "accepted") {
+    await sendUserNewOrderAcceptedMail(newOrder[0].store.email, newOrder[0].store.name);
+  }
+  // send email to user once store rejects order
+
+  if (orderParam.status === "canceled") {
+    await sendUserNewOrderRejectedMail(newOrder[0].store.email, newOrder[0].store.name);
+  }
   return newOrder[0];
 };
 
