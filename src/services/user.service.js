@@ -15,6 +15,7 @@ import getOTP from "../utils/sendOTP";
 import getJwt from "../utils/jwtGenerator";
 import { verifyCardRequest } from "./payment.service";
 import { sendUserSignupSMS, sendForgotPasswordSMS } from "../utils/sendSMS";
+import { createLog } from "./logs.service";
 
 // Get all Users
 const getUsers = async (urlParams) => {
@@ -136,6 +137,9 @@ const registerUser = async (userParam) => {
   // send sms to user
   await sendUserSignupSMS(user.phone_number);
 
+  // create log
+  await createLog("user signup", "user", `A new user - ${user.first_name} ${user.last_name} with email - ${user.email} just signed on softshop`);
+
   // get user details
   user = await userProfile(user.id);
 
@@ -171,6 +175,9 @@ const loginUser = async (loginParam) => {
 
   // get user details
   const userDetails = await userProfile(user.id);
+
+  // create log
+  await createLog("user Login", "user", `A new login from ${user.first_name} ${user.last_name} with email - ${user.email}`);
 
   return { userDetails, token };
 };
@@ -271,6 +278,8 @@ const updateUser = async (updateParam, id) => {
   // send mail to notify user of password change
   if (user.password && password) {
     sendPasswordChangeMail(user[0].email);
+    // create log
+    await createLog("user update prfile", "user", `A user - ${user.first_name} ${user.last_name} with email - ${user.email} just updated their profile`);
   }
   user = await userProfile(id);
 
@@ -349,6 +358,9 @@ const addItemToBasket = async (userId, basketItemMeta) => {
     },
     { omitUndefined: true, new: true, useFindAndModify: false }
   );
+
+  // create log
+  await createLog("new basket item", "user", `A user with id ${userId} just  added an item to their basket.`);
   return basketUpdate;
 };
 
@@ -415,6 +427,9 @@ const deleteBasketItem = async (userId, { basketId }) => {
 
   // return user basket items
   userBasket = await getUserBasketItems(userId);
+
+  // create log
+  await createLog("user remove basket item", "user", `A user  with id - ${userId} just removed an item from their basket`);
   return userBasket;
 };
 

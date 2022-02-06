@@ -1,9 +1,12 @@
 import logs from "../models/logs.model";
 
-const createLog = async (action, actor) => {
-  console.log(action, actor);
-  let request = await logs.create({ action, actor });
-  console.log(request);
+const createLog = async (action, actor, message) => {
+  await logs.create({ action, actor, message });
+};
+
+// create log
+const signupLog = async () => {
+  await createLog("user signup", "user", "A new user -  with email -  just signed on softshop");
 };
 
 const getLogs = async (filter) => {
@@ -12,5 +15,5 @@ const getLogs = async (filter) => {
 };
 
 export {
-  createLog, getLogs
+  createLog, getLogs, signupLog
 };
