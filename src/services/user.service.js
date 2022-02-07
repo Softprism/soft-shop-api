@@ -8,13 +8,11 @@ import User from "../models/user.model";
 import Token from "../models/tokens.model";
 import Basket from "../models/user-cart.model";
 
-import {
-  sendEmail, sendUserSignUpMail, sendSignUpOTPmail, sendPasswordChangeMail, sendForgotPasswordMail
-} from "../utils/sendMail";
+import { sendSignUpOTPmail, sendPasswordChangeMail, sendForgotPasswordMail } from "../utils/sendMail";
 import getOTP from "../utils/sendOTP";
 import getJwt from "../utils/jwtGenerator";
 import { verifyCardRequest } from "./payment.service";
-import { sendUserSignupSMS, sendForgotPasswordSMS } from "../utils/sendSMS";
+import { sendForgotPasswordSMS } from "../utils/sendSMS";
 import { createLog } from "./logs.service";
 
 // Get all Users
@@ -45,10 +43,7 @@ const verifyEmailAddress = async ({ email }) => {
 
   let token = await getOTP("user-signup", email);
 
-  // send otp
-  await sendSignUpOTPmail(email, token.otp);
-
-  return "OTP sent!";
+  return { msg: "OTP sent!", email, otp: token.otp };
 };
 
 const userProfile = async (userId) => {
@@ -123,19 +118,13 @@ const registerUser = async (userParam) => {
   let newUser = await user.save();
 
   // delete sign up token
-  await Token.findByIdAndDelete(userParam.token);
+  // await Token.findByIdAndDelete(userParam.token);
 
   // delete user on creation, uncomment to test registration without populating your database
   // await User.findByIdAndDelete(newUser._id);
 
   // Define payload for token
   let token = await getJwt(user.id, "user");
-
-  // send email to user
-  await sendUserSignUpMail(user.email);
-
-  // send sms to user
-  await sendUserSignupSMS(user.phone_number);
 
   // create log
   await createLog("user signup", "user", `A new user - ${user.first_name} ${user.last_name} with email - ${user.email} just signed on softshop`);

@@ -31,15 +31,10 @@ const sendEmail = async (toEmail, mailSubj, mailBody) => {
     };
 
     // Send email
-    transporter.sendMail(mailOptions, (err, data) => {
-      if (err) {
-        console.log(err.message);
-      } else {
-        console.log("Email sent successfully");
-      }
-    });
+    let sender = await transporter.sendMail(mailOptions);
+    return sender;
   } catch (error) {
-    console.log(error);
+    throw error;
   }
 };
 
@@ -57,8 +52,9 @@ const sendUserSignUpMail = async (toEmail) => {
   let subject = "Welcome To SoftShop!";
   let body = "Thanks for signing up!";
   let sendAction = await sendEmail(toEmail, subject, body);
+  console.log(sendAction);
   if (!sendAction) {
-    console.log("signup mail not sent");
+    console.log(`signup mail not sent to ${toEmail}`);
   }
 };
 

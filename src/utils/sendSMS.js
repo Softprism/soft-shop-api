@@ -18,8 +18,8 @@ const sendSMS = async (toNumber, body) => {
     });
     return action;
   } catch (error) {
-    return { err: error.message };
     console.log(error.message);
+    return { err: error.message };
   }
 };
 
@@ -27,7 +27,7 @@ const sendUserSignupSMS = async (phone) => {
   let body = "Thanks for signing up!";
   let action = await sendSMS(phone, body);
   if (action.err) {
-    console.log("could not send sms");
+    console.log(`could not send sms to ${phone}`);
   }
 };
 

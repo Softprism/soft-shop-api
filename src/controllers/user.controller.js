@@ -1,6 +1,8 @@
 import express from "express";
 // import { validationResult } from "express-validator";
 import * as userService from "../services/user.service";
+import { sendUserSignUpMail } from "../utils/sendMail";
+import { sendUserSignupSMS } from "../utils/sendSMS";
 
 const router = express.Router();
 
@@ -30,7 +32,12 @@ const verifyEmailAddress = async (req, res, next) => {
           success: false, msg: action.err, status: action.status
         });
     }
-    return res.status(200).json({ success: true, result: action, status: 200 });
+    res.status(200).json({ success: true, result: action.msg, status: 200 });
+    req.data = {
+      email: action.email,
+      otp: action.otp
+    };
+    next();
   } catch (error) {
     next(error);
   }
@@ -48,11 +55,17 @@ const registerUser = async (req, res, next) => {
         .json({ success: false, msg: result.err, status: result.status });
     }
 
-    return res
+    res
       .status(201)
       .json({
         success: true, result: result.user, token: result.token, status: 201
       });
+
+    req.data = {
+      email: result.user[0].email,
+      phone: result.user[0].phone_number
+    };
+    next();
   } catch (error) {
     next(error);
   }
