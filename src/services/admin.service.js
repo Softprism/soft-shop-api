@@ -7,7 +7,7 @@ import Store from "../models/store.model";
 import Notification from "../models/notification.models";
 import StoreUpdate from "../models/store-update.model";
 
-import sendEmail, { sendStorePasswordResetConfirmationMail, sendStorePayoutApprovalMail } from "../utils/sendMail";
+import sendEmail, { sendStorePasswordResetConfirmationMail, sendStorePayoutApprovalMail, sendStoreUpdateRequestApprovalMail } from "../utils/sendMail";
 import getJwt from "../utils/jwtGenerator";
 import Transaction from "../models/transaction.model";
 import Ledger from "../models/ledger.model";
