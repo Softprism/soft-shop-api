@@ -30,7 +30,7 @@ const createProducts = {
     }),
     availability: Joi.boolean(),
     variantOpt: Joi.boolean(),
-    price: Joi.number().empty().positive().required()
+    price: Joi.number().empty().required()
       .messages({
         "number.empty": "Price cannot be an empty field.",
         "number.base": "Please provide a valid number.",
@@ -122,7 +122,7 @@ const addVariantItemValidation = {
     itemThumbnail: Joi.string().empty().messages({
       "string.empty": "Sorry, item thumbnail cannot be an empty field",
     }),
-    itemPrice: Joi.number().empty().positive()
+    itemPrice: Joi.number().empty()
       .messages({
         "number.empty": "Item price cannot be an empty field.",
         "number.base": "Please provide a valid number.",
@@ -141,7 +141,7 @@ const validateVariantItem = {
     itemThumbnail: Joi.string().empty().messages({
       "string.empty": "Sorry, item thumbnail cannot be an empty field",
     }),
-    itemPrice: Joi.number().empty().positive()
+    itemPrice: Joi.number().empty()
       .messages({
         "number.empty": "Item price cannot be an empty field.",
         "number.base": "Please provide a valid number.",
@@ -170,7 +170,7 @@ const editVariantValidation = {
           "string.empty": "Sorry, product id cannot be an empty field",
           "string.length": "Product id must be a valid mongoose id.",
         }),
-        itemPrice: Joi.number().empty().positive()
+        itemPrice: Joi.number().empty()
           .messages({
             "number.empty": "Item price cannot be an empty field.",
             "number.base": "Please provide a valid number.",
