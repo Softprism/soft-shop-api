@@ -76,17 +76,9 @@ const loginStoreValidation = {
 
 const updateStoreValidation = {
   body: Joi.object({
-    address: Joi.string().min(2).messages({
-      "string.empty": "Sorry, phone number cannot be an empty field",
-      "string.min": "Address should be 11 numbers"
-    }),
     email: Joi.string().email().messages({
       "string.email": "Please enter a valid email",
       "string.empty": "Sorry, email cannot be an empty field",
-    }),
-    phone_number: Joi.string().min(11).messages({
-      "string.empty": "Sorry, phone number cannot be an empty field",
-      "string.min": "Phone number should be 11 numbers"
     }),
     images: Joi.array(),
     openingTime: Joi.string(),

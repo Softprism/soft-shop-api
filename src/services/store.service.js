@@ -14,6 +14,9 @@ import Transaction from "../models/transaction.model";
 import Category from "../models/category.model";
 
 import getDistance from "../utils/get-distance";
+import {
+  sendPasswordChangeMail, sendStorePasswordResetRequestMail, sendStorePayoutRequestMail, sendStoreSignUpMail, sendStoreUpdateRequestMail
+} from "../utils/sendMail";
 
 const getStores = async (urlParams) => {
   // declare fields to exclude from response
@@ -450,9 +453,14 @@ const createStore = async (StoreParam) => {
   if (!categoryChecker) {
     return { err: "This category does not exist.", status: 400 };
   }
+  StoreParam.labels = [{
+    labelTitle: "General",
+    labelThumb: "https://soft-shop.app/uploads/label/434764-nasco.png"
+  }];
   const newStore = new Store(StoreParam);
   await newStore.save();
 
+  await sendStoreSignUpMail(email);
   let token = await getJwt(newStore.id, "store");
 
   return token;
@@ -549,6 +557,7 @@ const updateStoreRequest = async (storeID, updateParam) => {
 
     if (await newUpdate.save()) {
       let update = { pendingUpdates: true };
+      await sendStoreUpdateRequestMail(checkStoreUpdate.email);
       await Store.findByIdAndUpdate(storeID, update);
     } else {
       return { err: "Update Request Failed, please try again.", status: 400 };
@@ -569,6 +578,10 @@ const updateStore = async (storeID, updateParam) => {
   );
   if (!checkStoreUpdate) return { err: "An error occurred while updating profile, please try again.", status: 400 };
 
+  // send mail to notify user of password change
+  if (updateParam.password) {
+    sendPasswordChangeMail(checkStoreUpdate.email);
+  }
   let storeRes = await getStore({}, storeID);
 
   return storeRes;
@@ -579,6 +592,14 @@ const addLabel = async (storeId, labelParam) => {
 
   if (!store) return { err: "Store not found." };
   const { labelTitle, labelThumb } = labelParam;
+
+  // check if the General label is being deletred
+  const genLabelChecker = await Store.findOne({
+    _id: storeId,
+    labels: { $elemMatch: { labelTitle: "General" }, },
+  });
+  if (genLabelChecker && labelTitle === "General") return { err: "You can't add label titled 'General'.", status: 400 };
+
   store.labels.push({ labelTitle, labelThumb });
   await store.save();
   const newStore = await Store.findById(storeId).select("labels");
@@ -645,6 +666,13 @@ const deleteLabel = async (storeId, labelParam) => {
     labels: { $elemMatch: { _id: labelId, }, },
   }).select("labels");
   if (!labelChecker) return { err: "Store label not found.", status: 404 };
+
+  // check if the General label is being deletred
+  const genLabelChecker = await Store.findOne({
+    _id: storeId,
+    labels: { $elemMatch: { _id: labelId, labelTitle: "General" }, },
+  });
+  if (genLabelChecker) return { err: "You can't delete the General Label.", status: 400 };
 
   await Store.updateMany({ _id: storeId }, {
     $pull: { labels: { _id: labelId }, },
@@ -870,6 +898,7 @@ const requestPayout = async (storeId) => {
   store.pendingWithdrawal = true;
   await store.save();
 
+  await sendStorePayoutRequestMail(store.email, payout);
   return newTransaction;
 };
 
@@ -903,6 +932,7 @@ const resetPassword = async ({ email }) => {
     await checkEmail.save();
     return "Your reset password request has been sent. You'll receive a mail containing your new password soon.";
   }
+  await sendStorePasswordResetRequestMail(email);
   return { err: "Please enter your email registered with softshop", status: 400 };
 };
 

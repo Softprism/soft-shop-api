@@ -1,6 +1,7 @@
 import Ledger from "../models/ledger.model";
 import Store from "../models/store.model";
 import Transaction from "../models/transaction.model";
+import { sendStoreCreditMail, sendStoreDebitMail } from "../utils/sendMail";
 
 const createTransaction = async ({
   amount, type, to, receiver, status, ref
@@ -24,6 +25,7 @@ const createTransaction = async ({
     ledger.payins += Number(amount);
     ledger.account_balance = Number(ledger.payins) - Number(ledger.payouts);
     await ledger.save();
+    await sendStoreCreditMail(store.email, Number(amount));
   }
 
   // debit store
@@ -32,9 +34,10 @@ const createTransaction = async ({
     store.account_details.total_debit += Number(amount);
     store.account_details.account_balance = Number(store.account_details.total_credit) - Number(store.account_details.total_debit);
     await store.save();
+    await sendStoreDebitMail(store.email, Number(amount));
   }
 
-  // credit store
+  // credit ledger
   if (newTrans && to === "Ledger" && type === "Credit") {
     let ledger = await Ledger.findOne({});
     ledger.payins += Number(amount);
