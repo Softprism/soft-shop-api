@@ -20,7 +20,13 @@ const registerStore = {
         "string.empty": "Sorry, phone number cannot be an empty field",
         "string.min": "Phone number should be 11 numbers"
       }),
-    images: Joi.array(),
+    images: Joi.object({
+      profilePhoto: Joi.string().required().empty().messages({
+        "any.required": "Profile Photo is required.",
+        "string.empty": "Sorry, Category name cannot be an empty field"
+      }),
+      pictures: Joi.array()
+    }),
     category: objectId.required().empty().messages({
       "any.required": "Category id is required.",
       "string.length": "Category id must be a valid mongoose id.",
@@ -80,7 +86,12 @@ const updateStoreValidation = {
       "string.email": "Please enter a valid email",
       "string.empty": "Sorry, email cannot be an empty field",
     }),
-    images: Joi.array(),
+    images: Joi.object({
+      profilePhoto: Joi.string().empty().messages({
+        "string.empty": "Sorry, Category name cannot be an empty field"
+      }),
+      pictures: Joi.array()
+    }),
     openingTime: Joi.string(),
     closingTime: Joi.string(),
     password: Joi.string().min(6).messages({
