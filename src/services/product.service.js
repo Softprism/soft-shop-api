@@ -195,7 +195,7 @@ const updateProduct = async (productParam, productId, storeId) => {
   // check if product exists
   const product = await Product.findOne({
     _id: productId,
-    // store: storeId
+    store: storeId
   });
   if (!product) {
     return {
