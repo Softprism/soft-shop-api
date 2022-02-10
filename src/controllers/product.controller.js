@@ -202,7 +202,6 @@ const updateVariantItem = async (req, res, next) => {
     let storeID;
     if (req.store) storeID = req.store.id;
     if (req.query.storeID && req.admin) storeID = req.query.storeID;
-
     const variant = await productService.editVariantItem(
       storeID,
       req.params.variantItemId,

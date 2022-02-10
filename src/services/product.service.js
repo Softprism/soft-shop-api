@@ -290,19 +290,20 @@ const editVariantItem = async (storeId, variantItemId, variantParam) => {
     itemName, itemThumbnail, itemPrice, required, quantityOpt
   } = variantParam;
   let variantItem = await Variant.findOne({ "variantItems._id": variantItemId, store: storeId });
-
   if (!variantItem) return { err: "Variant item not found.", status: 400 };
+
   await Variant.updateOne(
     {
       variantItems: { $elemMatch: { _id: variantItemId }, },
     },
     {
       $set: {
-        "variantItems.$.itemName": itemName,
-        "variantItems.$.itemThumbnail": itemThumbnail,
-        "variantItems.$.itemPrice": itemPrice,
-        "variantItems.$.required": required,
-        "variantItems.$.quantityOpt": quantityOpt,
+        ...itemName
+          && { "variantItems.$.itemName": itemName },
+        ...itemThumbnail && { "variantItems.$.itemThumbnail": itemThumbnail },
+        ...itemPrice && { "variantItems.$.itemPrice": itemPrice },
+        ...required && { "variantItems.$.required": required },
+        ...quantityOpt && { "variantItems.$.quantityOpt": quantityOpt }
       }
     },
     { new: true, }
