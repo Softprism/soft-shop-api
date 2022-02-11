@@ -407,6 +407,8 @@ const getOrderDetails = async (orderID) => {
         "user.password",
         "user.cart",
         "user.orders",
+        "rider.password",
+        "rider.orders",
       ],
     },
   ];
@@ -433,6 +435,12 @@ const getOrderDetails = async (orderID) => {
       as: "user",
     })
     .lookup({
+      from: "riders",
+      localField: "rider",
+      foreignField: "_id",
+      as: "rider",
+    })
+    .lookup({
       from: "customfees",
       localField: "orderItems.product",
       foreignField: "product",
@@ -442,6 +450,7 @@ const getOrderDetails = async (orderID) => {
       customFees: { $sum: "$productFees.amount" },
       user: { $arrayElemAt: ["$user", 0] },
       store: { $arrayElemAt: ["$store", 0] },
+      rider: { $arrayElemAt: ["$rider", 0] },
     })
     .append(pipeline);
 
