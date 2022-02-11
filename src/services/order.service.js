@@ -455,7 +455,6 @@ const editOrder = async (orderID, orderParam) => {
     {
       $unset: [
         "store.password",
-        "store.email",
         "store.labels",
         "store.phone_number",
         "store.images",
