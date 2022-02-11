@@ -23,7 +23,7 @@ const registerStore = {
     images: Joi.object({
       profilePhoto: Joi.string().required().empty().messages({
         "any.required": "Profile Photo is required.",
-        "string.empty": "Sorry, Category name cannot be an empty field"
+        "string.empty": "Sorry, profile photo cannot be an empty field"
       }),
       pictures: Joi.array()
     }),
@@ -88,7 +88,7 @@ const updateStoreValidation = {
     }),
     images: Joi.object({
       profilePhoto: Joi.string().empty().messages({
-        "string.empty": "Sorry, Category name cannot be an empty field"
+        "string.empty": "Sorry, profile photo cannot be an empty field"
       }),
       pictures: Joi.array()
     }),

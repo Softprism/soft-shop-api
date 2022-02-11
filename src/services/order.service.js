@@ -103,14 +103,17 @@ const getOrders = async (urlParams) => {
       "orderItems.qty": 1,
       "orderItems.price": 1,
       "orderItems.totalPrice": 1,
+      "user._id": 1,
       "user.first_name": 1,
       "user.last_name": 1,
       "user.phone_number": 1,
+      "rider._id": 1,
       "rider.first_name": 1,
       "rider.last_name": 1,
       orderId: 1,
       createdAt: 1,
     })
+    .unwind("$user")
     .append(pipeline)
     .sort(sort)
     .skip(skip)
