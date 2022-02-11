@@ -97,6 +97,7 @@ const getOrders = async (urlParams) => {
       status: 1,
       deliveryPrice: 1,
       totalPrice: 1,
+      taxPrice: 1,
       subtotal: 1,
       "orderItems._id": 1,
       "orderItems.productName": 1,
