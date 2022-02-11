@@ -63,7 +63,14 @@ const editOrder = async (req, res, next) => {
   try {
     let updatedOrder = await orderService.editOrder(req.params.orderID, req.body);
 
-    return res.status(200).json({ success: true, result: updatedOrder });
+    res.status(200).json({ success: true, result: updatedOrder });
+
+    // prepare data for next middleware
+    req.localData = {
+      name: updatedOrder.store.name,
+      email: updatedOrder.store.email
+    };
+    next();
   } catch (error) {
     next(error);
   }
