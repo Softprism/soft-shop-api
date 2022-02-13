@@ -74,7 +74,7 @@ const acceptDelivery = async (deliveryId, riderId) => {
   // update order status
   await Order.findByIdAndUpdate(
     { _id: delivery.order },
-    { status: "accepted" },
+    { status: "accepted", rider: riderId },
     { new: true }
   );
   return { updatedDelivery };
