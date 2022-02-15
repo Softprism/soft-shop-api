@@ -49,7 +49,7 @@ const createDelivery = async (orderId, storeId) => {
   // uodate orser status to ready
   await Order.findByIdAndUpdate(
     { _id: orderId },
-    { status: "ready" },
+    { status: "ready", delivery: delivery._id },
     { new: true }
   );
   await sendUserOrderReadyMail(user.email);

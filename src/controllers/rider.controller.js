@@ -1,5 +1,5 @@
 import {
-  getAllRiders, verifyEmailAddress, registerRider, loginRider,
+  getAllRiders, verifyEmailAddress, registerRider, loginRider, loggedInRider,
   validateToken, requestPasswordToken, resetPassword, updateRider
 } from "../services/rider.service";
 
@@ -155,7 +155,28 @@ const updateRiderProfile = async (req, res, next) => {
   }
 };
 
+// ========================================================================== //
+
+const getLoggedInRider = async (req, res, next) => {
+  try {
+    // Call Get Logged in Rider function from riderService
+    const rider = await loggedInRider(req.rider.id);
+    if (rider.err) {
+      return res
+        .status(rider.status)
+        .json({ success: false, msg: rider.err, status: rider.status });
+    }
+    return res.status(200).json({
+      success: true,
+      result: rider,
+      status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export {
-  createNewPassword, forgotPassword, getRiders,
+  createNewPassword, forgotPassword, getRiders, getLoggedInRider,
   signin, signup, verifyToken, requestToken, updateRiderProfile
 };

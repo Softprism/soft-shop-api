@@ -93,6 +93,12 @@ const getOrders = async (urlParams) => {
       foreignField: "_id",
       as: "rider",
     })
+    .lookup({
+      from: "deliveries",
+      localField: "delivery",
+      foreignField: "_id",
+      as: "delivery",
+    })
     .project({
       status: 1,
       deliveryPrice: 1,
@@ -111,6 +117,8 @@ const getOrders = async (urlParams) => {
       "rider._id": 1,
       "rider.first_name": 1,
       "rider.last_name": 1,
+      "delivery.status": 1,
+      "delivery.riderStatus": 1,
       orderId: 1,
       createdAt: 1,
     })

@@ -217,7 +217,16 @@ const updateRider = async (updateParam, id) => {
   return updatedRider;
 };
 
+// Get Logged in User info
+const loggedInRider = async (userId) => {
+  const rider = await Rider.findById(userId).select("-password");
+  if (!rider) {
+    return { err: "Rider does not exists.", status: 404 };
+  }
+  return rider;
+};
+
 export {
-  resetPassword, requestPasswordToken, verifyEmailAddress,
+  resetPassword, requestPasswordToken, verifyEmailAddress, loggedInRider,
   validateToken, getAllRiders, registerRider, loginRider, updateRider
 };

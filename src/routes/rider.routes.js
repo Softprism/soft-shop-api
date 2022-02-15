@@ -1,6 +1,6 @@
 import express from "express";
 import {
-  getRiders, verifyToken, signup, signin, requestToken, forgotPassword, createNewPassword, updateRiderProfile
+  getRiders, verifyToken, signup, signin, getLoggedInRider, requestToken, forgotPassword, createNewPassword, updateRiderProfile
 } from "../controllers/rider.controller";
 import auth from "../middleware/auth";
 import validator from "../middleware/validator";
@@ -17,6 +17,12 @@ const router = express.Router();
 // @desc    Get all riders
 // @access  Public
 router.get("/", checkPagination, getRiders);
+
+// @route   GET /user/login
+// @desc    Get logged in rider
+// @access  Private
+
+router.get("/login", auth, getLoggedInRider);
 
 // @route   POST /riders/verify
 // @desc    send OTP to verify new rider signup email
