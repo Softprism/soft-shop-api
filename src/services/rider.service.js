@@ -3,9 +3,10 @@ import capitalize from "capitalize";
 import Rider from "../models/rider.model";
 import Token from "../models/tokens.model";
 
-import sendEmail from "../utils/sendMail";
+import { sendSignUpOTPmail, sendPasswordChangeMail, sendForgotPasswordMail } from "../utils/sendMail";
 import getOTP from "../utils/sendOTP";
 import getJwt from "../utils/jwtGenerator";
+import { sendForgotPasswordSMS } from "../utils/sendSMS";
 
 const getAllRiders = async (urlParams) => {
   const limit = Number(urlParams.limit);
@@ -37,11 +38,6 @@ const verifyEmailAddress = async ({ email }) => {
   // send otp
 
   return { msg: "OTP sent!", email, otp: token.otp };
-  // let email_subject = "OTP For Account Creation";
-  // let email_message = token.otp;
-  // await sendEmail(email, email_subject, email_message);
-
-  // return "OTP sent!";
 };
 
 const registerRider = async (riderParam) => {
@@ -144,13 +140,10 @@ const requestPasswordToken = async ({ email }) => {
   let token = await getOTP("rider-forgot-password", email);
 
   // // send otp
-  // let email_subject = "forgot password";
-  // let email_message = token.otp;
-  // await sendEmail(email, email_subject, email_message);
+  await sendForgotPasswordMail(email, token.otp);
+  await sendForgotPasswordSMS(findUser.phone_number, token.otp);
 
-  // return "OTP sent!";
-
-  return { msg: "OTP sent!", email, otp: token.otp };
+  return "OTP sent!";
 };
 
 const resetPassword = async ({ token, email, password }) => {
@@ -173,10 +166,8 @@ const resetPassword = async ({ token, email, password }) => {
 
   await Token.findByIdAndDelete(token);
 
-  // // send confirmation email
-  // let email_subject = "Password Reset Successful";
-  // let email_message = "Password has been reset successfully";
-  // await sendEmail(email, email_subject, email_message);
+  // send confirmation email
+  await sendPasswordChangeMail(email);
 
   const rider = await Rider.findOne({ email }).select("-password");
   return rider;

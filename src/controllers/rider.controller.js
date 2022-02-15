@@ -14,7 +14,12 @@ const requestToken = async (req, res, next) => {
           success: false, msg: action.err, status: action.status
         });
     }
-    return res.status(200).json({ success: true, result: action, status: 200 });
+    res.status(200).json({ success: true, result: action, status: 200 });
+    req.data = {
+      email: action.email,
+      otp: action.otp
+    };
+    next();
   } catch (error) {
     next(error);
   }
@@ -48,11 +53,17 @@ const signup = async (req, res, next) => {
         .json({ success: false, msg: result.err, status: result.status });
     }
 
-    return res
+    res
       .status(201)
       .json({
         success: true, result: result.createdRider, token: result.riderToken, status: 201
       });
+
+    req.data = {
+      email: result.createdRider.email,
+      phone: result.createdRider.phone_number
+    };
+    next();
   } catch (error) {
     next(error);
   }
