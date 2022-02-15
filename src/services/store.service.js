@@ -587,6 +587,29 @@ const updateStore = async (storeID, updateParam) => {
   return storeRes;
 };
 
+const updateStorePhoto = async (storeID, updateParam) => {
+  // this service is used to update  store pictures
+  const {
+    profilePhoto, pictures
+  } = updateParam;
+  const checkStoreUpdate = await Store.findByIdAndUpdate(
+    storeID,
+    {
+      $set: {
+        ...profilePhoto
+          && { "images.profilePhoto": profilePhoto },
+        ...pictures && { "images.pictures": pictures },
+      }
+    },
+    { new: true }
+  );
+  if (!checkStoreUpdate) return { err: "An error occurred while updating profile, please try again.", status: 400 };
+
+  let storeRes = await getStore({}, storeID);
+
+  return storeRes;
+};
+
 const addLabel = async (storeId, labelParam) => {
   let store = await Store.findById(storeId);
 
@@ -955,5 +978,6 @@ export {
   updateStore,
   requestPayout,
   getPayoutHistory,
-  resetPassword
+  resetPassword,
+  updateStorePhoto
 };

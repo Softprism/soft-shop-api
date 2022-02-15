@@ -86,12 +86,6 @@ const updateStoreValidation = {
       "string.email": "Please enter a valid email",
       "string.empty": "Sorry, email cannot be an empty field",
     }),
-    images: Joi.object({
-      profilePhoto: Joi.string().empty().messages({
-        "string.empty": "Sorry, profile photo cannot be an empty field"
-      }),
-      pictures: Joi.array()
-    }),
     openingTime: Joi.string(),
     closingTime: Joi.string(),
     password: Joi.string().min(6).messages({
@@ -104,6 +98,17 @@ const updateStoreValidation = {
     promotionalNotifications: Joi.boolean(),
     smsNotifications: Joi.boolean(),
     prepTime: Joi.number().positive(),
+  }).messages({
+    "object.unknown": "You have used an invalid key."
+  })
+};
+
+const updateStorePhotoValidation = {
+  body: Joi.object({
+    profilePhoto: Joi.string().empty().messages({
+      "string.empty": "Sorry, profile photo cannot be an empty field"
+    }),
+    pictures: Joi.array()
   }).messages({
     "object.unknown": "You have used an invalid key."
   })
@@ -212,6 +217,6 @@ const deleteLabelValidation = {
 };
 
 export {
-  registerStore, updateStoreValidation, loginStoreValidation,
+  registerStore, updateStoreValidation, loginStoreValidation, updateStorePhotoValidation,
   storeRequest, labelValidation, deleteLabelValidation, editLabelValidation
 };

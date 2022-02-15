@@ -9,7 +9,7 @@ import {
   getStoresNoGeo, getStoreSalesStats, bestSellers,
   getStoreFeedback, getInventoryList, updateStore,
   requestPayout, getPayoutHistory, deleteStoreLabel,
-  updateStoreLabel,
+  updateStoreLabel, updateStorePhoto,
   resetPassword
 } from "../controllers/store.controller";
 import { getStoreVariantsForUsers } from "../controllers/product.controller";
@@ -21,7 +21,7 @@ import { hashPassword } from "../middleware/validationMiddleware";
 import validator from "../middleware/validator";
 import {
   registerStore, updateStoreValidation, loginStoreValidation, storeRequest,
-  labelValidation, deleteLabelValidation, editLabelValidation
+  labelValidation, deleteLabelValidation, editLabelValidation, updateStorePhotoValidation
 } from "../validations/storeValidation";
 
 const router = express.Router();
@@ -94,6 +94,11 @@ router.put("/change-request", auth, isStoreAdmin, validator(storeRequest), updat
 // @desc    Update a store
 // @access  Private
 router.put("/", auth, isStoreAdmin, validator(updateStoreValidation), hashPassword, updateStore);
+
+// @route   PUT /store/
+// @desc    Update a store
+// @access  Private
+router.put("/photo", auth, isStoreAdmin, validator(updateStorePhotoValidation), hashPassword, updateStorePhoto);
 
 // @route   PUT /store/
 // @desc    Update a store

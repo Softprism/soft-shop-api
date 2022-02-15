@@ -102,6 +102,22 @@ const updateStore = async (req, res, next) => {
     next(error);
   }
 };
+const updateStorePhoto = async (req, res, next) => {
+  try {
+    let storeID;
+    if (req.store) storeID = req.store.id;
+    if (req.query.storeId && req.admin) storeID = req.query.storeId;
+    const store = await storeService.updateStorePhoto(storeID, req.body);
+
+    if (store.err) {
+      res.status(store.status).json({ success: false, msg: store.err, status: store.status });
+    } else {
+      res.status(200).json({ success: true, result: store, status: 200 });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
 
 const updateStoreLabel = async (req, res, next) => {
   try {
@@ -314,5 +330,6 @@ export {
   updateStore,
   requestPayout,
   getPayoutHistory,
-  resetPassword
+  resetPassword,
+  updateStorePhoto
 };
