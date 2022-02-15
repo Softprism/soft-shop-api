@@ -173,10 +173,10 @@ const resetPassword = async ({ token, email, password }) => {
 
   await Token.findByIdAndDelete(token);
 
-  // send confirmation email
-  let email_subject = "Password Reset Successful";
-  let email_message = "Password has been reset successfully";
-  await sendEmail(email, email_subject, email_message);
+  // // send confirmation email
+  // let email_subject = "Password Reset Successful";
+  // let email_message = "Password has been reset successfully";
+  // await sendEmail(email, email_subject, email_message);
 
   const rider = await Rider.findOne({ email }).select("-password");
   return rider;
