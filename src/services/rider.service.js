@@ -35,11 +35,13 @@ const verifyEmailAddress = async ({ email }) => {
   let token = await getOTP("rider-signup", email);
 
   // send otp
-  let email_subject = "OTP For Account Creation";
-  let email_message = token.otp;
-  await sendEmail(email, email_subject, email_message);
 
-  return "OTP sent!";
+  return { msg: "OTP sent!", email, otp: token.otp };
+  // let email_subject = "OTP For Account Creation";
+  // let email_message = token.otp;
+  // await sendEmail(email, email_subject, email_message);
+
+  // return "OTP sent!";
 };
 
 const registerRider = async (riderParam) => {
