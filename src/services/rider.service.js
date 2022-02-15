@@ -141,7 +141,7 @@ const requestPasswordToken = async ({ email }) => {
 
   // // send otp
   await sendForgotPasswordMail(email, token.otp);
-  await sendForgotPasswordSMS(findUser.phone_number, token.otp);
+  await sendForgotPasswordSMS(findRider.phone_number, token.otp);
 
   return "OTP sent!";
 };
