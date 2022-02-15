@@ -143,12 +143,14 @@ const requestPasswordToken = async ({ email }) => {
 
   let token = await getOTP("rider-forgot-password", email);
 
-  // send otp
-  let email_subject = "forgot password";
-  let email_message = token.otp;
-  await sendEmail(email, email_subject, email_message);
+  // // send otp
+  // let email_subject = "forgot password";
+  // let email_message = token.otp;
+  // await sendEmail(email, email_subject, email_message);
 
-  return "OTP sent!";
+  // return "OTP sent!";
+
+  return { msg: "OTP sent!", email, otp: token.otp };
 };
 
 const resetPassword = async ({ token, email, password }) => {
