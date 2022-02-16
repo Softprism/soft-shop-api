@@ -54,6 +54,7 @@ const riderSchema = mongoose.Schema({
     type: String,
     required: true,
   },
+  profilePhoto: { type: String },
   isVerified: { type: Boolean, required: true, default: false },
   orders: [{ type: mongoose.Types.ObjectId, ref: "Order" }], // array to store multiple orders
   createdDate: { type: Date, default: Date.now },

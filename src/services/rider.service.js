@@ -176,7 +176,7 @@ const resetPassword = async ({ token, email, password }) => {
 // Update Rider Details
 const updateRider = async (updateParam, id) => {
   const {
-    first_name, last_name, original_password, password, phone_number
+    first_name, last_name, original_password, password, phone_number, profilePhoto
   } = updateParam;
   // Build Rider Object
   const riderFields = {};
@@ -185,6 +185,7 @@ const updateRider = async (updateParam, id) => {
   if (first_name) riderFields.first_name = first_name;
   if (last_name) riderFields.last_name = last_name;
   if (phone_number) riderFields.phone_number = phone_number;
+  if (profilePhoto) riderFields.profilePhoto = profilePhoto;
 
   // Find rider from DB Collection
   let rider = await Rider.findById(id);
