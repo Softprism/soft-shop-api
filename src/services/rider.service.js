@@ -18,7 +18,7 @@ const getAllRiders = async (urlParams) => {
 
   const riders = await Rider.find(urlParams)
     .select("-password -orders")
-    .sort({ createdDate: -1 }) // -1 for descending sort
+    .sort({ createdDate: -1 }) // -1 for descending sorting
     .skip(skip)
     .limit(limit);
 
