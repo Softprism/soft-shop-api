@@ -24,7 +24,7 @@ app.use(mongoSanitize());
 app.use(xss());
 app.use(hpp());
 
-// compress all response
+// compress all responses
 
 // app.use(compression({ level: 1 }));
 // api routes
