@@ -240,30 +240,30 @@ const loggedInRider = async (riderId) => {
       foreignField: "rider",
       as: "orders",
     })
-    // .lookup({
-    //   from: "deliveries",
-    //   localField: "_id",
-    //   foreignField: "rider",
-    //   as: "deliveries",
-    // })
-    // .lookup({
-    //   from: "reviews",
-    //   localField: "orders._id",
-    //   foreignField: "order",
-    //   as: "orderReview",
-    // })
+    .lookup({
+      from: "deliveries",
+      localField: "_id",
+      foreignField: "rider",
+      as: "deliveries",
+    })
+    .lookup({
+      from: "reviews",
+      localField: "orders._id",
+      foreignField: "order",
+      as: "orderReview",
+    })
 
   // adding metrics to the response
-    // .addFields({
-    //   sumOfStars: { $sum: "$orderReview.star" },
-    //   numOfReviews: { $size: "$orderReview" },
-    //   averageRating: { $floor: { $avg: "$orderReview.star" } },
-    //   productCount: { $size: "$products" },
-    //   orderCount: { $size: "$orders" },
-    // })
-    // .addFields({
-    //   averageRating: { $ifNull: ["$averageRating", 0] },
-    // })
+    .addFields({
+      sumOfStars: { $sum: "$orderReview.star" },
+      numOfReviews: { $size: "$orderReview" },
+      averageRating: { $floor: { $avg: "$orderReview.star" } },
+      deliveryCount: { $size: "$deliveries" },
+      orderCount: { $size: "$orders" },
+    })
+    .addFields({
+      averageRating: { $ifNull: ["$averageRating", 0] },
+    })
     .append(pipeline);
   return rider;
 };
