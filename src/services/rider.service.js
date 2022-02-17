@@ -219,11 +219,52 @@ const updateRider = async (updateParam, id) => {
 };
 
 // Get Logged in User info
-const loggedInRider = async (userId) => {
-  const rider = await Rider.findById(userId).select("-password");
-  if (!rider) {
+const loggedInRider = async (riderId) => {
+  const rider1 = await Rider.findById(riderId).select("-password");
+  if (!rider1) {
     return { err: "Rider does not exists.", status: 404 };
   }
+  const pipeline = [
+    {
+      $unset: [
+        "rider.password",
+      ],
+    },
+  ];
+
+  const rider = await Rider.aggregate()
+    .match({ _id: riderId })
+    .lookup({
+      from: "orders",
+      localField: "_id",
+      foreignField: "rider",
+      as: "orders",
+    })
+    // .lookup({
+    //   from: "deliveries",
+    //   localField: "_id",
+    //   foreignField: "rider",
+    //   as: "deliveries",
+    // })
+    // .lookup({
+    //   from: "reviews",
+    //   localField: "orders._id",
+    //   foreignField: "order",
+    //   as: "orderReview",
+    // })
+
+  // adding metrics to the response
+    // .addFields({
+    //   sumOfStars: { $sum: "$orderReview.star" },
+    //   numOfReviews: { $size: "$orderReview" },
+    //   averageRating: { $floor: { $avg: "$orderReview.star" } },
+    //   productCount: { $size: "$products" },
+    //   orderCount: { $size: "$orders" },
+    // })
+    // .addFields({
+    //   averageRating: { $ifNull: ["$averageRating", 0] },
+    // })
+    .append(pipeline);
   return rider;
 };
 
