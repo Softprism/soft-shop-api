@@ -25,6 +25,7 @@ app.use(xss());
 app.use(hpp());
 
 // compress all responses
+
 // app.use(compression({ level: 1 }));
 // api routes
 app.use("/api/v1", router);
