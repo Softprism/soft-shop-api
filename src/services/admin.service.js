@@ -7,7 +7,7 @@ import Store from "../models/store.model";
 import Notification from "../models/notification.models";
 import StoreUpdate from "../models/store-update.model";
 
-import sendEmail from "../utils/sendMail";
+import sendEmail, { sendStorePasswordResetConfirmationMail, sendStorePayoutApprovalMail, sendStoreUpdateRequestApprovalMail } from "../utils/sendMail";
 import getJwt from "../utils/jwtGenerator";
 import Transaction from "../models/transaction.model";
 import Ledger from "../models/ledger.model";
@@ -155,11 +155,7 @@ const resetStorePassword = async (storeEmail) => {
     );
 
   if (!store) return { error: "Store not found", status: 404 };
-  sendEmail(
-    storeEmail,
-    "Reset Password Successful",
-    `Your reset password request has been approved, please sign in to your account with <b> ${randomCode} </b> as your password. Reset your password afterwards`
-  );
+  await sendStorePasswordResetConfirmationMail(storeEmail, randomCode);
   return "Password has been reset for store";
 };
 
@@ -236,6 +232,7 @@ const confirmStoreUpdate = async (storeID) => {
   // delete the store update
   if (storeUpdateRequest.pendingUpdates === false) {
     await StoreUpdate.deleteOne({ store: storeID });
+    await sendStoreUpdateRequestApprovalMail(storeUpdateRequest.email);
   }
   return storeUpdateRequest;
 };
@@ -311,6 +308,7 @@ const confirmStorePayout = async (storeId) => {
     // let request = await initiateTransfer(payload);
     store.pendingWithdrawal = false;
     await store.save();
+    await sendStorePayoutApprovalMail(store.email, payload.amount);
     return payload;
   }
 

@@ -25,13 +25,13 @@ app.use(xss());
 app.use(hpp());
 
 // compress all responses
-app.use(compression({ level: 9 }));
+// app.use(compression({ level: 1 }));
 // api routes
-app.use("/", router);
+app.use("/api/v1", router);
 app.all("*", (req, res, next) => {
   res
-    .status(200)
-    .json({ success: true, msg: "server is fine. Jazz up if you're lost" });
+    .status(404)
+    .json({ success: true, msg: "Resource not found, please try logging in" });
   next();
 });
 

@@ -14,6 +14,7 @@ import {
 } from "../controllers/order.controller";
 import validator from "../middleware/validator";
 import { order_validation, reviewValidation } from "../validations/orderValidation";
+import { sendUserNewOrderAcceptedMail, sendUserNewOrderRejectedMail } from "../utils/sendMail";
 
 const router = express.Router();
 
@@ -40,15 +41,27 @@ router.patch("/toggle-favorite/:orderID", auth, toggleFavorite);
 // @route   PUT /user/edit/
 // @desc    modify fields in an order
 // @access  Private
-router.put("/user/edit/:orderID", auth, editOrder);
+router.put(
+  "/user/edit/:orderID",
+  auth,
+  editOrder,
+  async (req, res) => {
+    if (req.body.status === "accepted") {
+      await sendUserNewOrderAcceptedMail(req.localData.email, req.localData.name);
+    }
+    if (req.body.status === "canceled") {
+      await sendUserNewOrderRejectedMail(req.localData.email, req.localData.name);
+    }
+  }
+);
 
 // @route   PUT /review
 // @desc    user adds review to their order
 // @access  Private
 router.put("/review/:orderId?", auth, validator(reviewValidation), reviewOrder);
 
-// @route   PUT /review
-// @desc    user adds review to their order
+// @route   POST /card/encrypt
+// @desc
 // @access  Private
 router.post("/card/encrypt", encryptDetails);
 

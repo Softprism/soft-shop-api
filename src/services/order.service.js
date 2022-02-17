@@ -4,10 +4,13 @@ import User from "../models/user.model";
 import Store from "../models/store.model";
 import Review from "../models/review.model";
 import Rider from "../models/rider.model";
+
 import {
   bankTransfer, ussdPayment, cardPayment, verifyTransaction
 } from "./payment.service";
 import { createNotification } from "./notification.service";
+
+import { sendNewOrderInitiatedMail, sendUserNewOrderAcceptedMail, sendUserNewOrderRejectedMail } from "../utils/sendMail";
 
 const getOrders = async (urlParams) => {
   // initialize match parameters, get limit, skip & sort values
@@ -78,14 +81,40 @@ const getOrders = async (urlParams) => {
       foreignField: "_id",
       as: "productData",
     })
+    .lookup({
+      from: "users",
+      localField: "user",
+      foreignField: "_id",
+      as: "user",
+    })
+    .lookup({
+      from: "riders",
+      localField: "rider",
+      foreignField: "_id",
+      as: "rider",
+    })
     .project({
       status: 1,
+      deliveryPrice: 1,
       totalPrice: 1,
+      taxPrice: 1,
       subtotal: 1,
+      "orderItems._id": 1,
       "orderItems.productName": 1,
+      "orderItems.qty": 1,
+      "orderItems.price": 1,
+      "orderItems.totalPrice": 1,
+      "user._id": 1,
+      "user.first_name": 1,
+      "user.last_name": 1,
+      "user.phone_number": 1,
+      "rider._id": 1,
+      "rider.first_name": 1,
+      "rider.last_name": 1,
       orderId: 1,
       createdAt: 1,
     })
+    .unwind("$user")
     .append(pipeline)
     .sort(sort)
     .skip(skip)
@@ -310,7 +339,7 @@ const createOrder = async (orderParam) => {
     orderUpdate.paymentResult = neworder[0].paymentResult;
     orderUpdate.markModified("paymentResult");
     await orderUpdate.save();
-    return { err: `${neworder[0].paymentResult.message} Order has been created, please try paying again or select another payment method.`, status: 400 };
+    return { err: `${neworder[0].paymentResult.message} Order has been initiated, please try paying again or select another payment method.`, status: 400 };
   }
 
   // update order
@@ -323,6 +352,8 @@ const createOrder = async (orderParam) => {
   orderUpdate.markModified("paymentResult");
   await orderUpdate.save();
 
+  // send email notification on order initiated
+  await sendNewOrderInitiatedMail(neworder[0].user.email, neworder[0].totalPrice, neworder[0].store.name);
   let riders = await Rider.find();
   let ridersId = [];
   if (riders) {
@@ -376,6 +407,8 @@ const getOrderDetails = async (orderID) => {
         "user.password",
         "user.cart",
         "user.orders",
+        "rider.password",
+        "rider.orders",
       ],
     },
   ];
@@ -402,6 +435,12 @@ const getOrderDetails = async (orderID) => {
       as: "user",
     })
     .lookup({
+      from: "riders",
+      localField: "rider",
+      foreignField: "_id",
+      as: "rider",
+    })
+    .lookup({
       from: "customfees",
       localField: "orderItems.product",
       foreignField: "product",
@@ -411,6 +450,7 @@ const getOrderDetails = async (orderID) => {
       customFees: { $sum: "$productFees.amount" },
       user: { $arrayElemAt: ["$user", 0] },
       store: { $arrayElemAt: ["$store", 0] },
+      rider: { $arrayElemAt: ["$rider", 0] },
     })
     .append(pipeline);
 
@@ -428,7 +468,6 @@ const editOrder = async (orderID, orderParam) => {
     {
       $unset: [
         "store.password",
-        "store.email",
         "store.labels",
         "store.phone_number",
         "store.images",
@@ -562,6 +601,15 @@ const editOrder = async (orderID, orderParam) => {
     },
     { omitUndefined: true, new: true, useFindAndModify: false }
   );
+  // send email to user once store accepts order
+  if (orderParam.status === "accepted") {
+    await sendUserNewOrderAcceptedMail(newOrder[0].store.email, newOrder[0].store.name);
+  }
+  // send email to user once store rejects order
+
+  if (orderParam.status === "canceled") {
+    await sendUserNewOrderRejectedMail(newOrder[0].store.email, newOrder[0].store.name);
+  }
   return newOrder[0];
 };
 

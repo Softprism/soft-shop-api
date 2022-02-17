@@ -11,8 +11,8 @@ const getRiderDashboard = async (req, res, next) => {
           success: false, msg: action.err, status: action.status
         });
     }
-    const { orders, rider } = action;
-    return res.status(200).json({ success: true, result: { rider, orders }, status: 200 });
+    const { dashboard } = action;
+    return res.status(200).json({ success: true, result: dashboard, status: 200 });
   } catch (error) {
     next(error);
   }

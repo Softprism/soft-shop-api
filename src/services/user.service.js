@@ -8,10 +8,12 @@ import User from "../models/user.model";
 import Token from "../models/tokens.model";
 import Basket from "../models/user-cart.model";
 
-import sendEmail from "../utils/sendMail";
+import { sendSignUpOTPmail, sendPasswordChangeMail, sendForgotPasswordMail } from "../utils/sendMail";
 import getOTP from "../utils/sendOTP";
 import getJwt from "../utils/jwtGenerator";
 import { verifyCardRequest } from "./payment.service";
+import { sendForgotPasswordSMS } from "../utils/sendSMS";
+import { createLog } from "./logs.service";
 
 // Get all Users
 const getUsers = async (urlParams) => {
@@ -41,12 +43,7 @@ const verifyEmailAddress = async ({ email }) => {
 
   let token = await getOTP("user-signup", email);
 
-  // send otp
-  let email_subject = "OTP For Account Creation";
-  let email_message = token.otp;
-  await sendEmail(email, email_subject, email_message);
-
-  return "OTP sent!";
+  return { msg: "OTP sent!", email, otp: token.otp };
 };
 
 const userProfile = async (userId) => {
@@ -121,13 +118,16 @@ const registerUser = async (userParam) => {
   let newUser = await user.save();
 
   // delete sign up token
-  await Token.findByIdAndDelete(userParam.token);
+  // await Token.findByIdAndDelete(userParam.token);
 
   // delete user on creation, uncomment to test registration without populating your database
   // await User.findByIdAndDelete(newUser._id);
 
   // Define payload for token
   let token = await getJwt(user.id, "user");
+
+  // create log
+  await createLog("user signup", "user", `A new user - ${user.first_name} ${user.last_name} with email - ${user.email} just signed on softshop`);
 
   // get user details
   user = await userProfile(user.id);
@@ -159,14 +159,14 @@ const loginUser = async (loginParam) => {
     };
   }
 
-  // unset user pass***d
-  user.password = undefined;
-
   // Define payload for token
   let token = await getJwt(user.id, "user");
 
   // get user details
   const userDetails = await userProfile(user.id);
+
+  // create log
+  await createLog("user Login", "user", `A new login from ${user.first_name} ${user.last_name} with email - ${user.email}`);
 
   return { userDetails, token };
 };
@@ -185,7 +185,7 @@ const addCard = async (userId) => {
   };
   const payload = {
     "tx_ref": tx_ref(),
-    "amount": "0",
+    "amount": "100",
     "currency": "NGN",
     "redirect_url": "https://mobile.soft-shop.app/card",
     "payment_options": "card",
@@ -264,6 +264,12 @@ const updateUser = async (updateParam, id) => {
     { omitUndefined: true, new: true, useFindAndModify: false }
   );
 
+  // send mail to notify user of password change
+  if (user.password && password) {
+    sendPasswordChangeMail(user[0].email);
+    // create log
+    await createLog("user update prfile", "user", `A user - ${user.first_name} ${user.last_name} with email - ${user.email} just updated their profile`);
+  }
   user = await userProfile(id);
 
   return user;
@@ -341,6 +347,9 @@ const addItemToBasket = async (userId, basketItemMeta) => {
     },
     { omitUndefined: true, new: true, useFindAndModify: false }
   );
+
+  // create log
+  await createLog("new basket item", "user", `A user with id ${userId} just  added an item to their basket.`);
   return basketUpdate;
 };
 
@@ -407,6 +416,9 @@ const deleteBasketItem = async (userId, { basketId }) => {
 
   // return user basket items
   userBasket = await getUserBasketItems(userId);
+
+  // create log
+  await createLog("user remove basket item", "user", `A user  with id - ${userId} just removed an item from their basket`);
   return userBasket;
 };
 
@@ -441,9 +453,8 @@ const forgotPassword = async ({ email }) => {
   let token = await getOTP("user-forgot-password", email);
 
   // send otp
-  let email_subject = "forgot password";
-  let email_message = token.otp;
-  await sendEmail(email, email_subject, email_message);
+  await sendForgotPasswordMail(email, token.otp);
+  await sendForgotPasswordSMS(findUser.phone_number, token.otp);
 
   return "OTP sent!";
 };
@@ -487,9 +498,7 @@ const createNewPassword = async ({ token, email, password }) => {
   await Token.findByIdAndDelete(token);
 
   // send confirmation email
-  let email_subject = "Password Reset Successful";
-  let email_message = "Password has been reset successfully";
-  await sendEmail(email, email_subject, email_message);
+  await sendPasswordChangeMail(email);
 
   user = await userProfile(user.id);
   return user;

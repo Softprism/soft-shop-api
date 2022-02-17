@@ -15,6 +15,8 @@ import {
   registerValidation, emailValidation, loginValidation,
   resetPassword, updateUserValidation, addbasketValidation, editbasketValidation
 } from "../validations/userValidation";
+import { sendSignUpOTPmail, sendUserSignUpMail } from "../utils/sendMail";
+import { sendUserSignupSMS } from "../utils/sendSMS";
 
 const router = express.Router();
 
@@ -26,12 +28,31 @@ router.get("/", checkPagination, getUsers);
 // @route   POST /verify
 // @desc    send OTP to verify new user signup email
 // @access  Public
-router.post("/verify", validator(emailValidation), verifyEmailAddress);
+router.post(
+  "/verify",
+  validator(emailValidation),
+  verifyEmailAddress,
+  async (req, res) => {
+    // send otp
+    await sendSignUpOTPmail(req.data.email, req.data.otp);
+  }
+);
 
 // @route   POST /users/register
 // @desc    Register a User
 // @access  Public
-router.post("/", validator(registerValidation), hashPassword, registerUser);
+router.post(
+  "/",
+  validator(registerValidation),
+  hashPassword,
+  registerUser,
+  async (req, res, next) => {
+    // send email to user
+    await sendUserSignUpMail(req.data.email);
+    // send sms to user
+    await sendUserSignupSMS(req.data.phone);
+  }
+);
 
 // @route   POST /user/login
 // @desc    Login a User & get token
