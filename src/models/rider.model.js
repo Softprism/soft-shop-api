@@ -58,6 +58,9 @@ const riderSchema = mongoose.Schema({
   isVerified: { type: Boolean, required: true, default: false },
   orders: [{ type: mongoose.Types.ObjectId, ref: "Order" }], // array to store multiple orders
   createdDate: { type: Date, default: Date.now },
+  pushNotifications: { type: Boolean, default: false },
+  smsNotifications: { type: Boolean, default: false },
+  promotionalNotifications: { type: Boolean, default: false },
 });
 
 const Rider = mongoose.model("Rider", riderSchema);
