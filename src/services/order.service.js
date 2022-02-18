@@ -141,7 +141,9 @@ const createOrder = async (orderParam) => {
   // validate store
   const vStore = await Store.findById(store);
   if (!vStore) return { err: "Store not found.", status: 404 };
-
+  if (!vStore.isActive) {
+    return { err: "Sorry you can't create order from an inactive store.", status: 409 };
+  }
   // generates random unique id;
   let orderId = () => {
     let s4 = () => {
