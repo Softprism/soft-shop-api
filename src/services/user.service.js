@@ -296,6 +296,7 @@ const updateUser = async (updateParam, id) => {
 // };
 
 const addItemToBasket = async (userId, basketItemMeta) => {
+  // validate if store is active
   const product = await Product.findById(basketItemMeta.product.productId)
     .populate([{ path: "store", select: "_id name isActive", }]);
   if (!product) {
