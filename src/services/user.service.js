@@ -7,6 +7,7 @@ import mongoose from "mongoose";
 import User from "../models/user.model";
 import Token from "../models/tokens.model";
 import Basket from "../models/user-cart.model";
+import Product from "../models/product.model";
 
 import { sendSignUpOTPmail, sendPasswordChangeMail, sendForgotPasswordMail } from "../utils/sendMail";
 import getOTP from "../utils/sendOTP";
@@ -295,6 +296,16 @@ const updateUser = async (updateParam, id) => {
 // };
 
 const addItemToBasket = async (userId, basketItemMeta) => {
+  // validate if store is active
+  const product = await Product.findById(basketItemMeta.product.productId)
+    .populate([{ path: "store", select: "_id name isActive", }]);
+  if (!product) {
+    return { err: "Product does not exists.", status: 404 };
+  }
+  const { store } = product;
+  if (!store.isActive) {
+    return { err: "Sorry you can't add item from an inactive store.", status: 409 };
+  }
   // add user ID to basketMeta
   basketItemMeta.user = userId;
 
