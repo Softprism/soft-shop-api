@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import capitalize from "capitalize";
+import mongoose from "mongoose";
 import Rider from "../models/rider.model";
 import Token from "../models/tokens.model";
 
@@ -233,7 +234,7 @@ const loggedInRider = async (riderId) => {
   ];
 
   const rider = await Rider.aggregate()
-    .match({ _id: riderId })
+    .match({ _id: mongoose.Types.ObjectId(riderId) })
     .lookup({
       from: "orders",
       localField: "_id",

@@ -1,7 +1,7 @@
 /* eslint-disable no-await-in-loop */
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import mongoose, { mongo } from "mongoose";
+import mongoose from "mongoose";
 
 import Store from "../models/store.model";
 import Order from "../models/order.model";
