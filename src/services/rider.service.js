@@ -187,9 +187,9 @@ const updateRider = async (updateParam, id) => {
   if (last_name) riderFields.last_name = last_name;
   if (phone_number) riderFields.phone_number = phone_number;
   if (profilePhoto) riderFields.profilePhoto = profilePhoto;
-  if (pushNotifications) riderFields.pushNotifications = pushNotifications;
-  if (smsNotifications) riderFields.smsNotifications = smsNotifications;
-  if (promotionalNotifications) riderFields.promotionalNotifications = promotionalNotifications;
+  if (pushNotifications === true || pushNotifications === false) riderFields.pushNotifications = pushNotifications;
+  if (smsNotifications === true || smsNotifications === false) riderFields.smsNotifications = smsNotifications;
+  if (promotionalNotifications === true || promotionalNotifications === false) riderFields.promotionalNotifications = promotionalNotifications;
 
   // Find rider from DB Collection
   let rider = await Rider.findById(id);
