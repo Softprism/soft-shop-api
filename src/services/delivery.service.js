@@ -213,10 +213,10 @@ const reviewDelivery = async (review) => {
 
   // check if delivery exists in stores's account
   const delivery = await Delivery.findOne({
-    _id: review.delivery,
-    status: "delivered"
+    _id: review.delivery
   });
   if (!delivery) return { err: "Delivery not found.", status: 404 };
+  if (delivery.status !== "delivered") return { err: "You are only allowed to review a delivery that has a status of delivered", status: 404 };
 
   // check if store has made any review
   const isReviewed = await Review.findOne({
