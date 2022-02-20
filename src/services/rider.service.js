@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import capitalize from "capitalize";
+import mongoose from "mongoose";
 import Rider from "../models/rider.model";
 import Token from "../models/tokens.model";
 
@@ -176,8 +177,7 @@ const resetPassword = async ({ token, email, password }) => {
 // Update Rider Details
 const updateRider = async (updateParam, id) => {
   const {
-    first_name, last_name, original_password, password,
-    phone_number, profilePhoto, pushNotifications, smsNotifications
+    first_name, last_name, original_password, password, phone_number, profilePhoto, pushNotifications, smsNotifications, promotionalNotifications
   } = updateParam;
   // Build Rider Object
   const riderFields = {};
@@ -187,9 +187,9 @@ const updateRider = async (updateParam, id) => {
   if (last_name) riderFields.last_name = last_name;
   if (phone_number) riderFields.phone_number = phone_number;
   if (profilePhoto) riderFields.profilePhoto = profilePhoto;
-  if (pushNotifications) riderFields.pushNotifications = profilePhoto;
-  if (smsNotifications) riderFields.smsNotifications = smsNotifications;
-  if (promotionalNotifications) riderFields.promotionalNotifications = promotionalNotifications;
+  if (pushNotifications === true || pushNotifications === false) riderFields.pushNotifications = pushNotifications;
+  if (smsNotifications === true || smsNotifications === false) riderFields.smsNotifications = smsNotifications;
+  if (promotionalNotifications === true || promotionalNotifications === false) riderFields.promotionalNotifications = promotionalNotifications;
 
   // Find rider from DB Collection
   let rider = await Rider.findById(id);
@@ -232,13 +232,13 @@ const loggedInRider = async (riderId) => {
   const pipeline = [
     {
       $unset: [
-        "rider.password",
+        "password",
       ],
     },
   ];
 
   const rider = await Rider.aggregate()
-    .match({ _id: riderId })
+    .match({ _id: mongoose.Types.ObjectId(riderId) })
     .lookup({
       from: "orders",
       localField: "_id",
@@ -270,8 +270,7 @@ const loggedInRider = async (riderId) => {
       averageRating: { $ifNull: ["$averageRating", 0] },
     })
     .append(pipeline);
-
-  return rider;
+  return rider[0];
 };
 
 export {

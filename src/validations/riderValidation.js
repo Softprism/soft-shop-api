@@ -142,6 +142,9 @@ const updateRiderValidation = {
         "string.empty": "Sorry, profile photo cannot be an empty field",
         "string.min": "Profile photo should be 11 numbers"
       }),
+    pushNotifications: Joi.boolean().empty(),
+    smsNotifications: Joi.boolean().empty(),
+    promotionalNotifications: Joi.boolean().empty()
   }).messages({
     "object.unknown": "You have used an invalid key."
   })
