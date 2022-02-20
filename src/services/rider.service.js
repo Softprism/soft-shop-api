@@ -228,7 +228,7 @@ const loggedInRider = async (riderId) => {
   const pipeline = [
     {
       $unset: [
-        "rider.password",
+        "password",
       ],
     },
   ];
