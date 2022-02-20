@@ -176,7 +176,8 @@ const resetPassword = async ({ token, email, password }) => {
 // Update Rider Details
 const updateRider = async (updateParam, id) => {
   const {
-    first_name, last_name, original_password, password, phone_number, profilePhoto
+    first_name, last_name, original_password, password,
+    phone_number, profilePhoto, pushNotifications, smsNotifications
   } = updateParam;
   // Build Rider Object
   const riderFields = {};
@@ -186,6 +187,9 @@ const updateRider = async (updateParam, id) => {
   if (last_name) riderFields.last_name = last_name;
   if (phone_number) riderFields.phone_number = phone_number;
   if (profilePhoto) riderFields.profilePhoto = profilePhoto;
+  if (pushNotifications) riderFields.pushNotifications = profilePhoto;
+  if (smsNotifications) riderFields.smsNotifications = smsNotifications;
+  if (promotionalNotifications) riderFields.promotionalNotifications = promotionalNotifications;
 
   // Find rider from DB Collection
   let rider = await Rider.findById(id);
@@ -220,6 +224,7 @@ const updateRider = async (updateParam, id) => {
 
 // Get Logged in User info
 const loggedInRider = async (riderId) => {
+  console.log("aaa");
   const rider1 = await Rider.findById(riderId).select("-password");
   if (!rider1) {
     return { err: "Rider does not exists.", status: 404 };
@@ -248,16 +253,16 @@ const loggedInRider = async (riderId) => {
     })
     .lookup({
       from: "reviews",
-      localField: "orders._id",
-      foreignField: "order",
-      as: "orderReview",
+      localField: "_id",
+      foreignField: "rider",
+      as: "deliveryReview",
     })
 
   // adding metrics to the response
     .addFields({
-      sumOfStars: { $sum: "$orderReview.star" },
-      numOfReviews: { $size: "$orderReview" },
-      averageRating: { $floor: { $avg: "$orderReview.star" } },
+      sumOfStars: { $sum: "$deliveryReview.star" },
+      numOfReviews: { $size: "$deliveryReview" },
+      averageRating: { $floor: { $avg: "$deliveryReview.star" } },
       deliveryCount: { $size: "$deliveries" },
       orderCount: { $size: "$orders" },
     })
@@ -265,6 +270,7 @@ const loggedInRider = async (riderId) => {
       averageRating: { $ifNull: ["$averageRating", 0] },
     })
     .append(pipeline);
+
   return rider;
 };
 

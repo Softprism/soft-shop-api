@@ -1,6 +1,8 @@
 import Rider from "../models/rider.model";
 import Order from "../models/order.model";
 import Delivery from "../models/delivery.model";
+import Review from "../models/review.model";
+import Store from "../models/store.model";
 import { sendUserOrderReadyMail } from "../utils/sendMail";
 import { sendUserOrderPickedUpSMS } from "../utils/sendSMS";
 
@@ -204,7 +206,32 @@ const getDeliveryById = async (deliveryId, riderId) => {
   return { delivery };
 };
 
+const reviewDelivery = async (review) => {
+  // check if user exists
+  const store = await Store.findById(review.store);
+  if (!store) return { err: "Store does not exists.", status: 404 };
+
+  // check if delivery exists in stores's account
+  const delivery = await Delivery.findOne({
+    _id: review.delivery,
+    status: "delivered"
+  });
+  if (!delivery) return { err: "Delivery not found.", status: 404 };
+
+  // check if store has made any review
+  const isReviewed = await Review.findOne({
+    delivery: review.delivery,
+    store: review.store,
+  });
+  if (isReviewed) return { err: "Your review has been submitted for this order already.", status: 409 };
+  review.rider = delivery.rider;
+  const newReview = Review.create(review);
+  // const newReview = Review.findById(userReview._id).populate("user", "first_name last_name");
+
+  return newReview;
+};
+
 export {
   createDelivery, acceptDelivery, updatedDeliveryStatus, updatedRiderStatus,
-  getAllDeliveries, getDeliveryById, completeDelivery
+  getAllDeliveries, getDeliveryById, completeDelivery, reviewDelivery
 };
