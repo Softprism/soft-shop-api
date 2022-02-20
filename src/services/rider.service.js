@@ -266,7 +266,7 @@ const loggedInRider = async (riderId) => {
       averageRating: { $ifNull: ["$averageRating", 0] },
     })
     .append(pipeline);
-  return rider;
+  return rider[0];
 };
 
 export {
