@@ -423,6 +423,8 @@ const getStore = async (urlParams, storeId) => {
 
 const createStore = async (StoreParam) => {
   const {
+    owner_name,
+    owner_email,
     name,
     address,
     place_id,

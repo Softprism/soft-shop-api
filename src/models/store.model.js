@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
 
 const StoreSchema = mongoose.Schema({
+  owner_name: { type: String, required: true },
+  owner_email: { type: String, required: true },
   name: { type: String, required: true },
   images: {
     profilePhoto: { type: String, required: true },

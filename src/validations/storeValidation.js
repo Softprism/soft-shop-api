@@ -3,6 +3,17 @@ import objectId from "./common";
 
 const registerStore = {
   body: Joi.object({
+    owner_name: Joi.string().min(2).empty().messages({
+      "any.required": "Owner Name is required.",
+      "string.empty": "Sorry, owner name cannot be an empty field",
+      "string.min": "Owner Name should be two characters or more"
+    }),
+    owner_email: Joi.string().email().empty().required()
+      .messages({
+        "any.required": "Owner Email is required.",
+        "string.email": "Please enter a valid email",
+        "string.empty": "Sorry, owner email cannot be an empty field",
+      }),
     name: Joi.string().min(2).empty().messages({
       "any.required": "Name is required.",
       "string.empty": "Sorry, name cannot be an empty field",
