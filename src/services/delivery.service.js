@@ -162,7 +162,7 @@ const completeDelivery = async (orderId, userId) => {
   return { updatedOrder, delivery };
 };
 
-const getAllDeliveries = async (riderId, urlParams) => {
+const getAllDeliveries = async (urlParams) => {
   const limit = Number(urlParams.limit);
   const skip = Number(urlParams.skip);
 
@@ -174,7 +174,7 @@ const getAllDeliveries = async (riderId, urlParams) => {
     condition.status = urlParams.status;
   }
   if (urlParams.rider) {
-    condition.rider = riderId;
+    condition.rider = urlParams.riderId;
   }
   const deliveries = await Delivery.find(condition)
     .populate([

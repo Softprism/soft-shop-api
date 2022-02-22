@@ -104,8 +104,7 @@ const update_RiderStatus = async (req, res, next) => {
 // ========================================================================== //
 const getAll_Deliveries = async (req, res, next) => {
   try {
-    const { _id } = req.rider;
-    const action = await getAllDeliveries(_id, req.query);
+    const action = await getAllDeliveries(req.query);
     if (action.err) {
       return res
         .status(action.status)
