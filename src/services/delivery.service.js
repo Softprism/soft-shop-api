@@ -174,7 +174,7 @@ const getAllDeliveries = async (urlParams) => {
     condition.status = urlParams.status;
   }
   if (urlParams.rider) {
-    condition.rider = urlParams.riderId;
+    condition.rider = urlParams.rider;
   }
   const deliveries = await Delivery.find(condition)
     .populate([
