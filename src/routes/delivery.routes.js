@@ -4,7 +4,7 @@ import express from "express";
 import auth from "../middleware/auth";
 import {
   create_Delivery, accept_Delivery, update_DeliveryStatus, complete_Delivery,
-  update_RiderStatus, getAll_Deliveries, get_DeliveryById
+  update_RiderStatus, getAll_Deliveries, get_DeliveryById, review_delivery
 } from "../controllers/delivery.controller";
 import checkPagination from "../middleware/checkPagination";
 import { isStoreAdmin } from "../middleware/Permissions";
@@ -25,6 +25,11 @@ router.patch("/accept/:deliveryId", auth, accept_Delivery);
 // @desc    User complete delivery
 // @access  Private
 router.patch("/complete/:orderId", auth, complete_Delivery);
+
+// @route   PUT /review
+// @desc    user adds review to their order
+// @access  Private
+router.post("/review/:deliveryId?", auth, review_delivery);
 
 // @route   PATCH delivery-status/:deliveryId
 // @desc    Update delivery status

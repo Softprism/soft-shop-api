@@ -1,6 +1,8 @@
 import Rider from "../models/rider.model";
 import Order from "../models/order.model";
 import Delivery from "../models/delivery.model";
+import Review from "../models/review.model";
+import Store from "../models/store.model";
 import { sendUserOrderReadyMail } from "../utils/sendMail";
 import { sendUserOrderPickedUpSMS } from "../utils/sendSMS";
 
@@ -43,6 +45,7 @@ const createDelivery = async (orderId, storeId) => {
     phone_number: user.phone_number,
     order: orderId,
     user: user._id,
+    store: store._id
   };
   // create delivery
   const delivery = await Delivery.create(newDelivery);
@@ -159,7 +162,7 @@ const completeDelivery = async (orderId, userId) => {
   return { updatedOrder, delivery };
 };
 
-const getAllDeliveries = async (riderId, urlParams) => {
+const getAllDeliveries = async (urlParams) => {
   const limit = Number(urlParams.limit);
   const skip = Number(urlParams.skip);
 
@@ -170,7 +173,9 @@ const getAllDeliveries = async (riderId, urlParams) => {
   if (urlParams.status) {
     condition.status = urlParams.status;
   }
-  condition.rider = riderId;
+  if (urlParams.rider) {
+    condition.rider = urlParams.rider;
+  }
   const deliveries = await Delivery.find(condition)
     .populate([
       { path: "rider", select: "_id first_name last_name" },
@@ -204,7 +209,30 @@ const getDeliveryById = async (deliveryId, riderId) => {
   return { delivery };
 };
 
+const reviewDelivery = async (review) => {
+  // check if store exists
+  const store = await Store.findById(review.store);
+  if (!store) return { err: "Store does not exists.", status: 404 };
+  // check if delivery exists in stores's account
+  const delivery = await Delivery.findOne({
+    _id: review.delivery,
+    store: store._id
+  });
+  if (!delivery) return { err: "Delivery not found.", status: 404 };
+  if (delivery.status !== "delivered") return { err: "You are only allowed to review a delivery that has a status of delivered", status: 404 };
+
+  // check if store has made any review
+  const isReviewed = await Review.findOne({
+    delivery: review.delivery,
+    store: review.store,
+  });
+  if (isReviewed) return { err: "Your review has been submitted for this order already.", status: 409 };
+  review.rider = delivery.rider;
+  const newReview = Review.create(review);
+  return newReview;
+};
+
 export {
   createDelivery, acceptDelivery, updatedDeliveryStatus, updatedRiderStatus,
-  getAllDeliveries, getDeliveryById, completeDelivery
+  getAllDeliveries, getDeliveryById, completeDelivery, reviewDelivery
 };

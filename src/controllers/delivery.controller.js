@@ -1,6 +1,6 @@
 import {
   createDelivery, acceptDelivery, updatedDeliveryStatus, updatedRiderStatus,
-  getAllDeliveries, getDeliveryById, completeDelivery
+  getAllDeliveries, getDeliveryById, completeDelivery, reviewDelivery
 } from "../services/delivery.service";
 
 // ========================================================================== //
@@ -104,8 +104,7 @@ const update_RiderStatus = async (req, res, next) => {
 // ========================================================================== //
 const getAll_Deliveries = async (req, res, next) => {
   try {
-    const { _id } = req.rider;
-    const action = await getAllDeliveries(_id, req.query);
+    const action = await getAllDeliveries(req.query);
     if (action.err) {
       return res
         .status(action.status)
@@ -138,7 +137,30 @@ const get_DeliveryById = async (req, res, next) => {
   }
 };
 
+const review_delivery = async (req, res, next) => {
+  try {
+    if (req.params.deliveryId) req.body.delivery = req.params.deliveryId;
+
+    if (req.user) {
+      return res
+        .status(400)
+        .json({ success: false, msg: "action not allowed for user", status: 400 });
+    }
+    if (req.store) req.body.store = req.store.id;
+
+    const newReview = await reviewDelivery(req.body);
+
+    if (newReview.err) {
+      return res.status(newReview.status).json({ success: false, msg: newReview.err, status: newReview.status });
+    }
+
+    res.status(200).json({ success: true, result: newReview, status: 200 });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export {
   create_Delivery, accept_Delivery, update_DeliveryStatus, complete_Delivery,
-  update_RiderStatus, getAll_Deliveries, get_DeliveryById,
+  update_RiderStatus, getAll_Deliveries, get_DeliveryById, review_delivery
 };
