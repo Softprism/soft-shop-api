@@ -173,6 +173,9 @@ const getAllDeliveries = async (riderId, urlParams) => {
   if (urlParams.status) {
     condition.status = urlParams.status;
   }
+  if (urlParams.rider) {
+    condition.rider = riderId;
+  }
   const deliveries = await Delivery.find(condition)
     .populate([
       { path: "rider", select: "_id first_name last_name" },
