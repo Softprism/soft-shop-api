@@ -45,6 +45,7 @@ const createDelivery = async (orderId, storeId) => {
     phone_number: user.phone_number,
     order: orderId,
     user: user._id,
+    store: store._id
   };
   // create delivery
   const delivery = await Delivery.create(newDelivery);
@@ -207,13 +208,13 @@ const getDeliveryById = async (deliveryId, riderId) => {
 };
 
 const reviewDelivery = async (review) => {
-  // check if user exists
+  // check if store exists
   const store = await Store.findById(review.store);
   if (!store) return { err: "Store does not exists.", status: 404 };
-
   // check if delivery exists in stores's account
   const delivery = await Delivery.findOne({
-    _id: review.delivery
+    _id: review.delivery,
+    store: store._id
   });
   if (!delivery) return { err: "Delivery not found.", status: 404 };
   if (delivery.status !== "delivered") return { err: "You are only allowed to review a delivery that has a status of delivered", status: 404 };
@@ -226,8 +227,6 @@ const reviewDelivery = async (review) => {
   if (isReviewed) return { err: "Your review has been submitted for this order already.", status: 409 };
   review.rider = delivery.rider;
   const newReview = Review.create(review);
-  // const newReview = Review.findById(userReview._id).populate("user", "first_name last_name");
-
   return newReview;
 };
 
