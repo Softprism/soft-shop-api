@@ -1,16 +1,10 @@
+import capitalize from "capitalize";
 import Recommend from "../models/recommend-vendor.model";
 
 const recommendVendor = async (vendorParam) => {
   const {
     name, state, email, city, instagram
   } = vendorParam;
-    // seperate the user names
-  const arr = name.split(" ");
-
-  for (let i = 0; i < arr.length; i++) {
-    arr[i] = arr[i].charAt(0).toUpperCase() + arr[i].slice(1);
-  }
-  const Name = arr.join(" ");
 
   // find the vendor has already been recommended
   const vendorExist = await Recommend.findOne({ email });
@@ -20,7 +14,7 @@ const recommendVendor = async (vendorParam) => {
   }
   // create Waitlist
   const recommendedVendor = await Recommend.create({
-    name: Name,
+    name: capitalize(name),
     email,
     state,
     city,
