@@ -17,7 +17,7 @@ const router = express.Router();
 // @route   GET /category
 // @desc    Get all Categories
 // @access  Public
-router.get("/", auth, getCategories);
+router.get("/", getCategories);
 
 // @route   POST /category/new
 // @desc    Create New Category
