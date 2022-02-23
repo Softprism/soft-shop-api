@@ -12,6 +12,8 @@ import notificationRoutes from "./notification.routes";
 import deliveryRoutes from "./delivery.routes";
 import servicesRoutes from "./services.routes";
 import testRoutes from "./test.routes";
+import waitlistRoutes from "./waitlist.routes";
+import vendorRoutes from "./vendor.routes";
 
 const router = new Router();
 // api routes
@@ -28,5 +30,7 @@ router.use("/riders/notifications", notificationRoutes);
 router.use("/deliveries", deliveryRoutes);
 router.use("/services", servicesRoutes);
 router.use("/test", testRoutes);
+router.use("/waitlists", waitlistRoutes);
+router.use("/vendors", vendorRoutes);
 
 export default router;
