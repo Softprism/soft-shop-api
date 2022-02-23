@@ -13,7 +13,7 @@ const router = express.Router();
 // @route   GET /address
 // @desc    Get address predictions from input
 // @access  Private
-router.get("/address", auth, getAddresses);
+router.get("/address", getAddresses);
 
 // @route   GET /address
 // @desc    Get address predictions from input
