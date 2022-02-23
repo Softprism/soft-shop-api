@@ -122,8 +122,7 @@ const getAll_Deliveries = async (req, res, next) => {
 const get_DeliveryById = async (req, res, next) => {
   try {
     const { deliveryId } = req.params;
-    const { _id } = req.rider;
-    const action = await getDeliveryById(deliveryId, _id);
+    const action = await getDeliveryById(deliveryId);
     if (action.err) {
       return res
         .status(action.status)

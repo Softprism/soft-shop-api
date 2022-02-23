@@ -191,8 +191,8 @@ const getAllDeliveries = async (urlParams) => {
   return { deliveries };
 };
 
-const getDeliveryById = async (deliveryId, riderId) => {
-  const delivery = await Delivery.findOne({ _id: deliveryId, rider: riderId })
+const getDeliveryById = async (deliveryId) => {
+  const delivery = await Delivery.findOne({ _id: deliveryId })
     .populate([
       { path: "rider", select: "first_name last_name" },
       {
