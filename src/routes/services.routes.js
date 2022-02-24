@@ -18,11 +18,11 @@ router.get("/address", getAddresses);
 // @route   GET /address
 // @desc    Get address predictions from input
 // @access  Private
-router.get("/geocode", auth, validator(geoCodeValidation), getGeocode);
+router.get("/geocode", validator(geoCodeValidation), getGeocode);
 
 // @route   GET /distance
 // @desc    Get distance from user to store
 // @access  Private
-router.get("/distance", auth, getDistance);
+router.get("/distance", getDistance);
 
 export default router;

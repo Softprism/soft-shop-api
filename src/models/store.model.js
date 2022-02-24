@@ -5,8 +5,8 @@ const StoreSchema = mongoose.Schema({
   owner_email: { type: String, required: true },
   name: { type: String, required: true },
   images: {
-    profilePhoto: { type: String, required: true },
-    pictures: [{ type: String, required: true }],
+    profilePhoto: { type: String },
+    pictures: [{ type: String }],
   }, // array to store multiple images
   address: { type: String, required: true },
   place_id: { type: String },
@@ -16,8 +16,8 @@ const StoreSchema = mongoose.Schema({
   },
   password: { type: String, required: true },
   category: { type: mongoose.Schema.Types.ObjectId, ref: "Category" },
-  openingTime: { type: String, required: true },
-  closingTime: { type: String, required: true },
+  openingTime: { type: String },
+  closingTime: { type: String },
   deliveryTime: { type: String },
   prepTime: { type: Number },
   location: {

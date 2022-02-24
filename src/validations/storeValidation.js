@@ -32,8 +32,7 @@ const registerStore = {
         "string.min": "Phone number should be 11 numbers"
       }),
     images: Joi.object({
-      profilePhoto: Joi.string().required().empty().messages({
-        "any.required": "Profile Photo is required.",
+      profilePhoto: Joi.string().empty().messages({
         "string.empty": "Sorry, profile photo cannot be an empty field"
       }),
       pictures: Joi.array()
@@ -42,8 +41,8 @@ const registerStore = {
       "any.required": "Category id is required.",
       "string.length": "Category id must be a valid mongoose id.",
     }),
-    location: Joi.required().empty().messages({
-      "any.required": "location is required."
+    location: Joi.string().empty().messages({
+      "string.empty": "Sorry, location cannot be an empty field"
     }),
     password: Joi.string().min(6).empty().required()
       .messages({
@@ -52,11 +51,9 @@ const registerStore = {
         "string.min": "Password should be six characters or more"
       }),
     openingTime: Joi.string().messages({
-      "string.empty": "Sorry, Opening Time cannot be an empty field",
-      "any.required": "Opening Time is required."
+      "string.empty": "Sorry, Opening Time cannot be an empty field"
     }),
     closingTime: Joi.string().empty().messages({
-      "any.required": "Closing Time is required.",
       "string.empty": "Sorry, Closing Time cannot be an empty field",
     }),
     address: Joi.string().empty().min(2).messages({
