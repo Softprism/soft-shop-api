@@ -41,8 +41,8 @@ const registerStore = {
       "any.required": "Category id is required.",
       "string.length": "Category id must be a valid mongoose id.",
     }),
-    location: Joi.string().empty().messages({
-      "string.empty": "Sorry, location cannot be an empty field"
+    location: Joi.object({
+      coordinates: Joi.array()
     }),
     password: Joi.string().min(6).empty().required()
       .messages({
