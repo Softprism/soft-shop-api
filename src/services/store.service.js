@@ -472,7 +472,7 @@ const createStore = async (StoreParam) => {
 const loginStore = async (StoreParam) => {
   const { email, password } = StoreParam;
 
-  let store = await Store.findOne({ email }).select("password isVerified resetPassword pendingUpdates name pendingWithdrawal");
+  let store = await Store.findOne({ email }).select("password isVerified isActive resetPassword pendingUpdates name pendingWithdrawal");
 
   if (!store) {
     return { err: "Invalid email. Please try again.", status: 400 };
