@@ -608,7 +608,7 @@ const updateStorePhoto = async (storeID, updateParam) => {
       }
     },
     { new: true }
-  );
+  ).select("_id name images");
   if (!checkStoreUpdate) return { err: "An error occurred while updating profile, please try again.", status: 400 };
 
   let storeRes = await getStore({}, storeID);
