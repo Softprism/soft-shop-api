@@ -31,7 +31,7 @@ const StoreSchema = mongoose.Schema({
     },
   ],
   isVerified: { type: Boolean, default: false }, // this validates a store on the platform
-  isActive: { type: Boolean, default: true }, // this shows if a store is available to receive orders
+  isActive: { type: Boolean, default: false }, // this shows if a store is available to receive orders
   resetPassword: { type: String, default: "initiated", enum: ["initiated", "done"] },
   pendingUpdates: { type: Boolean, default: false },
   pendingWithdrawal: { type: Boolean, default: false },

@@ -171,6 +171,23 @@ const getAllStoresUpdateRequests = async (urlParams) => {
   return requests;
 };
 
+const toggleStoreActive = async (urlParams) => {
+  const { storeId } = urlParams;
+  const fetchStore = await Store.findById(storeId);
+  if (!fetchStore) {
+    return { err: "Store does not exists." };
+  }
+  let store = {};
+  if (fetchStore.isActive) {
+    store = await Store.findByIdAndUpdate(storeId, { isActive: false }, { new: true });
+  }
+  if (!fetchStore.isActive) {
+    store = await Store.findByIdAndUpdate(storeId, { isActive: true }, { new: true });
+  }
+
+  return store;
+};
+
 const confirmStoreUpdate = async (storeID) => {
   // use service to update store profile
   // also use for legacy admin store profile update action
@@ -335,5 +352,7 @@ const createCompayLedger = async () => {
 };
 
 export {
-  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin, resetStorePassword, confirmStoreUpdate, createNotification, confirmStorePayout, createCompayLedger, getAllStoresUpdateRequests, getResetPasswordRequests
+  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin,
+  resetStorePassword, confirmStoreUpdate, createNotification, confirmStorePayout,
+  createCompayLedger, getAllStoresUpdateRequests, getResetPasswordRequests, toggleStoreActive
 };

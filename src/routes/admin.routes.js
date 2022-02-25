@@ -4,10 +4,8 @@ import { isAdmin } from "../middleware/Permissions";
 import {
   getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin,
   resetStorePassword, confirmStoreUpdate, createTransaction, confirmStorePayout,
-  createNotification,
-  createCompayLedger,
-  getAllStoresUpdateRequests,
-  getResetPasswordRequests
+  createNotification, createCompayLedger, getAllStoresUpdateRequests,
+  getResetPasswordRequests, toggleStore
 } from "../controllers/admin.controller";
 import validator from "../middleware/validator";
 import { register, login } from "../validations/adminValidation";
@@ -73,6 +71,7 @@ router.get("/stores/updates", auth, checkPagination, getAllStoresUpdateRequests)
 router.post("/transactions", auth, isAdmin, createTransaction);
 
 router.put("/transactions/:storeId", auth, isAdmin, confirmStorePayout);
+router.put("/stores/:storeId/toggle", auth, isAdmin, toggleStore);
 
 router.post("/ledger", auth, isAdmin, createCompayLedger);
 router.get("/transactions", auth, isAdmin, getTransactions);

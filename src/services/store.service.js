@@ -481,6 +481,9 @@ const loginStore = async (StoreParam) => {
   if (process.env.NODE_ENV === "production" && store.isVerified === false) {
     return { err: "Please complete your verification.", status: 401 };
   }
+  if (!store.isActive) {
+    return { err: "Sorry store is inactive, kindly contact an admin.", status: 401 };
+  }
   // Check if password matches with stored hash
   const isMatch = await bcrypt.compare(password, store.password);
 

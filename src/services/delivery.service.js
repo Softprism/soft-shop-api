@@ -182,7 +182,7 @@ const getAllDeliveries = async (urlParams) => {
       {
         path: "order", select: "deliveryAddress", populate: "store"
       },
-      { path: "user", select: "_id first_name last_name phone_number" },
+      { path: "user", select: "_id first_name last_name phone_number address" },
     ])
     .sort({ createdDate: -1 }) // -1 for descending sort
     .skip(skip)
@@ -198,7 +198,7 @@ const getDeliveryById = async (deliveryId) => {
       {
         path: "order", select: "deliveryAddress", populate: "store"
       },
-      { path: "user", select: "_id first_name, last_name phone_number" },
+      { path: "user", select: "_id first_name, last_name phone_number address" },
     ]);
   if (!delivery) {
     return {

@@ -9,6 +9,6 @@ const router = express.Router();
 // @route   Post /vendors/recommend
 // @desc    recommend a vendor
 // @access  Public
-router.post("/recommend", auth, validator(recommendVendorValidation), recommend_vendor);
+router.post("/recommend", validator(recommendVendorValidation), recommend_vendor);
 
 export default router;
