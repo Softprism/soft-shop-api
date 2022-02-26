@@ -370,6 +370,13 @@ const getAllStores = async (urlParams) => {
   return { stores };
 };
 
+const getStoreById = async (storeId) => {
+  const store = await Store.findById(storeId);
+  if (!store) return { err: "Store not found." };
+
+  return { store };
+};
+
 // Get all Users
 const getUsers = async (urlParams) => {
   const limit = Number(urlParams.limit);
@@ -381,16 +388,23 @@ const getUsers = async (urlParams) => {
 
   const users = await User.find(urlParams)
     .select("-password -orders -cart")
-    .sort({ createdDate: -1 }) // -1 for descending sort
     .skip(skip)
     .limit(limit);
 
   return users;
 };
 
+const getUserById = async (userId) => {
+  const user = await User.findById(userId)
+    .select("-password -orders -cart");
+  if (!user) return { err: "User does not exist." };
+
+  return { user };
+};
+
 export {
   getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin,
   resetStorePassword, confirmStoreUpdate, createNotification, confirmStorePayout,
   createCompayLedger, getAllStoresUpdateRequests, getResetPasswordRequests,
-  toggleStoreActive, getAllStores, getUsers
+  toggleStoreActive, getAllStores, getUsers, getStoreById, getUserById
 };

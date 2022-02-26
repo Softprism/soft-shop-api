@@ -174,7 +174,9 @@ const toggleStore = async (req, res, next) => {
 const getAllStores = async (req, res, next) => {
   try {
     const stores = await adminService.getAllStores(req.query);
-    res.status(200).json({ success: true, result: stores, status: 200 });
+    res.status(200).json({
+      success: true, result: stores, size: stores.length, status: 200
+    });
   } catch (error) {
     next(error);
   }
@@ -193,9 +195,33 @@ const getUsers = async (req, res, next) => {
   }
 };
 
+const getUserById = async (req, res, next) => {
+  try {
+    const user = await adminService.getUserById(req.params.userId);
+
+    return res.status(200).json({
+      success: true, result: user, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getStoreById = async (req, res, next) => {
+  try {
+    const store = await adminService.getStoreById(req.params.storeId);
+
+    return res.status(200).json({
+      success: true, result: store, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export {
   getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin,
   resetStorePassword, confirmStoreUpdate, createNotification, createTransaction,
   confirmStorePayout, createCompayLedger, getAllStoresUpdateRequests,
-  getResetPasswordRequests, toggleStore, getAllStores, getUsers
+  getResetPasswordRequests, toggleStore, getAllStores, getUsers, getUserById, getStoreById
 };
