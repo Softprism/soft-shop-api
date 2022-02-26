@@ -17,13 +17,9 @@ import {
 } from "../validations/userValidation";
 import { sendSignUpOTPmail, sendUserSignUpMail } from "../utils/sendMail";
 import { sendUserSignupSMS } from "../utils/sendSMS";
+import { isAdmin } from "../middleware/Permissions";
 
 const router = express.Router();
-
-// @route   GET /users
-// @desc    Get all Users
-// @access  Public
-router.get("/", checkPagination, getUsers);
 
 // @route   POST /verify
 // @desc    send OTP to verify new user signup email

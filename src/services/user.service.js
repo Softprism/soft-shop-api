@@ -16,24 +16,6 @@ import { verifyCardRequest } from "./payment.service";
 import { sendForgotPasswordSMS } from "../utils/sendSMS";
 import { createLog } from "./logs.service";
 
-// Get all Users
-const getUsers = async (urlParams) => {
-  const limit = Number(urlParams.limit);
-  const skip = Number(urlParams.skip);
-
-  delete urlParams.limit;
-  delete urlParams.skip;
-  delete urlParams.page;
-
-  const users = await User.find(urlParams)
-    .select("-password -orders -cart")
-    .sort({ createdDate: -1 }) // -1 for descending sort
-    .skip(skip)
-    .limit(limit);
-
-  return users;
-};
-
 // send otp to Verify user email before sign up
 const verifyEmailAddress = async ({ email }) => {
   // check if user exists
@@ -516,7 +498,6 @@ const createNewPassword = async ({ token, email, password }) => {
 };
 
 export {
-  getUsers,
   verifyEmailAddress,
   registerUser,
   loginUser,

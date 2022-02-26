@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 
 import mongoose from "mongoose";
 import Admin from "../models/admin.model";
+import User from "../models/user.model";
 import Store from "../models/store.model";
 import Notification from "../models/notification.models";
 import StoreUpdate from "../models/store-update.model";
@@ -351,8 +352,45 @@ const createCompayLedger = async () => {
   return newLedger;
 };
 
+const getAllStores = async (urlParams) => {
+  const limit = Number(urlParams.limit);
+  const skip = Number(urlParams.skip);
+
+  delete urlParams.limit;
+  delete urlParams.skip;
+  delete urlParams.page;
+  let condition = {};
+  if (urlParams.isActive) {
+    condition.isActive = urlParams.isActive;
+  }
+  const stores = await Store.find(condition)
+    .skip(skip)
+    .limit(limit);
+
+  return { stores };
+};
+
+// Get all Users
+const getUsers = async (urlParams) => {
+  const limit = Number(urlParams.limit);
+  const skip = Number(urlParams.skip);
+
+  delete urlParams.limit;
+  delete urlParams.skip;
+  delete urlParams.page;
+
+  const users = await User.find(urlParams)
+    .select("-password -orders -cart")
+    .sort({ createdDate: -1 }) // -1 for descending sort
+    .skip(skip)
+    .limit(limit);
+
+  return users;
+};
+
 export {
   getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin,
   resetStorePassword, confirmStoreUpdate, createNotification, confirmStorePayout,
-  createCompayLedger, getAllStoresUpdateRequests, getResetPasswordRequests, toggleStoreActive
+  createCompayLedger, getAllStoresUpdateRequests, getResetPasswordRequests,
+  toggleStoreActive, getAllStores, getUsers
 };

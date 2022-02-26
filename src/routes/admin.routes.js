@@ -5,7 +5,7 @@ import {
   getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin,
   resetStorePassword, confirmStoreUpdate, createTransaction, confirmStorePayout,
   createNotification, createCompayLedger, getAllStoresUpdateRequests,
-  getResetPasswordRequests, toggleStore
+  getResetPasswordRequests, toggleStore, getAllStores, getUsers
 } from "../controllers/admin.controller";
 import validator from "../middleware/validator";
 import { register, login } from "../validations/adminValidation";
@@ -16,10 +16,20 @@ import checkPagination from "../middleware/checkPagination";
 
 const router = express.Router();
 
-// @route   GET /admins/all
+// @route   GET /admins/stores
 // @desc    Get all Admin Users
 // @access  Public
 router.get("/all", auth, isAdmin, getAdmins);
+
+// @route   GET /admins/all
+// @desc    Get all Stores
+// @access  Public
+router.get("/stores", auth, isAdmin, checkPagination, getAllStores);
+
+// @route   GET /users
+// @desc    Get all Users
+// @access  Private
+router.get("/users", auth, isAdmin, checkPagination, getUsers);
 
 // @route   POST admin/register
 // @desc    Register an Admin account

@@ -8,20 +8,6 @@ const router = express.Router();
 
 // ========================================================================== //
 
-const getUsers = async (req, res, next) => {
-  try {
-    const users = await userService.getUsers(req.query);
-
-    return res.status(200).json({
-      success: true, result: users, size: users.length, status: 200
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// ========================================================================== //
-
 const verifyEmailAddress = async (req, res, next) => {
   try {
     const action = await userService.verifyEmailAddress(req.body);
@@ -305,7 +291,6 @@ const createNewPassword = async (req, res, next) => {
 // ========================================================================== //
 
 export {
-  getUsers,
   verifyEmailAddress,
   registerUser,
   loginUser,

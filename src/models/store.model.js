@@ -5,7 +5,10 @@ const StoreSchema = mongoose.Schema({
   owner_email: { type: String, required: true },
   name: { type: String, required: true },
   images: {
-    profilePhoto: { type: String },
+    profilePhoto: {
+      type: String,
+      default: "https://soft-shop.app/../uploads/store/292672-edit.svg"
+    },
     pictures: [{ type: String }],
   }, // array to store multiple images
   address: { type: String, required: true },

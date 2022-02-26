@@ -436,7 +436,6 @@ const createStore = async (StoreParam) => {
     location,
     category
   } = StoreParam;
-  console.log(StoreParam);
   let store = await Store.findOne({ email });
 
   if (store) {
