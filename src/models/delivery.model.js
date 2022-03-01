@@ -17,7 +17,7 @@ const deliverySchema = mongoose.Schema({
     default: "pending",
   },
   createdDate: { type: Date, default: Date.now },
-});
+}, { timestamps: true });
 
 const Delivery = mongoose.model("Delivery", deliverySchema);
 
