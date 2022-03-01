@@ -17,12 +17,12 @@ const createDelivery = async (orderId, storeId) => {
     return { err: "Order does not exists.", status: 404, };
   }
   // check for order status
-  if (order.status === "ready" || order.status === "accepted" || order.status === "enroute" || order.status === "delivered" || order.status === "completed") {
+  if (order.status === "sent" || order.status === "accepted" || order.status === "enroute" || order.status === "delivered" || order.status === "completed") {
     return { err: "Sorry you can't create delivery for this Order.", status: 409, };
   }
   // check for order payment status
-  if (order.status !== "sent") {
-    return { err: "Payment hasn't been made for this Order.", status: 409, };
+  if (order.status !== "ready") {
+    return { err: "Order isn't ready for delivery.", status: 409, };
   }
   // check if store owner is the same with the logged in user
   if ((order.store._id).toString() !== storeId) {

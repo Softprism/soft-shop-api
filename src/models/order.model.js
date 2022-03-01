@@ -59,12 +59,12 @@ const OrderSchema = mongoose.Schema(
       required: true,
       default: false,
     },
-    // initiated (after creating order and await payment) => sent(payment confirmation) => ready(store sends order for delivery => accepted (when rider accepts an order) => enroute(item is on the way) => delivered (item is at user's location) => completed (user receives order)
+    // initiated (after creating order and await payment) => sent(payment confirmation) => approved(when store approves an order) => ready(store sends order for delivery => accepted(when rider accepts an order) => enroute(item is on the way) => delivered(item is at user's location) =>  completed(user receives order)
     status: {
       type: String,
       required: true,
       default: "initiated",
-      enum: ["initiated", "sent", "canceled", "ready", "accepted", "enroute", "delivered", "completed"]
+      enum: ["initiated", "sent", "canceled", "ready", "accepted", "enroute", "delivered", "completed", "approved"]
     },
     orderItems: [
       {

@@ -470,6 +470,10 @@ const getOrderDetails = async (orderID) => {
 
 const editOrder = async (orderID, orderParam) => {
   // can be used by both stores and users
+  const order = await Order.findById(orderID);
+  if (orderParam.status === "ready" && order.status !== "approved") {
+    return { err: "Sorry you can only set an order to ready after it has been approved by a store" };
+  }
   await Order.findByIdAndUpdate(
     orderID,
     { $set: orderParam },
