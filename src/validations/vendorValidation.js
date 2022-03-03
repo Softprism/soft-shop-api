@@ -17,8 +17,7 @@ const recommendVendorValidation = {
       "any.required": "city is required.",
       "string.empty": "Sorry, city cannot be an empty field",
     }),
-    instagram: Joi.string().empty().required().messages({
-      "any.required": "instagram is required.",
+    instagram: Joi.string().empty().messages({
       "string.empty": "Sorry, instagram cannot be an empty field",
     })
   }).messages({
