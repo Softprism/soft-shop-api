@@ -5,13 +5,15 @@ const recommendVendor = async (vendorParam) => {
   const {
     name, state, email, city, instagram
   } = vendorParam;
-
-  // find the vendor has already been recommended
-  const vendorExist = await Recommend.findOne({ email });
-  // check for if email exist
-  if (vendorExist) {
-    return { err: "Vendor has already been recommended.", status: 409, };
+  if (email) {
+    // find the vendor has already been recommended
+    const vendorExist = await Recommend.findOne({ email });
+    // check for if email exist
+    if (vendorExist) {
+      return { err: "Vendor has already been recommended.", status: 409, };
+    }
   }
+
   // create Waitlist
   const recommendedVendor = await Recommend.create({
     name: capitalize(name),
