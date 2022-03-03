@@ -6,7 +6,7 @@ const recommendSchema = mongoose.Schema(
     email: { type: String, ref: "User", },
     state: { type: String, required: true },
     city: { type: String, required: true },
-    instagram: { type: String, required: true }
+    instagram: { type: String }
   },
   { timestamps: true }
 );

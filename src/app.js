@@ -19,13 +19,12 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(cors());
 
-// sanitization and other preventive measures
+// sanitization and other preventive measuress
 app.use(mongoSanitize());
 app.use(xss());
 app.use(hpp());
 
-// compress all responses
-
+// compress all response
 // app.use(compression({ level: 1 }));
 // api routes
 app.use("/api/v1", router);
