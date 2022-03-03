@@ -15,7 +15,7 @@ const recommendVendor = async (vendorParam) => {
     }
   }
 
-  // create Waitlist
+  // create Waitlist for vendors
   const recommendedVendor = await Recommend.create({
     name: capitalize(name),
     email,
