@@ -224,7 +224,6 @@ const updateRider = async (updateParam, id) => {
 
 // Get Logged in User info
 const loggedInRider = async (riderId) => {
-  console.log("aaa");
   const rider1 = await Rider.findById(riderId).select("-password");
   if (!rider1) {
     return { err: "Rider does not exists.", status: 404 };

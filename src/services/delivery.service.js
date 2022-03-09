@@ -198,7 +198,7 @@ const getDeliveryById = async (deliveryId) => {
       {
         path: "order", select: "deliveryAddress", populate: "store"
       },
-      { path: "user", select: "_id first_name, last_name phone_number address" },
+      { path: "user", select: "_id first_name last_name phone_number address" },
     ]);
   if (!delivery) {
     return {
@@ -219,7 +219,7 @@ const reviewDelivery = async (review) => {
     store: store._id
   });
   if (!delivery) return { err: "Delivery not found.", status: 404 };
-  if (delivery.status !== "delivered") return { err: "You are only allowed to review a delivery that has a status of delivered", status: 404 };
+  if (delivery.status !== "delivered") return { err: "You are only allowed to review a delivery that does not have a status of delivered", status: 404 };
 
   // check if store has made any review
   const isReviewed = await Review.findOne({

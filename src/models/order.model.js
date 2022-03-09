@@ -20,6 +20,10 @@ const OrderSchema = mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Delivery",
     },
+    review: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Review",
+    },
     orderId: {
       type: String,
       unique: true,

@@ -458,6 +458,12 @@ const getOrderDetails = async (orderID) => {
       as: "delivery",
     })
     .lookup({
+      from: "reviews",
+      localField: "rider",
+      foreignField: "rider",
+      as: "deliveryReview",
+    })
+    .lookup({
       from: "customfees",
       localField: "orderItems.product",
       foreignField: "product",
@@ -469,6 +475,15 @@ const getOrderDetails = async (orderID) => {
       store: { $arrayElemAt: ["$store", 0] },
       rider: { $arrayElemAt: ["$rider", 0] },
       delivery: { $arrayElemAt: ["$delivery", 0] },
+    })
+    .addFields({
+      sumOfStars: { $sum: "$deliveryReview.star" },
+      numOfReviews: { $size: "$deliveryReview" },
+      averageRating: { $floor: { $avg: "$deliveryReview.star" } },
+      deliveryCount: { $size: "$deliveryReview" },
+    })
+    .addFields({
+      averageRating: { $ifNull: ["$deliveryReview", 0] },
     })
     .append(pipeline);
 
