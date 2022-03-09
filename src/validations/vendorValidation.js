@@ -15,10 +15,10 @@ const recommendVendorValidation = {
     }),
     city: Joi.string().empty().required().messages({
       "any.required": "city is required.",
-      "string.empty": "Sorry, city cannot be an empty field",
+      "string.empty": "Sorry, city cannot be an empty field.",
     }),
     instagram: Joi.string().empty().messages({
-      "string.empty": "Sorry, instagram cannot be an empty field",
+      "string.empty": "Sorry, instagram cannot be an empty field.",
     })
   }).messages({
     "object.unknown": "You have used an invalid key."

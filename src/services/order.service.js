@@ -297,7 +297,7 @@ const createOrder = async (orderParam) => {
       },
     })
     .append(pipeline);
-
+  // check if payment type is transfer
   if (neworder[0].paymentMethod === "Transfer") {
     const payload = {
       tx_ref: neworder[0].orderId,
