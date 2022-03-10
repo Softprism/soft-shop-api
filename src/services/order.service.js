@@ -117,6 +117,7 @@ const getOrders = async (urlParams) => {
       "rider._id": 1,
       "rider.first_name": 1,
       "rider.last_name": 1,
+      "rider.phone_number": 1,
       "delivery.status": 1,
       "delivery.riderStatus": 1,
       orderId: 1,
