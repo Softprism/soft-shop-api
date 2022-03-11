@@ -374,7 +374,8 @@ const createOrder = async (orderParam) => {
     });
   }
   await createNotification(ridersId, newOrder._id);
-
+  const { transfer_note } = neworder[0].paymentResult.meta.authorization;
+  neworder[0].account_name = `softshopt payment ${transfer_note.substring(transfer_note.indexOf("-"))}`;
   return neworder[0];
 };
 
