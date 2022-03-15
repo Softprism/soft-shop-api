@@ -165,6 +165,7 @@ const completeDelivery = async (orderId, userId) => {
 const getAllDeliveries = async (urlParams) => {
   const limit = Number(urlParams.limit);
   const skip = Number(urlParams.skip);
+  let { sort } = urlParams;
 
   delete urlParams.limit;
   delete urlParams.skip;
@@ -176,6 +177,9 @@ const getAllDeliveries = async (urlParams) => {
   if (urlParams.rider) {
     condition.rider = urlParams.rider;
   }
+  // check for sort type
+  if (urlParams.sortType === "desc") sort = `-${sort}`;
+  if (!urlParams.sort) sort = "createdDate";
   const deliveries = await Delivery.find(condition)
     .populate([
       { path: "rider", select: "_id first_name last_name" },
@@ -184,7 +188,7 @@ const getAllDeliveries = async (urlParams) => {
       },
       { path: "user", select: "_id first_name last_name phone_number address" },
     ])
-    .sort({ createdDate: -1 }) // -1 for descending sort
+    .sort(sort) // -1 for descending sort
     .skip(skip)
     .limit(limit);
 
