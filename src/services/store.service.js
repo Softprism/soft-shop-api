@@ -951,6 +951,12 @@ const getPayoutHistory = async (storeId, urlParams) => {
 
 const resetPassword = async ({ email }) => {
   const checkEmail = await Store.findOne({ email });
+  if (!checkEmail) {
+    return {
+      err: "Email doesnt exist.",
+      status: 409,
+    };
+  }
   if (checkEmail.resetPassword === "initiated") {
     return { err: "Please wait for the approval of your recent password reset request, or contact support for further assistance.", status: 400 };
   }
