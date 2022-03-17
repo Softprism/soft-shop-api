@@ -126,10 +126,14 @@ const updatedRiderStatus = async (deliveryId, riderId, status) => {
   if (status === "Complete Drop off") {
     await Order.findByIdAndUpdate({ _id: delivery.order }, { status: "delivered" }, { new: true });
   }
+  // update order Status
+  if (status === "Cancelled") {
+    await Order.findByIdAndUpdate({ _id: delivery.order }, { status: "cancelled" }, { new: true });
+  }
   // update delivery Status
   const updatedstatus = await Delivery.findByIdAndUpdate(
     deliveryId,
-    { riderStatus: status },
+    { riderStatus: status, status: "failed" },
     { new: true }
   );
   return { updatedstatus };

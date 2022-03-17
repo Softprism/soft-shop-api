@@ -68,7 +68,7 @@ const OrderSchema = mongoose.Schema(
       type: String,
       required: true,
       default: "initiated",
-      enum: ["initiated", "sent", "canceled", "ready", "accepted", "enroute", "delivered", "completed", "approved"]
+      enum: ["initiated", "sent", "cancelled", "ready", "accepted", "enroute", "delivered", "completed", "approved"]
     },
     orderItems: [
       {
