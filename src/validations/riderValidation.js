@@ -126,6 +126,11 @@ const updateRiderValidation = {
         "string.empty": "Sorry, original password cannot be an empty field",
         "string.min": "Original password should be six characters or more"
       }),
+    email: Joi.string().email().empty()
+      .messages({
+        "string.email": "Please enter a valid email",
+        "string.empty": "Sorry, email cannot be an empty field",
+      }),
     first_name: Joi.string().empty().messages({
       "string.empty": "Sorry, First name cannot be an empty field",
     }),
