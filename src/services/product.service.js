@@ -37,8 +37,6 @@ const getProducts = async (getParam) => {
     matchParam.labels = mongoose.Types.ObjectId(getParam.label);
   }
 
-  console.log(matchParam);
-
   const pipeline = [
     {
       $unset: [
