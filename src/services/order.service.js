@@ -361,6 +361,11 @@ const createOrder = async (orderParam) => {
   orderUpdate.taxPrice = neworder[0].taxPrice;
   orderUpdate.subtotal = neworder[0].subtotal;
   orderUpdate.paymentResult = neworder[0].paymentResult;
+  if (neworder[0].paymentMethod === "Transfer") {
+    const { transfer_note } = neworder[0].paymentResult.meta.authorization;
+    orderUpdate.paymentResult.account_name = `softshop payment ${transfer_note.substring(transfer_note.indexOf("-"))}`;
+  }
+
   orderUpdate.markModified("paymentResult");
   await orderUpdate.save();
 
@@ -374,8 +379,7 @@ const createOrder = async (orderParam) => {
     });
   }
   await createNotification(ridersId, newOrder._id);
-  const { transfer_note } = neworder[0].paymentResult.meta.authorization;
-  neworder[0].account_name = `softshop payment ${transfer_note.substring(transfer_note.indexOf("-"))}`;
+
   return neworder[0];
 };
 
