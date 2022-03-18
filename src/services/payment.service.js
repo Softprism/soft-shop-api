@@ -40,7 +40,7 @@ const verifyTransaction = async (paymentDetails) => {
 
   console.log(1, paymentDetails);
   const response = await flw.Transaction.verify({ id: paymentDetails.data.id });
-  console.log(1, response);
+  console.log(2, response);
 
   const { tx_ref } = response.data;
   if (tx_ref.includes("card")) {
