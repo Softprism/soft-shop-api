@@ -14,7 +14,6 @@ const acknowledgeFlwWebhook = async (req, res, next) => {
     res.status(200).json({ success: true });
     paymentService.verifyTransaction(req.body);
   }
-  next();
 };
 
 const getAllBanks = async (req, res, next) => {
