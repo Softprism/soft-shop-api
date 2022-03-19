@@ -328,7 +328,7 @@ const createOrder = async (orderParam) => {
     };
     neworder[0].paymentResult = await cardPayment(payload);
   }
-  if (neworder[0].paymentMethod === "Ussd") {
+  if (neworder[0].paymentMethod === "USSD") {
     const payload = {
       tx_ref: neworder[0].orderId,
       account_bank: orderParam.bankCode,
