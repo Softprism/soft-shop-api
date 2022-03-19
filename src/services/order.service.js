@@ -426,6 +426,7 @@ const getOrderDetails = async (orderID) => {
         "user.orders",
         "rider.password",
         "rider.orders",
+        "deliveryReview"
       ],
     },
   ];
