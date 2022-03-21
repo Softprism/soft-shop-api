@@ -106,6 +106,8 @@ const updateStoreValidation = {
     isActive: Joi.boolean(),
     pushNotifications: Joi.boolean(),
     promotionalNotifications: Joi.boolean(),
+    orderPushDeivceToken: Joi.string(),
+    vendorPushDeivceToken: Joi.string(),
     smsNotifications: Joi.boolean(),
     prepTime: Joi.number().positive(),
   }).messages({
