@@ -138,6 +138,7 @@ const updateUserValidation = {
         "string.min": "Phone number should be 11 numbers"
       }),
     pushNotifications: Joi.boolean(),
+    pushDeivceToken: Joi.string(),
     smsNotifications: Joi.boolean(),
     promotionalNotifications: Joi.boolean(),
   }).messages({
