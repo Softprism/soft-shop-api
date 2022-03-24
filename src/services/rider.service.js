@@ -177,7 +177,7 @@ const resetPassword = async ({ token, email, password }) => {
 // Update Rider Details
 const updateRider = async (updateParam, id) => {
   const {
-    first_name, last_name, email, original_password, password, phone_number, profilePhoto, pushNotifications, smsNotifications, promotionalNotifications
+    first_name, last_name, email, original_password, password, phone_number, profilePhoto, pushNotifications, smsNotifications, promotionalNotifications, pushDeivceToken
   } = updateParam;
   // Build Rider Object
   const riderFields = {};
@@ -191,6 +191,7 @@ const updateRider = async (updateParam, id) => {
   if (pushNotifications === true || pushNotifications === false) riderFields.pushNotifications = pushNotifications;
   if (smsNotifications === true || smsNotifications === false) riderFields.smsNotifications = smsNotifications;
   if (promotionalNotifications === true || promotionalNotifications === false) riderFields.promotionalNotifications = promotionalNotifications;
+  if (pushDeivceToken) riderFields.pushDeivceToken = pushDeivceToken;
 
   // Find rider from DB Collection
   let rider = await Rider.findById(id);

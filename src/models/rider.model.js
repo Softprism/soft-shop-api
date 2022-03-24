@@ -63,6 +63,7 @@ const riderSchema = mongoose.Schema({
   createdDate: { type: Date, default: Date.now },
   pushNotifications: { type: Boolean, default: false },
   smsNotifications: { type: Boolean, default: false },
+  pushDeivceToken: { type: String },
   promotionalNotifications: { type: Boolean, default: false },
 });
 
