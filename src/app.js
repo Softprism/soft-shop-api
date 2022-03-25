@@ -5,9 +5,12 @@ import cors from "cors";
 import mongoSanitize from "express-mongo-sanitize";
 import xss from "xss-clean";
 import hpp from "hpp";
+import admin from "firebase-admin";
 import errorHandler from "./middleware/errorMiddleware";
 import connectDB from "./config/db";
 import router from "./routes/index";
+
+import serviceAccount from "./config/softshop-order-firebase-adminsdk-yo40z-cfe8665739.json";
 
 dotenv.config();
 
@@ -26,6 +29,12 @@ app.use(hpp());
 
 // compress all response
 // app.use(compression({ level: 1 }));
+
+// start fcm
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
+
 // api routes
 app.use("/api/v1", router);
 app.all("*", (req, res, next) => {

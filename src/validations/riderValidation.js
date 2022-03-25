@@ -149,6 +149,7 @@ const updateRiderValidation = {
       }),
     pushNotifications: Joi.boolean().empty(),
     smsNotifications: Joi.boolean().empty(),
+    pushDeivceToken: Joi.string(),
     promotionalNotifications: Joi.boolean().empty()
   }).messages({
     "object.unknown": "You have used an invalid key."
