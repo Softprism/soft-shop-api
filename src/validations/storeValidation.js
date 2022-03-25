@@ -73,6 +73,8 @@ const registerStore = {
 
 const loginStoreValidation = {
   body: Joi.object({
+    orderPushDeivceToken: Joi.string(),
+    vendorPushDeivceToken: Joi.string(),
     email: Joi.string().email().empty().required()
       .messages({
         "any.required": "Email is required.",
@@ -92,6 +94,17 @@ const loginStoreValidation = {
 
 const updateStoreValidation = {
   body: Joi.object({
+    owner_name: Joi.string().min(2).empty().messages({
+      "any.required": "Owner Name is required.",
+      "string.empty": "Sorry, owner name cannot be an empty field",
+      "string.min": "Owner Name should be two characters or more"
+    }),
+    owner_email: Joi.string().email().empty().required()
+      .messages({
+        "any.required": "Owner Email is required.",
+        "string.email": "Please enter a valid email",
+        "string.empty": "Sorry, owner email cannot be an empty field",
+      }),
     email: Joi.string().email().messages({
       "string.email": "Please enter a valid email",
       "string.empty": "Sorry, email cannot be an empty field",

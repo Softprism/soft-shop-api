@@ -44,6 +44,7 @@ const registerValidation = {
 
 const loginValidation = {
   body: Joi.object({
+    pushDeivceToken: Joi.string(),
     email: Joi.string().email().empty().required()
       .messages({
         "any.required": "Email is required.",

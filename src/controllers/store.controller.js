@@ -43,7 +43,6 @@ const createStore = async (req, res, next) => {
 const loginStore = async (req, res, next) => {
   try {
     const store = await storeService.loginStore(req.body);
-
     if (store.err) {
       return res.status(store.status).json({ success: false, msg: store.err, status: store.status });
     }

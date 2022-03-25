@@ -469,9 +469,11 @@ const createStore = async (StoreParam) => {
 };
 
 const loginStore = async (StoreParam) => {
-  const { email, password } = StoreParam;
+  const {
+    email, password, orderPushDeivceToken, vendorPushDeivceToken
+  } = StoreParam;
 
-  let store = await Store.findOne({ email }).select("password isVerified isActive resetPassword pendingUpdates name pendingWithdrawal");
+  let store = await Store.findOne({ email }).select("password isVerified isActive resetPassword pendingUpdates name pendingWithdrawal vendorPushDeivceToken orderPushDeivceToken ");
 
   if (!store) {
     return { err: "Invalid email. Please try again.", status: 400 };
@@ -488,6 +490,17 @@ const loginStore = async (StoreParam) => {
 
   if (!isMatch) {
     return { err: "The password entered is invalid, please try again.", status: 401 };
+  }
+
+  if (vendorPushDeivceToken) {
+    let pushReg = await Store.findById(store._id);
+    pushReg.vendorPushDeivceToken = vendorPushDeivceToken;
+    await pushReg.save();
+  }
+  if (orderPushDeivceToken) {
+    let pushReg = await Store.findById(store._id);
+    pushReg.orderPushDeivceToken = orderPushDeivceToken;
+    await pushReg.save();
   }
 
   let token = await getJwt(store.id, "store");
