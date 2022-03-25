@@ -13,6 +13,7 @@ const getDistance = async (destination, origin) => {
     },
     timeout: 1000
   });
+  console.log(distance);
   return distance.data.rows[0].elements[0].duration.text;
 };
 
