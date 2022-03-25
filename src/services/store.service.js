@@ -159,7 +159,8 @@ const getStores = async (urlParams) => {
   }
   for (const store of stores) {
     store.deliveryTime = await getDistance(store.place_id, urlParams.place_id);
-    if (store.deliveryTime.err || store.deliveryTime.rows[0].elements[0].status === "NOT_FOUND") store.deliveryTime = "Can't resolve";
+
+    if (store.deliveryTime.err || store.deliveryTime.data.rows[0].elements[0].status === "NOT_FOUND") store.deliveryTime = "Can't resolve";
   }
   return stores;
 };
