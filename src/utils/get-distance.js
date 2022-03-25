@@ -14,7 +14,10 @@ const getDistance = async (destination, origin) => {
     timeout: 1000
   });
   if (distance.data.rows[0].elements[0].status === "NOT_FOUND") {
-    distance.data.rows[0].elements[0].duration.text = "Can't resolve";
+    distance.data.rows[0].elements[0] = {
+      duration: {
+      text: "Can't resolve"
+    }
   }
   return distance.data.rows[0].elements[0].duration.text;
 };
