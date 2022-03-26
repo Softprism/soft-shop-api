@@ -37,7 +37,7 @@ admin.initializeApp({
 
 // api routes
 app.use("/api/v1", router);
-app.use("/api/v1/dev", (req, res, next) => {
+app.use("/dev/v1", (req, res, next) => {
   console.log("dev mode");
   console.log(process.env.MONGO_URI_DEV);
   next();
