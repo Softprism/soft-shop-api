@@ -21,7 +21,7 @@ const getProducts = async (getParam) => {
     matchParam.store = mongoose.Types.ObjectId(getParam.store);
   }
   if (getParam.price) {
-    matchParam.price = getParam.price;
+    matchParam.price = Number(getParam.price);
   }
   if (getParam.availability) {
     getParam.availability = getParam.availability === "true";

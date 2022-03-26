@@ -124,7 +124,13 @@ const updatedRiderStatus = async (deliveryId, riderId, status) => {
   }
   // update order Status
   if (status === "Complete Drop off") {
-    await Order.findByIdAndUpdate({ _id: delivery.order }, { status: "delivered" }, { new: true });
+    await Order.findByIdAndUpdate({ _id: delivery.order }, { status: "completed" }, { new: true });
+    await Delivery.findByIdAndUpdate(deliveryId, { status: "delivered" });
+  }
+  // update order Status
+  if (status === "Cancelled") {
+    await Order.findByIdAndUpdate({ _id: delivery.order }, { status: "cancelled" }, { new: true });
+    await Delivery.findByIdAndUpdate(deliveryId, { status: "failed" });
   }
   // update delivery Status
   const updatedstatus = await Delivery.findByIdAndUpdate(
@@ -165,6 +171,7 @@ const completeDelivery = async (orderId, userId) => {
 const getAllDeliveries = async (urlParams) => {
   const limit = Number(urlParams.limit);
   const skip = Number(urlParams.skip);
+  let { sort } = urlParams;
 
   delete urlParams.limit;
   delete urlParams.skip;
@@ -176,6 +183,9 @@ const getAllDeliveries = async (urlParams) => {
   if (urlParams.rider) {
     condition.rider = urlParams.rider;
   }
+  // check for sort type
+  if (urlParams.sortType === "desc") sort = `-${sort}`;
+  if (!urlParams.sort) sort = "createdDate";
   const deliveries = await Delivery.find(condition)
     .populate([
       { path: "rider", select: "_id first_name last_name" },
@@ -184,7 +194,7 @@ const getAllDeliveries = async (urlParams) => {
       },
       { path: "user", select: "_id first_name last_name phone_number address" },
     ])
-    .sort({ createdDate: -1 }) // -1 for descending sort
+    .sort(sort) // -1 for descending sort
     .skip(skip)
     .limit(limit);
 
@@ -198,7 +208,7 @@ const getDeliveryById = async (deliveryId) => {
       {
         path: "order", select: "deliveryAddress", populate: "store"
       },
-      { path: "user", select: "_id first_name, last_name phone_number address" },
+      { path: "user", select: "_id first_name last_name phone_number address" },
     ]);
   if (!delivery) {
     return {
@@ -219,7 +229,7 @@ const reviewDelivery = async (review) => {
     store: store._id
   });
   if (!delivery) return { err: "Delivery not found.", status: 404 };
-  if (delivery.status !== "delivered") return { err: "You are only allowed to review a delivery that has a status of delivered", status: 404 };
+  if (delivery.status !== "delivered") return { err: "You are only allowed to review a delivery that does not have a status of delivered", status: 404 };
 
   // check if store has made any review
   const isReviewed = await Review.findOne({

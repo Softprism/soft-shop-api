@@ -117,6 +117,7 @@ const getOrders = async (urlParams) => {
       "rider._id": 1,
       "rider.first_name": 1,
       "rider.last_name": 1,
+      "rider.phone_number": 1,
       "delivery.status": 1,
       "delivery.riderStatus": 1,
       orderId: 1,
@@ -297,7 +298,7 @@ const createOrder = async (orderParam) => {
       },
     })
     .append(pipeline);
-
+  // check if payment type is transfer
   if (neworder[0].paymentMethod === "Transfer") {
     const payload = {
       tx_ref: neworder[0].orderId,
@@ -327,7 +328,7 @@ const createOrder = async (orderParam) => {
     };
     neworder[0].paymentResult = await cardPayment(payload);
   }
-  if (neworder[0].paymentMethod === "Ussd") {
+  if (neworder[0].paymentMethod === "USSD") {
     const payload = {
       tx_ref: neworder[0].orderId,
       account_bank: orderParam.bankCode,
@@ -360,6 +361,11 @@ const createOrder = async (orderParam) => {
   orderUpdate.taxPrice = neworder[0].taxPrice;
   orderUpdate.subtotal = neworder[0].subtotal;
   orderUpdate.paymentResult = neworder[0].paymentResult;
+  if (neworder[0].paymentMethod === "Transfer") {
+    const { transfer_note } = neworder[0].paymentResult.meta.authorization;
+    orderUpdate.paymentResult.account_name = `softshop payment ${transfer_note.substring(transfer_note.indexOf("-"))}`;
+  }
+
   orderUpdate.markModified("paymentResult");
   await orderUpdate.save();
 
@@ -420,6 +426,7 @@ const getOrderDetails = async (orderID) => {
         "user.orders",
         "rider.password",
         "rider.orders",
+        "deliveryReview"
       ],
     },
   ];
@@ -458,6 +465,12 @@ const getOrderDetails = async (orderID) => {
       as: "delivery",
     })
     .lookup({
+      from: "reviews",
+      localField: "rider",
+      foreignField: "rider",
+      as: "deliveryReview",
+    })
+    .lookup({
       from: "customfees",
       localField: "orderItems.product",
       foreignField: "product",
@@ -469,6 +482,15 @@ const getOrderDetails = async (orderID) => {
       store: { $arrayElemAt: ["$store", 0] },
       rider: { $arrayElemAt: ["$rider", 0] },
       delivery: { $arrayElemAt: ["$delivery", 0] },
+    })
+    .addFields({
+      sumOfStars: { $sum: "$deliveryReview.star" },
+      numOfReviews: { $size: "$deliveryReview" },
+      averageRating: { $floor: { $avg: "$deliveryReview.star" } },
+      deliveryCount: { $size: "$deliveryReview" },
+    })
+    .addFields({
+      averageRating: { $ifNull: ["$deliveryReview", 0] },
     })
     .append(pipeline);
 

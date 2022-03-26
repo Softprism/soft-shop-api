@@ -11,10 +11,9 @@ const verifyTransaction = async (req, res, next) => {
 
 const acknowledgeFlwWebhook = async (req, res, next) => {
   if (req.body.softshop !== "true") {
+    res.status(200).json({ success: true });
     paymentService.verifyTransaction(req.body);
-    return res.status(200).json({ success: true });
   }
-  next();
 };
 
 const getAllBanks = async (req, res, next) => {

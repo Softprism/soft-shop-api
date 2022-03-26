@@ -177,7 +177,7 @@ const resetPassword = async ({ token, email, password }) => {
 // Update Rider Details
 const updateRider = async (updateParam, id) => {
   const {
-    first_name, last_name, original_password, password, phone_number, profilePhoto, pushNotifications, smsNotifications, promotionalNotifications
+    first_name, last_name, email, original_password, password, phone_number, profilePhoto, pushNotifications, smsNotifications, promotionalNotifications
   } = updateParam;
   // Build Rider Object
   const riderFields = {};
@@ -186,6 +186,7 @@ const updateRider = async (updateParam, id) => {
   if (first_name) riderFields.first_name = first_name;
   if (last_name) riderFields.last_name = last_name;
   if (phone_number) riderFields.phone_number = phone_number;
+  if (email) riderFields.email = email;
   if (profilePhoto) riderFields.profilePhoto = profilePhoto;
   if (pushNotifications === true || pushNotifications === false) riderFields.pushNotifications = pushNotifications;
   if (smsNotifications === true || smsNotifications === false) riderFields.smsNotifications = smsNotifications;
@@ -224,7 +225,6 @@ const updateRider = async (updateParam, id) => {
 
 // Get Logged in User info
 const loggedInRider = async (riderId) => {
-  console.log("aaa");
   const rider1 = await Rider.findById(riderId).select("-password");
   if (!rider1) {
     return { err: "Rider does not exists.", status: 404 };

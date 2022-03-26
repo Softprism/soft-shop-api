@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
+import { DateTime } from "luxon";
 
+const now = new Date();
 const deliverySchema = mongoose.Schema({
   item: { type: String, required: true },
   pickup: { type: String, required: true },
@@ -13,11 +15,11 @@ const deliverySchema = mongoose.Schema({
   status: { type: String, enum: ["delivered", "pending", "accepted", "failed"], default: "pending" },
   riderStatus: {
     type: String,
-    enum: ["Arrive at pickup", "Start Delivery", "Complete Drop off", "pending"],
+    enum: ["Arrive at pickup", "Start Delivery", "Complete Drop off", "Cancelled", "pending"],
     default: "pending",
   },
-  createdDate: { type: Date, default: Date.now },
-}, { timestamps: true });
+  createdDate: { type: String, default: DateTime.fromJSDate(now).toString() },
+});
 
 const Delivery = mongoose.model("Delivery", deliverySchema);
 

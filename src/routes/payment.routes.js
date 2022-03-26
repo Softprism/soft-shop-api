@@ -8,7 +8,7 @@ const router = express.Router();
 // @route   POST /
 // @desc    verify transaction
 // @access  Private
-router.post("/verify", acknowledgeFlwWebhook, verifyTransaction);
+router.post("/verify", verifyTransaction);
 
 // @route   POST /
 // @desc    verify transaction

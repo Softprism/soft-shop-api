@@ -1,4 +1,7 @@
 import mongoose from "mongoose";
+import { DateTime } from "luxon";
+
+const now = new Date();
 
 const VariantSchema = mongoose.Schema({
   variantTitle: { type: String, required: true, },
@@ -14,7 +17,7 @@ const VariantSchema = mongoose.Schema({
   store: { type: mongoose.Schema.Types.ObjectId, ref: "Store", required: true },
   active: { type: Boolean, default: true },
   multiSelect: { type: Boolean, required: true },
-  createdDate: { type: Date, default: Date.now },
+  createdDate: { type: String, default: DateTime.fromJSDate(now).toString() },
 });
 
 const Variant = mongoose.model("Variant", VariantSchema);

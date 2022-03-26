@@ -22,6 +22,12 @@ const order_validation = {
         "number.base": "Please provide a valid number.",
         "any.required": "Delivery Price is required.",
       }),
+    card: Joi.string().empty().messages({
+      "string.empty": "Sorry, user card token is empty",
+    }),
+    bankCode: Joi.string().empty().messages({
+      "string.empty": "Sorry, bank code token is empty",
+    }),
     orderItems: Joi.array().items(
       Joi.object({
         productName: Joi.string().empty().required().messages({

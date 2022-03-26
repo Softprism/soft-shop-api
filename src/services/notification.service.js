@@ -49,4 +49,28 @@ const createNotification = async (userIds = [], orderId) => {
   await Notification.insertMany(array);
   return true;
 };
-export { createNotification, getRiderNotificationById, getAllRiderNotification };
+
+const deleteRiderNotifications = async (riderId) => {
+  await Notification.deleteMany({ rider: riderId });
+
+  return "notifications deleted successfully";
+};
+
+const deleteRiderNotificationById = async (notificationId, riderId) => {
+  const notification = await Notification.findOne({ _id: notificationId, rider: riderId });
+  if (!notification) {
+    return {
+      err: "Notification does not exists.",
+      status: 404,
+    };
+  }
+  await Notification.findOneAndRemove(
+    { _id: notificationId, rider: riderId }
+  );
+
+  return "notification deleted";
+};
+export {
+  createNotification, getRiderNotificationById, getAllRiderNotification,
+  deleteRiderNotificationById, deleteRiderNotifications
+};
