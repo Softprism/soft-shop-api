@@ -1,5 +1,8 @@
 import mongoose from "mongoose";
 import validator from "mongoose-validator";
+import { DateTime } from "luxon";
+
+const now = new Date();
 
 const riderSchema = mongoose.Schema({
   first_name: {
@@ -60,7 +63,7 @@ const riderSchema = mongoose.Schema({
   },
   isVerified: { type: Boolean, required: true, default: false },
   orders: [{ type: mongoose.Types.ObjectId, ref: "Order" }], // array to store multiple orders
-  createdDate: { type: Date, default: Date.now },
+  createdDate: { type: String, default: DateTime.fromJSDate(now).toString() },
   pushNotifications: { type: Boolean, default: false },
   smsNotifications: { type: Boolean, default: false },
   pushDeivceToken: { type: String },

@@ -1,5 +1,8 @@
 import mongoose from "mongoose";
 import validator from "mongoose-validator";
+import { DateTime } from "luxon";
+
+const now = new Date();
 
 const userSchema = mongoose.Schema({
   first_name: {
@@ -79,7 +82,7 @@ const userSchema = mongoose.Schema({
   pushDeivceToken: { type: String },
   smsNotifications: { type: Boolean, default: false },
   promotionalNotifications: { type: Boolean, default: false },
-  createdDate: { type: Date, default: Date.now },
+  createdDate: { type: String, default: DateTime.fromJSDate(now).toString() },
 });
 
 const User = mongoose.model("User", userSchema);
