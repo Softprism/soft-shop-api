@@ -37,6 +37,8 @@ admin.initializeApp({
 
 // api routes
 app.use("/api/v1", router);
+app.use("/api/v1/dev", router);
+
 app.all("*", (req, res, next) => {
   res
     .status(404)
