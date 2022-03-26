@@ -10,7 +10,7 @@ const router = express.Router();
 router.get("/", (req, res, next) => {
   return res.status(200).json({
     success: true,
-    result: `API is working! Socket for push notifications ${new Date().toString()}`,
+    result: `API is working! Cpanel Server - the time is ${new Date().toString()}`,
     status: 200
   });
 });
