@@ -1,4 +1,7 @@
 import mongoose from "mongoose";
+import { DateTime } from "luxon";
+
+const now = new Date();
 
 const BasketSchema = mongoose.Schema(
   {
@@ -33,6 +36,7 @@ const BasketSchema = mongoose.Schema(
         },
       ],
     },
+    createdAt: { type: String, default: DateTime.fromJSDate(now).toString() },
   },
   { timestamps: true }
 );

@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
+import { DateTime } from "luxon";
 
+const now = new Date();
 const OrderSchema = mongoose.Schema(
   {
     user: {
@@ -98,6 +100,7 @@ const OrderSchema = mongoose.Schema(
         ],
       },
     ],
+    createdAt: { type: String, default: DateTime.fromJSDate(now).toString() },
   },
   { timestamps: true }
 );

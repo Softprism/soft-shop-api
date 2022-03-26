@@ -1,4 +1,7 @@
 import mongoose from "mongoose";
+import { DateTime } from "luxon";
+
+const now = new Date();
 
 const ReviewSchema = mongoose.Schema(
   {
@@ -10,6 +13,7 @@ const ReviewSchema = mongoose.Schema(
     delivery: { type: mongoose.Schema.Types.ObjectId, ref: "Delivery", },
     rider: { type: mongoose.Schema.Types.ObjectId, ref: "Rider", },
     text: { type: String },
+    createdAt: { type: String, default: DateTime.fromJSDate(now).toString() },
   },
   { timestamps: true }
 );

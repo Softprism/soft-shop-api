@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
+import { DateTime } from "luxon";
 
+const now = new Date();
 const NotificationSchema = mongoose.Schema({
   title: { type: String },
   message: { type: String },
@@ -13,7 +15,7 @@ const NotificationSchema = mongoose.Schema({
     type: String,
     enum: ["Order", "Store", "Variant", "Product"]
   },
-  createdDate: { type: Date, default: Date.now },
+  createdDate: { type: String, default: DateTime.fromJSDate(now).toString() },
 });
 const Notification = mongoose.model("Notification", NotificationSchema);
 export default Notification;
