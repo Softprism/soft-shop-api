@@ -473,7 +473,7 @@ const loginStore = async (StoreParam) => {
     email, password, orderPushDeivceToken, vendorPushDeivceToken
   } = StoreParam;
 
-  let store = await Store.findOne({ email }).select("password isVerified isActive resetPassword pendingUpdates name pendingWithdrawal vendorPushDeivceToken orderPushDeivceToken ");
+  let store = await Store.findOne({ email }).select("password isVerified isActive resetPassword pendingUpdates name pendingWithdrawal vendorPushDeivceToken orderPushDeivceToken category");
 
   if (!store) {
     return { err: "Invalid email. Please try again.", status: 400 };
