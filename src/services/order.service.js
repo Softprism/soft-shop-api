@@ -165,6 +165,7 @@ const createOrder = async (orderParam) => {
   let newOrder = await order.save();
   console.log(order.createdAt);
   console.log(new Date().toString());
+  const now = new Date();
   console.log(DateTime.fromJSDate(now).toString());
 
   // Adds new order to user model
