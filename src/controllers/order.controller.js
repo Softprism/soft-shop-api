@@ -66,8 +66,11 @@ const editOrder = async (req, res, next) => {
     res.status(200).json({ success: true, result: updatedOrder });
     // prepare data for next middleware
     req.localData = {
-      name: updatedOrder.store.name,
-      email: updatedOrder.store.email
+      store_name: updatedOrder.store.name,
+      store_email: updatedOrder.store.email,
+      user_email: updatedOrder.user.email,
+      user_phone: updatedOrder.user.phone_number,
+      user_name: updatedOrder.user.first_name
     };
     next();
   } catch (error) {

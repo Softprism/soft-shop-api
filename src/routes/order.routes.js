@@ -15,6 +15,7 @@ import {
 import validator from "../middleware/validator";
 import { order_validation, reviewValidation } from "../validations/orderValidation";
 import { sendUserNewOrderAcceptedMail, sendUserNewOrderRejectedMail } from "../utils/sendMail";
+import { sendUserNewOrderRejectedSMS } from "../utils/sendSMS";
 
 const router = express.Router();
 
@@ -47,10 +48,12 @@ router.put(
   editOrder,
   async (req, res) => {
     if (req.body.status === "accepted") {
-      await sendUserNewOrderAcceptedMail(req.localData.email, req.localData.name);
+      await sendUserNewOrderAcceptedMail(req.localData.user_email, req.localData.store_name);
+      await sendUserNewOrderRejectedSMS(req.localData.user_phone, req.localData.store_name);
     }
     if (req.body.status === "canceled") {
-      await sendUserNewOrderRejectedMail(req.localData.email, req.localData.name);
+      await sendUserNewOrderRejectedMail(req.localData.user_email, req.localData.store_name);
+      await sendUserNewOrderRejectedSMS(req.localData.user_phone, req.localData.store_name);
     }
   }
 );

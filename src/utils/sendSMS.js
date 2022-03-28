@@ -54,7 +54,21 @@ const sendUserOrderDeliveredSMS = async (phone, dropoff) => {
     console.log("could not send sms");
   }
 };
+const sendUserNewOrderAcceptedSMS = async (phone, store) => {
+  let body = `Your order has been accepted and is being prepared by ${store} we'll also notify you when your order is on the way.`;
+  let action = await sendSMS(phone, body);
+  if (action.err) {
+    console.log("could not send sms");
+  }
+};
+const sendUserNewOrderRejectedSMS = async (phone, store) => {
+  let body = `Your order has been rejected by ${store} you can checkout alternative store near you for the same items.`;
+  let action = await sendSMS(phone, body);
+  if (action.err) {
+    console.log("could not send sms");
+  }
+};
 
 export {
-  sendSMS, sendUserSignupSMS, sendForgotPasswordSMS, sendUserOrderPickedUpSMS, sendUserOrderDeliveredSMS
+  sendSMS, sendUserSignupSMS, sendForgotPasswordSMS, sendUserOrderPickedUpSMS, sendUserOrderDeliveredSMS, sendUserNewOrderAcceptedSMS, sendUserNewOrderRejectedSMS
 };
