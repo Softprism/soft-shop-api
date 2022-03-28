@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import { DateTime } from "luxon";
 import Order from "../models/order.model";
 import User from "../models/user.model";
 import Store from "../models/store.model";
@@ -163,10 +162,6 @@ const createOrder = async (orderParam) => {
   order.orderId = orderId();
 
   let newOrder = await order.save();
-  console.log(order.createdAt);
-  console.log(new Date().toString());
-  const now = new Date();
-  console.log(DateTime.fromJSDate(now).toString());
 
   // Adds new order to user model
   vUser.orders.push(newOrder._id);
