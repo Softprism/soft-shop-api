@@ -120,7 +120,7 @@ const registerUser = async (userParam) => {
 
 // Login User
 const loginUser = async (loginParam) => {
-  const { email, password, pushDeivceToken } = loginParam;
+  const { email, password } = loginParam;
 
   // Find user with email
   let user = await User.findOne({ email });
@@ -140,11 +140,6 @@ const loginUser = async (loginParam) => {
       err: "The password entered is incorrect, please try again.",
       status: 401,
     };
-  }
-
-  if (pushDeivceToken) {
-    user.pushDeivceToken = pushDeivceToken;
-    await user.save();
   }
 
   // Define payload for token
