@@ -13,7 +13,7 @@ import { createTransaction } from "./transaction.service";
 import Transaction from "../models/transaction.model";
 import Category from "../models/category.model";
 
-import getDistance from "../utils/get-distance";
+import { getDistance } from "../utils/get-distance";
 import {
   sendPasswordChangeMail, sendStorePasswordResetRequestMail, sendStorePayoutRequestMail, sendStoreSignUpMail, sendStoreUpdateRequestMail
 } from "../utils/sendMail";
@@ -79,7 +79,7 @@ const getStores = async (urlParams) => {
   if (urlParams.long && urlParams.lat && urlParams.radius) {
     long = parseFloat(urlParams.long);
     lat = parseFloat(urlParams.lat);
-    radian = parseFloat(urlParams.radius / 3963.2);
+    radian = parseFloat(urlParams.radius / 6378.1); // calculate in km
   }
 
   // cleaning up the urlParams
