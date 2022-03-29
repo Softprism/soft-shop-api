@@ -1,7 +1,4 @@
 import mongoose from "mongoose";
-import { DateTime } from "luxon";
-
-const now = new Date();
 
 const StoreUpdateSchema = mongoose.Schema(
   {
@@ -25,7 +22,7 @@ const StoreUpdateSchema = mongoose.Schema(
         bank_name: { type: String }
       }
     },
-    createdAt: { type: String, default: DateTime.fromJSDate(now).toString() },
+    createdAt: { type: Date, default: Date.now },
   },
   { timestamps: true }
 );
