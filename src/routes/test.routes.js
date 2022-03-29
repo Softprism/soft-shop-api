@@ -18,10 +18,10 @@ router.get("/", (req, res, next) => {
 router.post("/send-push",
   async (req, res, next) => {
     const {
-      deviceToken, title, body, data
+      deviceToken, title, body, data, app
     } = req.body;
     try {
-      let request = await sendOne(deviceToken, title, body, data);
+      let request = await sendOne(app, deviceToken, title, body, data);
       return res.status(200).json({
         success: true,
         result: request,
