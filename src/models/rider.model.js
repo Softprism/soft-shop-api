@@ -56,7 +56,7 @@ const riderSchema = mongoose.Schema({
   },
   profilePhoto: {
     type: String,
-    default: "https://soft-shop.app/../uploads/store/292672-edit.svg"
+    default: "https://soft-shop.app/../uploads/store/292672-edit.png"
   },
   isVerified: { type: Boolean, required: true, default: false },
   orders: [{ type: mongoose.Types.ObjectId, ref: "Order" }], // array to store multiple orders
