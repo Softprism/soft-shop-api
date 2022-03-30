@@ -19,6 +19,8 @@ import { sendSignUpOTPmail, sendUserSignUpMail } from "../utils/sendMail";
 import { sendUserSignupSMS } from "../utils/sendSMS";
 import { isAdmin } from "../middleware/Permissions";
 
+import User from "../models/user.model";
+
 const router = express.Router();
 
 // @route   POST /verify
@@ -54,7 +56,16 @@ router.post(
 // @desc    Login a User & get token
 // @access  Public
 
-router.post("/login", validator(loginValidation), isUserVerified, loginUser);
+router.post("/login",
+  validator(loginValidation),
+  isUserVerified,
+  loginUser,
+  async (req, res) => {
+    // add push token to user profile
+    let user = await User.findById(req.data.id);
+    user.pushDeivceToken = req.data.deviceToken;
+    await user.save();
+  });
 
 // @route   POST /user/card
 // @desc    returns a link to user to continue card addition
