@@ -10,6 +10,8 @@ import {
   resetValidation, loginValidation, updateRiderValidation
 } from "../validations/riderValidation";
 import { hashPassword } from "../middleware/validationMiddleware";
+import Rider from "../models/rider.model";
+import { createLog } from "../services/logs.service";
 
 const router = express.Router();
 
@@ -42,7 +44,16 @@ router.post("/register", hashPassword, validator(registerValidation), signup);
 // @route   POST /riders/login
 // @desc    Login a User & get token
 // @access  Public
-router.post("/signin", validator(loginValidation), signin);
+router.post("/signin",
+  validator(loginValidation),
+  signin,
+  async (req, res) => {
+    let rider = await Rider.findById(req.data.id);
+    rider.pushDeviceToken = req.body.pushDeviceToken;
+    await rider.save();
+    // create log
+    await createLog("rider Login", "rider", `A new login from ${rider.last_name} ${rider.first_name} with email - ${req.body.email}`);
+  });
 
 // @route   POST /password
 // @desc    reset a forget password
