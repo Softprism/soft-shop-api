@@ -20,6 +20,7 @@ import { sendUserSignupSMS } from "../utils/sendSMS";
 import { isAdmin } from "../middleware/Permissions";
 
 import User from "../models/user.model";
+import { createLog } from "../services/logs.service";
 
 const router = express.Router();
 
@@ -65,6 +66,9 @@ router.post("/login",
     let user = await User.findById(req.data.id);
     user.pushDeivceToken = req.data.deviceToken;
     await user.save();
+
+    // create log
+    await createLog("user Login", "user", `A new login from ${user.first_name} ${user.last_name} with email - ${user.email}`);
   });
 
 // @route   POST /user/card

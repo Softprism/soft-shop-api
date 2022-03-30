@@ -148,9 +148,6 @@ const loginUser = async (loginParam) => {
   // get user details
   const userDetails = await userProfile(user.id);
 
-  // create log
-  await createLog("user Login", "user", `A new login from ${user.first_name} ${user.last_name} with email - ${user.email}`);
-
   return { userDetails, token };
 };
 
