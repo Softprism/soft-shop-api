@@ -492,17 +492,6 @@ const loginStore = async (StoreParam) => {
     return { err: "The password entered is invalid, please try again.", status: 401 };
   }
 
-  if (vendorPushDeivceToken) {
-    let pushReg = await Store.findById(store._id);
-    pushReg.vendorPushDeivceToken = vendorPushDeivceToken;
-    await pushReg.save();
-  }
-  if (orderPushDeivceToken) {
-    let pushReg = await Store.findById(store._id);
-    pushReg.orderPushDeivceToken = orderPushDeivceToken;
-    await pushReg.save();
-  }
-
   let token = await getJwt(store.id, "store");
 
   // remove store password

@@ -47,6 +47,11 @@ const loginStore = async (req, res, next) => {
       return res.status(store.status).json({ success: false, msg: store.err, status: store.status });
     }
     res.status(200).json({ success: true, result: store, status: 200 });
+
+    req.data = {
+      id: store.store._id
+    };
+    next();
   } catch (error) {
     next(error);
   }
