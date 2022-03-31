@@ -89,7 +89,7 @@ const signin = async (req, res, next) => {
     });
 
     req.data = {
-      id: loginRequest.rider
+      id: loginRequest.rider._id
     };
     next();
   } catch (error) {
