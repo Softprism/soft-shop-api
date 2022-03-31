@@ -82,8 +82,7 @@ const registerRider = async (riderParam) => {
 
 // Login rider
 const loginRider = async (loginParam) => {
-  const { email, password, pushDeivceToken } = loginParam;
-  console.log(email, password, pushDeivceToken);
+  const { email, password } = loginParam;
   // Find rider with email
   let rider = await Rider.findOne({
     $or: [{ email }, { phone: email }],
@@ -103,9 +102,6 @@ const loginRider = async (loginParam) => {
       status: 401,
     };
   }
-
-  rider.pushDeivceToken = pushDeivceToken;
-  await rider.save();
 
   // Define payload for token
   let token = await getJwt(rider._id, "rider");

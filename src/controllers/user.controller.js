@@ -71,12 +71,18 @@ const loginUser = async (req, res, next) => {
       });
     }
 
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
       result: loginRequest.userDetails[0],
       token: loginRequest.token,
       status: 200
     });
+
+    req.data = {
+      deviceToken: req.body.pushDeivceToken,
+      id: loginRequest.userDetails[0]._id,
+    };
+    next();
   } catch (error) {
     next(error);
   }

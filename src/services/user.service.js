@@ -120,7 +120,7 @@ const registerUser = async (userParam) => {
 
 // Login User
 const loginUser = async (loginParam) => {
-  const { email, password, pushDeivceToken } = loginParam;
+  const { email, password } = loginParam;
 
   // Find user with email
   let user = await User.findOne({ email });
@@ -142,19 +142,11 @@ const loginUser = async (loginParam) => {
     };
   }
 
-  if (pushDeivceToken) {
-    user.pushDeivceToken = pushDeivceToken;
-    await user.save();
-  }
-
   // Define payload for token
   let token = await getJwt(user.id, "user");
 
   // get user details
   const userDetails = await userProfile(user.id);
-
-  // create log
-  await createLog("user Login", "user", `A new login from ${user.first_name} ${user.last_name} with email - ${user.email}`);
 
   return { userDetails, token };
 };

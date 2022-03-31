@@ -24,6 +24,9 @@ import {
   labelValidation, deleteLabelValidation, editLabelValidation, updateStorePhotoValidation
 } from "../validations/storeValidation";
 
+import Store from "../models/store.model";
+import { createLog } from "../services/logs.service";
+
 const router = express.Router();
 
 // @route   GET /stores
@@ -83,7 +86,24 @@ router.post("/", validator(registerStore), hashPassword, createStore);
 // @route   POST /store/login
 // @desc    Login a store
 // @access  Public
-router.post("/login", validator(loginStoreValidation), loginStore);
+router.post(
+  "/login",
+  validator(loginStoreValidation),
+  loginStore,
+  async (req, res) => {
+    let pushReg = await Store.findById(req.data.id);
+    if (req.body.vendorPushDeivceToken) {
+      pushReg.vendorPushDeivceToken = req.body.vendorPushDeivceToken;
+      await pushReg.save();
+    }
+    if (req.body.orderPushDeivceToken) {
+      pushReg.orderPushDeivceToken = req.body.orderPushDeivceToken;
+      await pushReg.save();
+    }
+    // create log
+    await createLog("store Login", "store", `A new login from ${pushReg.name} with email - ${req.body.email}`);
+  }
+);
 
 // @route   PUT /store/
 // @desc    request for a store profile update
