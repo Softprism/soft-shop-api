@@ -1,6 +1,6 @@
 import express from "express";
 import { createLog } from "../services/logs.service";
-import { sendOne } from "../services/push.service";
+import { sendOne, sendTopic } from "../services/push.service";
 
 const router = express.Router();
 
@@ -19,6 +19,23 @@ router.post("/send-push",
     } = req.body;
     try {
       let request = await sendOne(app, deviceToken, title, body, data);
+      return res.status(200).json({
+        success: true,
+        result: request,
+        status: 200
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+router.post("/send-push-topic",
+  async (req, res, next) => {
+    const {
+      topic, title, body, data, app
+    } = req.body;
+    try {
+      let request = await sendTopic(app, topic, title, body, data);
       return res.status(200).json({
         success: true,
         result: request,

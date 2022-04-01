@@ -56,7 +56,7 @@ const sendMany = async (deviceTokens, title, body, data) => {
   return sendPush;
 };
 
-const sendTopic = async (topic, title, body, data) => {
+const sendTopic = async (app, topic, title, body, data) => {
   const message = {
     notification: {
       title,
@@ -66,8 +66,21 @@ const sendTopic = async (topic, title, body, data) => {
     topic
   };
   // Send a message to devices subscribed to the provided topic.
-  let sendPush = await admin.messaging().send(message);
-  return sendPush;
+  if (app === "sso") {
+    // Send a message to devices subscribed to the provided topic.
+    let sendPush = await sso.messaging().send(message);
+    return sendPush;
+  }
+  if (app === "ssd") {
+    // Send a message to devices subscribed to the provided topic.
+    let sendPush = await ssd.messaging().send(message);
+    return sendPush;
+  }
+  if (app === "ssv") {
+    // Send a message to devices subscribed to the provided topic.
+    let sendPush = await ssv.messaging().send(message);
+    return sendPush;
+  }
 };
 
 export { sendOne, sendMany, sendTopic };
