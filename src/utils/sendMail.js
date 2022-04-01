@@ -98,9 +98,9 @@ const sendUserNewOrderSentMail = async (toEmail, store) => {
   }
 };
 
-const sendUserNewOrderAcceptedMail = async (toEmail, store) => {
-  let subject = "Order Accepted";
-  let body = `Your order has been accepted and is being prepared by ${store} we'll also notify you when your order is on the way.`;
+const sendUserNewOrderApprovedMail = async (toEmail, store) => {
+  let subject = `Order Confirmed by ${store}`;
+  let body = `Your order has been confirmed and is being prepared by ${store} we'll also notify you when your order is on the way.`;
   let sendAction = await sendEmail(toEmail, subject, body);
   if (!sendAction) {
     console.log("new order initiated mail not sent");
@@ -119,6 +119,15 @@ const sendUserNewOrderRejectedMail = async (toEmail, store) => {
 const sendUserOrderReadyMail = async (toEmail) => {
   let subject = "Order is ready";
   let body = "Your order is now ready for delivery, we'll also notify you when your order has been picked up.";
+  let sendAction = await sendEmail(toEmail, subject, body);
+  if (!sendAction) {
+    console.log("new order initiated mail not sent");
+  }
+};
+
+const sendUserOrderAcceptedMail = async (toEmail, dropoff) => {
+  let subject = "Order has been assigned a delivery agent";
+  let body = `Your order has been accepted by a delivery agent. We'll also notify you when the agent is on his way to ${dropoff}`;
   let sendAction = await sendEmail(toEmail, subject, body);
   if (!sendAction) {
     console.log("new order initiated mail not sent");
@@ -229,10 +238,11 @@ export {
   sendPasswordChangeMail,
   sendForgotPasswordMail,
   sendUserSignUpMail,
-  sendUserNewOrderAcceptedMail,
+  sendUserNewOrderApprovedMail,
   sendUserNewOrderRejectedMail,
   sendUserNewOrderSentMail,
   sendUserOrderReadyMail,
+  sendUserOrderAcceptedMail,
   sendUserOrderPickedUpMail,
   sendUserOrderDeliveredMail,
   sendNewOrderInitiatedMail,

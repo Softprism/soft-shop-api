@@ -71,7 +71,17 @@ const OrderSchema = mongoose.Schema(
       type: String,
       required: true,
       default: "initiated",
-      enum: ["initiated", "sent", "cancelled", "ready", "accepted", "enroute", "delivered", "completed", "approved"]
+      enum: [
+        "initiated", // new order just created
+        "sent", // payment confirmation sent
+        "approved", // order approved by store
+        "cancelled", // order cancelled by store
+        "ready", // order ready for delivery
+        "accepted", // order accepted by rider
+        "enroute", // order is on the way user
+        "delivered", // order delivered to user
+        "completed", // delivery completed
+      ]
     },
     orderItems: [
       {

@@ -62,6 +62,7 @@ const getOrderDetails = async (req, res, next) => {
 const editOrder = async (req, res, next) => {
   try {
     let updatedOrder = await orderService.editOrder(req.params.orderID, req.body);
+    if (updatedOrder.err) return res.status(updatedOrder.status).json({ success: false, msg: updatedOrder.err, status: updatedOrder.status });
 
     res.status(200).json({ success: true, result: updatedOrder });
     // prepare data for next middleware
@@ -70,7 +71,8 @@ const editOrder = async (req, res, next) => {
       store_email: updatedOrder.store.email,
       user_email: updatedOrder.user.email,
       user_phone: updatedOrder.user.phone_number,
-      user_name: updatedOrder.user.first_name
+      user_name: updatedOrder.user.first_name,
+      delivery_address: updatedOrder.deliveryAddress,
     };
     next();
   } catch (error) {

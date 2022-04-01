@@ -14,8 +14,12 @@ import {
 } from "../controllers/order.controller";
 import validator from "../middleware/validator";
 import { order_validation, reviewValidation } from "../validations/orderValidation";
-import { sendUserNewOrderAcceptedMail, sendUserNewOrderRejectedMail } from "../utils/sendMail";
-import { sendUserNewOrderRejectedSMS } from "../utils/sendSMS";
+import {
+  sendUserNewOrderApprovedMail, sendUserNewOrderRejectedMail, sendUserOrderAcceptedMail, sendUserOrderDeliveredMail, sendUserOrderPickedUpMail, sendUserOrderReadyMail
+} from "../utils/sendMail";
+import {
+  sendUserNewOrderRejectedSMS, sendUserOrderDeliveredSMS, sendUserOrderPickedUpSMS, sendUserNewOrderAcceptedSMS
+} from "../utils/sendSMS";
 
 const router = express.Router();
 
@@ -47,13 +51,29 @@ router.put(
   auth,
   editOrder,
   async (req, res) => {
-    if (req.body.status === "accepted") {
-      await sendUserNewOrderAcceptedMail(req.localData.user_email, req.localData.store_name);
-      await sendUserNewOrderRejectedSMS(req.localData.user_phone, req.localData.store_name);
+    if (req.body.status === "approved") {
+      await sendUserNewOrderApprovedMail(req.localData.user_email, req.localData.store_name);
+      await sendUserNewOrderAcceptedSMS(req.localData.user_phone, req.localData.store_name);
     }
     if (req.body.status === "canceled") {
       await sendUserNewOrderRejectedMail(req.localData.user_email, req.localData.store_name);
       await sendUserNewOrderRejectedSMS(req.localData.user_phone, req.localData.store_name);
+    }
+    if (req.body.status === "ready") {
+      await sendUserOrderReadyMail(req.localData.user_email);
+      // await sendUserNewOrderRejectedSMS(req.localData.user_phone, req.localData.store_name);
+    }
+    if (req.body.status === "accepted") {
+      await sendUserOrderAcceptedMail(req.localData.user_email, req.localData.delivery_address);
+      // await sendUserNewOrderRejectedSMS(req.localData.user_phone, req.localData.store_name);
+    }
+    if (req.body.status === "enroute") {
+      await sendUserOrderPickedUpMail(req.localData.user_email, req.localData.delivery_address);
+      await sendUserOrderPickedUpSMS(req.localData.user_phone, req.localData.delivery_address);
+    }
+    if (req.body.status === "delivered") {
+      await sendUserOrderDeliveredMail(req.localData.user_email, req.localData.delivery_address);
+      await sendUserOrderDeliveredSMS(req.localData.user_phone, req.localData.delivery_address);
     }
   }
 );
