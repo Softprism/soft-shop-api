@@ -15,10 +15,10 @@ const sendSMS = async (toNumber, body) => {
       body,
       from: "SoftShop",
       to: toNumber,
+      statusCallback: "https://soft-shop.app/api/v1/test/sms-feedback"
     });
     return action;
   } catch (error) {
-    console.log(error.message);
     return { err: error.message };
   }
 };

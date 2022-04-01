@@ -1,8 +1,5 @@
 import express from "express";
-import admin from "firebase-admin";
-import { readFile } from "fs/promises";
-import serviceAccount from "../config/softshop-order-firebase-adminsdk-yo40z-cfe8665739.json";
-import { signupLog } from "../services/logs.service";
+import { createLog } from "../services/logs.service";
 import { sendOne } from "../services/push.service";
 
 const router = express.Router();
@@ -30,6 +27,17 @@ router.post("/send-push",
     } catch (error) {
       next(error);
     }
+  });
+
+router.post("/sms-feedback",
+  async (req, res, next) => {
+    const messageSid = req.body.MessageSid;
+    const messageStatus = req.body.MessageStatus;
+
+    console.log(`SID: ${messageSid}, Status: ${messageStatus}`);
+
+    res.sendStatus(200);
+    await createLog("send sms", "softshop", messageStatus);
   });
 
 export default router;
