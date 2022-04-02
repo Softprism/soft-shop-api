@@ -38,9 +38,7 @@ const verifyTransaction = async (paymentDetails) => {
   // if it's a new card transaction, it adds the cards details to the user profile
   // if it's a order transaction, it adds the payment details to the order payment result and credit store balance
 
-  console.log(1, paymentDetails);
   const response = await flw.Transaction.verify({ id: paymentDetails.data.id });
-  console.log(2, response);
 
   const { tx_ref } = response.data;
   if (tx_ref.includes("card")) {
@@ -115,7 +113,7 @@ const verifyTransaction = async (paymentDetails) => {
     if (response.data.status === "successful" && paymentDetails.softshop !== "true") {
       order.status = "sent";
       // send email to user to notify them of sent order
-      await sendUserNewOrderSentMail(order.user.email);
+      await sendUserNewOrderSentMail(order.orderId, order.user.email);
 
       // create a credit transaction for store and softshop
       let storeReq = {
