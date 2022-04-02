@@ -39,30 +39,30 @@ const sendForgotPasswordSMS = async (phone, otp) => {
   }
 };
 
-const sendUserOrderPickedUpSMS = async (phone, dropoff) => {
-  let body = `Your order has been picked up for delivery, please be available at ${dropoff}`;
+const sendUserOrderPickedUpSMS = async (orderId, phone, dropoff) => {
+  let body = `Your order ${orderId} has been picked up for delivery, please be available at ${dropoff}`;
   let action = await sendSMS(phone, body);
   if (action.err) {
     console.log("could not send sms");
   }
 };
 
-const sendUserOrderDeliveredSMS = async (phone, dropoff) => {
-  let body = `Your order has arrived at ${dropoff}`;
+const sendUserOrderDeliveredSMS = async (orderId, phone, dropoff) => {
+  let body = `Your order ${orderId} has arrived at ${dropoff}`;
   let action = await sendSMS(phone, body);
   if (action.err) {
     console.log("could not send sms");
   }
 };
-const sendUserNewOrderAcceptedSMS = async (phone, store) => {
-  let body = `Your order has been accepted and is being prepared by ${store} we'll also notify you when your order is on the way.`;
+const sendUserNewOrderAcceptedSMS = async (orderId, phone, store) => {
+  let body = `Your order ${orderId} has been accepted and is being prepared by ${store} we'll also notify you when your order is on the way.`;
   let action = await sendSMS(phone, body);
   if (action.err) {
     console.log("could not send sms");
   }
 };
-const sendUserNewOrderRejectedSMS = async (phone, store) => {
-  let body = `Your order has been rejected by ${store} you can checkout alternative store near you for the same items.`;
+const sendUserNewOrderRejectedSMS = async (orderId, phone, store) => {
+  let body = `Your ${orderId} order has been rejected by ${store} you can checkout alternative store near you for the same items.`;
   let action = await sendSMS(phone, body);
   if (action.err) {
     console.log("could not send sms");
