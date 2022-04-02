@@ -91,6 +91,7 @@ router.post(
   validator(loginStoreValidation),
   loginStore,
   async (req, res) => {
+    // device token registration
     let pushReg = await Store.findById(req.data.id);
     if (req.body.vendorPushDeivceToken) {
       pushReg.vendorPushDeivceToken = req.body.vendorPushDeivceToken;
