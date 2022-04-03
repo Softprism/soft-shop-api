@@ -35,6 +35,10 @@ const OrderSchema = mongoose.Schema(
     cancelReason: {
       type: String,
     },
+    customerNote: {
+      type: String,
+      default: "Nothing."
+    },
     paymentMethod: {
       type: String,
       enum: ["Card", "Transfer", "USSD"],
