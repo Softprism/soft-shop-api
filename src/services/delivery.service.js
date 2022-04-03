@@ -21,7 +21,7 @@ const createDelivery = async (orderId, storeId) => {
     return { err: "Sorry you can't create delivery for this Order.", status: 409, };
   }
   // check for order payment status
-  if (order.status !== "approved") {
+  if (order.status !== "ready") {
     return { err: "Order isn't ready for delivery.", status: 409, };
   }
   // check if store owner is the same with the logged in user
