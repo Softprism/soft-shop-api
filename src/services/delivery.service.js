@@ -96,6 +96,16 @@ const updatedDeliveryStatus = async (deliveryId, riderId, status) => {
   if (!delivery.rider || delivery.status === "pending") {
     return { err: "Delivery hasn't been accepted.", status: 409, };
   }
+  if (status === "accepted") {
+    await Order.findByIdAndUpdate({ _id: delivery.order }, { status: "accepted" }, { new: true });
+  }
+  if (status === "delivered") {
+    await Order.findByIdAndUpdate({ _id: delivery.order }, { status: "delivered" }, { new: true });
+  }
+  if (status === "failed") {
+    await Order.findByIdAndUpdate({ _id: delivery.order }, { status: "cancelled" }, { new: true });
+  }
+
   // update delivery Status
   const updatedstatus = await Delivery.findByIdAndUpdate(
     deliveryId,

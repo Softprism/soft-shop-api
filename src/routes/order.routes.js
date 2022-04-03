@@ -80,7 +80,7 @@ router.put(
       await sendOne(
         "ssu",
         user.pushDeivceToken,
-        `${order.orderId}canceled`,
+        `${order.orderId} canceled`,
         `Your order has been rejected by ${req.localData.store_name} you can checkout alternative store near you for the same items.`
       );
     }

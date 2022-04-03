@@ -52,7 +52,15 @@ const update_DeliveryStatus = async (req, res, next) => {
           success: false, msg: action.err, status: action.status
         });
     }
-    return res.status(200).json({ success: true, result: action.updatedstatus, status: 200 });
+    res.status(200).json({ success: true, result: action.updatedstatus, status: 200 });
+
+    req.localData = {
+      store_id: action.updatedstatus.store,
+      rider_id: action.updatedstatus.rider,
+      order_id: action.updatedstatus.order,
+      user_id: action.updatedstatus.user
+    };
+    next();
   } catch (error) {
     next(error);
   }
@@ -95,7 +103,14 @@ const update_RiderStatus = async (req, res, next) => {
           success: false, msg: action.err, status: action.status
         });
     }
-    return res.status(200).json({ success: true, result: action.updatedstatus, status: 200 });
+    res.status(200).json({ success: true, result: action.updatedstatus, status: 200 });
+    req.localData = {
+      store_id: action.updatedstatus.store,
+      rider_id: action.updatedstatus.rider,
+      order_id: action.updatedstatus.order,
+      user_id: action.updatedstatus.user
+    };
+    next();
   } catch (error) {
     next(error);
   }
