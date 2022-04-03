@@ -14,7 +14,12 @@ const create_Delivery = async (req, res, next) => {
           success: false, msg: action.err, status: action.status
         });
     }
-    return res.status(201).json({ success: true, result: action.delivery, status: 201 });
+    res.status(201).json({ success: true, result: action.delivery, status: 201 });
+    req.data = {
+      order_id: action.delivery.order,
+      user_id: action.delivery.user,
+    };
+    next();
   } catch (error) {
     next(error);
   }
@@ -33,7 +38,14 @@ const accept_Delivery = async (req, res, next) => {
           success: false, msg: action.err, status: action.status
         });
     }
-    return res.status(200).json({ success: true, result: action.updatedDelivery, status: 200 });
+    res.status(200).json({ success: true, result: action.updatedDelivery, status: 200 });
+    req.data = {
+      order_id: action.delivery.order,
+      user_id: action.delivery.user,
+      store_id: action.delivery.store,
+      rider_id: action.updatedstatus.rider,
+    };
+    next();
   } catch (error) {
     next(error);
   }

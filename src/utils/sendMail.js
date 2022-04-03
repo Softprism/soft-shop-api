@@ -117,7 +117,7 @@ const sendUserNewOrderRejectedMail = async (orderId, toEmail, store) => {
 };
 
 const sendUserOrderReadyMail = async (orderId, toEmail) => {
-  let subject = `Order ${orderId} is ready`;
+  let subject = `Order ${orderId} ready for delivery`;
   let body = "Your order is now ready for delivery, we'll also notify you when your order has been picked up.";
   let sendAction = await sendEmail(toEmail, subject, body);
   if (!sendAction) {

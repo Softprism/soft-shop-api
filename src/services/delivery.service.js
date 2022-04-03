@@ -21,7 +21,7 @@ const createDelivery = async (orderId, storeId) => {
     return { err: "Sorry you can't create delivery for this Order.", status: 409, };
   }
   // check for order payment status
-  if (order.status !== "ready") {
+  if (order.status !== "approved") {
     return { err: "Order isn't ready for delivery.", status: 409, };
   }
   // check if store owner is the same with the logged in user
@@ -49,13 +49,6 @@ const createDelivery = async (orderId, storeId) => {
   };
   // create delivery
   const delivery = await Delivery.create(newDelivery);
-  // uodate orser status to ready
-  await Order.findByIdAndUpdate(
-    { _id: orderId },
-    { status: "ready", delivery: delivery._id },
-    { new: true }
-  );
-  await sendUserOrderReadyMail(user.email);
   return { delivery };
 };
 
@@ -74,12 +67,6 @@ const acceptDelivery = async (deliveryId, riderId) => {
     { status: "accepted", rider: riderId },
     { new: true }
   );
-  // update order status
-  await Order.findByIdAndUpdate(
-    { _id: delivery.order },
-    { status: "accepted", rider: riderId },
-    { new: true }
-  );
   return { updatedDelivery };
 };
 
@@ -95,15 +82,6 @@ const updatedDeliveryStatus = async (deliveryId, riderId, status) => {
   // check if delivery has been assiged to a rider
   if (!delivery.rider || delivery.status === "pending") {
     return { err: "Delivery hasn't been accepted.", status: 409, };
-  }
-  if (status === "accepted") {
-    await Order.findByIdAndUpdate({ _id: delivery.order }, { status: "accepted" }, { new: true });
-  }
-  if (status === "delivered") {
-    await Order.findByIdAndUpdate({ _id: delivery.order }, { status: "delivered" }, { new: true });
-  }
-  if (status === "failed") {
-    await Order.findByIdAndUpdate({ _id: delivery.order }, { status: "cancelled" }, { new: true });
   }
 
   // update delivery Status
