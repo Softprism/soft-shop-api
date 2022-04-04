@@ -48,9 +48,11 @@ router.post("/signin",
   validator(loginValidation),
   signin,
   async (req, res) => {
+    // device token registration
     let rider = await Rider.findById(req.data.id);
     rider.pushDeviceToken = req.body.pushDeviceToken;
     await rider.save();
+
     // create log
     await createLog("rider Login", "rider", `A new login from ${rider.last_name} ${rider.first_name} with email - ${req.body.email}`);
   });

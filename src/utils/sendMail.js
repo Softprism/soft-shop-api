@@ -81,16 +81,16 @@ const sendForgotPasswordMail = async (toEmail, otp) => {
   }
 };
 
-const sendNewOrderInitiatedMail = async (toEmail, amount, store) => {
-  let subject = "New Order Initiated";
+const sendNewOrderInitiatedMail = async (orderId, toEmail, amount, store) => {
+  let subject = `New Order ${orderId} Initiated`;
   let body = `Your order has been initiated, once we confirm the receipt of ₦${amount} we'll notify ${store} so they can start preparing your order.`;
   let sendAction = await sendEmail(toEmail, subject, body);
   if (!sendAction) {
     console.log("new order initiated mail not sent");
   }
 };
-const sendUserNewOrderSentMail = async (toEmail, store) => {
-  let subject = "Order sent";
+const sendUserNewOrderSentMail = async (orderId, toEmail, store) => {
+  let subject = `Order ${orderId} sent`;
   let body = `Your order has been sent to ${store} we'll also notify you when they start preparing your order.`;
   let sendAction = await sendEmail(toEmail, subject, body);
   if (!sendAction) {
@@ -98,8 +98,8 @@ const sendUserNewOrderSentMail = async (toEmail, store) => {
   }
 };
 
-const sendUserNewOrderApprovedMail = async (toEmail, store) => {
-  let subject = `Order Confirmed by ${store}`;
+const sendUserNewOrderApprovedMail = async (orderId, toEmail, store) => {
+  let subject = `Order ${orderId} Confirmed by ${store}`;
   let body = `Your order has been confirmed and is being prepared by ${store} we'll also notify you when your order is on the way.`;
   let sendAction = await sendEmail(toEmail, subject, body);
   if (!sendAction) {
@@ -107,8 +107,8 @@ const sendUserNewOrderApprovedMail = async (toEmail, store) => {
   }
 };
 
-const sendUserNewOrderRejectedMail = async (toEmail, store) => {
-  let subject = "Order Rejected";
+const sendUserNewOrderRejectedMail = async (orderId, toEmail, store) => {
+  let subject = `Order ${orderId} Rejected`;
   let body = `Your order has been rejected by ${store} you can checkout alternative store near you for the same items.`;
   let sendAction = await sendEmail(toEmail, subject, body);
   if (!sendAction) {
@@ -116,8 +116,8 @@ const sendUserNewOrderRejectedMail = async (toEmail, store) => {
   }
 };
 
-const sendUserOrderReadyMail = async (toEmail) => {
-  let subject = "Order is ready";
+const sendUserOrderReadyMail = async (orderId, toEmail) => {
+  let subject = `Order ${orderId} ready for delivery`;
   let body = "Your order is now ready for delivery, we'll also notify you when your order has been picked up.";
   let sendAction = await sendEmail(toEmail, subject, body);
   if (!sendAction) {
@@ -125,8 +125,8 @@ const sendUserOrderReadyMail = async (toEmail) => {
   }
 };
 
-const sendUserOrderAcceptedMail = async (toEmail, dropoff) => {
-  let subject = "Order has been assigned a delivery agent";
+const sendUserOrderAcceptedMail = async (orderId, toEmail, dropoff) => {
+  let subject = `Order ${orderId} has been assigned a delivery agent`;
   let body = `Your order has been accepted by a delivery agent. We'll also notify you when the agent is on his way to ${dropoff}`;
   let sendAction = await sendEmail(toEmail, subject, body);
   if (!sendAction) {
@@ -134,8 +134,8 @@ const sendUserOrderAcceptedMail = async (toEmail, dropoff) => {
   }
 };
 
-const sendUserOrderPickedUpMail = async (toEmail, dropoff) => {
-  let subject = "Order has been picked up";
+const sendUserOrderPickedUpMail = async (orderId, toEmail, dropoff) => {
+  let subject = `Order ${orderId} has been picked up`;
   let body = `Your order is now enroute to ${dropoff}, we'll also notify you when he gets to your location.`;
   let sendAction = await sendEmail(toEmail, subject, body);
   if (!sendAction) {
@@ -143,8 +143,8 @@ const sendUserOrderPickedUpMail = async (toEmail, dropoff) => {
   }
 };
 
-const sendUserOrderDeliveredMail = async (toEmail, dropoff) => {
-  let subject = "Your Order has Arrived";
+const sendUserOrderDeliveredMail = async (orderId, toEmail, dropoff) => {
+  let subject = `Your ${orderId} Order has Arrived`;
   let body = `Your order is now at ${dropoff}, our agent will be waiting for your collection.`;
   let sendAction = await sendEmail(toEmail, subject, body);
   if (!sendAction) {

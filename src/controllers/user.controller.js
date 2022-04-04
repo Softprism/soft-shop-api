@@ -21,7 +21,6 @@ const verifyEmailAddress = async (req, res, next) => {
     res.status(200).json({ success: true, result: action.msg, status: 200 });
     req.data = {
       email: action.email,
-      otp: action.otp
     };
     next();
   } catch (error) {
@@ -49,7 +48,8 @@ const registerUser = async (req, res, next) => {
 
     req.data = {
       email: result.user[0].email,
-      phone: result.user[0].phone_number
+      phone: result.user[0].phone_number,
+      user_id: result.user[0]._id
     };
     next();
   } catch (error) {
@@ -136,6 +136,11 @@ const updateUser = async (req, res, next) => {
       user,
       status: 200
     });
+
+    req.localData = {
+      user: user[0],
+    };
+    next();
   } catch (error) {
     next(error);
   }
@@ -163,6 +168,9 @@ const addItemToBasket = async (req, res, next) => {
     const action = await userService.addItemToBasket(req.user.id, req.body);
 
     res.status(200).json({ success: true, result: action, status: 200 });
+
+    // create log
+    await createLog("new basket item", "user", `A user with id ${req.user.id} just  added an item to their basket.`);
   } catch (error) {
     next(error);
   }
@@ -219,6 +227,8 @@ const deleteBasketItem = async (req, res, next) => {
     }
 
     res.status(200).json({ success: true, result: action, status: 200 });
+    // create log
+    await createLog("user remove basket item", "user", `A user  with id - ${req.user.id} just removed an item from their basket`);
   } catch (error) {
     next(error);
   }
@@ -253,7 +263,11 @@ const forgotPassword = async (req, res, next) => {
         .json({ success: false, msg: action.err, status: action.status });
     }
 
-    return res.status(200).json({ success: true, result: action, status: 200 });
+    res.status(200).json({ success: true, result: action, status: 200 });
+
+    req.localData = {
+      user: action.user,
+    };
   } catch (error) {
     next(error);
   }
@@ -288,7 +302,13 @@ const createNewPassword = async (req, res, next) => {
         .json({ success: false, msg: action.err, status: action.status });
     }
 
-    return res.status(200).json({ success: true, result: action, status: 200 });
+    res.status(200).json({ success: true, result: action, status: 200 });
+
+    req.localData = {
+      user: action[0],
+      token: req.body.token,
+    };
+    next();
   } catch (error) {
     next(error);
   }

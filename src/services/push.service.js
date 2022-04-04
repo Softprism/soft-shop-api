@@ -15,6 +15,10 @@ let ssv = admin.initializeApp({
   credential: admin.credential.cert(softShopVendor)
 }, "ssv");
 
+let ssu = admin.initializeApp({
+  credential: admin.credential.cert(softShopVendor)
+}, "ssu");
+
 const sendOne = async (app, deviceToken, title, body, data) => {
   const message = {
     notification: {
@@ -38,6 +42,11 @@ const sendOne = async (app, deviceToken, title, body, data) => {
   if (app === "ssv") {
     // Send a message to devices subscribed to the provided topic.
     let sendPush = await ssv.messaging().send(message);
+    return sendPush;
+  }
+  if (app === "ssu") {
+    // Send a message to devices subscribed to the provided topic.
+    let sendPush = await ssu.messaging().send(message);
     return sendPush;
   }
 };

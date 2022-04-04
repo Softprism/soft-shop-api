@@ -1,10 +1,7 @@
-import Rider from "../models/rider.model";
 import Order from "../models/order.model";
 import Delivery from "../models/delivery.model";
 import Review from "../models/review.model";
 import Store from "../models/store.model";
-import { sendUserOrderReadyMail } from "../utils/sendMail";
-import { sendUserOrderPickedUpSMS } from "../utils/sendSMS";
 
 const createDelivery = async (orderId, storeId) => {
   // find the order
@@ -49,13 +46,6 @@ const createDelivery = async (orderId, storeId) => {
   };
   // create delivery
   const delivery = await Delivery.create(newDelivery);
-  // uodate orser status to ready
-  await Order.findByIdAndUpdate(
-    { _id: orderId },
-    { status: "ready", delivery: delivery._id },
-    { new: true }
-  );
-  await sendUserOrderReadyMail(user.email);
   return { delivery };
 };
 
@@ -71,12 +61,6 @@ const acceptDelivery = async (deliveryId, riderId) => {
   // update  delivery status
   const updatedDelivery = await Delivery.findByIdAndUpdate(
     { _id: deliveryId },
-    { status: "accepted", rider: riderId },
-    { new: true }
-  );
-  // update order status
-  await Order.findByIdAndUpdate(
-    { _id: delivery.order },
     { status: "accepted", rider: riderId },
     { new: true }
   );
@@ -96,6 +80,7 @@ const updatedDeliveryStatus = async (deliveryId, riderId, status) => {
   if (!delivery.rider || delivery.status === "pending") {
     return { err: "Delivery hasn't been accepted.", status: 409, };
   }
+
   // update delivery Status
   const updatedstatus = await Delivery.findByIdAndUpdate(
     deliveryId,

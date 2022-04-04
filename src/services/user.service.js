@@ -1,6 +1,5 @@
 /* eslint-disable quote-props */
 /* eslint-disable no-param-reassign */
-import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
 
@@ -9,12 +8,8 @@ import Token from "../models/tokens.model";
 import Basket from "../models/user-cart.model";
 import Product from "../models/product.model";
 
-import { sendSignUpOTPmail, sendPasswordChangeMail, sendForgotPasswordMail } from "../utils/sendMail";
-import getOTP from "../utils/sendOTP";
 import getJwt from "../utils/jwtGenerator";
 import { verifyCardRequest } from "./payment.service";
-import { sendForgotPasswordSMS } from "../utils/sendSMS";
-import { createLog } from "./logs.service";
 
 // send otp to Verify user email before sign up
 const verifyEmailAddress = async ({ email }) => {
@@ -24,9 +19,7 @@ const verifyEmailAddress = async ({ email }) => {
     return { err: "This email is being used by another user.", status: 409 };
   }
 
-  let token = await getOTP("user-signup", email);
-
-  return { msg: "OTP sent!", email, otp: token.otp };
+  return { msg: "OTP sent!", email };
 };
 
 const userProfile = async (userId) => {
@@ -98,19 +91,13 @@ const registerUser = async (userParam) => {
   }
 
   // Save user to db
-  let newUser = await user.save();
-
-  // delete sign up token
-  await Token.findByIdAndDelete(userParam.token);
+  await user.save();
 
   // delete user on creation, uncomment to test registration without populating your database
   // await User.findByIdAndDelete(newUser._id);
 
   // Define payload for token
   let token = await getJwt(user.id, "user");
-
-  // create log
-  await createLog("user signup", "user", `A new user - ${user.first_name} ${user.last_name} with email - ${user.email} just signed on softshop`);
 
   // get user details
   user = await userProfile(user.id);
@@ -245,12 +232,6 @@ const updateUser = async (updateParam, id) => {
     { omitUndefined: true, new: true, useFindAndModify: false }
   );
 
-  // send mail to notify user of password change
-  if (user.password && password) {
-    sendPasswordChangeMail(user[0].email);
-    // create log
-    await createLog("user update prfile", "user", `A user - ${user.first_name} ${user.last_name} with email - ${user.email} just updated their profile`);
-  }
   user = await userProfile(id);
 
   return user;
@@ -339,8 +320,6 @@ const addItemToBasket = async (userId, basketItemMeta) => {
     { omitUndefined: true, new: true, useFindAndModify: false }
   );
 
-  // create log
-  await createLog("new basket item", "user", `A user with id ${userId} just  added an item to their basket.`);
   return basketUpdate;
 };
 
@@ -408,8 +387,6 @@ const deleteBasketItem = async (userId, { basketId }) => {
   // return user basket items
   userBasket = await getUserBasketItems(userId);
 
-  // create log
-  await createLog("user remove basket item", "user", `A user  with id - ${userId} just removed an item from their basket`);
   return userBasket;
 };
 
@@ -441,13 +418,7 @@ const forgotPassword = async ({ email }) => {
     };
   }
 
-  let token = await getOTP("user-forgot-password", email);
-
-  // send otp
-  await sendForgotPasswordMail(email, token.otp);
-  await sendForgotPasswordSMS(findUser.phone_number, token.otp);
-
-  return "OTP sent!";
+  return { user: findUser, msg: "OTP sent!" };
 };
 
 const validateToken = async ({ type, otp, email }) => {
@@ -485,11 +456,6 @@ const createNewPassword = async ({ token, email, password }) => {
     { $set: { password } },
     { omitUndefined: true, new: true, useFindAndModify: false }
   );
-
-  await Token.findByIdAndDelete(token);
-
-  // send confirmation email
-  await sendPasswordChangeMail(email);
 
   user = await userProfile(user.id);
   return user;
