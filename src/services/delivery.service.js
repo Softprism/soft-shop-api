@@ -1,10 +1,7 @@
-import Rider from "../models/rider.model";
 import Order from "../models/order.model";
 import Delivery from "../models/delivery.model";
 import Review from "../models/review.model";
 import Store from "../models/store.model";
-import { sendUserOrderReadyMail } from "../utils/sendMail";
-import { sendUserOrderPickedUpSMS } from "../utils/sendSMS";
 
 const createDelivery = async (orderId, storeId) => {
   // find the order

@@ -1,7 +1,7 @@
 /* eslint-disable import/named */
 import express from "express";
 import {
-  getUsers, registerUser, loginUser, getLoggedInUser,
+  registerUser, loginUser, getLoggedInUser,
   updateUser, addItemToBasket, forgotPassword, validateToken,
   createNewPassword, verifyEmailAddress, getUserBasketItems,
   // createUserBasket,
@@ -9,7 +9,7 @@ import {
 } from "../controllers/user.controller";
 import validator from "../middleware/validator";
 import auth from "../middleware/auth";
-import checkPagination from "../middleware/checkPagination";
+
 import { isUserVerified, hashPassword } from "../middleware/validationMiddleware";
 import {
   registerValidation, emailValidation, loginValidation,
@@ -19,7 +19,6 @@ import {
   sendForgotPasswordMail, sendPasswordChangeMail, sendSignUpOTPmail, sendUserSignUpMail
 } from "../utils/sendMail";
 import { sendForgotPasswordSMS, sendUserSignupSMS } from "../utils/sendSMS";
-import { isAdmin } from "../middleware/Permissions";
 
 import User from "../models/user.model";
 import { createLog } from "../services/logs.service";
