@@ -15,12 +15,16 @@ import {
   registerValidation, emailValidation, loginValidation,
   resetPassword, updateUserValidation, addbasketValidation, editbasketValidation
 } from "../validations/userValidation";
-import { sendSignUpOTPmail, sendUserSignUpMail } from "../utils/sendMail";
-import { sendUserSignupSMS } from "../utils/sendSMS";
+import {
+  sendForgotPasswordMail, sendPasswordChangeMail, sendSignUpOTPmail, sendUserSignUpMail
+} from "../utils/sendMail";
+import { sendForgotPasswordSMS, sendUserSignupSMS } from "../utils/sendSMS";
 import { isAdmin } from "../middleware/Permissions";
 
 import User from "../models/user.model";
 import { createLog } from "../services/logs.service";
+import Token from "../models/tokens.model";
+import getOTP from "../utils/sendOTP";
 
 const router = express.Router();
 
@@ -33,7 +37,8 @@ router.post(
   verifyEmailAddress,
   async (req, res) => {
     // send otp
-    await sendSignUpOTPmail(req.data.email, req.data.otp);
+    let token = await getOTP("user-signup", email);
+    await sendSignUpOTPmail(req.data.email, token.otp);
   }
 );
 
@@ -46,10 +51,15 @@ router.post(
   hashPassword,
   registerUser,
   async (req, res, next) => {
+    // delete sign up token
+    await Token.findByIdAndDelete(req.body.token);
+    let user = await User.findOne({ email: req.data.user_id });
     // send email to user
     await sendUserSignUpMail(req.data.email);
     // send sms to user
     await sendUserSignupSMS(req.data.phone);
+    // create log
+    await createLog("user signup", "user", `A new user - ${user.first_name} ${user.last_name} with email - ${user.email} just signed on softshop`);
   }
 );
 
@@ -86,7 +96,21 @@ router.get("/login", auth, getLoggedInUser);
 // @desc    Update User Details
 // @access  Private
 
-router.put("/", auth, validator(updateUserValidation), updateUser);
+router.put(
+  "/",
+  auth,
+  validator(updateUserValidation),
+  updateUser,
+  async (req, res) => {
+    let { user } = req.localData;
+    // send mail to notify user of password change
+    if (user.password && req.body.password) {
+      sendPasswordChangeMail(user.email);
+      // create log
+      await createLog("user update prfile", "user", `A user - ${user.first_name} ${user.last_name} with email - ${user.email} just updated their profile`);
+    }
+  }
+);
 
 // @route   POST /cart
 // @desc    creates a basket for the user
@@ -116,7 +140,17 @@ router.delete("/basket/all", auth, deleteAllBasketItems);
 // @route   POST /password
 // @desc    reset a forget password
 // @access  Public
-router.post("/forgot-password", forgotPassword);
+router.post(
+  "/forgot-password",
+  forgotPassword,
+  async (req, res) => {
+    let { user } = req.localData;
+    // send otp & mail
+    let token = await getOTP("user-forgot-password", email);
+    await sendForgotPasswordMail(user.email, token.otp);
+    await sendForgotPasswordSMS(user.phone_number, token.otp);
+  }
+);
 
 // @route   GET /token
 // @desc    validates a token
@@ -126,6 +160,20 @@ router.post("/token", validateToken);
 // @route   PATCH /password
 // @desc    creates new password for user after forget password
 // @access  Public
-router.patch("/password", hashPassword, validator(resetPassword), createNewPassword);
+router.patch(
+  "/password",
+  hashPassword,
+  validator(resetPassword),
+  createNewPassword,
+  async (req, res) => {
+    let { user, token } = req.localData;
+
+    // delete token
+    await Token.findByIdAndDelete(token);
+
+    // send confirmation email
+    await sendPasswordChangeMail(user.email);
+  }
+);
 
 export default router;
