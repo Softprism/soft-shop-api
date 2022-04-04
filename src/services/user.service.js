@@ -1,6 +1,5 @@
 /* eslint-disable quote-props */
 /* eslint-disable no-param-reassign */
-import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
 
@@ -11,8 +10,6 @@ import Product from "../models/product.model";
 
 import getJwt from "../utils/jwtGenerator";
 import { verifyCardRequest } from "./payment.service";
-
-import { createLog } from "./logs.service";
 
 // send otp to Verify user email before sign up
 const verifyEmailAddress = async ({ email }) => {
