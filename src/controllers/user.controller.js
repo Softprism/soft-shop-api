@@ -1,8 +1,6 @@
 import express from "express";
 // import { validationResult } from "express-validator";
 import * as userService from "../services/user.service";
-import { sendUserSignUpMail } from "../utils/sendMail";
-import { sendUserSignupSMS } from "../utils/sendSMS";
 
 const router = express.Router();
 
@@ -108,6 +106,15 @@ const getLoggedInUser = async (req, res, next) => {
 const addCard = async (req, res, next) => {
   try {
     const action = await userService.addCard(req.user.id);
+
+    res.status(200).json({ success: true, result: action, status: 200 });
+  } catch (error) {
+    next(error);
+  }
+};
+const removeCard = async (req, res, next) => {
+  try {
+    const action = await userService.removeCard(req.user.id, req.query.card_index);
 
     res.status(200).json({ success: true, result: action, status: 200 });
   } catch (error) {
@@ -331,5 +338,6 @@ export {
   editBasketItems,
   deleteBasketItem,
   deleteAllBasketItems,
-  addCard
+  addCard,
+  removeCard
 };

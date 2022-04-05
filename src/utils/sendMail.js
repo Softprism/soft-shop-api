@@ -98,6 +98,15 @@ const sendUserNewOrderSentMail = async (orderId, toEmail, store) => {
   }
 };
 
+const sendStoreNewOrderSentMail = async (orderId, toEmail) => {
+  let subject = `Order ${orderId} created`;
+  let body = "An order has been created for you, please check your order app for more details.";
+  let sendAction = await sendEmail(toEmail, subject, body);
+  if (!sendAction) {
+    console.log("new order initiated mail not sent");
+  }
+};
+
 const sendUserNewOrderApprovedMail = async (orderId, toEmail, store) => {
   let subject = `Order ${orderId} Confirmed by ${store}`;
   let body = `Your order has been confirmed and is being prepared by ${store} we'll also notify you when your order is on the way.`;
@@ -241,6 +250,7 @@ export {
   sendUserNewOrderApprovedMail,
   sendUserNewOrderRejectedMail,
   sendUserNewOrderSentMail,
+  sendStoreNewOrderSentMail,
   sendUserOrderReadyMail,
   sendUserOrderAcceptedMail,
   sendUserOrderPickedUpMail,

@@ -176,6 +176,14 @@ const addCard = async (userId) => {
   let verifyCardReq = await verifyCardRequest(payload);
   return verifyCardReq;
 };
+
+const removeCard = async (userId, card_index) => {
+  await User.updateOne(
+    { _id: userId },
+    { $pull: { cards: { card_index } } },
+  );
+  return "Card removed successfully";
+};
 // Get Logged in User info
 const getLoggedInUser = async (userId) => {
   const user = await userProfile(userId);
@@ -476,5 +484,6 @@ export {
   editBasketItems,
   deleteBasketItem,
   deleteAllBasketItems,
-  addCard
+  addCard,
+  removeCard
 };
