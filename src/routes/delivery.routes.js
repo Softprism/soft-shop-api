@@ -32,6 +32,8 @@ router.post(
   async (req, res) => {
     let user = await User.findById(req.data.user_id);
     let order = await Order.findById(req.data.order_id);
+    let store = await Store.findById(req.data.store_id);
+    let rider = await Rider.findById(req.data.rider_id);
     // uodate orser status to ready
     await Order.findByIdAndUpdate(
       { _id: req.data.order_id },
@@ -44,6 +46,17 @@ router.post(
       user.pushDeivceToken,
       `${order.orderId} ready for pickup`,
       "Your order is now ready for delivery, we'll also notify you when your order has been picked up."
+    );
+    // send notification to store
+    let data = {
+      event: "delivery_created",
+    };
+    await sendOne(
+      "sso",
+      store.orderPushDeivceToken,
+      `Order ${order.orderId} accepted for delivery`,
+      `${rider.last_name} ${rider.first_name} has accepted your order ${order.orderId} for delivery. He's on his way to pick up the order.`,
+      data // data to be sent to order app
     );
 
     // send push notification to riders
@@ -137,11 +150,15 @@ router.patch(
       await Order.findByIdAndUpdate({ _id: order._id }, { status: "delivered" }, { new: true });
 
       // send push notification to store
+      let data = {
+        route: "history"
+      };
       await sendOne(
         "sso",
         store.orderPushDeviceToken,
         `Delivery for ${order.orderId} completed`,
-        "The delivery for your order has been completed."
+        "The delivery for your order has been completed.",
+        data
       );
       await sendOne(
         "ssu",

@@ -1,5 +1,4 @@
 import express from "express";
-import { check, validationResult } from "express-validator";
 import auth from "../middleware/auth";
 import checkPagination from "../middleware/checkPagination";
 
@@ -20,7 +19,7 @@ import {
 import {
   sendUserNewOrderRejectedSMS, sendUserOrderDeliveredSMS, sendUserOrderPickedUpSMS, sendUserNewOrderAcceptedSMS
 } from "../utils/sendSMS";
-import { sendOne } from "../services/push.service";
+import { sendOne, sendTopic } from "../services/push.service";
 import User from "../models/user.model";
 import Store from "../models/store.model";
 import Order from "../models/order.model";
@@ -98,6 +97,18 @@ router.put(
       );
 
       // send push notification to riders
+      let data = {
+        event: "order_ready",
+        place_id: store.place_id,
+        coords: store.location.coordinates
+      };
+      await sendTopic(
+        "ssd",
+        riderApp,
+        "",
+        "",
+        data
+      );
     }
     if (req.body.status === "accepted") {
       await sendUserOrderAcceptedMail(order.orderId, req.localData.user_email, req.localData.delivery_address);
