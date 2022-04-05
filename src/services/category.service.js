@@ -8,7 +8,7 @@ const getCategories = async (urlParams) => {
   if (urlParams.long && urlParams.lat && urlParams.radius) {
     long = parseFloat(urlParams.long);
     lat = parseFloat(urlParams.lat);
-    radian = parseFloat(urlParams.radius / 3963.2);
+    radian = parseFloat(urlParams.radius / 6378.1); // radius in radians (km)
   }
 
   // declare fields to remove after aggregating
