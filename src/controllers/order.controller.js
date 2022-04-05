@@ -1,8 +1,8 @@
-import { validationResult } from "express-validator";
 import Order from "../models/order.model";
 import Rider from "../models/rider.model";
 import { createNotification } from "../services/notification.service";
 import * as orderService from "../services/order.service";
+import { sendOne } from "../services/push.service";
 import { sendNewOrderInitiatedMail } from "../utils/sendMail";
 
 //= =====================================================================
@@ -45,6 +45,13 @@ const createOrder = async (req, res, next) => {
 
     // send email notification on order initiated
     await sendNewOrderInitiatedMail(newOrder.orderId, newOrder.user.email, newOrder.totalPrice, newOrder.store.name);
+
+    // notify order app on new order
+    await sendOne(
+      "sso",
+      newOrder.store.orderPushDeivceToken,
+      "New Order",
+    );
 
     // create notification for rider
     let riders = await Rider.find();

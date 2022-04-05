@@ -5,7 +5,7 @@ import {
   updateUser, addItemToBasket, forgotPassword, validateToken,
   createNewPassword, verifyEmailAddress, getUserBasketItems,
   // createUserBasket,
-  editBasketItems, deleteBasketItem, deleteAllBasketItems, addCard
+  editBasketItems, deleteBasketItem, deleteAllBasketItems, addCard, removeCard
 } from "../controllers/user.controller";
 import validator from "../middleware/validator";
 import auth from "../middleware/auth";
@@ -80,10 +80,15 @@ router.post("/login",
     await createLog("user Login", "user", `A new login from ${user.first_name} ${user.last_name} with email - ${user.email}`);
   });
 
-// @route   POST /user/card
+// @route   GET /user/card
 // @desc    returns a link to user to continue card addition
 // @access  Public
 router.get("/card", auth, addCard);
+
+// @route   DELETE /user/card
+// @desc    returns a link to user to continue card addition
+// @access  Public
+router.delete("/card", auth, removeCard);
 
 // @route   GET /user/login
 // @desc    Get logged in user
