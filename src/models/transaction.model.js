@@ -1,7 +1,4 @@
 import mongoose from "mongoose";
-import { DateTime } from "luxon";
-
-const now = new Date();
 
 const transactionSchema = mongoose.Schema({
   amount: { type: Number },
@@ -20,7 +17,7 @@ const transactionSchema = mongoose.Schema({
     default: "pending"
   },
   ref: { type: String },
-  createdDate: { type: String, default: DateTime.fromJSDate(now).toString() },
+  createdDate: { type: Date, default: Date.now },
 });
 const Transaction = mongoose.model("Transaction", transactionSchema);
 export default Transaction;

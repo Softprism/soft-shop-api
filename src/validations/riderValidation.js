@@ -58,6 +58,7 @@ const loginValidation = {
         "string.empty": "Sorry, password cannot be an empty field",
         "string.min": "Password should be six characters or more"
       }),
+    pushDeviceToken: Joi.string(),
   }).messages({
     "object.unknown": "You have used an invalid key."
   })

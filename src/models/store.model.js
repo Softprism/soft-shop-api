@@ -1,7 +1,4 @@
 import mongoose from "mongoose";
-import { DateTime } from "luxon";
-
-const now = new Date();
 
 const StoreSchema = mongoose.Schema({
   owner_name: { type: String, required: true },
@@ -10,7 +7,7 @@ const StoreSchema = mongoose.Schema({
   images: {
     profilePhoto: {
       type: String,
-      default: "https://soft-shop.app/../uploads/store/292672-edit.svg"
+      default: "https://soft-shop.app/../uploads/store/292672-edit.png"
     },
     pictures: [{ type: String }],
   }, // array to store multiple images
@@ -25,7 +22,7 @@ const StoreSchema = mongoose.Schema({
   openingTime: { type: String },
   closingTime: { type: String },
   deliveryTime: { type: String },
-  prepTime: { type: Number },
+  prepTime: { type: Number, default: 20 },
   location: {
     type: { type: String, default: "Point", enum: ["Point"] },
     coordinates: [Number],
@@ -57,7 +54,7 @@ const StoreSchema = mongoose.Schema({
     bank_name: { type: String },
     pending_payout: { type: Boolean },
   },
-  createdAt: { type: String, default: DateTime.fromJSDate(now).toString() },
+  createdAt: { type: Date, default: Date.now },
 },
 { timestamps: true });
 

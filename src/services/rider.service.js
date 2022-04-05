@@ -83,7 +83,6 @@ const registerRider = async (riderParam) => {
 // Login rider
 const loginRider = async (loginParam) => {
   const { email, password } = loginParam;
-
   // Find rider with email
   let rider = await Rider.findOne({
     $or: [{ email }, { phone: email }],

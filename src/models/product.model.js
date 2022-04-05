@@ -1,7 +1,5 @@
 import mongoose from "mongoose";
-import { DateTime } from "luxon";
 
-const now = new Date();
 const ProductSchema = mongoose.Schema({
   product_name: { type: String, required: true },
   product_description: { type: String, required: true },
@@ -27,7 +25,7 @@ const ProductSchema = mongoose.Schema({
   status: { type: String, default: "active" }, // deleted||active
   price: { type: Number, required: true },
   rating: { type: String, required: false },
-  createdDate: { type: String, default: DateTime.fromJSDate(now).toString() },
+  createdDate: { type: Date, default: Date.now },
 });
 
 const Product = mongoose.model("Product", ProductSchema);

@@ -10,7 +10,7 @@ import {
 } from "./payment.service";
 import { createNotification } from "./notification.service";
 
-import { sendNewOrderInitiatedMail, sendUserNewOrderAcceptedMail, sendUserNewOrderRejectedMail } from "../utils/sendMail";
+import { sendNewOrderInitiatedMail, sendUserNewOrderRejectedMail } from "../utils/sendMail";
 
 const getOrders = async (urlParams) => {
   // initialize match parameters, get limit, skip & sort values
@@ -137,7 +137,6 @@ const createOrder = async (orderParam) => {
 
   // validate user
   const vUser = await User.findById(user);
-  if (!vUser) return { err: "User does not exists.", status: 404 };
 
   // validate store
   const vStore = await Store.findById(store);
@@ -312,6 +311,9 @@ const createOrder = async (orderParam) => {
     };
       // eslint-disable-next-line no-use-before-define
     neworder[0].paymentResult = await bankTransfer(payload);
+
+    // add account name to response
+    neworder[0].paymentResult.account_name = `softshop payment ${neworder[0].paymentResult.meta.authorization.transfer_note.substring(neworder[0].paymentResult.meta.authorization.transfer_note.indexOf("-"))}`;
   }
   if (neworder[0].paymentMethod === "Card") {
     const payload = {
@@ -353,32 +355,6 @@ const createOrder = async (orderParam) => {
     await orderUpdate.save();
     return { err: `${neworder[0].paymentResult.message} Order has been initiated, please try paying again or select another payment method.`, status: 400 };
   }
-
-  // update order
-  let orderUpdate = await Order.findById(neworder[0]._id);
-  orderUpdate.orderItems = neworder[0].orderItems;
-  orderUpdate.totalPrice = neworder[0].totalPrice;
-  orderUpdate.taxPrice = neworder[0].taxPrice;
-  orderUpdate.subtotal = neworder[0].subtotal;
-  orderUpdate.paymentResult = neworder[0].paymentResult;
-  if (neworder[0].paymentMethod === "Transfer") {
-    const { transfer_note } = neworder[0].paymentResult.meta.authorization;
-    orderUpdate.paymentResult.account_name = `softshop payment ${transfer_note.substring(transfer_note.indexOf("-"))}`;
-  }
-
-  orderUpdate.markModified("paymentResult");
-  await orderUpdate.save();
-
-  // send email notification on order initiated
-  await sendNewOrderInitiatedMail(neworder[0].user.email, neworder[0].totalPrice, neworder[0].store.name);
-  let riders = await Rider.find();
-  let ridersId = [];
-  if (riders) {
-    ridersId = riders.map((rider) => {
-      return rider._id;
-    });
-  }
-  await createNotification(ridersId, newOrder._id);
 
   return neworder[0];
 };
@@ -501,7 +477,7 @@ const editOrder = async (orderID, orderParam) => {
   // can be used by both stores and users
   const order = await Order.findById(orderID);
   if (orderParam.status === "ready" && order.status !== "approved") {
-    return { err: "Sorry you can only set an order to ready after it has been approved by a store" };
+    return { err: "Sorry you can only set an order to ready after it has been approved by a store", status: 400 };
   }
   await Order.findByIdAndUpdate(
     orderID,
@@ -645,15 +621,6 @@ const editOrder = async (orderID, orderParam) => {
     },
     { omitUndefined: true, new: true, useFindAndModify: false }
   );
-  // send email to user once store accepts order
-  if (orderParam.status === "accepted") {
-    await sendUserNewOrderAcceptedMail(newOrder[0].store.email, newOrder[0].store.name);
-  }
-  // send email to user once store rejects order
-
-  if (orderParam.status === "canceled") {
-    await sendUserNewOrderRejectedMail(newOrder[0].store.email, newOrder[0].store.name);
-  }
   return newOrder[0];
 };
 

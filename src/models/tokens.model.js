@@ -1,7 +1,4 @@
 import mongoose from "mongoose";
-import { DateTime } from "luxon";
-
-const now = new Date();
 
 const tokenSchema = mongoose.Schema(
   {
@@ -19,7 +16,7 @@ const tokenSchema = mongoose.Schema(
       enum: ["user-forgot-password", "rider-forgot-password", "user-signup", "rider-signup"],
       required: true,
     },
-    createdAt: { type: String, default: DateTime.fromJSDate(now).toString() },
+    createdAt: { type: Date, default: Date.now },
   },
   {
     timestamps: true,

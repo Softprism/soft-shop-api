@@ -1,7 +1,5 @@
 import mongoose from "mongoose";
-import { DateTime } from "luxon";
 
-const now = new Date();
 const OrderSchema = mongoose.Schema(
   {
     user: {
@@ -33,6 +31,13 @@ const OrderSchema = mongoose.Schema(
     deliveryAddress: {
       type: String,
       required: true,
+    },
+    cancelReason: {
+      type: String,
+    },
+    customerNote: {
+      type: String,
+      default: "Nothing."
     },
     paymentMethod: {
       type: String,
@@ -70,7 +75,17 @@ const OrderSchema = mongoose.Schema(
       type: String,
       required: true,
       default: "initiated",
-      enum: ["initiated", "sent", "cancelled", "ready", "accepted", "enroute", "delivered", "completed", "approved"]
+      enum: [
+        "initiated", // new order just created
+        "sent", // payment confirmation sent
+        "approved", // order approved by store
+        "cancelled", // order cancelled by store
+        "ready", // order ready for delivery
+        "accepted", // order accepted by rider
+        "enroute", // order is on the way user
+        "delivered", // order delivered to user
+        "completed", // delivery completed
+      ]
     },
     orderItems: [
       {
@@ -100,7 +115,7 @@ const OrderSchema = mongoose.Schema(
         ],
       },
     ],
-    createdAt: { type: String, default: DateTime.fromJSDate(now).toString() },
+    createdAt: { type: Date, default: Date.now },
   },
   { timestamps: true }
 );

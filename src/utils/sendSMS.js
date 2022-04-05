@@ -15,10 +15,10 @@ const sendSMS = async (toNumber, body) => {
       body,
       from: "SoftShop",
       to: toNumber,
+      statusCallback: "https://soft-shop.app/api/v1/test/sms-feedback"
     });
     return action;
   } catch (error) {
-    console.log(error.message);
     return { err: error.message };
   }
 };
@@ -39,16 +39,30 @@ const sendForgotPasswordSMS = async (phone, otp) => {
   }
 };
 
-const sendUserOrderPickedUpSMS = async (phone, dropoff) => {
-  let body = `Your order has been picked up for delivery, please be available at ${dropoff}`;
+const sendUserOrderPickedUpSMS = async (orderId, phone, dropoff) => {
+  let body = `Your order ${orderId} has been picked up for delivery, please be available at ${dropoff}`;
   let action = await sendSMS(phone, body);
   if (action.err) {
     console.log("could not send sms");
   }
 };
 
-const sendUserOrderDeliveredSMS = async (phone, dropoff) => {
-  let body = `Your order has arrived at ${dropoff}`;
+const sendUserOrderDeliveredSMS = async (orderId, phone, dropoff) => {
+  let body = `Your order ${orderId} has arrived at ${dropoff}`;
+  let action = await sendSMS(phone, body);
+  if (action.err) {
+    console.log("could not send sms");
+  }
+};
+const sendUserNewOrderAcceptedSMS = async (orderId, phone, store) => {
+  let body = `Your order ${orderId} has been accepted and is being prepared by ${store} we'll also notify you when your order is on the way.`;
+  let action = await sendSMS(phone, body);
+  if (action.err) {
+    console.log("could not send sms");
+  }
+};
+const sendUserNewOrderRejectedSMS = async (orderId, phone, store) => {
+  let body = `Your ${orderId} order has been rejected by ${store} you can checkout alternative store near you for the same items.`;
   let action = await sendSMS(phone, body);
   if (action.err) {
     console.log("could not send sms");
@@ -56,5 +70,5 @@ const sendUserOrderDeliveredSMS = async (phone, dropoff) => {
 };
 
 export {
-  sendSMS, sendUserSignupSMS, sendForgotPasswordSMS, sendUserOrderPickedUpSMS, sendUserOrderDeliveredSMS
+  sendSMS, sendUserSignupSMS, sendForgotPasswordSMS, sendUserOrderPickedUpSMS, sendUserOrderDeliveredSMS, sendUserNewOrderAcceptedSMS, sendUserNewOrderRejectedSMS
 };

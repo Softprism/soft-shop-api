@@ -82,11 +82,16 @@ const signin = async (req, res, next) => {
       });
     }
 
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
       token: loginRequest.token,
       status: 200
     });
+
+    req.data = {
+      id: loginRequest.rider._id
+    };
+    next();
   } catch (error) {
     next(error);
   }

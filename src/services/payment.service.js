@@ -3,14 +3,15 @@ import dotenv from "dotenv";
 import forge from "node-forge";
 import Flutterwave from "flutterwave-node-v3";
 
-import { response } from "express";
 import User from "../models/user.model";
 import Order from "../models/order.model";
 import Store from "../models/store.model";
-import StoreUpdate from "../models/store-update.model";
-import { createTransaction } from "./transaction.service";
 import Ledger from "../models/ledger.model";
-import { sendUserNewOrderSentMail } from "../utils/sendMail";
+
+import { sendStoreNewOrderSentMail, sendUserNewOrderSentMail } from "../utils/sendMail";
+
+import { createTransaction } from "./transaction.service";
+import { sendOne } from "./push.service";
 
 // initial env variables
 dotenv.config();
@@ -38,9 +39,7 @@ const verifyTransaction = async (paymentDetails) => {
   // if it's a new card transaction, it adds the cards details to the user profile
   // if it's a order transaction, it adds the payment details to the order payment result and credit store balance
 
-  console.log(1, paymentDetails);
   const response = await flw.Transaction.verify({ id: paymentDetails.data.id });
-  console.log(2, response);
 
   const { tx_ref } = response.data;
   if (tx_ref.includes("card")) {
@@ -115,7 +114,7 @@ const verifyTransaction = async (paymentDetails) => {
     if (response.data.status === "successful" && paymentDetails.softshop !== "true") {
       order.status = "sent";
       // send email to user to notify them of sent order
-      await sendUserNewOrderSentMail(order.user.email);
+      await sendUserNewOrderSentMail(order.orderId, order.user.email);
 
       // create a credit transaction for store and softshop
       let storeReq = {
@@ -136,33 +135,49 @@ const verifyTransaction = async (paymentDetails) => {
         ref: order._id
       };
       await createTransaction(ledgerReq);
+
+      // notify order app on new order
+      let data = {
+        event: "new_order",
+        route: "newOrdersView"
+      };
+      await sendOne(
+        "sso",
+        store.orderPushDeivceToken,
+        "New Order",
+        `You have a new order from ${order.user.firstName} ${order.user.lastName}`,
+        data // data to be sent to order app
+      );
     }
+
+    // send email to store on new order
+    await sendStoreNewOrderSentMail(order.orderId, store.email);
 
     await store.save();
     await order.save();
     return order;
   }
 
-  if (tx_ref.includes("")) {
-    // store can only have one  withdrawal request
-    let approval = await Transaction.findOne({ receiver: storeId, status: "pending" });
-    if (!approval) return { err: "Cannot find store's withdrawal request", status: 400 };
-    approval.status = "completed";
-    await approval.save();
+  // if (tx_ref.includes("")) {
+  //   // store can only have one  withdrawal request
+  //   let approval = await Transaction.findOne({ receiver: storeId, status: "pending" });
+  //   if (!approval) return { err: "Cannot find store's withdrawal request", status: 400 };
+  //   approval.status = "completed";
+  //   await approval.save();
 
-    // create transaction
-    let request = {
-      amount: approval.amount,
-      type: "Debit",
-      to: "Ledger",
-      receiver: ledger._id,
-      status: "completed",
-      ref: approval.ref
-    };
-    await createTransaction(request);
+  //   // create transaction
+  //   let request = {
+  //     amount: approval.amount,
+  //     type: "Debit",
+  //     to: "Ledger",
+  //     receiver: ledger._id,
+  //     status: "completed",
+  //     ref: approval.ref
+  //   };
+  //   await createTransaction(request);
 
-    return approval;
-  }
+  //   return approval;
+  // }
 };
 
 const encryptCard = async (text) => {

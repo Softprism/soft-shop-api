@@ -1,7 +1,5 @@
 import mongoose from "mongoose";
-import { DateTime } from "luxon";
 
-const now = new Date();
 const deliverySchema = mongoose.Schema({
   item: { type: String, required: true },
   pickup: { type: String, required: true },
@@ -18,7 +16,7 @@ const deliverySchema = mongoose.Schema({
     enum: ["Arrive at pickup", "Start Delivery", "Complete Drop off", "Cancelled", "pending"],
     default: "pending",
   },
-  createdDate: { type: String, default: DateTime.fromJSDate(now).toString() },
+  createdDate: { type: Date, default: Date.now },
 });
 
 const Delivery = mongoose.model("Delivery", deliverySchema);

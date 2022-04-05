@@ -1,5 +1,9 @@
-import { validationResult } from "express-validator";
+import Order from "../models/order.model";
+import Rider from "../models/rider.model";
+import { createNotification } from "../services/notification.service";
 import * as orderService from "../services/order.service";
+import { sendOne } from "../services/push.service";
+import { sendNewOrderInitiatedMail } from "../utils/sendMail";
 
 //= =====================================================================
 
@@ -23,7 +27,41 @@ const createOrder = async (req, res, next) => {
 
     if (newOrder.err) return res.status(newOrder.status).json({ success: false, msg: newOrder.err, status: newOrder.status });
 
-    return res.status(201).json({ success: true, result: newOrder });
+    res.status(201).json({ success: true, result: newOrder });
+
+    // update order
+    let orderUpdate = await Order.findById(newOrder._id);
+    orderUpdate.orderItems = newOrder.orderItems;
+    orderUpdate.totalPrice = newOrder.totalPrice;
+    orderUpdate.taxPrice = newOrder.taxPrice;
+    orderUpdate.subtotal = newOrder.subtotal;
+    orderUpdate.paymentResult = newOrder.paymentResult;
+
+    if (newOrder.paymentMethod === "Transfer") {
+      orderUpdate.paymentResult.account_name = newOrder.paymentResult.account_name;
+    }
+    orderUpdate.markModified("paymentResult");
+    await orderUpdate.save();
+
+    // send email notification on order initiated
+    await sendNewOrderInitiatedMail(newOrder.orderId, newOrder.user.email, newOrder.totalPrice, newOrder.store.name);
+
+    // notify order app on new order
+    await sendOne(
+      "sso",
+      newOrder.store.orderPushDeivceToken,
+      "New Order",
+    );
+
+    // create notification for rider
+    let riders = await Rider.find();
+    let ridersId = [];
+    if (riders) {
+      ridersId = riders.map((rider) => {
+        return rider._id;
+      });
+    }
+    await createNotification(ridersId, newOrder._id);
   } catch (error) {
     next(error);
   }
@@ -62,12 +100,20 @@ const getOrderDetails = async (req, res, next) => {
 const editOrder = async (req, res, next) => {
   try {
     let updatedOrder = await orderService.editOrder(req.params.orderID, req.body);
+    if (updatedOrder.err) return res.status(updatedOrder.status).json({ success: false, msg: updatedOrder.err, status: updatedOrder.status });
 
     res.status(200).json({ success: true, result: updatedOrder });
     // prepare data for next middleware
     req.localData = {
-      name: updatedOrder.store.name,
-      email: updatedOrder.store.email
+      user_id: updatedOrder.user._id,
+      order_id: updatedOrder._id,
+      store_id: updatedOrder.store._id,
+      store_name: updatedOrder.store.name,
+      store_email: updatedOrder.store.email,
+      user_email: updatedOrder.user.email,
+      user_phone: updatedOrder.user.phone_number,
+      user_name: updatedOrder.user.first_name,
+      delivery_address: updatedOrder.deliveryAddress,
     };
     next();
   } catch (error) {
