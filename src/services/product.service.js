@@ -286,11 +286,19 @@ const addVariantItem = async (storeId, variantId, variantParam) => {
 };
 
 const editVariantItem = async (storeId, variantItemId, variantParam) => {
-  const {
+  let {
     itemName, itemThumbnail, itemPrice, required, quantityOpt
   } = variantParam;
   let variantItem = await Variant.findOne({ "variantItems._id": variantItemId, store: storeId });
   if (!variantItem) return { err: "Variant item not found.", status: 400 };
+
+  // check if required & quantityOpt exists then convert them to string
+  if (required) required = "true";
+  if (quantityOpt) quantityOpt = "true";
+
+  // check if required & quantityOpt is === false then convert them to string
+  if (required === false) required = "false";
+  if (quantityOpt === false) quantityOpt = "false";
 
   await Variant.updateOne(
     {
