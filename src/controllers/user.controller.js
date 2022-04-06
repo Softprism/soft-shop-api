@@ -2,6 +2,8 @@ import express from "express";
 // import { validationResult } from "express-validator";
 import * as userService from "../services/user.service";
 
+import { createLog } from "../services/logs.service";
+
 const router = express.Router();
 
 // ========================================================================== //

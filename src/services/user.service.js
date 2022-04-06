@@ -263,29 +263,11 @@ const updateUser = async (updateParam, id) => {
 //     return err;
 //   }
 // };
-
-const addItemToBasket = async (userId, basketItemMeta) => {
-  // validate if store is active
-  const product = await Product.findById(basketItemMeta.product.productId)
-    .populate([{ path: "store", select: "_id name isActive", }]);
-  if (!product) {
-    return { err: "Product does not exists.", status: 404 };
-  }
-  const { store } = product;
-  if (!store.isActive) {
-    return { err: "Sorry you can't add item from an inactive store.", status: 409 };
-  }
-  // add user ID to basketMeta
-  basketItemMeta.user = userId;
-
-  // add item to basket
-  let newBasketItem = new Basket(basketItemMeta);
-  await newBasketItem.save();
-
+const updateBasketPrice = async (basketId) => {
   // run price calculations
   const newBasketItemChore = await Basket.aggregate()
     .match({
-      _id: mongoose.Types.ObjectId(newBasketItem._id),
+      _id: mongoose.Types.ObjectId(basketId),
     })
     .addFields({
       "product.selectedVariants": {
@@ -314,20 +296,48 @@ const addItemToBasket = async (userId, basketItemMeta) => {
         $add: ["$totalProductPrice", "$totalVariantPrice"],
       },
     });
-
   // update new basket details with calculated prices
   let basketUpdate = await Basket.findOneAndUpdate(
-    { _id: newBasketItem._id },
+    { _id: basketId },
     {
       $set: {
         "product.selectedVariants":
-            newBasketItemChore[0].product.selectedVariants,
+           newBasketItemChore[0].product.selectedVariants,
         "product.totalPrice": newBasketItemChore[0].product.totalPrice,
       },
     },
     { omitUndefined: true, new: true, useFindAndModify: false }
   );
+  return basketUpdate;
+};
+const addItemToBasket = async (userId, basketItemMeta) => {
+  // validate if store is active
+  const product = await Product.findById(basketItemMeta.product.productId)
+    .populate([{ path: "store", select: "_id name isActive", }]);
+  if (!product) {
+    return { err: "Product does not exists.", status: 404 };
+  }
+  const { store } = product;
+  if (!store.isActive) {
+    return { err: "Sorry you can't add item from an inactive store.", status: 409 };
+  }
+  // add user ID to basketMeta
+  basketItemMeta.user = userId;
 
+  // check if product exists in basket and increment if there are no selected variant items
+  let existingBasketItem = await Basket.findOne({
+    "product.productId": basketItemMeta.product.productId
+  });
+  if (existingBasketItem && existingBasketItem.product.selectedVariants.length < 1 && !basketItemMeta.product.selectedVariants) {
+    existingBasketItem.product.qty += basketItemMeta.product.qty;
+    existingBasketItem.save();
+    let basketUpdate = await updateBasketPrice(existingBasketItem._id);
+    return basketUpdate;
+  }
+  // add item to basket
+  let newBasketItem = new Basket(basketItemMeta);
+  await newBasketItem.save();
+  let basketUpdate = await updateBasketPrice(newBasketItem._id);
   return basketUpdate;
 };
 
