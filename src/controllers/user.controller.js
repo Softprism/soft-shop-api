@@ -175,7 +175,9 @@ const updateUser = async (req, res, next) => {
 const addItemToBasket = async (req, res, next) => {
   try {
     const action = await userService.addItemToBasket(req.user.id, req.body);
-
+    if (action.err) {
+      return res.status(403).json({ success: false, msg: action.err });
+    }
     res.status(200).json({ success: true, result: action, status: 200 });
 
     // create log

@@ -328,7 +328,7 @@ const addItemToBasket = async (userId, basketItemMeta) => {
   let existingBasketItem = await Basket.findOne({
     "product.productId": basketItemMeta.product.productId
   });
-  if (existingBasketItem && existingBasketItem.product.selectedVariants.length < 1 && !basketItemMeta.product.selectedVariants) {
+  if (existingBasketItem) {
     existingBasketItem.product.qty += basketItemMeta.product.qty;
     existingBasketItem.save();
     let basketUpdate = await updateBasketPrice(existingBasketItem._id);
