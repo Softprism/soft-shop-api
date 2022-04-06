@@ -36,7 +36,7 @@ router.post(
   verifyEmailAddress,
   async (req, res) => {
     // send otp
-    let token = await getOTP("user-signup", email);
+    let token = await getOTP("user-signup", req.data.email);
     await sendSignUpOTPmail(req.data.email, token.otp);
   }
 );
