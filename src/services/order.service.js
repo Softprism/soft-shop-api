@@ -3,14 +3,10 @@ import Order from "../models/order.model";
 import User from "../models/user.model";
 import Store from "../models/store.model";
 import Review from "../models/review.model";
-import Rider from "../models/rider.model";
 
 import {
   bankTransfer, ussdPayment, cardPayment, verifyTransaction
 } from "./payment.service";
-import { createNotification } from "./notification.service";
-
-import { sendNewOrderInitiatedMail, sendUserNewOrderRejectedMail } from "../utils/sendMail";
 
 const getOrders = async (urlParams) => {
   // initialize match parameters, get limit, skip & sort values
@@ -82,6 +78,12 @@ const getOrders = async (urlParams) => {
       as: "productData",
     })
     .lookup({
+      from: "stores",
+      localField: "store",
+      foreignField: "_id",
+      as: "store",
+    })
+    .lookup({
       from: "users",
       localField: "user",
       foreignField: "_id",
@@ -100,6 +102,7 @@ const getOrders = async (urlParams) => {
       as: "delivery",
     })
     .project({
+      "store.name": 1,
       status: 1,
       deliveryPrice: 1,
       totalPrice: 1,
@@ -123,7 +126,15 @@ const getOrders = async (urlParams) => {
       orderId: 1,
       createdAt: 1,
     })
-    .unwind("$user")
+    .unwind("$user", "$store")
+    // .unwind({
+    //   path: "$rider",
+    //   preserveNullAndEmptyArrays: true
+    // })
+    // .unwind({
+    //   path: "$delivery",
+    //   preserveNullAndEmptyArrays: true
+    // })
     .append(pipeline)
     .sort(sort)
     .skip(skip)
