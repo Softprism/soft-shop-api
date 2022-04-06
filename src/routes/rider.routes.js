@@ -1,6 +1,6 @@
 import express from "express";
 import {
-  getRiders, verifyToken, signup, signin, getLoggedInRider, requestToken, forgotPassword, createNewPassword, updateRiderProfile
+  getRiders, verifyToken, signup, signin, getLoggedInRider, requestToken, forgotPassword, createNewPassword, updateRiderProfile, requestPayoutCtrl, getPayoutHistoryCtrl
 } from "../controllers/rider.controller";
 import auth from "../middleware/auth";
 import validator from "../middleware/validator";
@@ -71,5 +71,8 @@ router.patch("/reset-password", hashPassword, validator(resetValidation), create
 // @desc    creates new password for user after forget password
 // @access  Public
 router.patch("/profile", auth, validator(updateRiderValidation), updateRiderProfile);
+
+router.get("/payout", auth, requestPayoutCtrl);
+router.get("/payout/history", auth, checkPagination, getPayoutHistoryCtrl);
 
 export default router;

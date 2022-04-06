@@ -156,6 +156,10 @@ const confirmStorePayout = async (req, res, next) => {
 const createCompayLedger = async (req, res, next) => {
   try {
     const ledger = await adminService.createCompayLedger(req.params.storeId);
+
+    if (ledger.err) {
+      res.status(ledger.status).json({ success: false, msg: ledger.err, status: ledger.status });
+    }
     res.status(200).json({ success: true, result: ledger, status: 200 });
   } catch (error) {
     next(error);

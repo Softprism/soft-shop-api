@@ -17,6 +17,7 @@ import { getDistance } from "../utils/get-distance";
 import {
   sendPasswordChangeMail, sendStorePasswordResetRequestMail, sendStorePayoutRequestMail, sendStoreSignUpMail, sendStoreUpdateRequestMail
 } from "../utils/sendMail";
+import Ledger from "../models/ledger.model";
 
 const getStores = async (urlParams) => {
   // declare fields to exclude from response
@@ -901,6 +902,9 @@ const requestPayout = async (storeId) => {
   // get store details
   const store = await Store.findById(storeId);
 
+  // get ledger details
+  let ledger = await Ledger.findOne({});
+
   // set payout variable and check if there's sufficient funds
   let payout = store.account_details.account_balance;
   if (payout === 0) return { err: "Insufficent Funds.", status: 400 };
@@ -921,6 +925,15 @@ const requestPayout = async (storeId) => {
     to: "Store",
     receiver: storeId,
     ref: storeId
+  });
+
+  // create Debit transaction for ledger
+  await createTransaction({
+    amount: payout,
+    type: "Debit",
+    to: "Ledger",
+    receiver: ledger._id,
+    ref: riderId
   });
 
   // check for error while creating new transaction

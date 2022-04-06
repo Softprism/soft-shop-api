@@ -241,6 +241,30 @@ const sendStorePasswordResetConfirmationMail = async (toEmail, randomCode) => {
     console.log("signup mail not sent");
   }
 };
+const sendRiderPayoutRequestMail = async (toEmail, amount) => {
+  let subject = "Payout Request";
+  let body = `We've received your request to withdraw ₦${amount} from your SoftShop account, just some checks here and there and your funds will be released to you in no time. `;
+  let sendAction = await sendEmail(toEmail, subject, body);
+  if (!sendAction) {
+    console.log("signup mail not sent");
+  }
+};
+const sendRiderCreditMail = async (toEmail, amount) => {
+  let subject = "Softshop Acccount Credited!";
+  let body = `this is to notify you that your softshop balance has been credited with ₦${amount}. `;
+  let sendAction = await sendEmail(toEmail, subject, body);
+  if (!sendAction) {
+    console.log("signup mail not sent");
+  }
+};
+const sendRiderDebitMail = async (toEmail, amount) => {
+  let subject = "Softshop Acccount Debited!";
+  let body = `this is to notify you that your softshop balance has been debited with ₦${amount}. `;
+  let sendAction = await sendEmail(toEmail, subject, body);
+  if (!sendAction) {
+    console.log("signup mail not sent");
+  }
+};
 export {
   sendEmail,
   sendSignUpOTPmail,
@@ -264,5 +288,8 @@ export {
   sendStoreUpdateRequestApprovalMail,
   sendStorePayoutApprovalMail,
   sendStoreCreditMail,
-  sendStoreDebitMail
+  sendStoreDebitMail,
+  sendRiderPayoutRequestMail,
+  sendRiderCreditMail,
+  sendRiderDebitMail
 };

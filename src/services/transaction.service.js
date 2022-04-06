@@ -1,7 +1,10 @@
 import Ledger from "../models/ledger.model";
+import Rider from "../models/rider.model";
 import Store from "../models/store.model";
 import Transaction from "../models/transaction.model";
-import { sendStoreCreditMail, sendStoreDebitMail } from "../utils/sendMail";
+import {
+  sendRiderDebitMail, sendStoreDebitMail
+} from "../utils/sendMail";
 
 const createTransaction = async ({
   amount, type, to, receiver, status, ref
@@ -21,11 +24,6 @@ const createTransaction = async ({
     store.account_details.total_credit += Number(amount);
     store.account_details.account_balance = Number(store.account_details.total_credit) - Number(store.account_details.total_debit);
     await store.save();
-    let ledger = await Ledger.findOne({});
-    ledger.payins += Number(amount);
-    ledger.account_balance = Number(ledger.payins) - Number(ledger.payouts);
-    await ledger.save();
-    await sendStoreCreditMail(store.email, Number(amount));
   }
 
   // debit store
@@ -45,12 +43,29 @@ const createTransaction = async ({
     await ledger.save();
   }
 
-  // debit store
+  // debit ledger
   if (newTrans && to === "Ledger" && type === "Debit") {
     let ledger = await Ledger.findOne({});
     ledger.payouts += Number(amount);
     ledger.account_balance = Number(ledger.payins) - Number(ledger.payouts);
     await ledger.save();
+  }
+
+  // credit rider
+  if (newTrans && to === "Rider" && type === "Credit" && status === "completed") {
+    let rider = await Rider.findById(receiver);
+    rider.account_details.total_credit += Number(amount);
+    rider.account_details.account_balance = Number(rider.account_details.total_credit) - Number(rider.account_details.total_debit);
+    await rider.save();
+  }
+
+  // debit rider
+  if (newTrans && to === "Rider" && type === "Debit") {
+    let rider = await Rider.findById(receiver);
+    rider.account_details.total_debit += Number(amount);
+    rider.account_details.account_balance = Number(rider.account_details.total_credit) - Number(rider.account_details.total_debit);
+    await rider.save();
+    await sendRiderDebitMail(rider.email, Number(amount));
   }
   return newTrans;
 };

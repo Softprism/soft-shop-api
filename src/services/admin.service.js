@@ -323,7 +323,7 @@ const confirmStorePayout = async (storeId) => {
       reference: withdrawalRequest(),
       debit_currency: "NGN"
     };
-    // let request = await initiateTransfer(payload);
+    let request = await initiateTransfer(payload);
     store.pendingWithdrawal = false;
     await store.save();
     await sendStorePayoutApprovalMail(store.email, payload.amount);
@@ -347,6 +347,10 @@ const createCompayLedger = async () => {
   let details = {
     account_name: "SoftShop Ledger",
   };
+  let oldLedger = await Ledger.findOne({});
+  if (oldLedger) {
+    return { err: "Ledger already exists.", status: 400 };
+  }
   let newLedger = new Ledger(details);
   await newLedger.save();
   return newLedger;

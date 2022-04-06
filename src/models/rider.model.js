@@ -65,6 +65,17 @@ const riderSchema = mongoose.Schema({
   smsNotifications: { type: Boolean, default: false },
   pushDeviceToken: { type: String },
   promotionalNotifications: { type: Boolean, default: false },
+  pendingWithdrawal: { type: Boolean, default: false },
+  account_details: {
+    account_balance: { type: Number, default: 0.00 },
+    total_credit: { type: Number, default: 0.00 },
+    total_debit: { type: Number, default: 0.00 },
+    account_number: { type: String },
+    bank_code: { type: String },
+    full_name: { type: String },
+    bank_name: { type: String },
+    pending_payout: { type: Boolean },
+  }
 });
 
 const Rider = mongoose.model("Rider", riderSchema);

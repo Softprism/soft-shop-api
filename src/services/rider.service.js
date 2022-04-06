@@ -4,10 +4,15 @@ import mongoose from "mongoose";
 import Rider from "../models/rider.model";
 import Token from "../models/tokens.model";
 
-import { sendSignUpOTPmail, sendPasswordChangeMail, sendForgotPasswordMail } from "../utils/sendMail";
+import {
+  sendPasswordChangeMail, sendForgotPasswordMail, sendRiderPayoutRequestMail
+} from "../utils/sendMail";
 import getOTP from "../utils/sendOTP";
 import getJwt from "../utils/jwtGenerator";
 import { sendForgotPasswordSMS } from "../utils/sendSMS";
+import Transaction from "../models/transaction.model";
+import { createTransaction } from "./transaction.service";
+import Ledger from "../models/ledger.model";
 
 const getAllRiders = async (urlParams) => {
   const limit = Number(urlParams.limit);
@@ -176,8 +181,9 @@ const resetPassword = async ({ token, email, password }) => {
 // Update Rider Details
 const updateRider = async (updateParam, id) => {
   const {
-    first_name, last_name, email, original_password, password, phone_number, profilePhoto, pushNotifications, smsNotifications, promotionalNotifications, pushDeivceToken
+    first_name, last_name, email, original_password, password, phone_number, profilePhoto, pushNotifications, smsNotifications, promotionalNotifications, pushDeivceToken, account_details
   } = updateParam;
+  console.log(account_details);
   // Build Rider Object
   const riderFields = {};
 
@@ -191,6 +197,7 @@ const updateRider = async (updateParam, id) => {
   if (smsNotifications === true || smsNotifications === false) riderFields.smsNotifications = smsNotifications;
   if (promotionalNotifications === true || promotionalNotifications === false) riderFields.promotionalNotifications = promotionalNotifications;
   if (pushDeivceToken) riderFields.pushDeivceToken = pushDeivceToken;
+  if (account_details) riderFields.account_details = account_details;
 
   // Find rider from DB Collection
   let rider = await Rider.findById(id);
@@ -273,7 +280,72 @@ const loggedInRider = async (riderId) => {
   return rider[0];
 };
 
+const requestPayout = async (riderId) => {
+  // get rider details
+  const rider = await Rider.findById(riderId);
+
+  // get ledger
+  let ledger = await Ledger.findOne({});
+
+  // set payout variable and check if there's sufficient funds
+  let payout = rider.account_details.account_balance;
+  if (payout === 0) return { err: "Insufficent Funds.", status: 400 };
+
+  // check for pending request
+  let oldRequest = await Transaction.findOne({
+    type: "Debit",
+    receiver: riderId,
+    status: "pending"
+  });
+
+  if (oldRequest && rider.pendingWithdrawal === true) return { err: "You have a pending payout request. Please wait for its approval", status: 400 };
+
+  // create Debit transaction for rider
+  let newTransaction = await createTransaction({
+    amount: payout,
+    type: "Debit",
+    to: "Rider",
+    receiver: riderId,
+    ref: riderId
+  });
+
+  // create Debit transaction for ledger
+  await createTransaction({
+    amount: payout,
+    type: "Debit",
+    to: "Ledger",
+    receiver: ledger._id,
+    ref: riderId
+  });
+
+  // check for error while creating new transaction
+  if (!newTransaction) return { err: "Error requesting payout. Please try again", status: 400 };
+  rider.pendingWithdrawal = true;
+  await rider.save();
+
+  await sendRiderPayoutRequestMail(rider.email, payout);
+  return newTransaction;
+};
+
+const getPayoutHistory = async (riderId, urlParams) => {
+  const limit = Number(urlParams.limit);
+  const skip = Number(urlParams.skip);
+  const payoutHistory = await Transaction
+    .find({
+      receiver: riderId,
+      type: "Debit",
+      status: "completed"
+    })
+    .populate({
+      path: "receiver",
+      select: "account_details"
+    })
+    .sort("createdDate")
+    .skip(skip)
+    .limit(limit);
+  return payoutHistory;
+};
 export {
   resetPassword, requestPasswordToken, verifyEmailAddress, loggedInRider,
-  validateToken, getAllRiders, registerRider, loginRider, updateRider
+  validateToken, getAllRiders, registerRider, loginRider, updateRider, requestPayout, getPayoutHistory
 };

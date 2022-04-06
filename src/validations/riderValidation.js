@@ -148,6 +148,28 @@ const updateRiderValidation = {
         "string.empty": "Sorry, profile photo cannot be an empty field",
         "string.min": "Profile photo should be 11 numbers"
       }),
+    account_details: Joi.object({
+      account_number: Joi.string().empty().min(10)
+        .messages({
+          "string.empty": "Sorry, account number cannot be an empty field",
+          "string.min": "Account number should be 10 numbers",
+        }),
+      bank_name: Joi.string().empty().min(3)
+        .messages({
+          "string.empty": "Sorry, bank name cannot be an empty field",
+          "string.min": "Bank name should be 3 characters or more",
+        }),
+      full_name: Joi.string().empty().min(3)
+        .messages({
+          "string.empty": "Sorry, full name cannot be an empty field",
+          "string.min": "Full name should be 3 characters or more",
+        }),
+      bank_code: Joi.string().empty().min(3)
+        .messages({
+          "string.empty": "Sorry, bank code cannot be an empty field",
+          "string.min": "Bank code should be 3 characters or more",
+        }),
+    }),
     pushNotifications: Joi.boolean().empty(),
     smsNotifications: Joi.boolean().empty(),
     pushDeivceToken: Joi.string(),

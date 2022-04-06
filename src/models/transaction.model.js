@@ -8,7 +8,7 @@ const transactionSchema = mongoose.Schema({
   },
   to: {
     type: String,
-    enum: ["Store", "User", "Ledger"]
+    enum: ["Store", "User", "Ledger", "Rider"]
   },
   receiver: { type: mongoose.Schema.Types.ObjectId, refPath: "to" },
   status: {
