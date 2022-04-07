@@ -55,7 +55,36 @@ const order_validation = {
             "number.empty": "Quantity cannot be an empty field.",
             "number.base": "Please provide a valid number.",
           }),
-      })
+        selectedVariants: Joi.array().items(
+          Joi.object({
+            itemName: Joi.string().empty().required().messages({
+              "any.required": "Variant item name is required.",
+              "string.empty": "Sorry, Variant item name cannot be an empty field",
+            }),
+            variantTitle: Joi.string().empty().required().messages({
+              "any.required": "Variant title is required.",
+              "string.empty": "Sorry, Variant title cannot be an empty field",
+            }),
+            itemPrice: Joi.number().empty().positive().required()
+              .messages({
+                "any.required": "Variant item price is required.",
+                "number.empty": "Variant item price cannot be an empty field.",
+                "number.base": "Please provide a valid number.",
+              }),
+            quantity: Joi.number().empty().positive().required()
+              .messages({
+                "any.required": "Variant item quantity is required.",
+                "number.empty": "Variant item quantity cannot be an empty field.",
+                "number.base": "Please provide a valid number.",
+              }),
+            variantId: objectId.required().empty().messages({
+              "any.required": "Variant id is required.",
+              "string.empty": "Sorry, Variant id cannot be an empty field",
+              "string.length": "Variant id must be a valid mongoose id.",
+            }),
+          }),
+        ),
+      }),
     ),
   }).messages({
     "object.unknown": "You have used an invalid key."
