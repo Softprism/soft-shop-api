@@ -326,6 +326,7 @@ const addItemToBasket = async (userId, basketItemMeta) => {
 
   // check if product exists in basket and increment if there are no selected variant items
   let existingBasketItem = await Basket.findOne({
+    user: userId,
     "product.productId": basketItemMeta.product.productId
   });
   if (existingBasketItem) {
