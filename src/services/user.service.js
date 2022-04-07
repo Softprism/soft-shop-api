@@ -331,6 +331,9 @@ const addItemToBasket = async (userId, basketItemMeta) => {
   });
   if (existingBasketItem) {
     existingBasketItem.product.qty += basketItemMeta.product.qty;
+    if (basketItemMeta.product.selectedVariants) {
+      existingBasketItem.product.selectedVariants = basketItemMeta.product.selectedVariants;
+    }
     await existingBasketItem.save();
     let basketUpdate = await updateBasketPrice(existingBasketItem._id);
     return basketUpdate;
