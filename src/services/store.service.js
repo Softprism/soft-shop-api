@@ -771,18 +771,26 @@ const bestSellers = async (storeId, pagingParam) => {
         status: { $in: ["sent", "ready", "accepted", "enroute", "delivered", "completed"] }
       }
     )
+    // lookup the products in each order
     .lookup({
       from: "products",
       localField: "orderItems.product",
       foreignField: "_id",
       as: "products",
     })
+    // unwind the products array to get each product for each order
     .unwind("products")
+    // unwind the orderItems field so we can get each item for each product
+    // the goal is to eventually have an object with same product in the orderItems and product field
     .unwind("orderItems")
+    // group by product and push the orderItems to each group
+    // so we can eventually get our goal
     .group({
       _id: "$products",
       orders: { $push: "$orderItems" },
+      allSubTotals: { $sum: "$subtotal" },
     })
+    // filter the orders array so we only have same product in the orderItems field and product field
     .project({
       orders: {
         $filter: {

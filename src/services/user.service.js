@@ -332,7 +332,14 @@ const addItemToBasket = async (userId, basketItemMeta) => {
   if (existingBasketItem) {
     existingBasketItem.product.qty += basketItemMeta.product.qty;
     if (basketItemMeta.product.selectedVariants) {
-      existingBasketItem.product.selectedVariants = basketItemMeta.product.selectedVariants;
+      // if user is adding an existing item to basket along side selected variants, the existing selected variant quantity should be incremented by the new quantity coming in
+      existingBasketItem.product.selectedVariants.forEach((variant) => {
+        basketItemMeta.product.selectedVariants.forEach((basketItemVariant) => {
+          if (variant.variantId.toString() === basketItemVariant.variantId) {
+            variant.quantity += basketItemVariant.quantity;
+          }
+        });
+      });
     }
     await existingBasketItem.save();
     let basketUpdate = await updateBasketPrice(existingBasketItem._id);

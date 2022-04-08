@@ -27,6 +27,11 @@ router.get("/all", auth, isAdmin, getAdmins);
 // @access  Private
 router.get("/stores", auth, isAdmin, checkPagination, getAllStores);
 
+// @route   GET /stores
+// @desc    Get all update requests from all stores.
+// @access  Private
+router.get("/stores/updates", auth, checkPagination, getAllStoresUpdateRequests);
+
 // @route   GET /admins/stores/:storeId
 // @desc    Get a Store
 // @access  Private
@@ -83,11 +88,6 @@ router.patch("/password-reset/store/:email", auth, isAdmin, resetStorePassword);
 // @desc    confirm a store update request
 // @access  Private
 router.put("/store/:storeId", auth, isAdmin, confirmStoreUpdate);
-
-// @route   GET /stores
-// @desc    Get all update requests from all stores.
-// @access  Private
-router.get("/stores/updates", auth, checkPagination, getAllStoresUpdateRequests);
 
 router.post("/transactions", auth, isAdmin, createTransaction);
 
