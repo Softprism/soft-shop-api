@@ -16,7 +16,7 @@ const order_validation = {
       "any.required": "Delivery address is required.",
       "string.empty": "Sorry, Delivery address cannot be an empty field",
     }),
-    deliveryPrice: Joi.number().positive().required().empty()
+    deliveryPrice: Joi.number().required().empty()
       .messages({
         "number.empty": "Delivery Price cannot be an empty field.",
         "number.base": "Please provide a valid number.",
@@ -65,7 +65,7 @@ const order_validation = {
               "any.required": "Variant title is required.",
               "string.empty": "Sorry, Variant title cannot be an empty field",
             }),
-            itemPrice: Joi.number().empty().positive().required()
+            itemPrice: Joi.number().empty().required()
               .messages({
                 "any.required": "Variant item price is required.",
                 "number.empty": "Variant item price cannot be an empty field.",
