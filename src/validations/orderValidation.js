@@ -8,6 +8,11 @@ const order_validation = {
       "string.length": "Store id must be a valid mongoose id.",
       "string.empty": "Sorry, store id cannot be an empty field",
     }),
+    user: objectId.required().empty().messages({
+      "any.required": "User id is required.",
+      "string.length": "User id must be a valid mongoose id.",
+      "string.empty": "Sorry, store id cannot be an empty field",
+    }),
     paymentMethod: Joi.string().required().empty().messages({
       "any.required": "Payment method is required.",
       "string.empty": "Sorry, payment method cannot be an empty field",
