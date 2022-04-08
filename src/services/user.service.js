@@ -352,6 +352,31 @@ const addItemToBasket = async (userId, basketItemMeta) => {
   return basketUpdate;
 };
 
+// const getUserBasketItems = async (userId) => {
+//   // get total price in basket
+//   const totalProductPriceInBasket = await Basket.aggregate()
+//     .match({
+//       user: mongoose.Types.ObjectId(userId),
+//     })
+//     .group({
+//       _id: "$user",
+//       total: { $sum: "$product.totalPrice" },
+//     });
+//     // get user basket items
+//   let userBasket = await Basket.aggregate()
+//     .match({
+//       user: mongoose.Types.ObjectId(userId),
+//     })
+//     .sort("createdAt");
+
+//   if (userBasket.length < 1 && totalProductPriceInBasket.length < 1) return { userBasket: [], totalPrice: 0, count: 0 };
+
+//   return {
+//     userBasket,
+//     totalPrice: totalProductPriceInBasket[0].total,
+//     count: userBasket.length,
+//   };
+// };
 const getUserBasketItems = async (userId) => {
   // get total price in basket
   const totalProductPriceInBasket = await Basket.aggregate()
@@ -362,7 +387,35 @@ const getUserBasketItems = async (userId) => {
       _id: "$user",
       total: { $sum: "$product.totalPrice" },
     });
-    // get user basket items
+    // get store location
+  const storeLocation = await Basket.aggregate()
+    .match({
+      user: mongoose.Types.ObjectId(userId),
+    })
+    // lookup products from each product
+    .lookup({
+      from: "products",
+      localField: "product.productId", // field in basket
+      foreignField: "_id", // field in product
+      as: "products",
+    })
+    // lookup stores from each product
+    .lookup({
+      from: "stores",
+      localField: "products.store", // field in product
+      foreignField: "_id", // field in store
+      as: "stores",
+    })
+    // hide $products field with project
+    .project({
+      products: 0,
+    })
+    // group basket items by store
+    .group({
+      _id: "$stores.location",
+    });
+
+  // get user basket items
   let userBasket = await Basket.aggregate()
     .match({
       user: mongoose.Types.ObjectId(userId),
@@ -373,6 +426,7 @@ const getUserBasketItems = async (userId) => {
 
   return {
     userBasket,
+    storeLocation: storeLocation[0]._id[0].coordinates,
     totalPrice: totalProductPriceInBasket[0].total,
     count: userBasket.length,
   };
