@@ -30,7 +30,7 @@ const accept_Delivery = async (req, res, next) => {
   try {
     const { deliveryId } = req.params;
     const { _id } = req.rider;
-    const action = await acceptDelivery(deliveryId, _id);
+    const action = await acceptDelivery(deliveryId, _id, req.query);
     if (action.err) {
       return res
         .status(action.status)
@@ -39,11 +39,12 @@ const accept_Delivery = async (req, res, next) => {
         });
     }
     res.status(200).json({ success: true, result: action.updatedDelivery, status: 200 });
+    console.log(action);
     req.data = {
-      order_id: action.delivery.order,
-      user_id: action.delivery.user,
-      store_id: action.delivery.store,
-      rider_id: action.updatedstatus.rider,
+      order_id: action.updatedDelivery.order,
+      user_id: action.updatedDelivery.user,
+      store_id: action.updatedDelivery.store,
+      rider_id: action.updatedDelivery.rider,
     };
     next();
   } catch (error) {

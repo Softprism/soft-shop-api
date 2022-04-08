@@ -37,6 +37,7 @@ const createDelivery = async (orderId, storeId) => {
   const newDelivery = {
     item: items.toString(),
     pickup: store.address,
+    location: store.location,
     dropOff: deliveryAddress,
     receiver: `${user.first_name} ${user.last_name}`,
     phone_number: user.phone_number,
@@ -49,10 +50,26 @@ const createDelivery = async (orderId, storeId) => {
   return { delivery };
 };
 
-const acceptDelivery = async (deliveryId, riderId) => {
-  const delivery = await Delivery.findById(deliveryId);
+const acceptDelivery = async (deliveryId, riderId, urlParams) => {
+  let condition = {};
+  let long;
+  let lat;
+  let radian;
+  if (!urlParams.long || !urlParams.lat || !urlParams.radius) {
+    return { err: "Please pass in your location to accept delivery close to you.", status: 409, };
+  }
+  long = parseFloat(urlParams.long);
+  lat = parseFloat(urlParams.lat);
+  radian = parseFloat(urlParams.radius / 6378.1); // calculate in km
+  condition.location = {
+    $geoWithin: {
+      $centerSphere: [[long, lat], radian],
+    },
+  };
+  condition._id = deliveryId;
+  const delivery = await Delivery.findOne(condition);
   if (!delivery) {
-    return { err: "Delivery does not exists.", status: 404, };
+    return { err: "Please select a delivery that's close to your location", status: 404, };
   }
   // check if delivery has already been assigned to a rider
   if (delivery.rider || delivery.status !== "pending") {
@@ -171,6 +188,20 @@ const getAllDeliveries = async (urlParams) => {
   // check for sort type
   if (urlParams.sortType === "desc") sort = `-${sort}`;
   if (!urlParams.sort) sort = "createdDate";
+  let long;
+  let lat;
+  let radian;
+  if (urlParams.long && urlParams.lat && urlParams.radius) {
+    long = parseFloat(urlParams.long);
+    lat = parseFloat(urlParams.lat);
+    radian = parseFloat(urlParams.radius / 6378.1); // calculate in km
+    condition.location = {
+      $geoWithin: {
+        $centerSphere: [[long, lat], radian],
+      },
+    };
+  }
+
   const deliveries = await Delivery.find(condition)
     .populate([
       { path: "rider", select: "_id first_name last_name" },
