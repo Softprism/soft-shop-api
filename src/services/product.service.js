@@ -131,9 +131,9 @@ const getProductDetails = async (productId) => {
     })
     .lookup({
       from: "variants",
-      localField: "variant",
+      localField: "variants",
       foreignField: "_id",
-      as: "variant",
+      as: "variants",
     })
   // // $lookup produces array, $unwind go destructure everything to object
     .unwind("$store")
