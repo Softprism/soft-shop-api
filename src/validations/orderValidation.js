@@ -8,7 +8,7 @@ const order_validation = {
       "string.length": "Store id must be a valid mongoose id.",
       "string.empty": "Sorry, store id cannot be an empty field",
     }),
-    user: objectId.required().empty().messages({
+    user: objectId.empty().messages({
       "any.required": "User id is required.",
       "string.length": "User id must be a valid mongoose id.",
       "string.empty": "Sorry, store id cannot be an empty field",
