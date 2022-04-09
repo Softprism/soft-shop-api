@@ -2,7 +2,7 @@ import * as paymentService from "../services/payment.service";
 
 const verifyTransaction = async (req, res, next) => {
   try {
-    if (req.body.message === "Transfer Queued Successfully") {
+    if (req.body.event === "transfer.completed") {
       let verify = await paymentService.verifyPayout(req.body);
       return res.status(200).json({ success: true, result: verify, status: 200 });
     }

@@ -162,9 +162,14 @@ const verifyTransaction = async (paymentDetails) => {
 
 const verifyPayout = async (payload) => {
   console.log(123, payload);
+  // check for failed payment and retry
+
+  // else check for successful payment and update transaction status and send appropraite emails
+
   flwpayload = [
     payload.data.id
   ];
+
   const response = await flw.Transfer.get_a_transfer(flwpayload);
   console.log(response);
   return response;
