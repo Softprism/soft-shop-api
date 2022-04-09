@@ -16,6 +16,10 @@ const deliverySchema = mongoose.Schema({
     enum: ["Arrive at pickup", "Start Delivery", "Complete Drop off", "Cancelled", "pending"],
     default: "pending",
   },
+  location: {
+    type: { type: String, default: "Point", enum: ["Point"] },
+    coordinates: [Number],
+  },
   createdDate: { type: Date, default: Date.now },
 });
 
