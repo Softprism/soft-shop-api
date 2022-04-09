@@ -9,6 +9,15 @@ const verifyTransaction = async (req, res, next) => {
   }
 };
 
+const verifyPayout = async (req, res, next) => {
+  try {
+    let verify = await paymentService.verifyPayout(req.body);
+    return res.status(200).json({ success: true, result: verify, status: 200 });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const acknowledgeFlwWebhook = async (req, res, next) => {
   if (req.body.softshop !== "true") {
     res.status(200).json({ success: true });
@@ -56,5 +65,5 @@ const getTransactions = async (req, res, next) => {
 };
 
 export {
-  verifyTransaction, acknowledgeFlwWebhook, getAllBanks, getBankDetails, getTransactions
+  verifyTransaction, acknowledgeFlwWebhook, getAllBanks, getBankDetails, getTransactions, verifyPayout
 };

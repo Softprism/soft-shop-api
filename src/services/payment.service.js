@@ -40,7 +40,6 @@ const verifyTransaction = async (paymentDetails) => {
   // if it's a order transaction, it adds the payment details to the order payment result and credit store balance
 
   const response = await flw.Transaction.verify({ id: paymentDetails.data.id });
-  console.log(response);
 
   const { tx_ref } = response.data;
   if (tx_ref.includes("card")) {
@@ -158,27 +157,15 @@ const verifyTransaction = async (paymentDetails) => {
     await order.save();
     return order;
   }
+};
 
-  if (tx_ref.includes("")) {
-    // store can only have one  withdrawal request
-    let approval = await Transaction.findOne({ receiver: storeId, status: "pending" });
-    if (!approval) return { err: "Cannot find store's withdrawal request", status: 400 };
-    approval.status = "completed";
-    await approval.save();
-
-    // create transaction
-    let request = {
-      amount: approval.amount,
-      type: "Debit",
-      to: "Ledger",
-      receiver: ledger._id,
-      status: "completed",
-      ref: approval.ref
-    };
-    await createTransaction(request);
-
-    return approval;
-  }
+const verifyPayout = async (payload) => {
+  flwpayload = [
+    payload.data.id
+  ];
+  const response = await flw.Transfer.get_a_transfer(flwpayload);
+  console.log(response);
+  return response;
 };
 
 const encryptCard = async (text) => {
@@ -234,5 +221,5 @@ const initiateTransfer = async (payload) => {
   return response;
 };
 export {
-  flw, bankTransfer, verifyTransaction, encryptCard, ussdPayment, cardPayment, verifyCardRequest, getAllBanks, getBankDetails, getTransactions, initiateTransfer
+  flw, bankTransfer, verifyTransaction, encryptCard, ussdPayment, cardPayment, verifyCardRequest, getAllBanks, getBankDetails, getTransactions, initiateTransfer, verifyPayout
 };
