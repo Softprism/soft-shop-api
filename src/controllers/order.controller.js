@@ -89,7 +89,7 @@ const getOrderDetails = async (req, res, next) => {
 
     if (orderDetails.err) return res.status(orderDetails.status).json({ success: false, msg: orderDetails.err, status: orderDetails.status });
 
-    return res.status(200).json({ success: true, result: orderDetails });
+    return res.status(200).json({ success: true, result: orderDetails[0] });
   } catch (error) {
     next(error);
   }
