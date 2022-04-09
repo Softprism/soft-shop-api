@@ -941,7 +941,7 @@ const requestPayout = async (storeId) => {
     type: "Debit",
     to: "Ledger",
     receiver: ledger._id,
-    ref: riderId
+    ref: storeId
   });
 
   // check for error while creating new transaction
