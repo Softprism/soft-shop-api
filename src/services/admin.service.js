@@ -257,90 +257,35 @@ const confirmStoreUpdate = async (storeID) => {
 
 const confirmStorePayout = async (storeId) => {
   let store = await Store.findById(storeId);
-  let ledger = await Ledger.findOne({});
   let payout = await Transaction.findOne({
     receiver: storeId,
     type: "Debit",
     status: "pending"
   });
 
-  /* get total credit and total debit transactions for stores
-    so we can compare with the total credit and total debit fields
-    in store profile */
-  let transactions = await Transaction.aggregate()
-    .match({
-      receiver: mongoose.Types.ObjectId(storeId),
-    })
-    .group({
-      _id: "$receiver",
-      totalCredit: {
-        $sum: {
-          $cond:
-       [{
-         $and: [
-           { $eq: ["$type", "Credit"] },
-           { $eq: ["$status", "completed"] }
-         ]
-       },
-       "$amount", 0]
-        }
-      },
-      totalDebit: {
-        $sum: {
-          $cond:
-       [
-         { $eq: ["$type", "Debit"] },
-         "$amount", 0
-       ]
-        }
-      }
-    });
-
-  let totalStoreCredits = Number(store.account_details.total_credit);
-  let totalStoreDebits = Number(store.account_details.total_debit);
-  let totalTransactionCredits = Number(transactions[0].totalCredit);
-  let totalTransactionDebits = Number(transactions[0].totalDebit);
-
-  if (totalStoreCredits === totalTransactionCredits && totalTransactionDebits === totalStoreDebits && ledger.account_balance >= store.account_details.account_balance) {
-    // create withdrwal request code
-    // create card index
-    let withdrawalRequest = () => {
-      let s4 = () => {
-        return Math.floor((1 + Math.random()) * 0x10000)
-          .toString(16)
-          .substring(1);
-      };
-        // return id of format 'card - aaaaa'
-      return `wtdrqt-${s4()}`;
+  // create withdrwal random id
+  let withdrawalRequest = () => {
+    let s4 = () => {
+      return Math.floor((1 + Math.random()) * 0x10000)
+        .toString(16)
+        .substring(1);
     };
-    // initiate transfer
-    let payload = {
-      account_bank: store.account_details.bank_code,
-      account_number: store.account_details.account_number,
-      amount: payout.amount,
-      narration: `Softshop - ${store.name} Withdrawal`,
-      currency: "NGN",
-      reference: withdrawalRequest(),
-      debit_currency: "NGN"
-    };
-    let request = await initiateTransfer(payload);
-    store.pendingWithdrawal = false;
-    await store.save();
-    await sendStorePayoutApprovalMail(store.email, payload.amount);
-    return payload;
-  }
-
-  return {
-    err: "Store money not consistent. Please pull transaction records.",
-    data: {
-      totalStoreCredits,
-      totalTransactionCredits,
-      totalTransactionDebits,
-      totalStoreDebits,
-      account_balance: store.account_details.account_balance
-    },
-    status: 400
+    // return id of format 'card - aaaaa'
+    return `wtdrqt-${s4()}`;
   };
+    // initiate transfer
+  let payload = {
+    account_bank: store.account_details.bank_code,
+    account_number: store.account_details.account_number,
+    amount: payout.amount,
+    narration: `Softshop - ${store.name} Withdrawal`,
+    currency: "NGN",
+    reference: withdrawalRequest(),
+    debit_currency: "NGN"
+  };
+  let request = await initiateTransfer(payload);
+  // await sendStorePayoutApprovalMail(store.email, payload.amount);
+  return request;
 };
 
 const createCompayLedger = async () => {

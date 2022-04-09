@@ -35,12 +35,12 @@ const cardPayment = async (payload) => {
   return response;
 };
 const verifyTransaction = async (paymentDetails) => {
-  console.log(paymentDetails);
   // this verifies a transaction with flutterwave
   // if it's a new card transaction, it adds the cards details to the user profile
   // if it's a order transaction, it adds the payment details to the order payment result and credit store balance
 
   const response = await flw.Transaction.verify({ id: paymentDetails.data.id });
+  console.log(response);
 
   const { tx_ref } = response.data;
   if (tx_ref.includes("card")) {
@@ -159,26 +159,26 @@ const verifyTransaction = async (paymentDetails) => {
     return order;
   }
 
-  // if (tx_ref.includes("")) {
-  //   // store can only have one  withdrawal request
-  //   let approval = await Transaction.findOne({ receiver: storeId, status: "pending" });
-  //   if (!approval) return { err: "Cannot find store's withdrawal request", status: 400 };
-  //   approval.status = "completed";
-  //   await approval.save();
+  if (tx_ref.includes("")) {
+    // store can only have one  withdrawal request
+    let approval = await Transaction.findOne({ receiver: storeId, status: "pending" });
+    if (!approval) return { err: "Cannot find store's withdrawal request", status: 400 };
+    approval.status = "completed";
+    await approval.save();
 
-  //   // create transaction
-  //   let request = {
-  //     amount: approval.amount,
-  //     type: "Debit",
-  //     to: "Ledger",
-  //     receiver: ledger._id,
-  //     status: "completed",
-  //     ref: approval.ref
-  //   };
-  //   await createTransaction(request);
+    // create transaction
+    let request = {
+      amount: approval.amount,
+      type: "Debit",
+      to: "Ledger",
+      receiver: ledger._id,
+      status: "completed",
+      ref: approval.ref
+    };
+    await createTransaction(request);
 
-  //   return approval;
-  // }
+    return approval;
+  }
 };
 
 const encryptCard = async (text) => {
@@ -231,6 +231,7 @@ const getTransactions = async () => {
 
 const initiateTransfer = async (payload) => {
   const response = await flw.Transfer.initiate(payload);
+  return response;
 };
 export {
   flw, bankTransfer, verifyTransaction, encryptCard, ussdPayment, cardPayment, verifyCardRequest, getAllBanks, getBankDetails, getTransactions, initiateTransfer
