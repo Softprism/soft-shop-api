@@ -37,7 +37,7 @@ router.post(
     // uodate orser status to ready
     await Order.findByIdAndUpdate(
       { _id: req.data.order_id },
-      { status: "ready", delivery: delivery._id },
+      { status: "ready", delivery: req.data.delivery._id },
       { new: true }
     );
     // send push notification to user

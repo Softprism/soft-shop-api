@@ -18,6 +18,7 @@ const create_Delivery = async (req, res, next) => {
     req.data = {
       order_id: action.delivery.order,
       user_id: action.delivery.user,
+      delivery: action.delivery
     };
     next();
   } catch (error) {
