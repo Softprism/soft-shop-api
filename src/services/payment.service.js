@@ -145,7 +145,7 @@ const verifyTransaction = async (paymentDetails) => {
         "sso",
         store.orderPushDeivceToken,
         "New Order",
-        `You have a new order from ${order.user.firstName} ${order.user.lastName}`,
+        `You have a new order from ${order.user.first_name} ${order.user.last_name}`,
         data // data to be sent to order app
       );
 

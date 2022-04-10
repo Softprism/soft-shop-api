@@ -1,6 +1,7 @@
 import * as paymentService from "../services/payment.service";
 
 const verifyTransaction = async (req, res, next) => {
+  console.log(req.body);
   try {
     if (req.body.event === "transfer.completed") {
       let verify = await paymentService.verifyPayout(req.body);
