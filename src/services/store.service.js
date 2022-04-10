@@ -908,49 +908,78 @@ const getInventoryList = async (queryParam) => {
 
 const requestPayout = async (storeId) => {
   // get store details
-  const store = await Store.findById(storeId);
+  let store = await Store.findById(storeId);
 
   // get ledger details
   let ledger = await Ledger.findOne({});
 
   // set payout variable and check if there's sufficient funds
   let payout = store.account_details.account_balance;
-  if (payout === 0) return { err: "Insufficent Funds.", status: 400 };
+  if (payout < 1000) return { err: "Insufficent Funds. You need up to NGN1000 to request for payouts.", status: 400 };
 
-  // check for pending request
-  let oldRequest = await Transaction.findOne({
+  // check for pending store request
+  let oldStoreRequest = await Transaction.findOne({
     type: "Debit",
+    to: "Store",
     receiver: storeId,
-    status: "pending"
+    status: "pending",
+    ref: storeId
+
+  });
+  // check for pending store request in ledger
+  let oldLedgerRequest = await Transaction.findOne({
+    type: "Debit",
+    to: "Ledger",
+    receiver: ledger._id,
+    status: "pending",
+    ref: storeId
   });
 
-  if (oldRequest && store.pendingWithdrawal === true) return { err: "You have a pending payout request. Please wait for its approval", status: 400 };
+  if (oldStoreRequest && oldLedgerRequest && store.pendingWithdrawal === true) {
+    // add current payout to oldStoreRequest and oldLedgerRequest
+    oldStoreRequest.amount += payout;
+    oldStoreRequest.fee += payout * 0.02;
+    oldLedgerRequest.amount += payout;
+    oldLedgerRequest.fee += payout * 0.02;
 
-  // create transaction
-  let newTransaction = createTransaction({
+    // update oldStoreRequest and oldLedgerRequest
+    await oldStoreRequest.save();
+    await oldLedgerRequest.save();
+
+    // update store account balance
+    store.account_details.total_debit += Number(payout);
+    store.account_details.account_balance = Number(store.account_details.total_credit) - Number(store.account_details.total_debit);
+    await store.save();
+
+    return { email: store.email, payout, transaction: oldStoreRequest };
+  }
+
+  // create  debit transaction for store
+  let newStoreTransaction = await createTransaction({
     amount: payout,
     type: "Debit",
     to: "Store",
     receiver: storeId,
-    ref: storeId
+    ref: storeId,
+    fee: 0.02 * Number(payout)
   });
 
   // create Debit transaction for ledger
-  await createTransaction({
+  let newLedgerTransaction = await createTransaction({
     amount: payout,
     type: "Debit",
     to: "Ledger",
     receiver: ledger._id,
-    ref: storeId
+    ref: storeId,
+    fee: 0.02 * Number(payout)
   });
 
   // check for error while creating new transaction
-  if (!newTransaction) return { err: "Error requesting payout. Please try again", status: 400 };
+  if (!newStoreTransaction || !newLedgerTransaction) return { err: "Error requesting payout. Please try again", status: 400 };
   store.pendingWithdrawal = true;
   await store.save();
 
-  await sendStorePayoutRequestMail(store.email, payout);
-  return newTransaction;
+  return { email: store.email, payout, transaction: newStoreTransaction };
 };
 
 const getPayoutHistory = async (storeId, urlParams) => {

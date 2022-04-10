@@ -8,10 +8,11 @@ import Order from "../models/order.model";
 import Store from "../models/store.model";
 import Ledger from "../models/ledger.model";
 
-import { sendStoreNewOrderSentMail, sendUserNewOrderSentMail } from "../utils/sendMail";
+import { sendStoreNewOrderSentMail, sendStorePayoutSentMail, sendUserNewOrderSentMail } from "../utils/sendMail";
 
 import { createTransaction } from "./transaction.service";
 import { sendOne } from "./push.service";
+import Transaction from "../models/transaction.model";
 
 // initial env variables
 dotenv.config();
@@ -35,7 +36,6 @@ const cardPayment = async (payload) => {
   return response;
 };
 const verifyTransaction = async (paymentDetails) => {
-  console.log(paymentDetails);
   // this verifies a transaction with flutterwave
   // if it's a new card transaction, it adds the cards details to the user profile
   // if it's a order transaction, it adds the payment details to the order payment result and credit store balance
@@ -161,18 +161,50 @@ const verifyTransaction = async (paymentDetails) => {
 };
 
 const verifyPayout = async (payload) => {
-  console.log(123, payload);
   // check for failed payment and retry
 
   // else check for successful payment and update transaction status and send appropraite emails
 
-  flwpayload = [
-    payload.data.id
-  ];
-
+  let flwpayload = {
+    id: payload.data.id
+  };
   const response = await flw.Transfer.get_a_transfer(flwpayload);
-  console.log(response);
-  return response;
+
+  if (response.data.status === "SUCCESSFUL") {
+    let ledger = await Ledger.findOne({});
+    let store = await Store.findById(response.data.narration);
+    // check for pending store request
+    let oldStoreRequest = await Transaction.findOne({
+      type: "Debit",
+      to: "Store",
+      receiver: response.data.narration,
+      status: "pending",
+    });
+    // check for pending store request in ledger
+    let oldLedgerRequest = await Transaction.findOne({
+      type: "Debit",
+      to: "Ledger",
+      receiver: ledger._id,
+      status: "pending",
+      ref: response.data.narration
+
+    });
+
+    if (oldStoreRequest && oldLedgerRequest) {
+      // update status of oldStoreRequest and oldLedgerRequest
+      oldStoreRequest.status = "completed";
+      oldLedgerRequest.status = "completed";
+
+      // update oldStoreRequest and oldLedgerRequest
+      await oldStoreRequest.save();
+      await oldLedgerRequest.save();
+
+      // send payout sent email
+      await sendStorePayoutSentMail(store.email, response.data.amount);
+    }
+
+    return response;
+  }
 };
 
 const encryptCard = async (text) => {

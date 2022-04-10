@@ -224,6 +224,15 @@ const sendStorePayoutApprovalMail = async (toEmail, amount) => {
   }
 };
 
+const sendStorePayoutSentMail = async (toEmail, amount) => {
+  let subject = "Payout Sent!";
+  let body = `₦${amount} has been sent to your account. `;
+  let sendAction = await sendEmail(toEmail, subject, body);
+  if (!sendAction) {
+    console.log("signup mail not sent");
+  }
+};
+
 const sendStorePasswordResetRequestMail = async (toEmail) => {
   let subject = "Request To Reset Password";
   let body = "We've received your request to make a sensitive change to your account, in a few moment from now, you'll receive another mail containing instructions on how to get back into your account. ";
@@ -283,6 +292,7 @@ export {
   sendStoreSignUpMail,
   sendStoreUpdateRequestMail,
   sendStorePayoutRequestMail,
+  sendStorePayoutSentMail,
   sendStorePasswordResetRequestMail,
   sendStorePasswordResetConfirmationMail,
   sendStoreUpdateRequestApprovalMail,

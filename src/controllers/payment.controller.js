@@ -23,9 +23,15 @@ const verifyTransaction = async (req, res, next) => {
 // };
 
 const acknowledgeFlwWebhook = async (req, res, next) => {
+  if (req.body.event === "transfer.completed") {
+    res.status(200).json({ success: true, status: 200 });
+    await paymentService.verifyPayout(req.body);
+    return;
+  }
   if (req.body.softshop !== "true") {
     res.status(200).json({ success: true });
     paymentService.verifyTransaction(req.body);
+    return 1;
   }
 };
 

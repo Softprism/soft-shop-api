@@ -1,5 +1,5 @@
-import { validationResult } from "express-validator";
 import * as storeService from "../services/store.service";
+import { sendStoreDebitMail, sendStorePayoutRequestMail } from "../utils/sendMail";
 
 const getStores = async (req, res, next) => {
   try {
@@ -271,11 +271,13 @@ const requestPayout = async (req, res, next) => {
       );
     }
 
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
-      result: payout,
+      result: payout.transaction,
       status: 200
     });
+    await sendStorePayoutRequestMail(payout.email, payout.payout);
+    await sendStoreDebitMail(payout.email, Number(payout.payout));
   } catch (error) {
     next(error);
   }

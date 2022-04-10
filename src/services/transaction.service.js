@@ -7,7 +7,7 @@ import {
 } from "../utils/sendMail";
 
 const createTransaction = async ({
-  amount, type, to, receiver, status, ref
+  amount, type, to, receiver, status, ref, fee
 }) => {
   // validate if request contains a valid amount
   amount = Number(amount);
@@ -15,7 +15,7 @@ const createTransaction = async ({
 
   // create new transaction
   let newTrans = await Transaction.create({
-    amount, type, to, receiver, status, ref
+    amount, type, to, receiver, status, ref, fee
   });
 
   // credit store
@@ -32,7 +32,6 @@ const createTransaction = async ({
     store.account_details.total_debit += Number(amount);
     store.account_details.account_balance = Number(store.account_details.total_credit) - Number(store.account_details.total_debit);
     await store.save();
-    await sendStoreDebitMail(store.email, Number(amount));
   }
 
   // credit ledger

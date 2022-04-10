@@ -257,34 +257,23 @@ const confirmStoreUpdate = async (storeID) => {
 
 const confirmStorePayout = async (storeId) => {
   let store = await Store.findById(storeId);
-  let payout = await Transaction.findOne({
-    receiver: storeId,
+  let payout = await Transaction.find({
+    ref: storeId,
     type: "Debit",
     status: "pending"
   });
 
-  // create withdrwal random id
-  let withdrawalRequest = () => {
-    let s4 = () => {
-      return Math.floor((1 + Math.random()) * 0x10000)
-        .toString(16)
-        .substring(1);
-    };
-    // return id of format 'card - aaaaa'
-    return `wtdrqt-${s4()}`;
-  };
-    // initiate transfer
+  // if (payout.length < 2) return { err: "No pending payout for this store.", status: 400 };
+
   let payload = {
     account_bank: store.account_details.bank_code,
     account_number: store.account_details.account_number,
-    amount: payout.amount,
-    narration: `Softshop - ${store.name} Withdrawal`,
-    currency: "NGN",
-    reference: withdrawalRequest(),
-    debit_currency: "NGN"
+    amount: Number(payout[0].amount) - Number(payout[0].fee),
+    narration: storeId,
+    currency: "NGN"
   };
   let request = await initiateTransfer(payload);
-  // await sendStorePayoutApprovalMail(store.email, payload.amount);
+  await sendStorePayoutApprovalMail(store.email, payload.amount);
   return request;
 };
 
