@@ -199,6 +199,9 @@ const verifyPayout = async (payload) => {
       await oldStoreRequest.save();
       await oldLedgerRequest.save();
 
+      // change store's pending withdrawal to false
+      store.pendingWithdrawal = false;
+      store.save();
       // send payout sent email
       await sendStorePayoutSentMail(store.email, response.data.amount);
     }
