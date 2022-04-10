@@ -51,17 +51,6 @@ const verifyTransaction = async (paymentDetails) => {
       return { err: response.message, status: 400 };
     }
 
-    // create card index
-    let card_index = () => {
-      let s4 = () => {
-        return Math.floor((1 + Math.random()) * 0x10000)
-          .toString(16)
-          .substring(1);
-      };
-        // return id of format 'card - aaaaa'
-      return `cindex-${s4()}`;
-    };
-
     // check if card has already been added
     let checker = await User.findOne({
       _id: response.data.meta.user_id,
@@ -77,6 +66,17 @@ const verifyTransaction = async (paymentDetails) => {
 
     // find user from payment initiated
     let user = await User.findById(response.data.meta.user_id).select("-orders");
+
+    // create card index
+    let card_index = () => {
+      let s4 = () => {
+        return Math.floor((1 + Math.random()) * 0x10000)
+          .toString(16)
+          .substring(1);
+      };
+        // return id of format 'card - aaaaa'
+      return `cindex-${s4()}`;
+    };
     // add card index to initiated payment card details
     response.data.card.card_index = card_index();
 
