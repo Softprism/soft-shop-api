@@ -300,12 +300,14 @@ const createOrder = async (orderParam) => {
     // calculate total price for the order
     .addFields({
       totalPrice: {
-        $add: [
-          "$taxPrice",
-          "$totalProductPrice",
-          "$totalVariantPrice",
-          "$deliveryPrice",
-        ],
+        $ceil: {
+          $add: [
+            "$taxPrice",
+            "$totalProductPrice",
+            "$totalVariantPrice",
+            "$deliveryPrice",
+          ]
+        },
       },
     })
     .append(pipeline);

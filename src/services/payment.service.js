@@ -85,7 +85,7 @@ const verifyTransaction = async (paymentDetails) => {
     await user.save();
 
     // create credit transaction for Ledger
-    let ledger = Ledger.findOne({});
+    let ledger = await Ledger.findOne({});
     let request = {
       amount: 100,
       type: "Credit",
@@ -106,7 +106,7 @@ const verifyTransaction = async (paymentDetails) => {
 
     let order = await Order.findOne({ orderId: tx_ref }).populate("user");
     let store = await Store.findById(order.store);
-    let ledger = Ledger.findOne({});
+    let ledger = await Ledger.findOne({});
 
     order.paymentResult = response.data;
     order.markModified("paymentResult");
