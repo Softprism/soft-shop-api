@@ -104,7 +104,7 @@ const verifyTransaction = async (paymentDetails) => {
   if (tx_ref.includes("soft")) {
     // user is paying for an order
 
-    let order = await Order.findOne({ orderId: tx_ref }).populate("user");
+    let order = await Order.findOne({ orderId: tx_ref }).populate("user store");
     let store = await Store.findById(order.store);
     let ledger = await Ledger.findOne({});
 
@@ -153,7 +153,7 @@ const verifyTransaction = async (paymentDetails) => {
       await sendStoreNewOrderSentMail(order.orderId, store.email);
 
       // send email to user to notify them of sent order
-      await sendUserNewOrderSentMail(order.orderId, order.user.email);
+      await sendUserNewOrderSentMail(order.orderId, order.user.email, store.name);
 
       await store.save();
       await order.save();
