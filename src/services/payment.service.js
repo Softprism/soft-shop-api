@@ -114,8 +114,6 @@ const verifyTransaction = async (paymentDetails) => {
     // Update order status to sent and credit store balance when payment has been validated by flutterwave. Hitting this endpoint from softshop app will not update details.
     if (response.data.status === "successful" && paymentDetails.softshop !== "true") {
       order.status = "sent";
-      // send email to user to notify them of sent order
-      await sendUserNewOrderSentMail(order.orderId, order.user.email);
 
       // create a credit transaction for store and softshop
       let storeReq = {
@@ -140,7 +138,8 @@ const verifyTransaction = async (paymentDetails) => {
       // notify order app on new order
       let data = {
         event: "new_order",
-        route: "newOrdersView"
+        route: "/",
+        index: "0"
       };
       await sendOne(
         "sso",
@@ -153,6 +152,9 @@ const verifyTransaction = async (paymentDetails) => {
 
     // send email to store on new order
     await sendStoreNewOrderSentMail(order.orderId, store.email);
+
+    // send email to user to notify them of sent order
+    await sendUserNewOrderSentMail(order.orderId, order.user.email);
 
     await store.save();
     await order.save();

@@ -32,6 +32,7 @@ const transactionSchema = mongoose.Schema({
   fee: {
     type: Number,
     required: true,
+    default: 0.00
   },
   createdDate: { type: Date, default: Date.now },
 });
