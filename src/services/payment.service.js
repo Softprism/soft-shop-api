@@ -148,17 +148,17 @@ const verifyTransaction = async (paymentDetails) => {
         `You have a new order from ${order.user.firstName} ${order.user.lastName}`,
         data // data to be sent to order app
       );
+
+      // send email to store on new order
+      await sendStoreNewOrderSentMail(order.orderId, store.email);
+
+      // send email to user to notify them of sent order
+      await sendUserNewOrderSentMail(order.orderId, order.user.email);
+
+      await store.save();
+      await order.save();
+      return order;
     }
-
-    // send email to store on new order
-    await sendStoreNewOrderSentMail(order.orderId, store.email);
-
-    // send email to user to notify them of sent order
-    await sendUserNewOrderSentMail(order.orderId, order.user.email);
-
-    await store.save();
-    await order.save();
-    return order;
   }
 };
 
