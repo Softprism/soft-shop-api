@@ -311,14 +311,33 @@ const updateBasketPrice = async (basketId) => {
   return basketUpdate;
 };
 const addItemToBasket = async (userId, basketItemMeta) => {
-  // validate if store is active
+  // check if basket is empty, else get store id of existing basket items
+  let basket = await Basket.findOne({ user: userId });
+  if (basket) {
+    // check if new basket item is from the same store
+    // 1. get product of exisiting basket item
+    const eProduct = await Product.findById(basket.product.productId)
+      .populate([{ path: "store", select: "_id name isActive", }]);
+
+    // 2. get product of new basket item
+    const nProduct = await Product.findById(basketItemMeta.product.productId)
+      .populate([{ path: "store", select: "_id name isActive", }]);
+
+    // 3. compare store ids of existing and new basket item
+    if (eProduct.store._id.toString() !== nProduct.store._id.toString()) {
+      // if not same, return an error, user can only add items from the same store
+      return { err: "You can only add items from the same store", status: 400 };
+    }
+  }
+
+  // check if product exists
   const product = await Product.findById(basketItemMeta.product.productId)
     .populate([{ path: "store", select: "_id name isActive", }]);
   if (!product) {
     return { err: "Product does not exists.", status: 404 };
   }
-  const { store } = product;
-  if (!store.isActive) {
+  // check if store is active
+  if (!product.store.isActive) {
     return { err: "Sorry you can't add item from an inactive store.", status: 409 };
   }
   // add user ID to basketMeta
@@ -345,6 +364,7 @@ const addItemToBasket = async (userId, basketItemMeta) => {
     let basketUpdate = await updateBasketPrice(existingBasketItem._id);
     return basketUpdate;
   }
+
   // add item to basket
   let newBasketItem = new Basket(basketItemMeta);
   await newBasketItem.save();
