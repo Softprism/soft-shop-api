@@ -139,6 +139,9 @@ const updateUser = async (req, res, next) => {
     if (req.query.userID && req.admin) userID = req.query.userID;
 
     const user = await userService.updateUser(req.body, userID);
+    if (user.err) {
+      return res.status(user.status).json({ success: false, msg: user.err, status: user.status });
+    }
 
     res.status(200).json({
       success: true,

@@ -108,8 +108,8 @@ router.put(
   async (req, res) => {
     let { user } = req.localData;
     // send mail to notify user of password change
-    if (user.password && req.body.password) {
-      sendPasswordChangeMail(user.email);
+    if (req.body.password && req.body.original_password) {
+      await sendPasswordChangeMail(user.email);
       // create log
       await createLog("user update prfile", "user", `A user - ${user.first_name} ${user.last_name} with email - ${user.email} just updated their profile`);
     }
