@@ -8,7 +8,9 @@ import Order from "../models/order.model";
 import Store from "../models/store.model";
 import Ledger from "../models/ledger.model";
 
-import { sendStoreNewOrderSentMail, sendStorePayoutSentMail, sendUserNewOrderSentMail } from "../utils/sendMail";
+import {
+  sendStoreNewOrderSentMail, sendStorePayoutSentMail, sendUserNewOrderPaymentFailedMail, sendUserNewOrderSentMail
+} from "../utils/sendMail";
 
 import { createTransaction } from "./transaction.service";
 import { sendOne } from "./push.service";
@@ -41,6 +43,7 @@ const verifyTransaction = async (paymentDetails) => {
   // if it's a order transaction, it adds the payment details to the order payment result and credit store balance
 
   const response = await flw.Transaction.verify({ id: paymentDetails.data.id });
+  console.log(response);
 
   const { tx_ref } = response.data;
   if (tx_ref.includes("card")) {
@@ -157,6 +160,15 @@ const verifyTransaction = async (paymentDetails) => {
 
       await store.save();
       await order.save();
+      return order;
+    }
+    if (response.data.status === "failed") {
+      // mark order as failed
+      order.status = "cancelled";
+      await order.save();
+      // send payment failed email to user
+      await sendUserNewOrderPaymentFailedMail(order.orderId, order.user.email);
+
       return order;
     }
   }

@@ -98,6 +98,15 @@ const sendUserNewOrderSentMail = async (orderId, toEmail, store) => {
   }
 };
 
+const sendUserNewOrderPaymentFailedMail = async (orderId, toEmail) => {
+  let subject = `Payment For Order ${orderId} failed`;
+  let body = "We noticed that your payment for your order has failed, please contact us if you've made payment and have been debited, else try initiating the order again with another payment method.";
+  let sendAction = await sendEmail(toEmail, subject, body);
+  if (!sendAction) {
+    console.log("new order initiated mail not sent");
+  }
+};
+
 const sendStoreNewOrderSentMail = async (orderId, toEmail) => {
   let subject = `Order ${orderId} created`;
   let body = "An order has been created for you, please check your order app for more details.";
@@ -284,6 +293,7 @@ export {
   sendUserNewOrderRejectedMail,
   sendUserNewOrderSentMail,
   sendStoreNewOrderSentMail,
+  sendUserNewOrderPaymentFailedMail,
   sendUserOrderReadyMail,
   sendUserOrderAcceptedMail,
   sendUserOrderPickedUpMail,
