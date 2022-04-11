@@ -323,6 +323,8 @@ const addItemToBasket = async (userId, basketItemMeta) => {
     const nProduct = await Product.findById(basketItemMeta.product.productId)
       .populate([{ path: "store", select: "_id name isActive", }]);
 
+    if (!nProduct || !eProduct) throw { err: "Error Encountered while adding item to basket. Please clear your basket and try again.", status: 404 };
+
     // 3. compare store ids of existing and new basket item
     if (eProduct.store._id.toString() !== nProduct.store._id.toString()) {
       // if not same, return an error, user can only add items from the same store

@@ -661,7 +661,7 @@ const reviewOrder = async (review) => {
     user: mongoose.Types.ObjectId(review.user),
     status: "completed"
   });
-  if (!order) return { err: "Order not found.", status: 404 };
+  if (!order) return { err: "We couldn't add your feedback at this time. The order may not exist or still in progress, please try again later.", status: 404 };
 
   // check if user has made any review
   const isReviewed = await Review.findOne({
@@ -670,12 +670,25 @@ const reviewOrder = async (review) => {
   });
   if (isReviewed) return { err: "Your review has been submitted for this order already.", status: 409 };
 
+  // add store to review object
+  review.store = order.store;
+
+  // save review
   const userReview = new Review(review);
   await userReview.save();
 
-  const newReview = Review.findById(userReview._id).populate("user", "first_name last_name");
+  // change order isReviewed to true
+  await Order.findByIdAndUpdate(
+    review.order,
+    { $set: { isReviewed: true } },
+    { omitUndefined: true, new: true, useFindAndModify: false }
+  );
 
-  return newReview;
+  return "Review submitted successfully.";
+
+  // const newReview = await Review.findById(userReview._id).populate("user", "first_name last_name");
+
+  // return newReview;
 };
 
 const encryptDetails = async (cardDetails) => {

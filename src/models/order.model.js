@@ -70,7 +70,11 @@ const OrderSchema = mongoose.Schema(
       required: true,
       default: false,
     },
-    // initiated (after creating order and await payment) => sent(payment confirmation) => approved(when store approves an order) => ready(store sends order for delivery => accepted(when rider accepts an order) => enroute(item is on the way) => delivered(item is at user's location) =>  completed(user receives order)
+    isReviewed: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
     status: {
       type: String,
       required: true,
@@ -86,6 +90,7 @@ const OrderSchema = mongoose.Schema(
         "delivered", // order delivered to user
         "completed", // delivery completed
       ]
+      // initiated (after creating order and await payment) => sent(payment confirmation) => approved(when store approves an order) => ready(store sends order for delivery => accepted(when rider accepts an order) => enroute(item is on the way) => delivered(item is at user's location) =>  completed(user receives order)
     },
     orderItems: [
       {

@@ -6,7 +6,7 @@ import Store from "../models/store.model";
 const createDelivery = async (orderId, storeId) => {
   // find the order
   const order = await Order.findById(orderId).populate([
-    { path: "store", select: "_id name address" },
+    { path: "store", select: "_id name address location" },
     { path: "user", select: "_id first_name last_name phone_number email" },
   ]);
   // check for if order exist
@@ -191,6 +191,7 @@ const getAllDeliveries = async (urlParams) => {
   let long;
   let lat;
   let radian;
+
   if (urlParams.long && urlParams.lat && urlParams.radius) {
     long = parseFloat(urlParams.long);
     lat = parseFloat(urlParams.lat);
@@ -202,6 +203,9 @@ const getAllDeliveries = async (urlParams) => {
     };
   }
 
+  if (urlParams.rider) {
+    condition.rider = urlParams.rider;
+  }
   const deliveries = await Delivery.find(condition)
     .populate([
       { path: "rider", select: "_id first_name last_name" },
