@@ -263,7 +263,7 @@ const confirmStorePayout = async (storeId) => {
     status: "pending"
   });
 
-  // if (payout.length < 2) return { err: "No pending payout for this store.", status: 400 };
+  if (payout.length < 2) return { err: "No pending payout for this store.", status: 400 };
 
   let payload = {
     account_bank: store.account_details.bank_code,
@@ -273,6 +273,12 @@ const confirmStorePayout = async (storeId) => {
     currency: "NGN"
   };
   let request = await initiateTransfer(payload);
+  // update store payout transaction status to approved
+  await Transaction.updateMany(
+    { ref: storeId, type: "Debit", status: "pending" },
+    { $set: { status: "approved" } },
+    { omitUndefined: true, new: true, useFindAndModify: false }
+  );
   await sendStorePayoutApprovalMail(store.email, payload.amount);
   return request;
 };

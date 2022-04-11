@@ -22,7 +22,13 @@ const transactionSchema = mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["completed", "pending", "failed"],
+    enum: [
+      "completed", // payment has been sent
+      "approved", // admin as confirmed payment
+      "pending", // payment is pending
+      "failed" // payment failed
+    ],
+
     default: "pending"
   },
   ref: {

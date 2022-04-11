@@ -175,19 +175,19 @@ const verifyPayout = async (payload) => {
   if (response.data.status === "SUCCESSFUL") {
     let ledger = await Ledger.findOne({});
     let store = await Store.findById(response.data.narration);
-    // check for pending store request
+    // check for approved store request
     let oldStoreRequest = await Transaction.findOne({
       type: "Debit",
       to: "Store",
       receiver: response.data.narration,
-      status: "pending",
+      status: "approved",
     });
     // check for pending store request in ledger
     let oldLedgerRequest = await Transaction.findOne({
       type: "Debit",
       to: "Ledger",
       receiver: ledger._id,
-      status: "pending",
+      status: "approved",
       ref: response.data.narration
 
     });
