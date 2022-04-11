@@ -204,6 +204,14 @@ const verifyPayout = async (payload) => {
       // change store's pending withdrawal to false
       store.pendingWithdrawal = false;
       store.save();
+
+      // send push notifications to vendor on successful payment
+      await sendOne(
+        "ssv",
+        store.vendorPushDeivceToken,
+        "Payout Completed",
+        "Your withdrawal request has been paid successfully",
+      );
       // send payout sent email
       await sendStorePayoutSentMail(store.email, response.data.amount);
     }
