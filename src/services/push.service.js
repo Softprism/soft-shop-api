@@ -39,30 +39,29 @@ const sendOne = async (app, deviceToken, title, body, data) => {
       data,
       token: deviceToken
     };
-
     if (app === "ssa") {
+      // Send a message to devices subscribed to the provided topic.
+      let sendPush = await ssa.messaging().send(message);
+      return sendPush;
+    }
+    if (app === "sso") {
     // Send a message to devices subscribed to the provided topic.
       let sendPush = await sso.messaging().send(message);
       return sendPush;
     }
-    if (app === "ssa") {
+    if (app === "ssd") {
       // Send a message to devices subscribed to the provided topic.
       let sendPush = await ssd.messaging().send(message);
       return sendPush;
     }
-    if (app === "ssa") {
+    if (app === "ssv") {
       // Send a message to devices subscribed to the provided topic.
       let sendPush = await ssv.messaging().send(message);
       return sendPush;
     }
-    if (app === "ssa") {
+    if (app === "ssu") {
       // Send a message to devices subscribed to the provided topic.
       let sendPush = await ssu.messaging().send(message);
-      return sendPush;
-    }
-    if (app === "ssa") {
-      // Send a message to devices subscribed to the provided topic.
-      let sendPush = await ssa.messaging().send(message);
       return sendPush;
     }
   } catch (error) {
@@ -83,27 +82,27 @@ const sendMany = async (app, deviceTokens, title, body, data) => {
     };
     if (app === "ssa") {
       // Send a message to devices subscribed to the provided topic.
+      let sendPush = await ssa.messaging().send(message);
+      return sendPush;
+    }
+    if (app === "sso") {
+      // Send a message to devices subscribed to the provided topic.
       let sendPush = await sso.messaging().sendMulticast(message);
       return sendPush;
     }
-    if (app === "ssa") {
+    if (app === "ssd") {
       // Send a message to devices subscribed to the provided topic.
       let sendPush = await ssd.messaging().sendMulticast(message);
       return sendPush;
     }
-    if (app === "ssa") {
+    if (app === "ssv") {
       // Send a message to devices subscribed to the provided topic.
       let sendPush = await ssv.messaging().sendMulticast(message);
       return sendPush;
     }
-    if (app === "ssa") {
+    if (app === "ssu") {
       // Send a message to devices subscribed to the provided topic.
       let sendPush = await ssu.messaging().sendMulticast(message);
-      return sendPush;
-    }
-    if (app === "ssa") {
-      // Send a message to devices subscribed to the provided topic.
-      let sendPush = await ssa.messaging().send(message);
       return sendPush;
     }
   } catch (error) {
@@ -120,18 +119,23 @@ const sendTopic = async (app, topic, title, body, data) => {
     data,
     topic
   };
-  // Send a message to devices subscribed to the provided topic.
   if (app === "ssa") {
+    // Send a message to devices subscribed to the provided topic.
+    let sendPush = await ssa.messaging().send(message);
+    return sendPush;
+  }
+  // Send a message to devices subscribed to the provided topic.
+  if (app === "sso") {
     // Send a message to devices subscribed to the provided topic.
     let sendPush = await sso.messaging().send(message);
     return sendPush;
   }
-  if (app === "ssa") {
+  if (app === "ssd") {
     // Send a message to devices subscribed to the provided topic.
     let sendPush = await ssd.messaging().send(message);
     return sendPush;
   }
-  if (app === "ssa") {
+  if (app === "ssv") {
     // Send a message to devices subscribed to the provided topic.
     let sendPush = await ssv.messaging().send(message);
     return sendPush;
