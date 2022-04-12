@@ -135,6 +135,12 @@ const updateRiderValidation = {
     first_name: Joi.string().empty().messages({
       "string.empty": "Sorry, First name cannot be an empty field",
     }),
+    location: Joi.object().empty().messages({
+      "object.unknown": "You have used an invalid key."
+    }),
+    place_id: Joi.string().empty().messages({
+      "string.empty": "Sorry, field cannot be an empty field",
+    }),
     last_name: Joi.string().empty().messages({
       "string.empty": "Sorry, Last name cannot be an empty field",
     }),
@@ -171,6 +177,7 @@ const updateRiderValidation = {
         }),
     }),
     pushNotifications: Joi.boolean().empty(),
+    isBusy: Joi.boolean().empty(),
     smsNotifications: Joi.boolean().empty(),
     pushDeivceToken: Joi.string(),
     promotionalNotifications: Joi.boolean().empty()

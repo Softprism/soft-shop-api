@@ -96,19 +96,19 @@ router.put(
         "Your order is now ready for delivery, we'll also notify you when your order has been picked up."
       );
 
-      // send push notification to riders
-      let data = {
-        event: "order_ready",
-        place_id: store.place_id,
-        coords: store.location.coordinates
-      };
-      await sendTopic(
-        "ssd",
-        riderApp,
-        "",
-        "",
-        data
-      );
+      // // send push notification to riders
+      // let data = {
+      //   event: "order_ready",
+      //   place_id: store.place_id,
+      //   coords: store.location.coordinates
+      // };
+      // await sendTopic(
+      //   "ssd",
+      //   "riderApp",
+      //   "",
+      //   "",
+      //   data
+      // );
     }
     if (req.body.status === "accepted") {
       await sendUserOrderAcceptedMail(order.orderId, req.localData.user_email, req.localData.delivery_address);

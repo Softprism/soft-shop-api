@@ -25,29 +25,8 @@ const createDelivery = async (orderId, storeId) => {
   if ((order.store._id).toString() !== storeId) {
     return { err: "You're not permitted to carry out this action", status: 403, };
   }
-  const {
-    orderItems, user, store, deliveryAddress,
-  } = order;
-  let items = [];
-  // create item name and quantity
-  items = orderItems.map((orderItem) => {
-    return `${orderItem.qty}X ${orderItem.productName}`;
-  });
-  // new delivery pbject to be created
-  const newDelivery = {
-    item: items.toString(),
-    pickup: store.address,
-    location: store.location,
-    dropOff: deliveryAddress,
-    receiver: `${user.first_name} ${user.last_name}`,
-    phone_number: user.phone_number,
-    order: orderId,
-    user: user._id,
-    store: store._id
-  };
-  // create delivery
-  const delivery = await Delivery.create(newDelivery);
-  return { delivery };
+
+  return { delivery: "Delivery Created Successfully" };
 };
 
 const acceptDelivery = async (deliveryId, riderId, urlParams) => {

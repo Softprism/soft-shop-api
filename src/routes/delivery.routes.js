@@ -12,12 +12,14 @@ import Store from "../models/store.model";
 import Rider from "../models/rider.model";
 import Order from "../models/order.model";
 
-import { sendOne } from "../services/push.service";
+import { sendOne, sendPushToNearbyRiders } from "../services/push.service";
 import User from "../models/user.model";
 import {
   sendUserNewOrderRejectedMail, sendUserOrderAcceptedMail, sendUserOrderDeliveredMail, sendUserOrderReadyMail
 } from "../utils/sendMail";
 import { sendUserNewOrderRejectedSMS, sendUserOrderDeliveredSMS } from "../utils/sendSMS";
+import Delivery from "../models/delivery.model";
+import { createLog } from "../services/logs.service";
 
 const router = express.Router();
 
@@ -30,37 +32,50 @@ router.post(
   isStoreAdmin,
   create_Delivery,
   async (req, res) => {
-    let user = await User.findById(req.data.user_id);
-    let order = await Order.findById(req.data.order_id);
-    let store = await Store.findById(req.data.store_id);
-    let rider = await Rider.findById(req.data.rider_id);
-    // uodate orser status to ready
-    await Order.findByIdAndUpdate(
-      { _id: req.data.order_id },
-      { status: "ready", delivery: req.data.delivery._id },
-      { new: true }
-    );
-    // send push notification to user
-    await sendOne(
-      "ssu",
-      user.pushDeivceToken,
-      `${order.orderId} ready for pickup`,
-      "Your order is now ready for delivery, we'll also notify you when your order has been picked up."
-    );
-    // send notification to store
-    let data = {
-      event: "delivery_created",
-    };
-    await sendOne(
-      "sso",
-      store.orderPushDeivceToken,
-      `Order ${order.orderId} accepted for delivery`,
-      `${rider.last_name} ${rider.first_name} has accepted your order ${order.orderId} for delivery. He's on his way to pick up the order.`,
-      data // data to be sent to order app
-    );
+    try {
+      let order = await Order.findById(req.params.orderId);
+      let store = await Store.findById(order.store);
+      let user = await User.findById(order.user);
 
-    // send push notification to riders
-    await sendUserOrderReadyMail(order.orderId, user.email);
+      const {
+        orderItems, deliveryAddress,
+      } = order;
+      let items = [];
+      // create item name and quantity
+      items = orderItems.map((orderItem) => {
+        return `${orderItem.qty}X ${orderItem.productName}`;
+      });
+
+      // new delivery object to be created
+      let newDelivery = {
+        item: items.toString(),
+        pickup: store.address,
+        location: store.location,
+        dropOff: deliveryAddress,
+        receiver: `${user.first_name} ${user.last_name}`,
+        phone_number: user.phone_number,
+        order: order._id,
+        user: user._id,
+        store: store._id
+      };
+      // create delivery
+      newDelivery = await Delivery.create(newDelivery);
+
+      // send push notification to riders
+      await sendPushToNearbyRiders(newDelivery);
+
+      // send push notification to user
+      await sendOne(
+        "ssu",
+        user.pushDeivceToken,
+        `${order.orderId} ready for pickup`,
+        "Your order is now ready for delivery, we'll also notify you when your order has been picked up."
+      );
+
+      await sendUserOrderReadyMail(order.orderId, user.email);
+    } catch (error) {
+      await createLog("error", "delivery.routes", "create_Delivery");
+    }
   }
 );
 

@@ -181,13 +181,15 @@ const resetPassword = async ({ token, email, password }) => {
 // Update Rider Details
 const updateRider = async (updateParam, id) => {
   const {
-    first_name, last_name, email, original_password, password, phone_number, profilePhoto, pushNotifications, smsNotifications, promotionalNotifications, pushDeivceToken, account_details
+    first_name, last_name, email, original_password, password, phone_number, profilePhoto, pushNotifications, smsNotifications, promotionalNotifications, pushDeivceToken, account_details, location, place_id
   } = updateParam;
   console.log(account_details);
   // Build Rider Object
   const riderFields = {};
 
   // Check for fields
+  if (location) riderFields.location = location;
+  if (place_id) riderFields.place_id = place_id;
   if (first_name) riderFields.first_name = first_name;
   if (last_name) riderFields.last_name = last_name;
   if (phone_number) riderFields.phone_number = phone_number;
@@ -201,6 +203,12 @@ const updateRider = async (updateParam, id) => {
 
   // Find rider from DB Collection
   let rider = await Rider.findById(id);
+  if (!rider) {
+    return {
+      err: "Rider does not exists.",
+      status: 404,
+    };
+  }
 
   if (password) {
     if (!original_password) return { err: "please enter old password", status: 400 };
@@ -212,12 +220,6 @@ const updateRider = async (updateParam, id) => {
 
     // Replace password from rider object with encrypted one
     riderFields.password = await bcrypt.hash(password, salt);
-  }
-  if (!rider) {
-    return {
-      err: "Rider does not exists.",
-      status: 404,
-    };
   }
 
   // Updates the rider Object with the changed values

@@ -75,7 +75,19 @@ const riderSchema = mongoose.Schema({
     full_name: { type: String },
     bank_name: { type: String },
     pending_payout: { type: Boolean },
-  }
+  },
+  isBusy: { type: Boolean, default: false },
+  location: {
+    type: {
+      type: String,
+      default: "Point",
+    },
+    coordinates: {
+      type: [Number],
+      default: [0, 0],
+    },
+  },
+  place_id: { type: String },
 });
 
 const Rider = mongoose.model("Rider", riderSchema);
