@@ -10,19 +10,19 @@ import { createLog } from "./logs.service";
 
 let sso = admin.initializeApp({
   credential: admin.credential.cert(softShopOrder),
-}, "sso");
+}, "ssa");
 
 let ssd = admin.initializeApp({
   credential: admin.credential.cert(softShopDelivery)
-}, "ssd");
+}, "ssa");
 
 let ssv = admin.initializeApp({
   credential: admin.credential.cert(softShopVendor)
-}, "ssv");
+}, "ssa");
 
 let ssu = admin.initializeApp({
   credential: admin.credential.cert(softShopVendor)
-}, "ssu");
+}, "ssa");
 
 let ssa = admin.initializeApp({
   credential: admin.credential.cert(softShopApps)
@@ -40,22 +40,22 @@ const sendOne = async (app, deviceToken, title, body, data) => {
       token: deviceToken
     };
 
-    if (app === "sso") {
+    if (app === "ssa") {
     // Send a message to devices subscribed to the provided topic.
       let sendPush = await sso.messaging().send(message);
       return sendPush;
     }
-    if (app === "ssd") {
+    if (app === "ssa") {
       // Send a message to devices subscribed to the provided topic.
       let sendPush = await ssd.messaging().send(message);
       return sendPush;
     }
-    if (app === "ssv") {
+    if (app === "ssa") {
       // Send a message to devices subscribed to the provided topic.
       let sendPush = await ssv.messaging().send(message);
       return sendPush;
     }
-    if (app === "ssu") {
+    if (app === "ssa") {
       // Send a message to devices subscribed to the provided topic.
       let sendPush = await ssu.messaging().send(message);
       return sendPush;
@@ -81,22 +81,22 @@ const sendMany = async (app, deviceTokens, title, body, data) => {
       data,
       tokens: deviceTokens
     };
-    if (app === "sso") {
+    if (app === "ssa") {
       // Send a message to devices subscribed to the provided topic.
       let sendPush = await sso.messaging().sendMulticast(message);
       return sendPush;
     }
-    if (app === "ssd") {
+    if (app === "ssa") {
       // Send a message to devices subscribed to the provided topic.
       let sendPush = await ssd.messaging().sendMulticast(message);
       return sendPush;
     }
-    if (app === "ssv") {
+    if (app === "ssa") {
       // Send a message to devices subscribed to the provided topic.
       let sendPush = await ssv.messaging().sendMulticast(message);
       return sendPush;
     }
-    if (app === "ssu") {
+    if (app === "ssa") {
       // Send a message to devices subscribed to the provided topic.
       let sendPush = await ssu.messaging().sendMulticast(message);
       return sendPush;
@@ -121,17 +121,17 @@ const sendTopic = async (app, topic, title, body, data) => {
     topic
   };
   // Send a message to devices subscribed to the provided topic.
-  if (app === "sso") {
+  if (app === "ssa") {
     // Send a message to devices subscribed to the provided topic.
     let sendPush = await sso.messaging().send(message);
     return sendPush;
   }
-  if (app === "ssd") {
+  if (app === "ssa") {
     // Send a message to devices subscribed to the provided topic.
     let sendPush = await ssd.messaging().send(message);
     return sendPush;
   }
-  if (app === "ssv") {
+  if (app === "ssa") {
     // Send a message to devices subscribed to the provided topic.
     let sendPush = await ssv.messaging().send(message);
     return sendPush;
@@ -161,11 +161,13 @@ const sendPushToNearbyRiders = async (newDelivery) => {
       let title = "New Delivery";
       let body = `${newDelivery.receiver} has requested a delivery from ${store.name}.`;
       // send push notification to riders
-      await sendMany("ssd", ridersToken, title, body);
+      await sendMany("ssa", ridersToken, title, body);
       return "success";
     }
     console.log("no riders found, creating log...");
     await createLog("find_riders_for_delivery", "store", `can't find any riders for delivery requested by  ${store.name} for ${user.first_name} ${user.last_name}`);
+    console.log("no riders found, creating log... Done!");
+
     return "no_rider_available";
   } catch (error) {
     await createLog("send_push_to_nearby_riders", "server", error.message);

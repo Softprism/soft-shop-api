@@ -66,7 +66,7 @@ router.post(
 
       // send push notification to user
       await sendOne(
-        "ssu",
+        "ssa",
         user.pushDeivceToken,
         `${order.orderId} ready for pickup`,
         "Your order is now ready for delivery, we'll also notify you when your order has been picked up."
@@ -99,14 +99,14 @@ router.patch(
     );
     // send push notification to user
     await sendOne(
-      "ssu",
+      "ssa",
       user.pushDeivceToken,
       `${order.orderId} accepted`,
       "Your order has been accepted by a rider and is being prepared by the store."
     );
     // send mail to store, notify them of rider delivery acceptance
     await sendOne(
-      "sso",
+      "ssa",
       store.orderPushDeviceToken,
       `Delivery for ${order.orderId} accepted`,
       `The delivery for your order has been accepted by ${rider.last_name} ${rider.first_name}.`
@@ -144,7 +144,7 @@ router.patch(
 
       // send push notification to store
       await sendOne(
-        "sso",
+        "ssa",
         store.orderPushDeviceToken,
         `Delivery for ${order.orderId} failed`,
         "The delivery for your order has failed."
@@ -155,7 +155,7 @@ router.patch(
       await sendUserNewOrderRejectedSMS(order.orderId, user.phone_number, store.name);
       // send push notification to user
       await sendOne(
-        "ssu",
+        "ssa",
         user.pushDeivceToken,
         `${order.orderId} canceled`,
         `Your order has been rejected by ${rider.last_name} ${rider.first_name} you can checkout alternative store near you for the same items.`
@@ -169,14 +169,14 @@ router.patch(
         route: "history"
       };
       await sendOne(
-        "sso",
+        "ssa",
         store.orderPushDeviceToken,
         `Delivery for ${order.orderId} completed`,
         "The delivery for your order has been completed.",
         data
       );
       await sendOne(
-        "ssu",
+        "ssa",
         user.pushDeviceToken,
         `Delivery for ${order.orderId} completed`,
         "The delivery for your order has been completed."
@@ -190,14 +190,14 @@ router.patch(
       await Order.findByIdAndUpdate({ _id: req.localData.order_id }, { status: "accepted" }, { new: true });
       // send push notification to user notify them of rider delivery acceptance
       await sendOne(
-        "ssu",
+        "ssa",
         user.pushDeviceToken,
         `Delivery for ${order.orderId} accepted`,
         `The delivery for your order has been accepted by ${rider.last_name} ${rider.first_name}.`
       );
       // send mail to store, notify them of rider delivery acceptance
       await sendOne(
-        "sso",
+        "ssa",
         store.orderPushDeviceToken,
         `Delivery for ${order.orderId} accepted`,
         `The delivery for your order has been accepted by ${rider.last_name} ${rider.first_name}.`
@@ -223,13 +223,13 @@ router.patch(
 
     if (req.params.status === "Arrive at pickup") {
       await sendOne(
-        "ssu",
+        "ssa",
         user.pushDeviceToken,
         `Your Rider At ${store.name}`,
         `${rider.last_name} ${rider.first_name} is at ${store.name} receiving your order.`
       );
       await sendOne(
-        "sso",
+        "ssa",
         store.orderPushDeviceToken,
         `${rider.last_name} ${rider.first_name} is waiting!`,
         `${rider.last_name} ${rider.first_name} is at waiting to pickup ${order.orderId}`
@@ -237,7 +237,7 @@ router.patch(
     }
     if (req.params.status === "Start Delivery") {
       await sendOne(
-        "ssu",
+        "ssa",
         user.pushDeviceToken,
         `Order ${order.orderId} has been picked up`,
         `Your order ${order.orderId} has been picked up for delivery, please be available at ${order.deliveryAddress}`
@@ -245,13 +245,13 @@ router.patch(
     }
     if (req.params.status === "Complete Drop off") {
       await sendOne(
-        "sso",
+        "ssa",
         store.orderPushDeviceToken,
         `Delivery for ${order.orderId} completed`,
         "The delivery for your order has been completed."
       );
       await sendOne(
-        "ssu",
+        "ssa",
         user.pushDeviceToken,
         `Delivery for ${order.orderId} completed`,
         "The delivery for your order has been completed."
@@ -259,13 +259,13 @@ router.patch(
     }
     if (req.params.status === "Cancelled") {
       await sendOne(
-        "sso",
+        "ssa",
         store.orderPushDeviceToken,
         `Delivery for ${order.orderId} canceled`,
         "The delivery for your order has been canceled."
       );
       await sendOne(
-        "ssu",
+        "ssa",
         user.pushDeviceToken,
         `Delivery for ${order.orderId} canceled`,
         "The delivery for your order has been canceled."
