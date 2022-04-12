@@ -3,6 +3,7 @@ import express from "express";
 import * as userService from "../services/user.service";
 
 import { createLog } from "../services/logs.service";
+import Basket from "../models/user-cart.model";
 
 const router = express.Router();
 
@@ -181,10 +182,44 @@ const addItemToBasket = async (req, res, next) => {
     if (action.err) {
       return res.status(403).json({ success: false, msg: action.err });
     }
-    res.status(200).json({ success: true, result: action, status: 200 });
 
-    // create log
-    await createLog("new basket item", "user", `A user with id ${req.user.id} just  added an item to their basket.`);
+    if (action.existingBasketItem) {
+      res.status(200).json({ success: true, result: action.message, status: 200 });
+      action.existingBasketItem.product.qty += req.body.product.qty;
+      if (req.body.product.selectedVariants) {
+      // if user is adding an existing item to basket along side selected variants, the existing selected variant quantity should be incremented by the new quantity coming in
+        action.existingBasketItem.product.selectedVariants.forEach((variant) => {
+          req.body.product.selectedVariants.forEach((basketItemVariant) => {
+            if (variant.variantId.toString() === basketItemVariant.variantId) {
+              variant.quantity += basketItemVariant.quantity;
+            } else {
+            // find the selected variant in the existing basket item and increment quantity
+              let existingVariant = action.existingBasketItem.product.selectedVariants.find(
+                (variant) => variant.variantId.toString() === basketItemVariant.variantId
+              );
+              if (!existingVariant) {
+              // if the selected variant is not found in the existing basket item, add it to the selected variants array
+                action.existingBasketItem.product.selectedVariants.push(basketItemVariant);
+              }
+            }
+          });
+        });
+      }
+      await action.existingBasketItem.save();
+      await userService.updateBasketPrice(action.existingBasketItem._id);
+      createLog("update_basket_item", "user", "basket item updated successfully");
+    } else {
+      res.status(200).json({ success: true, result: action, status: 200 });
+
+      // add user field to new basket item
+      req.body.user = req.user.id;
+      // add item to basket
+      let newBasketItem = new Basket(req.body);
+      await newBasketItem.save();
+      await userService.updateBasketPrice(newBasketItem._id);
+      // create log
+      await createLog("new basket item", "user", `A user with id ${req.user.id} just  added an item to their basket.`);
+    }
   } catch (error) {
     next(error);
   }

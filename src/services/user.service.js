@@ -311,7 +311,7 @@ const updateBasketPrice = async (basketId) => {
   return basketUpdate;
 };
 const addItemToBasket = async (userId, basketItemMeta) => {
-  // check if basket is empty, else get store id of existing basket items
+  // check if basket is empty, else get store id of existing basket items and make sure user is shopping from the same store.
   let basket = await Basket.findOne({ user: userId });
   if (basket) {
     // check if new basket item is from the same store
@@ -323,7 +323,7 @@ const addItemToBasket = async (userId, basketItemMeta) => {
     const nProduct = await Product.findById(basketItemMeta.product.productId)
       .populate([{ path: "store", select: "_id name isActive", }]);
 
-    if (!nProduct || !eProduct) throw { err: "Error Encountered while adding item to basket. Please clear your basket and try again.", status: 404 };
+    if (!nProduct || !eProduct) return { err: "Error Encountered while adding item to basket. Please clear your basket and try again.", status: 404 };
 
     // 3. compare store ids of existing and new basket item
     if (eProduct.store._id.toString() !== nProduct.store._id.toString()) {
@@ -332,46 +332,53 @@ const addItemToBasket = async (userId, basketItemMeta) => {
     }
   }
 
-  // check if product exists
+  // user is shopping for the first time, create a new basket
+  // 1. Get product details
   const product = await Product.findById(basketItemMeta.product.productId)
     .populate([{ path: "store", select: "_id name isActive", }]);
-  if (!product) {
-    return { err: "Product does not exists.", status: 404 };
-  }
-  // check if store is active
+
+  // 1.1. check if store is active
   if (!product.store.isActive) {
     return { err: "Sorry you can't add item from an inactive store.", status: 409 };
   }
-  // add user ID to basketMeta
-  basketItemMeta.user = userId;
 
-  // check if product exists in basket and increment if there are no selected variant items
+  // check if product exists in basket and increment product and selected variant quantities
   let existingBasketItem = await Basket.findOne({
     user: userId,
     "product.productId": basketItemMeta.product.productId
   });
   if (existingBasketItem) {
-    existingBasketItem.product.qty += basketItemMeta.product.qty;
-    if (basketItemMeta.product.selectedVariants) {
-      // if user is adding an existing item to basket along side selected variants, the existing selected variant quantity should be incremented by the new quantity coming in
-      existingBasketItem.product.selectedVariants.forEach((variant) => {
-        basketItemMeta.product.selectedVariants.forEach((basketItemVariant) => {
-          if (variant.variantId.toString() === basketItemVariant.variantId) {
-            variant.quantity += basketItemVariant.quantity;
-          }
-        });
-      });
-    }
-    await existingBasketItem.save();
-    let basketUpdate = await updateBasketPrice(existingBasketItem._id);
-    return basketUpdate;
+    return { existingBasketItem, message: "Item Updated Successfully", status: 201 };
+    // existingBasketItem.product.qty += basketItemMeta.product.qty;
+    // if (basketItemMeta.product.selectedVariants) {
+    //   // if user is adding an existing item to basket along side selected variants, the existing selected variant quantity should be incremented by the new quantity coming in
+    //   existingBasketItem.product.selectedVariants.forEach((variant) => {
+    //     basketItemMeta.product.selectedVariants.forEach((basketItemVariant) => {
+    //       if (variant.variantId.toString() === basketItemVariant.variantId) {
+    //         variant.quantity += basketItemVariant.quantity;
+    //       } else {
+    //         // find the selected variant in the existing basket item and increment quantity
+    //         let existingVariant = existingBasketItem.product.selectedVariants.find(
+    //           (variant) => variant.variantId.toString() === basketItemVariant.variantId
+    //         );
+    //         if (!existingVariant) {
+    //           // if the selected variant is not found in the existing basket item, add it to the selected variants array
+    //           existingBasketItem.product.selectedVariants.push(basketItemVariant);
+    //         }
+    //       }
+    //     });
+    //   });
+    // }
+    // await existingBasketItem.save();
+    // let basketUpdate = await updateBasketPrice(existingBasketItem._id);
+    // return basketUpdate;
   }
 
-  // add item to basket
-  let newBasketItem = new Basket(basketItemMeta);
-  await newBasketItem.save();
-  let basketUpdate = await updateBasketPrice(newBasketItem._id);
-  return basketUpdate;
+  // // add item to basket
+  // let newBasketItem = new Basket(basketItemMeta);
+  // await newBasketItem.save();
+  // let basketUpdate = await updateBasketPrice(newBasketItem._id);
+  return "Item Added Succesfully";
 };
 
 // const getUserBasketItems = async (userId) => {
@@ -586,6 +593,7 @@ export {
   getLoggedInUser,
   updateUser,
   addItemToBasket,
+  updateBasketPrice,
   forgotPassword,
   validateToken,
   createNewPassword,
