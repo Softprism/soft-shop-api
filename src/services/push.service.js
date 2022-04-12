@@ -10,19 +10,19 @@ import { createLog } from "./logs.service";
 
 let sso = admin.initializeApp({
   credential: admin.credential.cert(softShopOrder),
-}, "ssa");
+}, "sso");
 
 let ssd = admin.initializeApp({
   credential: admin.credential.cert(softShopDelivery)
-}, "ssa");
+}, "ssd");
 
 let ssv = admin.initializeApp({
   credential: admin.credential.cert(softShopVendor)
-}, "ssa");
+}, "ssv");
 
 let ssu = admin.initializeApp({
   credential: admin.credential.cert(softShopVendor)
-}, "ssa");
+}, "ssu");
 
 let ssa = admin.initializeApp({
   credential: admin.credential.cert(softShopApps)
