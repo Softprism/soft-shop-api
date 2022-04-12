@@ -150,8 +150,7 @@ const sendPushToNearbyRiders = async (newDelivery) => {
         $geoWithin: {
           $centerSphere: [[long, lat], radian]
         }
-      },
-      isBusy: false
+      }
     });
     if (riders.length > 0) {
       console.log(`found ${riders.length} riders`);

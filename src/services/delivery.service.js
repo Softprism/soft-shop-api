@@ -2,6 +2,7 @@ import Order from "../models/order.model";
 import Delivery from "../models/delivery.model";
 import Review from "../models/review.model";
 import Store from "../models/store.model";
+import Rider from "../models/rider.model";
 
 const createDelivery = async (orderId, storeId) => {
   // find the order
@@ -30,6 +31,8 @@ const createDelivery = async (orderId, storeId) => {
 };
 
 const acceptDelivery = async (deliveryId, riderId, urlParams) => {
+  const rider = await Rider.findById(riderId);
+
   let condition = {};
   let long;
   let lat;
@@ -60,6 +63,8 @@ const acceptDelivery = async (deliveryId, riderId, urlParams) => {
     { status: "accepted", rider: riderId },
     { new: true }
   );
+  rider.isBusy = true;
+  await rider.save();
   return { updatedDelivery };
 };
 
