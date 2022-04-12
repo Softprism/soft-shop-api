@@ -12,12 +12,14 @@ import Store from "../models/store.model";
 import Rider from "../models/rider.model";
 import Order from "../models/order.model";
 
-import { sendOne } from "../services/push.service";
+import { sendOne, sendPushToNearbyRiders } from "../services/push.service";
 import User from "../models/user.model";
 import {
   sendUserNewOrderRejectedMail, sendUserOrderAcceptedMail, sendUserOrderDeliveredMail, sendUserOrderReadyMail
 } from "../utils/sendMail";
 import { sendUserNewOrderRejectedSMS, sendUserOrderDeliveredSMS } from "../utils/sendSMS";
+import Delivery from "../models/delivery.model";
+import { createLog } from "../services/logs.service";
 
 const router = express.Router();
 
@@ -30,37 +32,50 @@ router.post(
   isStoreAdmin,
   create_Delivery,
   async (req, res) => {
-    let user = await User.findById(req.data.user_id);
-    let order = await Order.findById(req.data.order_id);
-    let store = await Store.findById(req.data.store_id);
-    let rider = await Rider.findById(req.data.rider_id);
-    // uodate orser status to ready
-    await Order.findByIdAndUpdate(
-      { _id: req.data.order_id },
-      { status: "ready", delivery: req.data.delivery._id },
-      { new: true }
-    );
-    // send push notification to user
-    await sendOne(
-      "ssu",
-      user.pushDeivceToken,
-      `${order.orderId} ready for pickup`,
-      "Your order is now ready for delivery, we'll also notify you when your order has been picked up."
-    );
-    // send notification to store
-    let data = {
-      event: "delivery_created",
-    };
-    await sendOne(
-      "sso",
-      store.orderPushDeivceToken,
-      `Order ${order.orderId} accepted for delivery`,
-      `${rider.last_name} ${rider.first_name} has accepted your order ${order.orderId} for delivery. He's on his way to pick up the order.`,
-      data // data to be sent to order app
-    );
+    try {
+      let order = await Order.findById(req.params.orderId);
+      let store = await Store.findById(order.store);
+      let user = await User.findById(order.user);
 
-    // send push notification to riders
-    await sendUserOrderReadyMail(order.orderId, user.email);
+      const {
+        orderItems, deliveryAddress,
+      } = order;
+      let items = [];
+      // create item name and quantity
+      items = orderItems.map((orderItem) => {
+        return `${orderItem.qty}X ${orderItem.productName}`;
+      });
+
+      // new delivery object to be created
+      let newDelivery = {
+        item: items.toString(),
+        pickup: store.address,
+        location: store.location,
+        dropOff: deliveryAddress,
+        receiver: `${user.first_name} ${user.last_name}`,
+        phone_number: user.phone_number,
+        order: order._id,
+        user: user._id,
+        store: store._id
+      };
+      // create delivery
+      newDelivery = await Delivery.create(newDelivery);
+
+      // send push notification to riders
+      await sendPushToNearbyRiders(newDelivery);
+
+      // send push notification to user
+      await sendOne(
+        "ssa",
+        user.pushDeivceToken,
+        `${order.orderId} ready for pickup`,
+        "Your order is now ready for delivery, we'll also notify you when your order has been picked up."
+      );
+
+      await sendUserOrderReadyMail(order.orderId, user.email);
+    } catch (error) {
+      await createLog("error", "delivery.routes", "create_Delivery");
+    }
   }
 );
 
@@ -84,14 +99,14 @@ router.patch(
     );
     // send push notification to user
     await sendOne(
-      "ssu",
+      "ssa",
       user.pushDeivceToken,
       `${order.orderId} accepted`,
       "Your order has been accepted by a rider and is being prepared by the store."
     );
     // send mail to store, notify them of rider delivery acceptance
     await sendOne(
-      "sso",
+      "ssa",
       store.orderPushDeviceToken,
       `Delivery for ${order.orderId} accepted`,
       `The delivery for your order has been accepted by ${rider.last_name} ${rider.first_name}.`
@@ -129,7 +144,7 @@ router.patch(
 
       // send push notification to store
       await sendOne(
-        "sso",
+        "ssa",
         store.orderPushDeviceToken,
         `Delivery for ${order.orderId} failed`,
         "The delivery for your order has failed."
@@ -140,7 +155,7 @@ router.patch(
       await sendUserNewOrderRejectedSMS(order.orderId, user.phone_number, store.name);
       // send push notification to user
       await sendOne(
-        "ssu",
+        "ssa",
         user.pushDeivceToken,
         `${order.orderId} canceled`,
         `Your order has been rejected by ${rider.last_name} ${rider.first_name} you can checkout alternative store near you for the same items.`
@@ -154,14 +169,14 @@ router.patch(
         route: "history"
       };
       await sendOne(
-        "sso",
+        "ssa",
         store.orderPushDeviceToken,
         `Delivery for ${order.orderId} completed`,
         "The delivery for your order has been completed.",
         data
       );
       await sendOne(
-        "ssu",
+        "ssa",
         user.pushDeviceToken,
         `Delivery for ${order.orderId} completed`,
         "The delivery for your order has been completed."
@@ -175,14 +190,14 @@ router.patch(
       await Order.findByIdAndUpdate({ _id: req.localData.order_id }, { status: "accepted" }, { new: true });
       // send push notification to user notify them of rider delivery acceptance
       await sendOne(
-        "ssu",
+        "ssa",
         user.pushDeviceToken,
         `Delivery for ${order.orderId} accepted`,
         `The delivery for your order has been accepted by ${rider.last_name} ${rider.first_name}.`
       );
       // send mail to store, notify them of rider delivery acceptance
       await sendOne(
-        "sso",
+        "ssa",
         store.orderPushDeviceToken,
         `Delivery for ${order.orderId} accepted`,
         `The delivery for your order has been accepted by ${rider.last_name} ${rider.first_name}.`
@@ -208,13 +223,13 @@ router.patch(
 
     if (req.params.status === "Arrive at pickup") {
       await sendOne(
-        "ssu",
+        "ssa",
         user.pushDeviceToken,
         `Your Rider At ${store.name}`,
         `${rider.last_name} ${rider.first_name} is at ${store.name} receiving your order.`
       );
       await sendOne(
-        "sso",
+        "ssa",
         store.orderPushDeviceToken,
         `${rider.last_name} ${rider.first_name} is waiting!`,
         `${rider.last_name} ${rider.first_name} is at waiting to pickup ${order.orderId}`
@@ -222,7 +237,7 @@ router.patch(
     }
     if (req.params.status === "Start Delivery") {
       await sendOne(
-        "ssu",
+        "ssa",
         user.pushDeviceToken,
         `Order ${order.orderId} has been picked up`,
         `Your order ${order.orderId} has been picked up for delivery, please be available at ${order.deliveryAddress}`
@@ -230,13 +245,13 @@ router.patch(
     }
     if (req.params.status === "Complete Drop off") {
       await sendOne(
-        "sso",
+        "ssa",
         store.orderPushDeviceToken,
         `Delivery for ${order.orderId} completed`,
         "The delivery for your order has been completed."
       );
       await sendOne(
-        "ssu",
+        "ssa",
         user.pushDeviceToken,
         `Delivery for ${order.orderId} completed`,
         "The delivery for your order has been completed."
@@ -244,13 +259,13 @@ router.patch(
     }
     if (req.params.status === "Cancelled") {
       await sendOne(
-        "sso",
+        "ssa",
         store.orderPushDeviceToken,
         `Delivery for ${order.orderId} canceled`,
         "The delivery for your order has been canceled."
       );
       await sendOne(
-        "ssu",
+        "ssa",
         user.pushDeviceToken,
         `Delivery for ${order.orderId} canceled`,
         "The delivery for your order has been canceled."

@@ -64,7 +64,7 @@ router.put(
       await sendUserNewOrderAcceptedSMS(order.orderId, req.localData.user_phone, req.localData.store_name);
       // send push notification
       await sendOne(
-        "ssu",
+        "ssa",
         user.pushDeivceToken,
         `${order.orderId} approved`,
         `Your order has been accepted and is being prepared by ${req.localData.store_name} we'll also notify you when your order is on the way.`
@@ -77,7 +77,7 @@ router.put(
       await sendUserNewOrderRejectedSMS(order.orderId, req.localData.user_phone, req.localData.store_name);
       // send push notification
       await sendOne(
-        "ssu",
+        "ssa",
         user.pushDeivceToken,
         `${order.orderId} canceled`,
         `Your order has been rejected by ${req.localData.store_name} you can checkout alternative store near you for the same items.`
@@ -90,25 +90,25 @@ router.put(
 
       // send push notification to user
       await sendOne(
-        "ssu",
+        "ssa",
         user.pushDeivceToken,
         `${order.orderId} ready for pickup`,
         "Your order is now ready for delivery, we'll also notify you when your order has been picked up."
       );
 
-      // send push notification to riders
-      let data = {
-        event: "order_ready",
-        place_id: store.place_id,
-        coords: store.location.coordinates
-      };
-      await sendTopic(
-        "ssd",
-        riderApp,
-        "",
-        "",
-        data
-      );
+      // // send push notification to riders
+      // let data = {
+      //   event: "order_ready",
+      //   place_id: store.place_id,
+      //   coords: store.location.coordinates
+      // };
+      // await sendTopic(
+      //   "ssa",
+      //   "riderApp",
+      //   "",
+      //   "",
+      //   data
+      // );
     }
     if (req.body.status === "accepted") {
       await sendUserOrderAcceptedMail(order.orderId, req.localData.user_email, req.localData.delivery_address);
@@ -124,7 +124,7 @@ router.put(
 
       // send push notification to store
       await sendOne(
-        "sso",
+        "ssa",
         store.orderPushDeivceToken,
         `order ${order.orderId} completed`,
         `The rider successfully delivered order ${order.orderId} to your customer.`
