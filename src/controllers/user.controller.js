@@ -199,7 +199,7 @@ const getUserBasketItems = async (req, res, next) => {
       success: true,
       result: action.userBasket,
       totalPrice: action.totalPrice,
-      storeLocation: action.storeLocation,
+      shoppingFrom: action.shoppingFrom,
       size: action.count,
     });
   } catch (error) {

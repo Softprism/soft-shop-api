@@ -434,7 +434,20 @@ const getUserBasketItems = async (userId) => {
     })
     // group basket items by store
     .group({
-      _id: "$stores.location",
+      _id: "$stores._id",
+      store_location: { $first: "$stores.location" },
+      store_name: { $first: "$stores.name" },
+    })
+    .addFields({
+      _id: {
+        $arrayElemAt: ["$_id", 0],
+      },
+      store_location: {
+        $arrayElemAt: ["$store_location", 0],
+      },
+      store_name: {
+        $arrayElemAt: ["$store_name", 0],
+      },
     });
 
   // get user basket items
@@ -448,7 +461,7 @@ const getUserBasketItems = async (userId) => {
 
   return {
     userBasket,
-    storeLocation: storeLocation[0]._id[0].coordinates,
+    shoppingFrom: storeLocation[0],
     totalPrice: totalProductPriceInBasket[0].total,
     count: userBasket.length,
   };
