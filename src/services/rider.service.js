@@ -181,7 +181,7 @@ const resetPassword = async ({ token, email, password }) => {
 // Update Rider Details
 const updateRider = async (updateParam, id) => {
   const {
-    first_name, last_name, email, original_password, password, phone_number, profilePhoto, pushNotifications, smsNotifications, promotionalNotifications, pushDeivceToken, account_details, location, place_id
+    first_name, last_name, email, original_password, password, phone_number, profilePhoto, pushNotifications, smsNotifications, promotionalNotifications, pushDeivceToken, account_details, location, place_id, isBusy
   } = updateParam;
   console.log(account_details);
   // Build Rider Object
@@ -196,6 +196,8 @@ const updateRider = async (updateParam, id) => {
   if (email) riderFields.email = email;
   if (profilePhoto) riderFields.profilePhoto = profilePhoto;
   if (pushNotifications === true || pushNotifications === false) riderFields.pushNotifications = pushNotifications;
+  if (isBusy === true || isBusy === false) riderFields.isBusy = isBusy;
+
   if (smsNotifications === true || smsNotifications === false) riderFields.smsNotifications = smsNotifications;
   if (promotionalNotifications === true || promotionalNotifications === false) riderFields.promotionalNotifications = promotionalNotifications;
   if (pushDeivceToken) riderFields.pushDeivceToken = pushDeivceToken;
