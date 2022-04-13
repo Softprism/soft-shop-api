@@ -834,17 +834,22 @@ const getStoreFeedback = async (storeId, pagingParam) => {
   const pipeline = [
     {
       $unset: [
-        "taxPrice",
-        "deliveryPrice",
-        "subtotal",
-        "totalPrice",
-        "isPaid",
-        "isDelivered",
-        "isFavorite",
-        "status",
-        "orderItems",
-        "paymentMethod",
-        "deliveryAddress",
+        // "taxPrice",
+        // "deliveryPrice",
+        // "subtotal",
+        // "totalPrice",
+        // "isPaid",
+        // "isDelivered",
+        // "isFavorite",
+        // "status",
+        // "orderItems",
+        // "paymentMethod",
+        // "deliveryAddress",
+        "orderReview.user.pushNotifications",
+        "orderReview.user.smsNotifications",
+        "orderReview.user.promotionalNotifications",
+        "orderReview.user.cards",
+        "orderReview.user.pushDeivceToken",
         "orderReview.user.orders",
         "orderReview.user.password",
         "orderReview.user.phone_number",
@@ -886,6 +891,7 @@ const getStoreFeedback = async (storeId, pagingParam) => {
     .unwind("orderReview.user")
     .project({
       orderReview: 1,
+      orderId: 1
     })
     .sort("-orderReview.star")
     .skip(skip)
