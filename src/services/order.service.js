@@ -481,6 +481,7 @@ const getOrderDetails = async (orderID) => {
     })
     .addFields({
       averageRating: { $ifNull: ["$deliveryReview", 0] },
+      rider: { $ifNull: ["$rider", []] },
     })
     .append(pipeline);
 
