@@ -80,7 +80,7 @@ const loginUser = async (req, res, next) => {
     });
 
     req.data = {
-      deviceToken: req.body.pushDeivceToken,
+      deviceToken: req.body.pushDeviceToken,
       id: loginRequest.userDetails[0]._id,
     };
     next();

@@ -93,12 +93,12 @@ router.post(
   async (req, res) => {
     // device token registration
     let pushReg = await Store.findById(req.data.id);
-    if (req.body.vendorPushDeivceToken) {
-      pushReg.vendorPushDeivceToken = req.body.vendorPushDeivceToken;
+    if (req.body.vendorPushDeviceToken) {
+      pushReg.vendorPushDeviceToken = req.body.vendorPushDeviceToken;
       await pushReg.save();
     }
-    if (req.body.orderPushDeivceToken) {
-      pushReg.orderPushDeivceToken = req.body.orderPushDeivceToken;
+    if (req.body.orderPushDeviceToken) {
+      pushReg.orderPushDeviceToken = req.body.orderPushDeviceToken;
       await pushReg.save();
     }
     // create log

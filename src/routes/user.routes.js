@@ -73,7 +73,7 @@ router.post("/login",
   async (req, res) => {
     // add push token to user profile
     let user = await User.findById(req.data.id);
-    user.pushDeivceToken = req.data.deviceToken;
+    user.pushDeviceToken = req.data.deviceToken;
     await user.save();
 
     // create log

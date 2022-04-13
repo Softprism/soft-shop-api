@@ -49,7 +49,7 @@ const createOrder = async (req, res, next) => {
     // notify order app on new order
     // await sendOne(
     //   "ssa",
-    //   newOrder.store.orderPushDeivceToken,
+    //   newOrder.store.orderPushDeviceToken,
     //   "New Order",
     // );
 

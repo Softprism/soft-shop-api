@@ -73,8 +73,8 @@ const registerStore = {
 
 const loginStoreValidation = {
   body: Joi.object({
-    orderPushDeivceToken: Joi.string(),
-    vendorPushDeivceToken: Joi.string(),
+    orderPushDeviceToken: Joi.string(),
+    vendorPushDeviceToken: Joi.string(),
     email: Joi.string().email().empty().required()
       .messages({
         "any.required": "Email is required.",
@@ -117,8 +117,8 @@ const updateStoreValidation = {
     isActive: Joi.boolean(),
     pushNotifications: Joi.boolean(),
     promotionalNotifications: Joi.boolean(),
-    orderPushDeivceToken: Joi.string(),
-    vendorPushDeivceToken: Joi.string(),
+    orderPushDeviceToken: Joi.string(),
+    vendorPushDeviceToken: Joi.string(),
     smsNotifications: Joi.boolean(),
     prepTime: Joi.number().positive(),
   }).messages({

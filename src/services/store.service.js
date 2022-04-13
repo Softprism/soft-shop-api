@@ -471,10 +471,10 @@ const createStore = async (StoreParam) => {
 
 const loginStore = async (StoreParam) => {
   const {
-    email, password, orderPushDeivceToken, vendorPushDeivceToken
+    email, password, orderPushDeviceToken, vendorPushDeviceToken
   } = StoreParam;
 
-  let store = await Store.findOne({ email }).select("password isVerified isActive resetPassword pendingUpdates name pendingWithdrawal vendorPushDeivceToken orderPushDeivceToken category");
+  let store = await Store.findOne({ email }).select("password isVerified isActive resetPassword pendingUpdates name pendingWithdrawal vendorPushDeviceToken orderPushDeviceToken category");
 
   if (!store) {
     return { err: "Invalid email. Please try again.", status: 400 };
@@ -849,7 +849,7 @@ const getStoreFeedback = async (storeId, pagingParam) => {
         "orderReview.user.smsNotifications",
         "orderReview.user.promotionalNotifications",
         "orderReview.user.cards",
-        "orderReview.user.pushDeivceToken",
+        "orderReview.user.pushDeviceToken",
         "orderReview.user.orders",
         "orderReview.user.password",
         "orderReview.user.phone_number",

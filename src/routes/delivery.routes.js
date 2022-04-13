@@ -67,7 +67,7 @@ router.post(
       // send push notification to user
       await sendOne(
         "ssa",
-        user.pushDeivceToken,
+        user.pushDeviceToken,
         `${order.orderId} ready for pickup`,
         "Your order is now ready for delivery, we'll also notify you when your order has been picked up."
       );
@@ -100,7 +100,7 @@ router.patch(
     // send push notification to user
     await sendOne(
       "ssa",
-      user.pushDeivceToken,
+      user.pushDeviceToken,
       `${order.orderId} accepted`,
       "Your order has been accepted by a rider and is being prepared by the store."
     );
@@ -156,7 +156,7 @@ router.patch(
       // send push notification to user
       await sendOne(
         "ssa",
-        user.pushDeivceToken,
+        user.pushDeviceToken,
         `${order.orderId} canceled`,
         `Your order has been rejected by ${rider.last_name} ${rider.first_name} you can checkout alternative store near you for the same items.`
       );

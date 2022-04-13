@@ -146,7 +146,7 @@ const verifyTransaction = async (paymentDetails) => {
       };
       await sendOne(
         "ssa",
-        store.orderPushDeivceToken,
+        store.orderPushDeviceToken,
         "New Order",
         `You have a new order from ${order.user.first_name} ${order.user.last_name}`,
         data // data to be sent to order app
@@ -220,7 +220,7 @@ const verifyPayout = async (payload) => {
       // send push notifications to vendor on successful payment
       await sendOne(
         "ssa",
-        store.vendorPushDeivceToken,
+        store.vendorPushDeviceToken,
         "Payout Completed",
         "Your withdrawal request has been paid successfully",
       );

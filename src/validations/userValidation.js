@@ -44,7 +44,7 @@ const registerValidation = {
 
 const loginValidation = {
   body: Joi.object({
-    pushDeivceToken: Joi.string(),
+    pushDeviceToken: Joi.string(),
     email: Joi.string().email().empty().required()
       .messages({
         "any.required": "Email is required.",
@@ -139,7 +139,7 @@ const updateUserValidation = {
         "string.min": "Phone number should be 11 numbers"
       }),
     pushNotifications: Joi.boolean(),
-    pushDeivceToken: Joi.string(),
+    pushDeviceToken: Joi.string(),
     smsNotifications: Joi.boolean(),
     promotionalNotifications: Joi.boolean(),
   }).messages({
