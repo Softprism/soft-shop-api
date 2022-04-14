@@ -112,11 +112,15 @@ const updatedRiderStatus = async (deliveryId, riderId, status) => {
   if (status === "Complete Drop off") {
     await Order.findByIdAndUpdate({ _id: delivery.order }, { status: "completed" }, { new: true });
     await Delivery.findByIdAndUpdate(deliveryId, { status: "delivered" });
+    // change rider isBusy status to false
+    await Rider.findByIdAndUpdate(riderId, { isBusy: false });
   }
   // update order Status
   if (status === "Cancelled") {
     await Order.findByIdAndUpdate({ _id: delivery.order }, { status: "cancelled" }, { new: true });
     await Delivery.findByIdAndUpdate(deliveryId, { status: "failed" });
+    // change rider isBusy status to false
+    await Rider.findByIdAndUpdate(riderId, { isBusy: false });
   }
   // update delivery Status
   const updatedstatus = await Delivery.findByIdAndUpdate(
