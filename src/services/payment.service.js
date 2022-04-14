@@ -108,6 +108,7 @@ const verifyTransaction = async (paymentDetails) => {
     // user is paying for an order
 
     let order = await Order.findOne({ orderId: tx_ref }).populate("user");
+    let user = await User.findById(order.user._id);
     let store = await Store.findById(order.store);
     let ledger = await Ledger.findOne({});
 
@@ -164,8 +165,13 @@ const verifyTransaction = async (paymentDetails) => {
     }
     if (response.data.status === "failed") {
       // mark order as failed
-      order.status = "cancelled";
-      await order.save();
+      // order.status = "cancelled";
+      // await order.save();
+      // delete order from user orders
+      user.orders.pull(order._id);
+      await user.save();
+      // delete order
+      await Order.findOneAndDelete({ orderId: tx_ref });
       // send payment failed email to user
       await sendUserNewOrderPaymentFailedMail(order.orderId, order.user.email);
 
