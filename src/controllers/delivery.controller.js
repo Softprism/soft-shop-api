@@ -93,11 +93,20 @@ const complete_Delivery = async (req, res, next) => {
           success: false, msg: action.err, status: action.status
         });
     }
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
       result: { order: action.updatedOrder, delivery: action.delivery },
       status: 200
     });
+
+    //
+    req.localData = {
+      user: action.delivery.user,
+      store: action.delivery.store,
+      rider: action.delivery.rider,
+      order: action.delivery.order
+    };
+    next();
   } catch (error) {
     next(error);
   }

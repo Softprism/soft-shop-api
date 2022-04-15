@@ -163,7 +163,16 @@ const sendUserOrderPickedUpMail = async (orderId, toEmail, dropoff) => {
 
 const sendUserOrderDeliveredMail = async (orderId, toEmail, dropoff) => {
   let subject = `Your ${orderId} Order has Arrived`;
-  let body = `Your order is now at ${dropoff}, our agent will be waiting for your collection.`;
+  let body = `Your order is now at ${dropoff}, our delivery personnel will be waiting for your collection.`;
+  let sendAction = await sendEmail(toEmail, subject, body);
+  if (!sendAction) {
+    console.log("new order initiated mail not sent");
+  }
+};
+
+const sendUserOrderCompletedMail = async (orderId, toEmail) => {
+  let subject = `Your ${orderId} Order is now completed`;
+  let body = "Thanks for shopping with us, we hope you enjoyed your experience. Don't forget to rate your experience shopping from the store on our app.";
   let sendAction = await sendEmail(toEmail, subject, body);
   if (!sendAction) {
     console.log("new order initiated mail not sent");
@@ -298,6 +307,7 @@ export {
   sendUserOrderAcceptedMail,
   sendUserOrderPickedUpMail,
   sendUserOrderDeliveredMail,
+  sendUserOrderCompletedMail,
   sendNewOrderInitiatedMail,
   sendStoreSignUpMail,
   sendStoreUpdateRequestMail,

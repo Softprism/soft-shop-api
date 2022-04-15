@@ -110,26 +110,47 @@ router.put(
       //   data
       // );
     }
-    if (req.body.status === "accepted") {
-      await sendUserOrderAcceptedMail(order.orderId, req.localData.user_email, req.localData.delivery_address);
-      // await sendUserNewOrderRejectedSMS(req.localData.user_phone, req.localData.store_name);
-    }
-    if (req.body.status === "enroute") {
-      await sendUserOrderPickedUpMail(order.orderId, req.localData.user_email, req.localData.delivery_address);
-      await sendUserOrderPickedUpSMS(order.orderId, req.localData.user_phone, req.localData.delivery_address);
-    }
-    if (req.body.status === "delivered") {
-      await sendUserOrderDeliveredMail(order.orderId, req.localData.user_email, req.localData.delivery_address);
-      await sendUserOrderDeliveredSMS(order.orderId, req.localData.user_phone, req.localData.delivery_address);
-
-      // send push notification to store
-      await sendOne(
-        "ssa",
-        store.orderPushDeviceToken,
-        `order ${order.orderId} completed`,
-        `The rider successfully delivered order ${order.orderId} to your customer.`
-      );
-    }
+    // if (req.body.status === "accepted") {
+    //   await sendUserOrderAcceptedMail(order.orderId, req.localData.user_email, req.localData.delivery_address);
+    //   // send push notification to user
+    //   await sendOne(
+    //     "ssa",
+    //     user.pushDeviceToken,
+    //     `${order.orderId} accepted`,
+    //     "Your order has been accepted by a rider and is being prepared by the store."
+    //   );
+    //   // send mail to store, notify them of rider delivery acceptance
+    //   await sendOne(
+    //     "ssa",
+    //     store.orderPushDeviceToken,
+    //     `Delivery for ${order.orderId} accepted`,
+    //     `The delivery for your order ${order.orderId} has been accepted by a rider.`
+    //   );
+    //   // await sendUserNewOrderRejectedSMS(req.localData.user_phone, req.localData.store_name);
+    // }
+    // if (req.body.status === "enroute") {
+    //   await sendUserOrderPickedUpMail(order.orderId, req.localData.user_email, req.localData.delivery_address);
+    //   await sendUserOrderPickedUpSMS(order.orderId, req.localData.user_phone, req.localData.delivery_address);
+    // }
+    // if (req.body.status === "delivered") {
+    //   await sendUserOrderDeliveredMail(order.orderId, req.localData.user_email, req.localData.delivery_address);
+    //   await sendUserOrderDeliveredSMS(order.orderId, req.localData.user_phone, req.localData.delivery_address);
+    // }
+    // if (req.body.status === "completed") {
+    //   // send push notification to store
+    //   let data = {
+    //     event: "completed_order",
+    //     route: "/",
+    //     index: "3"
+    //   };
+    //   await sendOne(
+    //     "ssa",
+    //     store.orderPushDeviceToken,
+    //     `order ${order.orderId} completed`,
+    //     `The rider successfully delivered order ${order.orderId} to your customer.`,
+    //     data
+    //   );
+    // }
   }
 );
 

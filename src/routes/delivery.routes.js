@@ -15,7 +15,7 @@ import Order from "../models/order.model";
 import { sendOne, sendPushToNearbyRiders } from "../services/push.service";
 import User from "../models/user.model";
 import {
-  sendUserNewOrderRejectedMail, sendUserOrderAcceptedMail, sendUserOrderDeliveredMail, sendUserOrderReadyMail
+  sendUserNewOrderRejectedMail, sendUserOrderAcceptedMail, sendUserOrderCompletedMail, sendUserOrderDeliveredMail, sendUserOrderReadyMail
 } from "../utils/sendMail";
 import { sendUserNewOrderRejectedSMS, sendUserOrderDeliveredSMS } from "../utils/sendSMS";
 import Delivery from "../models/delivery.model";
@@ -91,6 +91,10 @@ router.patch(
     let order = await Order.findById(req.data.orderId);
     let store = await Store.findById(req.data.store_id);
     let rider = await Rider.findById(req.data.rider_id);
+    // update rider isBusy status to true
+    rider.isBusy = true;
+    await rider.save();
+
     // update order status
     await Order.findByIdAndUpdate(
       { _id: req.data.orderId },
@@ -119,7 +123,37 @@ router.patch(
 // @route   PATCH /complete/:orderId
 // @desc    User complete delivery
 // @access  Private
-router.patch("/complete/:orderId", auth, complete_Delivery);
+router.patch(
+  "/complete/:orderId",
+  auth,
+  complete_Delivery,
+  async (req, res) => {
+    let user = await User.findById(req.localData.user);
+    let store = await Store.findById(req.localData.store);
+    let rider = await Rider.findById(req.localData.rider);
+    let order = await Order.findById(req.localData.order);
+    // update rider isBusy status to false
+    rider.isBusy = false;
+    await rider.save();
+
+    // send push notification to user
+    await sendOne(
+      "ssa",
+      user.pushDeviceToken,
+      `Order - ${order.orderId} completed`,
+      "Your order has been delivered and completed, please rate your experience shopping from this store."
+    );
+    // send mail to store, notify them of rider delivery acceptance
+    await sendOne(
+      "ssa",
+      store.orderPushDeviceToken,
+      `Order -  ${order.orderId} completed`,
+      `${rider.last_name} ${rider.first_name} completed the delivery to your customer successfully.`
+    );
+    // send mail to user, notify them of order completd
+    await sendUserOrderCompletedMail(order.orderId, user.email);
+  }
+);
 
 // @route   PUT /review
 // @desc    user adds review to their order
@@ -140,14 +174,15 @@ router.patch(
     let rider = await Rider.findById(req.localData.rider_id);
 
     if (req.params.status === "failed") {
-      await Order.findByIdAndUpdate({ _id: order._id }, { status: "cancelled" }, { new: true });
+      order.status = "cancelled";
+      await order.save();
 
       // send push notification to store
       await sendOne(
         "ssa",
         store.orderPushDeviceToken,
         `Delivery for ${order.orderId} failed`,
-        "The delivery for your order has failed."
+        `The delivery for ${order.orderId} has failed.`
       );
       // send mail
       await sendUserNewOrderRejectedMail(order.orderId, user.email, store.name);
@@ -162,24 +197,15 @@ router.patch(
       );
     }
     if (req.params.status === "delivered") {
-      await Order.findByIdAndUpdate({ _id: order._id }, { status: "delivered" }, { new: true });
+      // change order status to delivered
+      order.status = "delivered";
+      await order.save();
 
-      // send push notification to store
-      let data = {
-        route: "history"
-      };
-      await sendOne(
-        "ssa",
-        store.orderPushDeviceToken,
-        `Delivery for ${order.orderId} completed`,
-        "The delivery for your order has been completed.",
-        data
-      );
       await sendOne(
         "ssa",
         user.pushDeviceToken,
-        `Delivery for ${order.orderId} completed`,
-        "The delivery for your order has been completed."
+        `${rider.last_name} ${rider.first_name} has Arrived`,
+        "Your order has been delivered to your location."
       );
       // send mail to user
       await sendUserOrderDeliveredMail(order.orderId, user.email, order.deliveryAddress);
@@ -187,7 +213,10 @@ router.patch(
       await sendUserOrderDeliveredSMS(order.orderId, user.phone_number, order.deliveryAddress);
     }
     if (req.params.status === "accepted") {
-      await Order.findByIdAndUpdate({ _id: req.localData.order_id }, { status: "accepted" }, { new: true });
+      // change order status to accepted
+      order.status = "accepted";
+      await order.save();
+
       // send push notification to user notify them of rider delivery acceptance
       await sendOne(
         "ssa",
@@ -236,34 +265,57 @@ router.patch(
       );
     }
     if (req.params.status === "Start Delivery") {
+      // change order status to enroute
+      order.status = "enroute";
+      await order.save();
+
       await sendOne(
         "ssa",
         user.pushDeviceToken,
-        `Order ${order.orderId} has been picked up`,
+        `Order ${order.orderId} is enroute`,
         `Your order ${order.orderId} has been picked up for delivery, please be available at ${order.deliveryAddress}`
       );
     }
     if (req.params.status === "Complete Drop off") {
-      await sendOne(
-        "ssa",
-        store.orderPushDeviceToken,
-        `Delivery for ${order.orderId} completed`,
-        "The delivery for your order has been completed."
-      );
+      // await sendOne(
+      //   "ssa",
+      //   store.orderPushDeviceToken,
+      //   `Delivery for ${order.orderId} completed`,
+      //   "The delivery for your order has been completed."
+      // );
+      // change order status to delivered
+      order.status = "delivered";
+      await order.save();
+
+      // change rider isBusy status to false
+      rider.isBusy = false;
+      await rider.save();
+
       await sendOne(
         "ssa",
         user.pushDeviceToken,
-        `Delivery for ${order.orderId} completed`,
-        "The delivery for your order has been completed."
+        `${rider.last_name} ${rider.first_name} has Arrived`,
+        "Your order has been delivered to your location."
       );
     }
     if (req.params.status === "Cancelled") {
+      // change order status to cancelled
+      order.status = "cancelled";
+      await order.save();
+
+      // change rider isBusy status to false
+      rider.isBusy = false;
+      await rider.save();
+
+      // send push notification to store
       await sendOne(
         "ssa",
         store.orderPushDeviceToken,
         `Delivery for ${order.orderId} canceled`,
         "The delivery for your order has been canceled."
       );
+
+      // send push notification to user
       await sendOne(
         "ssa",
         user.pushDeviceToken,
