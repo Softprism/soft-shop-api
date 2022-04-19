@@ -41,8 +41,8 @@ const StoreSchema = mongoose.Schema({
   pushNotifications: { type: Boolean, default: false },
   smsNotifications: { type: Boolean, default: false },
   promotionalNotifications: { type: Boolean, default: false },
-  orderPushDeviceToken: { type: String },
-  vendorPushDeviceToken: { type: String },
+  orderPushDeviceToken: [{ type: String }],
+  vendorPushDeviceToken: [{ type: String }],
   tax: { type: String },
   account_details: {
     account_balance: { type: Number, default: 0.00 },

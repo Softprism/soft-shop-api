@@ -51,6 +51,7 @@ const loginStore = async (req, res, next) => {
     req.data = {
       id: store.store._id
     };
+    console.log(123);
     next();
   } catch (error) {
     next(error);

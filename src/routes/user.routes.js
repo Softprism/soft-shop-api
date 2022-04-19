@@ -73,8 +73,15 @@ router.post("/login",
   async (req, res) => {
     // add push token to user profile
     let user = await User.findById(req.data.id);
-    user.pushDeviceToken = req.data.deviceToken;
-    await user.save();
+    if (req.body.pushDeviceToken) {
+      let existingToken = user.pushDeviceToken.find((res) => {
+        return res === req.body.pushDeviceToken;
+      });
+      if (!existingToken) {
+        user.pushDeviceToken.push(req.body.pushDeviceToken);
+        await user.save();
+      }
+    }
 
     // create log
     await createLog("user Login", "user", `A new login from ${user.first_name} ${user.last_name} with email - ${user.email}`);
