@@ -82,7 +82,7 @@ const sendMany = async (app, deviceTokens, title, body, data) => {
     };
     if (app === "ssa") {
       // Send a message to devices subscribed to the provided topic.
-      let sendPush = await ssa.messaging().send(message);
+      let sendPush = await ssa.messaging().sendMulticast(message);
       return sendPush;
     }
     if (app === "sso") {

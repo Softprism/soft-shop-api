@@ -13,7 +13,7 @@ import {
 } from "../utils/sendMail";
 
 import { createTransaction } from "./transaction.service";
-import { sendOne } from "./push.service";
+import { sendMany } from "./push.service";
 import Transaction from "../models/transaction.model";
 
 // initial env variables
@@ -145,7 +145,7 @@ const verifyTransaction = async (paymentDetails) => {
         route: "/",
         index: "0"
       };
-      await sendOne(
+      await sendMany(
         "ssa",
         store.orderPushDeviceToken,
         "New Order",
@@ -224,7 +224,7 @@ const verifyPayout = async (payload) => {
       store.save();
 
       // send push notifications to vendor on successful payment
-      await sendOne(
+      await sendMany(
         "ssa",
         store.vendorPushDeviceToken,
         "Payout Completed",

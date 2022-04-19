@@ -12,7 +12,7 @@ import Store from "../models/store.model";
 import Rider from "../models/rider.model";
 import Order from "../models/order.model";
 
-import { sendOne, sendPushToNearbyRiders } from "../services/push.service";
+import { sendMany, sendPushToNearbyRiders } from "../services/push.service";
 import User from "../models/user.model";
 import {
   sendUserNewOrderRejectedMail, sendUserOrderAcceptedMail, sendUserOrderCompletedMail, sendUserOrderDeliveredMail, sendUserOrderReadyMail
@@ -65,7 +65,7 @@ router.post(
       await sendPushToNearbyRiders(newDelivery);
 
       // send push notification to user
-      await sendOne(
+      await sendMany(
         "ssa",
         user.pushDeviceToken,
         `${order.orderId} ready for pickup`,
@@ -102,14 +102,14 @@ router.patch(
       { new: true }
     );
     // send push notification to user
-    await sendOne(
+    await sendMany(
       "ssa",
       user.pushDeviceToken,
       `${order.orderId} accepted`,
       "Your order has been accepted by a rider and is being prepared by the store."
     );
     // send mail to store, notify them of rider delivery acceptance
-    await sendOne(
+    await sendMany(
       "ssa",
       store.orderPushDeviceToken,
       `Delivery for ${order.orderId} accepted`,
@@ -137,14 +137,14 @@ router.patch(
     await rider.save();
 
     // send push notification to user
-    await sendOne(
+    await sendMany(
       "ssa",
       user.pushDeviceToken,
       `Order - ${order.orderId} completed`,
       "Your order has been delivered and completed, please rate your experience shopping from this store."
     );
     // send mail to store, notify them of rider delivery acceptance
-    await sendOne(
+    await sendMany(
       "ssa",
       store.orderPushDeviceToken,
       `Order -  ${order.orderId} completed`,
@@ -178,7 +178,7 @@ router.patch(
       await order.save();
 
       // send push notification to store
-      await sendOne(
+      await sendMany(
         "ssa",
         store.orderPushDeviceToken,
         `Delivery for ${order.orderId} failed`,
@@ -189,7 +189,7 @@ router.patch(
       // send sms
       await sendUserNewOrderRejectedSMS(order.orderId, user.phone_number, store.name);
       // send push notification to user
-      await sendOne(
+      await sendMany(
         "ssa",
         user.pushDeviceToken,
         `${order.orderId} canceled`,
@@ -201,7 +201,7 @@ router.patch(
       order.status = "delivered";
       await order.save();
 
-      await sendOne(
+      await sendMany(
         "ssa",
         user.pushDeviceToken,
         `${rider.last_name} ${rider.first_name} has Arrived`,
@@ -218,14 +218,14 @@ router.patch(
       await order.save();
 
       // send push notification to user notify them of rider delivery acceptance
-      await sendOne(
+      await sendMany(
         "ssa",
         user.pushDeviceToken,
         `Delivery for ${order.orderId} accepted`,
         `The delivery for your order has been accepted by ${rider.last_name} ${rider.first_name}.`
       );
       // send mail to store, notify them of rider delivery acceptance
-      await sendOne(
+      await sendMany(
         "ssa",
         store.orderPushDeviceToken,
         `Delivery for ${order.orderId} accepted`,
@@ -251,13 +251,13 @@ router.patch(
     let user = await User.findById(req.localData.user_id);
 
     if (req.params.status === "Arrive at pickup") {
-      await sendOne(
+      await sendMany(
         "ssa",
         user.pushDeviceToken,
         `Your Rider At ${store.name}`,
         `${rider.last_name} ${rider.first_name} is at ${store.name} receiving your order.`
       );
-      await sendOne(
+      await sendMany(
         "ssa",
         store.orderPushDeviceToken,
         `${rider.last_name} ${rider.first_name} is waiting!`,
@@ -269,7 +269,7 @@ router.patch(
       order.status = "enroute";
       await order.save();
 
-      await sendOne(
+      await sendMany(
         "ssa",
         user.pushDeviceToken,
         `Order ${order.orderId} is enroute`,
@@ -277,7 +277,7 @@ router.patch(
       );
     }
     if (req.params.status === "Complete Drop off") {
-      // await sendOne(
+      // await sendMany(
       //   "ssa",
       //   store.orderPushDeviceToken,
       //   `Delivery for ${order.orderId} completed`,
@@ -291,7 +291,7 @@ router.patch(
       rider.isBusy = false;
       await rider.save();
 
-      await sendOne(
+      await sendMany(
         "ssa",
         user.pushDeviceToken,
         `${rider.last_name} ${rider.first_name} has Arrived`,
@@ -308,7 +308,7 @@ router.patch(
       await rider.save();
 
       // send push notification to store
-      await sendOne(
+      await sendMany(
         "ssa",
         store.orderPushDeviceToken,
         `Delivery for ${order.orderId} canceled`,
@@ -316,7 +316,7 @@ router.patch(
       );
 
       // send push notification to user
-      await sendOne(
+      await sendMany(
         "ssa",
         user.pushDeviceToken,
         `Delivery for ${order.orderId} canceled`,

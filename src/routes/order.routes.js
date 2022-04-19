@@ -19,7 +19,7 @@ import {
 import {
   sendUserNewOrderRejectedSMS, sendUserOrderDeliveredSMS, sendUserOrderPickedUpSMS, sendUserNewOrderAcceptedSMS
 } from "../utils/sendSMS";
-import { sendOne, sendTopic } from "../services/push.service";
+import { sendMany, sendTopic } from "../services/push.service";
 import User from "../models/user.model";
 import Store from "../models/store.model";
 import Order from "../models/order.model";
@@ -63,7 +63,7 @@ router.put(
       // send sms
       await sendUserNewOrderAcceptedSMS(order.orderId, req.localData.user_phone, req.localData.store_name);
       // send push notification
-      await sendOne(
+      await sendMany(
         "ssa",
         user.pushDeviceToken,
         `${order.orderId} approved`,
@@ -76,7 +76,7 @@ router.put(
       // send sms
       await sendUserNewOrderRejectedSMS(order.orderId, req.localData.user_phone, req.localData.store_name);
       // send push notification
-      await sendOne(
+      await sendMany(
         "ssa",
         user.pushDeviceToken,
         `${order.orderId} canceled`,
@@ -89,7 +89,7 @@ router.put(
       // await sendUserNewOrderRejectedSMS(req.localData.user_phone, req.localData.store_name);
 
       // send push notification to user
-      await sendOne(
+      await sendMany(
         "ssa",
         user.pushDeviceToken,
         `${order.orderId} ready for pickup`,
@@ -113,14 +113,14 @@ router.put(
     // if (req.body.status === "accepted") {
     //   await sendUserOrderAcceptedMail(order.orderId, req.localData.user_email, req.localData.delivery_address);
     //   // send push notification to user
-    //   await sendOne(
+    //   await sendMany(
     //     "ssa",
     //     user.pushDeviceToken,
     //     `${order.orderId} accepted`,
     //     "Your order has been accepted by a rider and is being prepared by the store."
     //   );
     //   // send mail to store, notify them of rider delivery acceptance
-    //   await sendOne(
+    //   await sendMany(
     //     "ssa",
     //     store.orderPushDeviceToken,
     //     `Delivery for ${order.orderId} accepted`,
@@ -143,7 +143,7 @@ router.put(
     //     route: "/",
     //     index: "3"
     //   };
-    //   await sendOne(
+    //   await sendMany(
     //     "ssa",
     //     store.orderPushDeviceToken,
     //     `order ${order.orderId} completed`,
