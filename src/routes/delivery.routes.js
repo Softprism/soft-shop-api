@@ -88,7 +88,7 @@ router.patch(
   accept_Delivery,
   async (req, res) => {
     let user = await User.findById(req.data.user_id);
-    let order = await Order.findById(req.data.orderId);
+    let order = await Order.findById(req.data.order_id);
     let store = await Store.findById(req.data.store_id);
     let rider = await Rider.findById(req.data.rider_id);
     // update rider isBusy status to true
@@ -97,7 +97,7 @@ router.patch(
 
     // update order status
     await Order.findByIdAndUpdate(
-      { _id: req.data.orderId },
+      { _id: req.data.order_id },
       { status: "accepted", rider: req.data.rider_id },
       { new: true }
     );

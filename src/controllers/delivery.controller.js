@@ -45,7 +45,7 @@ const accept_Delivery = async (req, res, next) => {
       order_id: action.updatedDelivery.order,
       user_id: action.updatedDelivery.user,
       store_id: action.updatedDelivery.store,
-      rider_id: action.updatedDelivery.rider,
+      rider_id: _id,
     };
     next();
   } catch (error) {

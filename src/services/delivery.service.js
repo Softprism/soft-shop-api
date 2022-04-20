@@ -31,8 +31,6 @@ const createDelivery = async (orderId, storeId) => {
 };
 
 const acceptDelivery = async (deliveryId, riderId, urlParams) => {
-  const rider = await Rider.findById(riderId);
-
   let condition = {};
   let long;
   let lat;
