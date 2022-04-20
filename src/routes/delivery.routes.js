@@ -173,7 +173,7 @@ router.patch(
     let user = await User.findById(req.localData.user_id);
     let rider = await Rider.findById(req.localData.rider_id);
 
-    if (req.params.status === "failed") {
+    if (req.query.status === "failed") {
       order.status = "cancelled";
       await order.save();
 
@@ -196,7 +196,7 @@ router.patch(
         `Your order has been rejected by ${rider.last_name} ${rider.first_name} you can checkout alternative store near you for the same items.`
       );
     }
-    if (req.params.status === "delivered") {
+    if (req.query.status === "delivered") {
       // change order status to delivered
       order.status = "delivered";
       await order.save();
@@ -212,7 +212,7 @@ router.patch(
       // send sms to user
       await sendUserOrderDeliveredSMS(order.orderId, user.phone_number, order.deliveryAddress);
     }
-    if (req.params.status === "accepted") {
+    if (req.query.status === "accepted") {
       // change order status to accepted
       order.status = "accepted";
       await order.save();
@@ -250,7 +250,7 @@ router.patch(
     let order = await Order.findById(req.localData.order_id);
     let user = await User.findById(req.localData.user_id);
 
-    if (req.params.status === "Arrive at pickup") {
+    if (req.query.status === "Arrive at pickup") {
       await sendMany(
         "ssa",
         user.pushDeviceToken,
@@ -264,7 +264,7 @@ router.patch(
         `${rider.last_name} ${rider.first_name} is at waiting to pickup ${order.orderId}`
       );
     }
-    if (req.params.status === "Start Delivery") {
+    if (req.query.status === "Start Delivery") {
       // change order status to enroute
       order.status = "enroute";
       await order.save();
@@ -276,7 +276,7 @@ router.patch(
         `Your order ${order.orderId} has been picked up for delivery, please be available at ${order.deliveryAddress}`
       );
     }
-    if (req.params.status === "Complete Drop off") {
+    if (req.query.status === "Complete Drop off") {
       // await sendMany(
       //   "ssa",
       //   store.orderPushDeviceToken,
@@ -298,7 +298,7 @@ router.patch(
         "Your order has been delivered to your location."
       );
     }
-    if (req.params.status === "Cancelled") {
+    if (req.query.status === "Cancelled") {
       // change order status to cancelled
       order.status = "cancelled";
       await order.save();
