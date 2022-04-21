@@ -128,13 +128,13 @@ const updatedRiderStatus = async (deliveryId, riderId, status) => {
   return { updatedstatus };
 };
 
-const completeDelivery = async (orderId, userId) => {
+const completeDelivery = async (orderId, riderId) => {
   const order = await Order.findById(orderId);
   if (!order) {
     return { err: "Order does not exists.", status: 404, };
   }
   // check if user who requested for order is the same with the logged in user
-  if (order.user.toString() !== userId.toString()) {
+  if (order.rider.toString() !== riderId.toString()) {
     return { err: "You're not permitted to carry out this action", status: 403, };
   }
   // check for delivery

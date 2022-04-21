@@ -84,7 +84,7 @@ const update_DeliveryStatus = async (req, res, next) => {
 const complete_Delivery = async (req, res, next) => {
   try {
     const { orderId } = req.params;
-    const { id } = req.user;
+    const { id } = req.rider;
     const action = await completeDelivery(orderId, id);
     if (action.err) {
       return res
