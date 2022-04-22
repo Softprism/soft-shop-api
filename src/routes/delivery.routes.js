@@ -147,13 +147,14 @@ router.patch(
     let data = {
       event: "completed_order",
       route: "/",
-      index: "2"
+      index: "3"
     };
     await sendMany(
       "ssa",
       store.orderPushDeviceToken,
       `Order -  ${order.orderId} completed`,
-      `${rider.last_name} ${rider.first_name} completed the delivery to your customer successfully.`
+      `${rider.last_name} ${rider.first_name} completed the delivery to your customer successfully.`,
+      data
     );
     // send mail to user, notify them of order completd
     await sendUserOrderCompletedMail(order.orderId, user.email);
@@ -262,11 +263,17 @@ router.patch(
         `Your Rider At ${store.name}`,
         `${rider.last_name} ${rider.first_name} is at ${store.name} receiving your order.`
       );
+      let data = {
+        event: "pickup_order",
+        route: "/",
+        index: "3"
+      };
       await sendMany(
         "ssa",
         store.orderPushDeviceToken,
         `${rider.last_name} ${rider.first_name} is waiting!`,
-        `${rider.last_name} ${rider.first_name} is at waiting to pickup ${order.orderId}`
+        `${rider.last_name} ${rider.first_name} is at waiting to pickup ${order.orderId}`,
+        data
       );
     }
     if (req.query.status === "Start Delivery") {
