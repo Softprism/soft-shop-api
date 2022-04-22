@@ -6,7 +6,8 @@ import {
   resetStorePassword, confirmStoreUpdate, createTransaction, confirmStorePayout,
   createNotification, createCompayLedger, getAllStoresUpdateRequests,
   getResetPasswordRequests, toggleStore, getAllStores, getUsers,
-  getUserById, getStoreById
+  getUserById, getStoreById, sendRiderMail, sendStoreMail, sendUserMail,
+  sendAllStoresMails, sendAllRidersMails, sendAllUsersMails, sendAllMails
 } from "../controllers/admin.controller";
 import validator from "../middleware/validator";
 import { register, login } from "../validations/adminValidation";
@@ -96,5 +97,16 @@ router.put("/stores/:storeId/toggle", auth, isAdmin, toggleStore);
 
 router.post("/ledger", auth, isAdmin, createCompayLedger);
 router.get("/transactions", auth, isAdmin, getTransactions);
+
+router.post("/riders/:riderId", auth, isAdmin, sendRiderMail);
+router.post("/riders", auth, isAdmin, sendAllRidersMails);
+
+router.post("/stores/:storeId", auth, isAdmin, sendStoreMail);
+router.post("/stores", auth, isAdmin, sendAllStoresMails);
+
+router.post("/users/:userId", auth, isAdmin, sendUserMail);
+router.post("/users", auth, isAdmin, sendAllUsersMails);
+
+router.post("/mails", auth, isAdmin, sendAllMails);
 
 export default router;
