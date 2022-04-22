@@ -144,6 +144,11 @@ router.patch(
       "Your order has been delivered and completed, please rate your experience shopping from this store."
     );
     // send mail to store, notify them of rider delivery acceptance
+    let data = {
+      event: "completed_order",
+      route: "/",
+      index: "2"
+    };
     await sendMany(
       "ssa",
       store.orderPushDeviceToken,
