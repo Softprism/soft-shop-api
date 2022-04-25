@@ -144,6 +144,7 @@ const sendTopic = async (app, topic, title, body, data) => {
 
 const sendPushToNearbyRiders = async (newDelivery) => {
   try {
+    console.log(newDelivery);
     // find riders close to delivery location and send a push notifiction to the delivery app
     let long = parseFloat(newDelivery.location.coordinates[0]);
     let lat = parseFloat(newDelivery.location.coordinates[1]);
