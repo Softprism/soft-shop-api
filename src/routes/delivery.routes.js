@@ -272,7 +272,7 @@ router.patch(
         "ssa",
         store.orderPushDeviceToken,
         `${rider.last_name} ${rider.first_name} is waiting!`,
-        `${rider.last_name} ${rider.first_name} is at waiting to pickup ${order.orderId}`,
+        `${rider.last_name} ${rider.first_name} is at your location waiting to pickup ${order.orderId}`,
         data
       );
     }
