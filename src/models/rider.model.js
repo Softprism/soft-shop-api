@@ -90,6 +90,8 @@ const riderSchema = mongoose.Schema({
   place_id: { type: String },
 });
 
+riderSchema.index({ location: "2dsphere" });
+
 const Rider = mongoose.model("Rider", riderSchema);
 
 export default Rider;

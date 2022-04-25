@@ -142,24 +142,26 @@ const sendTopic = async (app, topic, title, body, data) => {
   }
 };
 
-const sendPushToNearbyRiders = async (newDelivery) => {
+const sendPushToNearbyRiders = async (newDelivery, store, user) => {
   try {
     console.log(newDelivery);
     // find riders close to delivery location and send a push notifiction to the delivery app
     let long = parseFloat(newDelivery.location.coordinates[0]);
     let lat = parseFloat(newDelivery.location.coordinates[1]);
-    let radian = parseFloat(10 / 6378.1);
+    let radian = parseFloat(200 / 6378.1);
     console.log(`searching for riders... long:  ${long}, " lat: ${lat}, radian: ${radian}`);
     const riders = await Rider.find({
-      location: {
+      "location.coordinates": {
         $geoWithin: {
           $centerSphere: [[long, lat], radian]
         }
       }
-    });
+    }).lean();
     if (riders.length > 0) {
       console.log(`found ${riders.length} riders`);
       let ridersToken = await Promise.all(riders.map(async (rider) => {
+        // conver device token array to string
+        rider.pushDeviceToken = rider.pushDeviceToken.toString();
         return rider.pushDeviceToken;
       }));
       let title = "New Delivery";

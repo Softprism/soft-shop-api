@@ -62,7 +62,7 @@ router.post(
       newDelivery = await Delivery.create(newDelivery);
 
       // send push notification to riders
-      await sendPushToNearbyRiders(newDelivery);
+      await sendPushToNearbyRiders(newDelivery, store, user);
 
       // send push notification to user
       await sendMany(
