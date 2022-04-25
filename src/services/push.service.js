@@ -148,7 +148,7 @@ const sendPushToNearbyRiders = async (newDelivery) => {
     let long = parseFloat(newDelivery.location.coordinates[0]);
     let lat = parseFloat(newDelivery.location.coordinates[1]);
     let radian = parseFloat(10 / 6378.1);
-    console.log("searching for riders");
+    console.log(`searching for riders... long:  ${long}, " lat: ${lat}, radian: ${radian}`);
     const riders = await Rider.find({
       location: {
         $geoWithin: {
