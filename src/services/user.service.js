@@ -196,6 +196,7 @@ const updateUser = async (updateParam, id) => {
   const {
     first_name, last_name, address, original_password, password, email, phone_number, pushNotifications, smsNotifications, promotionalNotifications, pushDeviceToken
   } = updateParam;
+
   // Build User Object
   const userFields = {};
 
@@ -209,8 +210,10 @@ const updateUser = async (updateParam, id) => {
   if (phone_number) userFields.phone_number = phone_number;
   if (pushNotifications) userFields.pushNotifications = pushNotifications;
   if (pushDeviceToken) userFields.pushDeviceToken = pushDeviceToken;
-  if (smsNotifications) userFields.smsNotifications = smsNotifications;
-  if (promotionalNotifications) userFields.promotionalNotifications = promotionalNotifications;
+  if (smsNotifications === true || smsNotifications === false) {
+    userFields.smsNotifications = smsNotifications;
+  }
+  if (promotionalNotifications === true || promotionalNotifications === false) userFields.promotionalNotifications = promotionalNotifications;
 
   // Find user from DB Collection
   let user = await User.findById(id);
