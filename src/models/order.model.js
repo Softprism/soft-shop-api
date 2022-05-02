@@ -87,8 +87,8 @@ const OrderSchema = mongoose.Schema(
         "ready", // order ready for delivery
         "accepted", // order accepted by rider
         "enroute", // order is on the way user
-        "delivered", // order delivered to user
-        "completed", // delivery completed
+        "arrived", // order delivered to user
+        "delivered", // delivery completed
       ]
       // initiated (after creating order and await payment) => sent(payment confirmation) => approved(when store approves an order) => ready(store sends order for delivery => accepted(when rider accepts an order) => enroute(item is on the way) => delivered(item is at user's location) =>  completed(user receives order)
     },

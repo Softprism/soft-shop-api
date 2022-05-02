@@ -43,7 +43,7 @@ const userProfile = async (userId) => {
       pipeline: [
         {
           $match: {
-            status: "completed",
+            status: "arrived",
             $expr: {
               $eq: ["$$userId", "$user"]
             }

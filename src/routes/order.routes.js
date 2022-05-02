@@ -14,12 +14,12 @@ import {
 import validator from "../middleware/validator";
 import { order_validation, reviewValidation } from "../validations/orderValidation";
 import {
-  sendUserNewOrderApprovedMail, sendUserNewOrderRejectedMail, sendUserOrderAcceptedMail, sendUserOrderDeliveredMail, sendUserOrderPickedUpMail, sendUserOrderReadyMail
+  sendUserNewOrderApprovedMail, sendUserNewOrderRejectedMail, sendUserOrderReadyMail
 } from "../utils/sendMail";
 import {
-  sendUserNewOrderRejectedSMS, sendUserOrderDeliveredSMS, sendUserOrderPickedUpSMS, sendUserNewOrderAcceptedSMS
+  sendUserNewOrderRejectedSMS, sendUserNewOrderAcceptedSMS
 } from "../utils/sendSMS";
-import { sendMany, sendTopic } from "../services/push.service";
+import { sendMany } from "../services/push.service";
 import User from "../models/user.model";
 import Store from "../models/store.model";
 import Order from "../models/order.model";

@@ -15,7 +15,7 @@ const createDelivery = async (orderId, storeId) => {
     return { err: "Order does not exists.", status: 404, };
   }
   // check for order status
-  if (order.status === "sent" || order.status === "accepted" || order.status === "enroute" || order.status === "delivered" || order.status === "completed") {
+  if (order.status === "sent" || order.status === "accepted" || order.status === "enroute" || order.status === "arrived" || order.status === "delivered") {
     return { err: "Sorry you can't create delivery for this Order.", status: 409, };
   }
   // check for order payment status
@@ -149,7 +149,7 @@ const completeDelivery = async (orderId, riderId) => {
   // update order Status
   const updatedOrder = await Order.findByIdAndUpdate(
     orderId,
-    { status: "completed" },
+    { status: "delivered" },
     { new: true }
   );
   return { updatedOrder, delivery };

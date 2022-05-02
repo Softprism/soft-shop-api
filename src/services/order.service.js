@@ -660,7 +660,7 @@ const reviewOrder = async (review) => {
   const order = await Order.findOne({
     _id: mongoose.Types.ObjectId(review.order),
     user: mongoose.Types.ObjectId(review.user),
-    status: "completed"
+    status: "delivered"
   });
   if (!order) return { err: "We couldn't add your feedback at this time. The order may not exist or still in progress, please try again later.", status: 404 };
 

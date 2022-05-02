@@ -116,7 +116,7 @@ const getStores = async (urlParams) => {
       pipeline: [
         {
           $match: {
-            status: { $in: ["sent", "ready", "accepted", "enroute", "delivered", "completed"] },
+            status: { $in: ["sent", "ready", "accepted", "enroute", "arrived", "delivered"] },
             $expr: {
               $eq: ["$$storeId", "$store"]
             }
@@ -245,7 +245,7 @@ const getStoresNoGeo = async (urlParams) => {
       pipeline: [
         {
           $match: {
-            status: { $in: ["sent", "ready", "accepted", "enroute", "delivered", "completed"] },
+            status: { $in: ["sent", "ready", "accepted", "enroute", "delivered", "arrived"] },
             $expr: {
               $eq: ["$$storeId", "$store"]
             }
@@ -337,7 +337,7 @@ const getStore = async (urlParams, storeId) => {
       pipeline: [
         {
           $match: {
-            status: { $in: ["sent", "ready", "accepted", "enroute", "delivered", "completed"] },
+            status: { $in: ["sent", "ready", "accepted", "enroute", "delivered", "arrived"] },
             $expr: {
               $eq: ["$$storeId", "$store"]
             }
@@ -384,7 +384,7 @@ const getStore = async (urlParams, storeId) => {
         pipeline: [
           {
             $match: {
-              status: { $in: ["sent", "ready", "accepted", "enroute", "delivered", "completed"] },
+              status: { $in: ["sent", "ready", "accepted", "enroute", "delivered", "arrived"] },
               $expr: {
                 $eq: ["$$storeId", "$store"]
               }
@@ -735,7 +735,7 @@ const getStoreSalesStats = async (storeId, days) => {
   let salesStats = await Order.aggregate()
     .match({
       store: mongoose.Types.ObjectId(storeId),
-      status: "completed",
+      status: "arrived",
       createdAt: { $gt: d },
     })
     .addFields({
@@ -768,7 +768,7 @@ const bestSellers = async (storeId, pagingParam) => {
     .match(
       {
         store: mongoose.Types.ObjectId(storeId),
-        status: { $in: ["sent", "ready", "accepted", "enroute", "delivered", "completed"] }
+        status: { $in: ["sent", "ready", "accepted", "enroute", "delivered", "arrived"] }
       }
     )
     // lookup the products in each order
@@ -865,7 +865,7 @@ const getStoreFeedback = async (storeId, pagingParam) => {
   const feedbacks = await Order.aggregate()
     .match({
       store: mongoose.Types.ObjectId(storeId),
-      status: "completed"
+      status: "arrived"
     })
     .lookup({
       from: "reviews",
