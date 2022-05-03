@@ -36,6 +36,8 @@ app.use("/dev/v1", (req, res, next) => {
   next();
 }, router);
 
+app.get("/", (req, res) => res.send({ message: "Welcome to Soft-Shop server!" }));
+
 app.all("*", (req, res, next) => {
   res
     .status(404)
