@@ -17,7 +17,7 @@ const getAddresses = async (req, res, next) => {
         // types: "establishment",
         key: process.env.GOOGLE_MAPS_API_KEY
       },
-      timeout: 1000
+      timeout: 100000
     });
     return res.status(200).json({ success: true, result: addresses.data.predictions, status: 200 });
   } catch (error) {

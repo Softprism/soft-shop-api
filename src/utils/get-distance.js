@@ -11,7 +11,7 @@ const getDistance = async (destination, origin) => {
       destinations: [`place_id:${destination}`],
       key: process.env.GOOGLE_MAPS_API_KEY
     },
-    timeout: 1000
+    timeout: 100000
   });
   if (distance.data.rows[0].elements[0].status === "NOT_FOUND") {
     distance.data.rows[0].elements[0] = {
@@ -36,7 +36,7 @@ const getDistanceService = async (req, res, next) => {
         destinations: [`place_id:${destination}`],
         key: process.env.GOOGLE_MAPS_API_KEY
       },
-      timeout: 5000
+      timeout: 50000
     });
     if (distance.data.rows[0].elements[0].status === "NOT_FOUND") {
       distance.data.rows[0].elements[0] = {
