@@ -471,7 +471,7 @@ const createStore = async (StoreParam) => {
 
 const loginStore = async (StoreParam) => {
   const {
-    email, password, orderPushDeviceToken, vendorPushDeviceToken
+    email, password
   } = StoreParam;
 
   let store = await Store.findOne({ email }).select("password isVerified isActive resetPassword pendingUpdates name pendingWithdrawal vendorPushDeviceToken orderPushDeviceToken category");
@@ -480,17 +480,18 @@ const loginStore = async (StoreParam) => {
     return { err: "Invalid email. Please try again.", status: 400 };
   }
 
-  if (process.env.NODE_ENV === "production" && store.isVerified === false) {
-    return { err: "Please complete your verification.", status: 401 };
-  }
-  if (store.isVerified === false) {
-    return { err: "Sorry store is not yet verified, kindly contact stores@soft-shop.app", status: 401 };
-  }
   // Check if password matches with stored hash
   const isMatch = await bcrypt.compare(password, store.password);
 
   if (!isMatch) {
     return { err: "The password entered is invalid, please try again.", status: 401 };
+  }
+
+  if (process.env.NODE_ENV === "production" && store.isVerified === false) {
+    return { err: "Please complete your verification.", status: 401 };
+  }
+  if (store.isVerified === false) {
+    return { err: "Sorry store is not yet verified, kindly contact stores@soft-shop.app", status: 401 };
   }
 
   let token = await getJwt(store.id, "store");
