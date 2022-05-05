@@ -12,6 +12,7 @@ import {
 import { hashPassword } from "../middleware/validationMiddleware";
 import Rider from "../models/rider.model";
 import { createLog } from "../services/logs.service";
+import { sendSignUpOTPmail } from "../utils/sendMail";
 
 const router = express.Router();
 
@@ -29,7 +30,12 @@ router.get("/login", auth, getLoggedInRider);
 // @route   POST /riders/verify
 // @desc    send OTP to verify new rider signup email
 // @access  Public
-router.post("/token", validator(emailValidation), requestToken);
+router.post("/token",
+  validator(emailValidation),
+  requestToken,
+  async (req, res) => {
+    await sendSignUpOTPmail(req.data.email, req.data.otp);
+  });
 
 // @route   GET /riders/token
 // @desc    validates a token
