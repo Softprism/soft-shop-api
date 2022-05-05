@@ -15,7 +15,7 @@ import Category from "../models/category.model";
 
 import { getDistance } from "../utils/get-distance";
 import {
-  sendPasswordChangeMail, sendStorePasswordResetRequestMail, sendStorePayoutRequestMail, sendStoreSignUpMail, sendStoreUpdateRequestMail
+  sendPasswordChangeMail, sendStorePasswordResetRequestMail, sendStoreSignUpMail, sendStoreUpdateRequestMail
 } from "../utils/sendMail";
 import Ledger from "../models/ledger.model";
 

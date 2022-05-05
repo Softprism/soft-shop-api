@@ -21,6 +21,7 @@ const order_validation = {
       "any.required": "Delivery address is required.",
       "string.empty": "Sorry, Delivery address cannot be an empty field",
     }),
+    customerNote: Joi.string(),
     deliveryPrice: Joi.number().required().empty()
       .messages({
         "number.empty": "Delivery Price cannot be an empty field.",
