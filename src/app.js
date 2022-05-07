@@ -41,7 +41,7 @@ app.get("/", (req, res) => res.send({ message: "Welcome to Soft-Shop server!" })
 app.all("*", (req, res, next) => {
   res
     .status(404)
-    .json({ success: true, msg: "Resource not found, please try logging in" });
+    .json({ success: false, msg: "Resource not found, please try logging in" });
   next();
 });
 
