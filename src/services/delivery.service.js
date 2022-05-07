@@ -138,7 +138,9 @@ const completeDelivery = async (orderId, riderId) => {
     return { err: "You're not permitted to carry out this action", status: 403, };
   }
   // check for delivery
-  const delivery = await Delivery.findOne({ order: orderId });
+  let delivery = await Delivery.findOne({ order: orderId });
+  delivery.status = "delivered";
+  await delivery.save();
   if (!delivery) {
     return { err: "Delivery does not exists.", status: 404, };
   }
