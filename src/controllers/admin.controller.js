@@ -1,6 +1,7 @@
 import { validationResult } from "express-validator";
 
 import * as adminService from "../services/admin.service";
+import * as emailService from "../services/email.service";
 import * as transactionService from "../services/transaction.service";
 
 const getAdmins = async (req, res) => {
@@ -223,9 +224,95 @@ const getStoreById = async (req, res, next) => {
   }
 };
 
+const sendRiderMail = async (req, res, next) => {
+  try {
+    const rider = await emailService.sendRiderEmail(req.params.riderId, req.body);
+
+    return res.status(200).json({
+      success: true, result: rider, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const sendUserMail = async (req, res, next) => {
+  try {
+    const user = await emailService.sendUserEmail(req.params.userId, req.body);
+
+    return res.status(200).json({
+      success: true, result: user, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const sendStoreMail = async (req, res, next) => {
+  try {
+    const store = await emailService.sendStoreEmail(req.params.storeId, req.body);
+
+    return res.status(200).json({
+      success: true, result: store, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const sendAllStoresMails = async (req, res, next) => {
+  try {
+    const stores = await emailService.sendAllStoresEmails(req.body);
+
+    return res.status(200).json({
+      success: true, result: stores, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const sendAllUsersMails = async (req, res, next) => {
+  try {
+    const users = await emailService.sendAllUsersEmails(req.body);
+
+    return res.status(200).json({
+      success: true, result: users, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const sendAllRidersMails = async (req, res, next) => {
+  try {
+    const riders = await emailService.sendAllRidersEmails(req.body);
+
+    return res.status(200).json({
+      success: true, result: riders, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const sendAllMails = async (req, res, next) => {
+  try {
+    const data = await emailService.sendAllEmails(req.body);
+
+    return res.status(200).json({
+      success: true, result: data, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export {
   getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin,
   resetStorePassword, confirmStoreUpdate, createNotification, createTransaction,
   confirmStorePayout, createCompayLedger, getAllStoresUpdateRequests,
-  getResetPasswordRequests, toggleStore, getAllStores, getUsers, getUserById, getStoreById
+  getResetPasswordRequests, toggleStore, getAllStores, getUsers, getUserById,
+  getStoreById, sendRiderMail, sendStoreMail, sendUserMail, sendAllStoresMails,
+  sendAllRidersMails, sendAllUsersMails, sendAllMails
 };
