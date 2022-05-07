@@ -14,6 +14,12 @@ const createDelivery = async (orderId, storeId) => {
   if (!order) {
     return { err: "Order does not exists.", status: 404, };
   }
+
+  // check for existing delivery
+  const delivery = await Delivery.findOne({ order: orderId });
+  if (delivery) {
+    return { err: "Delivery already exists.", status: 400, };
+  }
   // check for order status
   if (order.status === "sent" || order.status === "accepted" || order.status === "enroute" || order.status === "arrived" || order.status === "delivered") {
     return { err: "Sorry you can't create delivery for this Order.", status: 409, };
