@@ -8,6 +8,7 @@ const deliverySchema = mongoose.Schema({
   receiver: { type: String, required: true },
   rider: { type: mongoose.Schema.Types.ObjectId, ref: "Rider" },
   order: { type: mongoose.Schema.Types.ObjectId, ref: "Order" },
+  orderId: { type: String, unique: true },
   user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   store: { type: mongoose.Schema.Types.ObjectId, ref: "Store" },
   status: { type: String, enum: ["delivered", "pending", "accepted", "arrived", "failed"], default: "pending" },
