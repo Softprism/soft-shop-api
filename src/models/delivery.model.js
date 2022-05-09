@@ -13,7 +13,7 @@ const deliverySchema = mongoose.Schema({
   status: { type: String, enum: ["delivered", "pending", "accepted", "arrived", "failed"], default: "pending" },
   riderStatus: {
     type: String,
-    enum: ["Arrive at pickup", "Start Delivery", "Complete Drop off", "Cancelled", "pending"],
+    enum: ["Arrive at pickup", "Start Delivery", "Complete Drop off", "cancelled", "pending"],
     default: "pending",
   },
   location: {

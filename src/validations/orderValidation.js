@@ -49,7 +49,7 @@ const order_validation = {
           "string.empty": "Sorry, product id cannot be an empty field",
           "string.length": "Product id must be a valid mongoose id.",
         }),
-        price: Joi.number().empty().positive().required()
+        price: Joi.number().empty().required()
           .messages({
             "any.required": "Price is required.",
             "number.empty": "Price cannot be an empty field.",

@@ -310,7 +310,7 @@ router.patch(
         "Your order has been delivered to your location."
       );
     }
-    if (req.query.status === "Cancelled") {
+    if (req.query.status === "cancelled") {
       // change order status to cancelled
       order.status = "cancelled";
       await order.save();
