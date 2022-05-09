@@ -70,7 +70,7 @@ router.put(
         `Your order has been accepted and is being prepared by ${req.localData.store_name} we'll also notify you when your order is on the way.`
       );
     }
-    if (req.body.status === "canceled") {
+    if (req.body.status === "cancelled" || req.body.status === "canceled") {
       // send mail
       await sendUserNewOrderRejectedMail(order.orderId, req.localData.user_email, req.localData.store_name);
       // send sms

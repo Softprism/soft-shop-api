@@ -37,7 +37,6 @@ const OrderSchema = mongoose.Schema(
     },
     customerNote: {
       type: String,
-      default: ""
     },
     paymentMethod: {
       type: String,
