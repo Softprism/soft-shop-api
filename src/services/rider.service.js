@@ -183,12 +183,18 @@ const updateRider = async (updateParam, id) => {
   const {
     first_name, last_name, email, original_password, password, phone_number, profilePhoto, pushNotifications, smsNotifications, promotionalNotifications, pushDeviceToken, account_details, location, place_id, isBusy
   } = updateParam;
-  console.log(account_details);
   // Build Rider Object
   const riderFields = {};
 
   // Check for fields
-  if (location) riderFields.location = location;
+  if (location) {
+    // add location to riderFields
+    riderFields.location = location;
+    // add points to riderFields location object
+    riderFields.location.type = "Point";
+  }
+  console.log(location);
+
   if (place_id) riderFields.place_id = place_id;
   if (first_name) riderFields.first_name = first_name;
   if (last_name) riderFields.last_name = last_name;
