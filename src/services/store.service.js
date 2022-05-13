@@ -966,7 +966,7 @@ const requestPayout = async (storeId) => {
     to: "Store",
     receiver: storeId,
     ref: storeId,
-    fee: 0.02 * Number(payout)
+    fee: 0
   });
 
   // create Debit transaction for ledger
@@ -976,7 +976,7 @@ const requestPayout = async (storeId) => {
     to: "Ledger",
     receiver: ledger._id,
     ref: storeId,
-    fee: 0.02 * Number(payout)
+    fee: 0
   });
 
   // check for error while creating new transaction

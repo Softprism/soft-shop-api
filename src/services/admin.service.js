@@ -14,6 +14,8 @@ import Transaction from "../models/transaction.model";
 import Ledger from "../models/ledger.model";
 import { createTransaction } from "./transaction.service";
 import { initiateTransfer } from "./payment.service";
+import Logistics from "../models/logistics-company.model";
+import Rider from "../models/rider.model";
 
 const getAdmins = async () => {
   const admins = await Admin.find();
@@ -283,6 +285,59 @@ const confirmStorePayout = async (storeId) => {
   return request;
 };
 
+const confirmLogisticsPayout = async (companyId) => {
+  let company = await Logistics.findById(companyId);
+  let payout = await Transaction.find({
+    ref: companyId,
+    type: "Debit",
+    status: "pending"
+  });
+
+  if (payout.length < 2) return { err: "No pending payout for this logistics company.", status: 400 };
+
+  let payload = {
+    account_bank: company.account_details.bank_code,
+    account_number: company.account_details.account_number,
+    amount: Number(payout[0].amount) - Number(payout[0].fee),
+    narration: company._id,
+    currency: "NGN"
+  };
+  let request = await initiateTransfer(payload);
+  // update store payout transaction status to approved
+  await Transaction.updateMany(
+    { ref: company._id, type: "Debit", status: "pending" },
+    { $set: { status: "approved" } },
+    { omitUndefined: true, new: true, useFindAndModify: false }
+  );
+  return request;
+};
+
+const confirmRiderPayout = async (riderId) => {
+  let rider = await Rider.findById(riderId);
+  let payout = await Transaction.find({
+    ref: riderId,
+    type: "Debit",
+    status: "pending"
+  });
+
+  if (payout.length < 2) return { err: "No pending payout for this rider.", status: 400 };
+
+  let payload = {
+    account_bank: rider.account_details.bank_code,
+    account_number: rider.account_details.account_number,
+    amount: Number(payout[0].amount) - Number(payout[0].fee),
+    narration: rider._id,
+    currency: "NGN"
+  };
+  let request = await initiateTransfer(payload);
+  // update store payout transaction status to approved
+  await Transaction.updateMany(
+    { ref: rider._id, type: "Debit", status: "pending" },
+    { $set: { status: "approved" } },
+    { omitUndefined: true, new: true, useFindAndModify: false }
+  );
+  return request;
+};
 const createCompayLedger = async () => {
   let details = {
     account_name: "SoftShop Ledger",
@@ -350,5 +405,5 @@ export {
   getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin,
   resetStorePassword, confirmStoreUpdate, createNotification, confirmStorePayout,
   createCompayLedger, getAllStoresUpdateRequests, getResetPasswordRequests,
-  toggleStoreActive, getAllStores, getUsers, getStoreById, getUserById
+  toggleStoreActive, getAllStores, getUsers, getStoreById, getUserById, confirmLogisticsPayout, confirmRiderPayout
 };

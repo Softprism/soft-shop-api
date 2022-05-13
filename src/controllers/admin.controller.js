@@ -140,7 +140,16 @@ const createTransaction = async (req, res, next) => {
 
 const confirmStorePayout = async (req, res, next) => {
   try {
-    const transaction = await adminService.confirmStorePayout(req.params.storeId);
+    let transaction;
+    if (req.query.storeId) {
+      transaction = await adminService.confirmStorePayout(req.query.storeId);
+    }
+    if (req.query.companyId) {
+      transaction = await adminService.confirmLogisticsPayout(req.query.companyId);
+    }
+    if (req.query.rider) {
+      transaction = await adminService.confirmRiderPayout(req.query.riderId);
+    }
 
     if (transaction.err) {
       res.status(transaction.status).json({
@@ -308,11 +317,26 @@ const sendAllMails = async (req, res, next) => {
   }
 };
 
+const confirmLogisticsPayout = async (req, res, next) => {
+  try {
+    const transaction = await adminService.confirmStorePayout(req.params.companyId);
+
+    if (transaction.err) {
+      res.status(transaction.status).json({
+        success: false, msg: transaction.err, data: transaction.data, status: transaction.status
+      });
+    } else {
+      res.status(200).json({ success: true, result: transaction, status: 200 });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
 export {
   getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin,
   resetStorePassword, confirmStoreUpdate, createNotification, createTransaction,
   confirmStorePayout, createCompayLedger, getAllStoresUpdateRequests,
   getResetPasswordRequests, toggleStore, getAllStores, getUsers, getUserById,
   getStoreById, sendRiderMail, sendStoreMail, sendUserMail, sendAllStoresMails,
-  sendAllRidersMails, sendAllUsersMails, sendAllMails
+  sendAllRidersMails, sendAllUsersMails, sendAllMails, confirmLogisticsPayout
 };
