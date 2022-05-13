@@ -4,7 +4,9 @@ import mongoose from "mongoose";
 
 import Logistics from "../models/logistics-company.model";
 import Rider from "../models/rider.model";
+import Transaction from "../models/transaction.model";
 import getJwt from "../utils/jwtGenerator";
+import { createTransaction } from "./transaction.service";
 
 const companySignup = async (signupParams) => {
   // destructure  signupParams with variables in model
@@ -308,6 +310,79 @@ const viewCompanyRiderDetails = async (riderId) => {
   return riders;
 };
 
+const requestWithdrawal = async (id) => {
+  // check if company exists
+  const companyExists = await Logistics.findById(id);
+  if (!companyExists) {
+    return { err: "This company does not exist", status: 401 };
+  }
+
+  // check if company has enough balance
+  if (companyExists.account_details.account_balance < 1000) {
+    return { err: "Insufficient Balance. You can only withdraw 1000 naira upwards.", status: 401 };
+  }
+
+  // check for pending store request
+  let oldLogisticsRequest = await Transaction.findOne({
+    type: "Debit",
+    to: "logistics",
+    receiver: companyExists._id,
+    status: "pending",
+    ref: companyExists._id
+  });
+  // check for pending store request in ledger
+  let oldLedgerRequest = await Transaction.findOne({
+    type: "Debit",
+    to: "Ledger",
+    receiver: companyExists._id,
+    status: "pending",
+    ref: companyExists._id
+  });
+  console.log(oldLedgerRequest);
+  // add current account balance to pending logistics and ledger withdrawal request
+  if (oldLogisticsRequest && oldLedgerRequest && companyExists.pendingWithdrawal === true) {
+    oldLogisticsRequest.amount += Number(companyExists.account_details.account_balance);
+    await oldLogisticsRequest.save();
+    oldLedgerRequest.amount += Number(companyExists.account_details.account_balance);
+    await oldLedgerRequest.save();
+
+    // update company account balance
+    companyExists.account_details.total_debit += Number(companyExists.account_details.account_balance);
+    companyExists.account_details.account_balance = Number(companyExists.account_details.total_credit - companyExists.account_details.total_debit);
+    await companyExists.save();
+
+    return "Withdrawal Request Updated Successfully";
+  }
+
+  // create debit transaction for company
+  await createTransaction({
+    amount: Number(companyExists.account_details.account_balance),
+    type: "Debit",
+    to: "logistics",
+    receiver: companyExists._id,
+    status: "pending",
+    ref: companyExists._id,
+    fee: 0
+  });
+
+  // create Debit transaction for ledger
+  await createTransaction({
+    amount: Number(companyExists.account_details.account_balance),
+    type: "Debit",
+    to: "Ledger",
+    receiver: companyExists._id,
+    status: "pending",
+    ref: companyExists._id,
+    fee: 0
+  });
+
+  // update company's withdraw status
+  companyExists.pendingWithdrawal = true;
+  await companyExists.save();
+
+  return "Withdrawal Requested Successfully";
+};
+
 export {
   companySignup,
   companyLogin,
@@ -317,5 +392,6 @@ export {
   updateCompanyImage,
   updateCompanyDetails,
   viewCompanyRiders,
-  viewCompanyRiderDetails
+  viewCompanyRiderDetails,
+  requestWithdrawal
 };

@@ -113,6 +113,18 @@ const viewCompanyRiderDetails = async (req, res) => {
     success: true, result: data, status: 200
   });
 };
+
+const requestWithdrawal = async (req, res) => {
+  const action = await logisticsService.requestWithdrawal(req.logistics.id);
+  // check for errors
+  if (action.err) {
+    return res.status(action.status).json({ success: false, result: action.err });
+  }
+  // send response
+  res.status(200).json({
+    success: true, result: action, status: 200
+  });
+};
 export {
-  companySignup, companyLogin, companyDetails, updateCompanyAddress, updateLoginDetails, updateCompanyImage, updateCompanyDetails, viewCompanyRiders, viewCompanyRiderDetails
+  companySignup, companyLogin, companyDetails, updateCompanyAddress, updateLoginDetails, updateCompanyImage, updateCompanyDetails, viewCompanyRiders, viewCompanyRiderDetails, requestWithdrawal
 };

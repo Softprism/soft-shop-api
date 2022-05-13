@@ -38,7 +38,7 @@ const riderSchema = mongoose.Schema({
     ],
   },
   corporate: { type: Boolean, required: true },
-  company_id: { type: mongoose.Types.ObjectId, required: true, ref: "logistics" },
+  company_id: { type: mongoose.Types.ObjectId, ref: "logistics" },
   email: {
     type: String,
     unique: true,

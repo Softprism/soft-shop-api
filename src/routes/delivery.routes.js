@@ -138,6 +138,7 @@ router.patch(
     let rider = await Rider.findById(req.localData.rider);
     let order = await Order.findById(req.localData.order);
     let delivery = await Delivery.findOne({ order: order._id });
+
     // update rider isBusy status to false
     rider.isBusy = false;
     await rider.save();
@@ -147,10 +148,28 @@ router.patch(
       // get rider logistics company
       let company = await Logistics.findById(rider.company_id);
       // create credit transaction for logistics company
-      await createTransaction(delivery.deliverFee, "credit", "logistics", company._id, delivery.orderId, 0);
+      await createTransaction({
+        amount: Number(delivery.deliveryFee),
+        type: "Credit",
+        to: "logistics",
+        receiver: company._id,
+        status: "pending",
+        ref: delivery.orderId,
+        fee: 0
+      });
     } else {
       // create credit transaction for rider
-      await createTransaction(delivery.deliverFee, "credit", "rider", rider._id, delivery.orderId, 0);
+      await createTransaction(
+        {
+          amount: Number(delivery.deliveryFee),
+          type: "Credit",
+          to: "Rider",
+          receiver: rider._id,
+          status: "pending",
+          ref: delivery.orderId,
+          fee: 0
+        }
+      );
     }
 
     // send push notification to user

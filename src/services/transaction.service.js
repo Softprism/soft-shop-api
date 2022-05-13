@@ -52,7 +52,7 @@ const createTransaction = async ({
   }
 
   // credit rider
-  if (newTrans && to === "Rider" && type === "Credit" && status === "completed") {
+  if (newTrans && to === "Rider" && type === "Credit") {
     let rider = await Rider.findById(receiver);
     rider.account_details.total_credit += Number(amount);
     rider.account_details.account_balance = Number(rider.account_details.total_credit) - Number(rider.account_details.total_debit);
