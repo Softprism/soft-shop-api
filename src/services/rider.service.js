@@ -373,6 +373,15 @@ const getPayoutHistory = async (riderId, urlParams) => {
   return payoutHistory;
 };
 export {
-  resetPassword, requestPasswordToken, verifyEmailAddress, loggedInRider,
-  validateToken, getAllRiders, registerRider, loginRider, updateRider, requestPayout, getPayoutHistory
+  resetPassword,
+  requestPasswordToken,
+  verifyEmailAddress,
+  loggedInRider,
+  validateToken,
+  getAllRiders,
+  registerRider,
+  loginRider,
+  updateRider,
+  requestPayout,
+  getPayoutHistory
 };
