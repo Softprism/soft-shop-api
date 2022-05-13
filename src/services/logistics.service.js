@@ -379,27 +379,25 @@ const requestWithdrawal = async (id) => {
   }
 
   // check for pending store request
-  let oldLogisticsRequest = await Transaction.findOne({
+  let oldLogisticsRequest = await Transaction.find({
     type: "Debit",
-    to: "logistics",
-    receiver: companyExists._id,
-    status: "pending",
-    ref: companyExists._id
-  });
-  // check for pending store request in ledger
-  let oldLedgerRequest = await Transaction.findOne({
-    type: "Debit",
-    to: "Ledger",
-    receiver: companyExists._id,
     status: "pending",
     ref: companyExists._id
   });
   // add current account balance to pending logistics and ledger withdrawal request
-  if (oldLogisticsRequest && oldLedgerRequest && companyExists.pendingWithdrawal === true) {
-    oldLogisticsRequest.amount += Number(companyExists.account_details.account_balance);
-    await oldLogisticsRequest.save();
-    oldLedgerRequest.amount += Number(companyExists.account_details.account_balance);
-    await oldLedgerRequest.save();
+  if (oldLogisticsRequest.length === 2 && companyExists.pendingWithdrawal === true) {
+    await Transaction.updateMany(
+      {
+        type: "Debit",
+        ref: companyExists._id,
+        status: "pending"
+      },
+      { $inc: { amount: Number(companyExists.account_details.account_balance) } }
+    );
+    // oldLogisticsRequest.amount += Number(companyExists.account_details.account_balance);
+    // await oldLogisticsRequest.save();
+    // oldLedgerRequest.amount += Number(companyExists.account_details.account_balance);
+    // await oldLedgerRequest.save();
 
     // update company account balance
     companyExists.account_details.total_debit += Number(companyExists.account_details.account_balance);
