@@ -8,6 +8,11 @@ import Transaction from "../models/transaction.model";
 import getJwt from "../utils/jwtGenerator";
 import { createTransaction } from "./transaction.service";
 
+const getAllCompanies = async () => {
+  // return all Logistics companies name
+  const companies = await Logistics.find().select("-password").sort("-createdAt");
+  return companies;
+};
 const companySignup = async (signupParams) => {
   // destructure  signupParams with variables in model
   const {
@@ -79,7 +84,58 @@ const companyDetails = async (id) => {
   if (!companyExists) {
     return { err: "This company does not exist", status: 401 };
   }
-  return companyExists;
+  // get all company's rider and amount of delivery of each rider using aggregate
+  const data = await Logistics.aggregate([
+    {
+      $match: {
+        _id: mongoose.Types.ObjectId(id),
+      },
+    },
+    // lookup riders with company_id
+    {
+      $lookup: {
+        from: "riders",
+        localField: "_id",
+        foreignField: "company_id",
+        as: "riders",
+      },
+    },
+    {
+      $lookup: {
+        from: "deliveries",
+        localField: "riders._id",
+        foreignField: "rider",
+        as: "deliveries",
+      }
+    },
+    // count riders and deliveries
+    {
+      $addFields: {
+        riderCount: {
+          $size: "$riders",
+        },
+        deliveryCount: {
+          $size: "$deliveries",
+        },
+      },
+    },
+    // hide riders and deliveries field
+    {
+      $project: {
+        deliveries: 0,
+        riders: 0,
+      },
+    },
+
+  ]);
+
+  // count amount of delivery of each rider
+  // {
+  //   $group: {
+  //     _id: "$riders._id",
+  //     rider: { $first: "$riders" },
+
+  return data;
 };
 
 const updateCompanyAddress = async (id, locationParam) => {
@@ -338,7 +394,6 @@ const requestWithdrawal = async (id) => {
     status: "pending",
     ref: companyExists._id
   });
-  console.log(oldLedgerRequest);
   // add current account balance to pending logistics and ledger withdrawal request
   if (oldLogisticsRequest && oldLedgerRequest && companyExists.pendingWithdrawal === true) {
     oldLogisticsRequest.amount += Number(companyExists.account_details.account_balance);
@@ -384,6 +439,7 @@ const requestWithdrawal = async (id) => {
 };
 
 export {
+  getAllCompanies,
   companySignup,
   companyLogin,
   companyDetails,

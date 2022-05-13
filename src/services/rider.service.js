@@ -308,7 +308,24 @@ const requestPayout = async (riderId) => {
     status: "pending"
   });
 
-  if (oldRequest && rider.pendingWithdrawal === true) return { err: "You have a pending payout request. Please wait for its approval", status: 400 };
+  // check for pending ledger request
+  let oldLedgerRequest = await Transaction.findOne({
+    type: "Debit",
+    receiver: riderId,
+    status: "pending"
+  });
+
+  if (oldRequest && oldLedgerRequest && rider.pendingWithdrawal === true) {
+    oldRequest.amount += Number(rider.account_details.account_balance);
+    await oldRequest.save();
+    oldLedgerRequest.amount += Number(rider.account_details.account_balance);
+    await oldLedgerRequest.save();
+
+    // update rider account balance
+    rider.account_details.total_debit += Number(rider.account_details.account_balance);
+    rider.account_details.account_balance = Number(rider.account_details.total_credit - rider.account_details.total_debit);
+    await rider.save();
+  }
 
   // create Debit transaction for rider
   let newTransaction = await createTransaction({

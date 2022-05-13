@@ -1,10 +1,13 @@
 import express from "express";
 import {
-  companyDetails, companyLogin, companySignup, requestWithdrawal, updateCompanyAddress, updateCompanyDetails, updateCompanyImage, updateLoginDetails, viewCompanyRiderDetails, viewCompanyRiders
+  companyDetails, companyLogin, companySignup, getAllCompanies, requestWithdrawal, updateCompanyAddress, updateCompanyDetails, updateCompanyImage, updateLoginDetails, viewCompanyRiderDetails, viewCompanyRiders
 } from "../controllers/logistics.controller";
 import auth from "../middleware/auth";
 
 const router = express.Router();
+
+// get all companies route
+router.get("/all", getAllCompanies);
 
 // signup company route
 router.post(
