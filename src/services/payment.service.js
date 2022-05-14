@@ -234,7 +234,6 @@ const verifyTransaction = async (paymentDetails) => {
 };
 
 const verifyPayout = async (payload) => {
-  console.log(payload);
   // check for failed payment and retry
 
   // else check for successful payment and update transaction status and send appropraite emails
