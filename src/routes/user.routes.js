@@ -51,14 +51,18 @@ router.post(
   registerUser,
   async (req, res, next) => {
     // delete sign up token
-    await Token.findByIdAndDelete(req.body.token);
-    let user = await User.findOne({ email: req.data.user_id });
+    // await Token.findByIdAndDelete(req.body.token);
+    let user = await User.findById(req.data.user_id);
     // send email to user
-    await sendUserSignUpMail(req.data.email);
+    // capitalize user's first name
+    user.first_name = user.first_name.charAt(0).toUpperCase() + user.first_name.slice(1);
+    await sendUserSignUpMail(user.email, user.first_name);
     // send sms to user
     await sendUserSignupSMS(req.data.phone);
     // create log
     await createLog("user signup", "user", `A new user - ${user.first_name} ${user.last_name} with email - ${user.email} just signed on softshop`);
+    // delete newly created user account
+    await User.findByIdAndDelete(req.data.user_id);
   }
 );
 

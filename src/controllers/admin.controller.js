@@ -3,6 +3,7 @@ import { validationResult } from "express-validator";
 import * as adminService from "../services/admin.service";
 import * as emailService from "../services/email.service";
 import * as transactionService from "../services/transaction.service";
+import { sendWaitListInvite } from "../utils/sendMail";
 
 const getAdmins = async (req, res) => {
   try {
@@ -332,11 +333,24 @@ const confirmLogisticsPayout = async (req, res, next) => {
     next(error);
   }
 };
+
+const inviteUsersToBeta = async (req, res, next) => {
+  try {
+    const action = await sendWaitListInvite(req.body.emails);
+
+    return res.status(200).json({
+      success: true, result: action, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export {
   getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin,
   resetStorePassword, confirmStoreUpdate, createNotification, createTransaction,
   confirmStorePayout, createCompayLedger, getAllStoresUpdateRequests,
   getResetPasswordRequests, toggleStore, getAllStores, getUsers, getUserById,
   getStoreById, sendRiderMail, sendStoreMail, sendUserMail, sendAllStoresMails,
-  sendAllRidersMails, sendAllUsersMails, sendAllMails, confirmLogisticsPayout
+  sendAllRidersMails, sendAllUsersMails, sendAllMails, confirmLogisticsPayout, inviteUsersToBeta
 };

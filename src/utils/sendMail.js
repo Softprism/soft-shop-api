@@ -1,7 +1,10 @@
 /* eslint-disable no-empty */
 import nodemailer from "nodemailer";
+import handlebars from "handlebars";
+import path from "path";
+import fs from "fs";
 
-const sendEmail = async (toEmail, mailSubj, mailBody) => {
+const sendEmail = async (toEmail, mailSubj, mailBody, fileName, path, cid) => {
   try {
     let transporter = nodemailer.createTransport({
       host: "mail.soft-shop.app",
@@ -10,7 +13,7 @@ const sendEmail = async (toEmail, mailSubj, mailBody) => {
       auth: {
         user: "nduka@soft-shop.app",
         pass: "2021@Softprism",
-      },
+      }
     });
 
     // Verify connection configuration
@@ -27,7 +30,120 @@ const sendEmail = async (toEmail, mailSubj, mailBody) => {
       from: "\"Nduka from Softshop\" <nduka@soft-shop.app>",
       to: toEmail,
       subject: mailSubj,
+      attachments: [{
+        fileName,
+        path,
+        cid
+      }],
       html: mailBody,
+    };
+
+    // Send email
+    let sender = await transporter.sendMail(mailOptions);
+    return sender;
+  } catch (error) {
+    throw error;
+  }
+};
+
+const sendWaitListSignupMail = async (toEmail) => {
+  const textWLogo = path.join(__dirname, "../mails/excited.hbs");
+  const source = fs.readFileSync(textWLogo, "utf-8").toString();
+  // const template = handlebars.compile(source);
+  // const replacements = {
+  //   first_name
+  // };
+  // const htmlToSend = template(replacements);
+  try {
+    let transporter = nodemailer.createTransport({
+      host: "mail.soft-shop.app",
+      port: 465,
+      secure: true,
+      auth: {
+        user: "nduka@soft-shop.app",
+        pass: "2021@Softprism",
+      }
+    });
+
+    // Verify connection configuration
+    transporter.verify((error, success) => {
+      if (error) {
+        console.log(error.message);
+      } else {
+        console.log("Server is ready to send waitlist message.");
+      }
+    });
+
+    // Set mail options
+    let mailOptions = {
+      from: "\"Nduka from Softshop\" <nduka@soft-shop.app>",
+      to: toEmail,
+      subject: "Early Access To SoftShop 🎉",
+      attachments: [{
+        fileName: "logo.png",
+        path: `${__dirname}/../mails/logo.png`,
+        cid: "logo"
+      }],
+      html: source,
+      headers: {
+        priority: "high"
+      },
+    };
+
+    // Send email
+    let sender = await transporter.sendMail(mailOptions);
+    return sender;
+  } catch (error) {
+    throw error;
+  }
+};
+
+const sendWaitListInvite = async (toEmails) => {
+  const textWLogo = path.join(__dirname, "../mails/invitation.hbs");
+  const source = fs.readFileSync(textWLogo, "utf-8").toString();
+  const template = handlebars.compile(source);
+  try {
+    let transporter = nodemailer.createTransport({
+      host: "mail.soft-shop.app",
+      port: 465,
+      secure: true,
+      auth: {
+        user: "nduka@soft-shop.app",
+        pass: "2021@Softprism",
+      }
+    });
+
+    // Verify connection configuration
+    transporter.verify((error, success) => {
+      if (error) {
+        console.log(error.message);
+      } else {
+        console.log("Server is ready to send waitlist message.");
+      }
+    });
+    // Set mail options
+    let mailOptions = {
+      from: "\"Nduka from Softshop\" <nduka@soft-shop.app>",
+      to: [],
+      bcc: toEmails,
+      replyTo: "beta@soft-shop.app",
+      subject: "Invitation To SoftShop Beta🥳",
+      attachments: [
+        {
+          fileName: "logo.png",
+          path: `${__dirname}/../mails/logo.png`,
+          cid: "logo"
+        },
+        {
+          fileName: "image.png",
+          path: `${__dirname}/../mails/image.png`,
+          cid: "image"
+        }
+      ],
+      html: source,
+      headers: {
+        priority: "high"
+      },
     };
 
     // Send email
@@ -48,10 +164,20 @@ const sendSignUpOTPmail = async (toEmail, otp) => {
   }
 };
 
-const sendUserSignUpMail = async (toEmail) => {
-  let subject = "Welcome To SoftShop!";
-  let body = "Thanks for signing up!";
-  let sendAction = await sendEmail(toEmail, subject, body);
+const sendUserSignUpMail = async (toEmail, firstName) => {
+  const textWLogo = path.join(__dirname, "../mails/thanks.hbs");
+  const source = fs.readFileSync(textWLogo, "utf-8").toString();
+  const template = handlebars.compile(source);
+  const replacements = {
+    first_name: firstName
+  };
+  const htmlToSend = template(replacements);
+  let subject = "Welcome To SoftShop 😊 ";
+  let fileName = "logo.png";
+  let filePath = `${__dirname}/../mails/logo.png`;
+  let cid = "logo";
+
+  let sendAction = await sendEmail(toEmail, subject, htmlToSend, fileName, filePath, cid);
   console.log(sendAction);
   if (!sendAction) {
     console.log(`signup mail not sent to ${toEmail}`);
@@ -293,6 +419,8 @@ const sendRiderDebitMail = async (toEmail, amount) => {
   }
 };
 export {
+  sendWaitListSignupMail,
+  sendWaitListInvite,
   sendEmail,
   sendSignUpOTPmail,
   sendPasswordChangeMail,
