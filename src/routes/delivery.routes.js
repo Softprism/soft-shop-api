@@ -20,6 +20,8 @@ import {
 import { sendUserNewOrderRejectedSMS, sendUserOrderDeliveredSMS } from "../utils/sendSMS";
 import Delivery from "../models/delivery.model";
 import { createLog } from "../services/logs.service";
+import { createTransaction } from "../services/transaction.service";
+import Logistics from "../models/logistics-company.model";
 
 const router = express.Router();
 
@@ -56,6 +58,8 @@ router.post(
         phone_number: user.phone_number,
         order: order._id,
         orderId: order.orderId,
+        // add delivery fee minus 3%
+        deliveryFee: Number(order.deliveryPrice - Math.round(order.deliveryPrice * 0.03)),
         user: user._id,
         store: store._id
       };
@@ -133,9 +137,40 @@ router.patch(
     let store = await Store.findById(req.localData.store);
     let rider = await Rider.findById(req.localData.rider);
     let order = await Order.findById(req.localData.order);
+    let delivery = await Delivery.findOne({ order: order._id });
+
     // update rider isBusy status to false
     rider.isBusy = false;
     await rider.save();
+
+    // check if rider belongs to a company
+    if (rider.corporate) {
+      // get rider logistics company
+      let company = await Logistics.findById(rider.company_id);
+      // create credit transaction for logistics company
+      await createTransaction({
+        amount: Number(delivery.deliveryFee),
+        type: "Credit",
+        to: "logistics",
+        receiver: company._id,
+        status: "pending",
+        ref: delivery.orderId,
+        fee: 0
+      });
+    } else {
+      // create credit transaction for rider
+      await createTransaction(
+        {
+          amount: Number(delivery.deliveryFee),
+          type: "Credit",
+          to: "Rider",
+          receiver: rider._id,
+          status: "pending",
+          ref: delivery.orderId,
+          fee: 0
+        }
+      );
+    }
 
     // send push notification to user
     await sendMany(

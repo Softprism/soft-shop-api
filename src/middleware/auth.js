@@ -3,6 +3,7 @@ import User from "../models/user.model";
 import Admin from "../models/admin.model";
 import Store from "../models/store.model";
 import Rider from "../models/rider.model";
+import Logistics from "../models/logistics-company.model";
 
 const auth = async (req, res, next) => {
   let token;
@@ -45,6 +46,12 @@ const auth = async (req, res, next) => {
         req.rider = verifyRider;
       }
 
+      if (decoded.logistics) {
+        const { logistics } = decoded;
+        let verifyLogistics = await Logistics.findById(logistics.id);
+        if (!verifyLogistics) res.status(404).json({ success: false, msg: "logistics company doesn't exist", status: 404 });
+        req.logistics = verifyLogistics;
+      }
       next();
     } catch (err) {
       res

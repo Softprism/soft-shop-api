@@ -301,14 +301,33 @@ const requestPayout = async (riderId) => {
   let payout = rider.account_details.account_balance;
   if (payout === 0) return { err: "Insufficent Funds.", status: 400 };
 
-  // check for pending request
-  let oldRequest = await Transaction.findOne({
+  // check for rider and ledger pending request
+  let oldRequest = await Transaction.find({
     type: "Debit",
-    receiver: riderId,
+    ref: riderId,
     status: "pending"
   });
 
-  if (oldRequest && rider.pendingWithdrawal === true) return { err: "You have a pending payout request. Please wait for its approval", status: 400 };
+  if (oldRequest.length === 2 && rider.pendingWithdrawal === true) {
+    await Transaction.updateMany(
+      {
+        type: "Debit",
+        ref: riderId,
+        status: "pending"
+      },
+      { $inc: { amount: Number(rider.account_details.account_balance) } }
+    );
+    // oldRequest.amount += Number(rider.account_details.account_balance);
+    // await oldRequest.save();
+    // oldLedgerRequest.amount += Number(rider.account_details.account_balance);
+    // await oldLedgerRequest.save();
+
+    // update rider account balance
+    rider.account_details.total_debit += Number(rider.account_details.account_balance);
+    rider.account_details.account_balance = Number(rider.account_details.total_credit - rider.account_details.total_debit);
+    await rider.save();
+    return "Withdrawal Request Sent.";
+  }
 
   // create Debit transaction for rider
   let newTransaction = await createTransaction({
@@ -334,7 +353,7 @@ const requestPayout = async (riderId) => {
   await rider.save();
 
   await sendRiderPayoutRequestMail(rider.email, payout);
-  return newTransaction;
+  return "Withdrawal Request Sent.";
 };
 
 const getPayoutHistory = async (riderId, urlParams) => {
@@ -356,6 +375,15 @@ const getPayoutHistory = async (riderId, urlParams) => {
   return payoutHistory;
 };
 export {
-  resetPassword, requestPasswordToken, verifyEmailAddress, loggedInRider,
-  validateToken, getAllRiders, registerRider, loginRider, updateRider, requestPayout, getPayoutHistory
+  resetPassword,
+  requestPasswordToken,
+  verifyEmailAddress,
+  loggedInRider,
+  validateToken,
+  getAllRiders,
+  registerRider,
+  loginRider,
+  updateRider,
+  requestPayout,
+  getPayoutHistory
 };

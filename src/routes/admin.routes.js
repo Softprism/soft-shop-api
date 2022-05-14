@@ -92,7 +92,7 @@ router.put("/store/:storeId", auth, isAdmin, confirmStoreUpdate);
 
 router.post("/transactions", auth, isAdmin, createTransaction);
 
-router.put("/transactions/:storeId", auth, isAdmin, confirmStorePayout);
+router.put("/transactions/", auth, isAdmin, confirmStorePayout);
 router.put("/stores/:storeId/toggle", auth, isAdmin, toggleStore);
 
 router.post("/ledger", auth, isAdmin, createCompayLedger);

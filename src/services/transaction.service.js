@@ -1,4 +1,5 @@
 import Ledger from "../models/ledger.model";
+import Logistics from "../models/logistics-company.model";
 import Rider from "../models/rider.model";
 import Store from "../models/store.model";
 import Transaction from "../models/transaction.model";
@@ -51,7 +52,7 @@ const createTransaction = async ({
   }
 
   // credit rider
-  if (newTrans && to === "Rider" && type === "Credit" && status === "completed") {
+  if (newTrans && to === "Rider" && type === "Credit") {
     let rider = await Rider.findById(receiver);
     rider.account_details.total_credit += Number(amount);
     rider.account_details.account_balance = Number(rider.account_details.total_credit) - Number(rider.account_details.total_debit);
@@ -66,6 +67,23 @@ const createTransaction = async ({
     await rider.save();
     await sendRiderDebitMail(rider.email, Number(amount));
   }
+
+  // credit logistics company
+  if (newTrans && to === "logistics" && type === "Credit") {
+    let logistics = await Logistics.findById(receiver);
+    logistics.account_details.total_credit += Number(amount);
+    logistics.account_details.account_balance = Number(logistics.account_details.total_credit) - Number(logistics.account_details.total_debit);
+    await logistics.save();
+  }
+
+  // debit logistics company
+  if (newTrans && to === "logistics" && type === "Debit") {
+    let logistics = await Logistics.findById(receiver);
+    logistics.account_details.total_debit += Number(amount);
+    logistics.account_details.account_balance = Number(logistics.account_details.total_credit) - Number(logistics.account_details.total_debit);
+    await logistics.save();
+  }
+
   return newTrans;
 };
 

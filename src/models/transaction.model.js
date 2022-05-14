@@ -12,7 +12,7 @@ const transactionSchema = mongoose.Schema({
   },
   to: {
     type: String,
-    enum: ["Store", "User", "Ledger", "Rider"],
+    enum: ["Store", "User", "Ledger", "Rider", "logistics"],
     required: true,
   },
   receiver: {

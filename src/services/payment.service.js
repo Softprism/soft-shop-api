@@ -109,7 +109,7 @@ const verifyTransaction = async (paymentDetails) => {
 
     let order = await Order.findOne({ orderId: tx_ref }).populate("user");
     let user = await User.findById(order.user._id);
-    let store = await Store.findById(order.store);
+    let store = await Store.findById(order.store).populate("category");
     let ledger = await Ledger.findOne({});
 
     order.paymentResult = response.data;
@@ -120,8 +120,61 @@ const verifyTransaction = async (paymentDetails) => {
       order.status = "sent";
 
       // create a credit transaction for store and softshop
+      // calculate softshop commission with order.subtotal range and store category
+      let commission = 0;
+      if (store.category.name === "food") {
+        if (order.subtotal >= 0 && order.subtotal <= 2999) {
+          commission = 0.05;
+        }
+        if (order.subtotal > 2999 && order.subtotal <= 5999) {
+          commission = 0.04;
+        }
+        if (order.subtotal > 5999 && order.subtotal <= 9999) {
+          commission = 0.03;
+        }
+        if (order.subtotal > 9999 && order.subtotal <= 14999) {
+          commission = 0.02;
+        }
+        if (order.subtotal > 14999) {
+          commission = 0.015;
+        }
+      }
+      if (store.category.name === "Grocery") {
+        if (order.subtotal >= 0 && order.subtotal <= 19999) {
+          commission = 0.05;
+        }
+        if (order.subtotal > 19999 && order.subtotal <= 39999) {
+          commission = 0.04;
+        }
+        if (order.subtotal > 39999 && order.subtotal <= 59999) {
+          commission = 0.03;
+        }
+        if (order.subtotal > 59999 && order.subtotal <= 99999) {
+          commission = 0.02;
+        }
+        if (order.subtotal > 100000) {
+          commission = 0.015;
+        }
+      }
+      if (store.category.name === "Pharmacy") {
+        if (order.subtotal >= 0 && order.subtotal <= 3999) {
+          commission = 0.05;
+        }
+        if (order.subtotal > 3999 && order.subtotal <= 7999) {
+          commission = 0.04;
+        }
+        if (order.subtotal > 7999 && order.subtotal <= 11999) {
+          commission = 0.03;
+        }
+        if (order.subtotal > 11999 && order.subtotal <= 15999) {
+          commission = 0.02;
+        }
+        if (order.subtotal > 15999) {
+          commission = 0.015;
+        }
+      }
       let storeReq = {
-        amount: order.subtotal,
+        amount: Number(order.subtotal) - Number(order.subtotal * commission),
         type: "Credit",
         to: "Store",
         receiver: store._id,

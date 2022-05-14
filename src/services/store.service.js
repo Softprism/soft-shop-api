@@ -924,34 +924,32 @@ const requestPayout = async (storeId) => {
   let payout = store.account_details.account_balance;
   if (payout < 1000) return { err: "Insufficent Funds. You need up to NGN1000 to request for payouts.", status: 400 };
 
-  // check for pending store request
-  let oldStoreRequest = await Transaction.findOne({
+  // check for pending store and ledger request
+  let oldStoreRequest = await Transaction.find({
     type: "Debit",
-    to: "Store",
-    receiver: storeId,
     status: "pending",
     ref: storeId
 
   });
-  // check for pending store request in ledger
-  let oldLedgerRequest = await Transaction.findOne({
-    type: "Debit",
-    to: "Ledger",
-    receiver: ledger._id,
-    status: "pending",
-    ref: storeId
-  });
 
-  if (oldStoreRequest && oldLedgerRequest && store.pendingWithdrawal === true) {
+  if (oldStoreRequest.length === 2 && store.pendingWithdrawal === true) {
+    await Transaction.updateMany(
+      {
+        type: "Debit",
+        ref: storeId,
+        status: "pending"
+      },
+      { $inc: { amount: Number(store.account_details.account_balance) } }
+    );
     // add current payout to oldStoreRequest and oldLedgerRequest
-    oldStoreRequest.amount += payout;
-    oldStoreRequest.fee += payout * 0.02;
-    oldLedgerRequest.amount += payout;
-    oldLedgerRequest.fee += payout * 0.02;
+    // oldStoreRequest.amount += payout;
+    // oldStoreRequest.fee += payout * 0.02;
+    // oldLedgerRequest.amount += payout;
+    // oldLedgerRequest.fee += payout * 0.02;
 
-    // update oldStoreRequest and oldLedgerRequest
-    await oldStoreRequest.save();
-    await oldLedgerRequest.save();
+    // // update oldStoreRequest and oldLedgerRequest
+    // await oldStoreRequest.save();
+    // await oldLedgerRequest.save();
 
     // update store account balance
     store.account_details.total_debit += Number(payout);
@@ -968,7 +966,7 @@ const requestPayout = async (storeId) => {
     to: "Store",
     receiver: storeId,
     ref: storeId,
-    fee: 0.02 * Number(payout)
+    fee: 0
   });
 
   // create Debit transaction for ledger
@@ -978,7 +976,7 @@ const requestPayout = async (storeId) => {
     to: "Ledger",
     receiver: ledger._id,
     ref: storeId,
-    fee: 0.02 * Number(payout)
+    fee: 0
   });
 
   // check for error while creating new transaction
