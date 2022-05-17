@@ -414,9 +414,23 @@ const confirmRiderAccountDetails = async (riderId) => {
   return rider;
 };
 
+const confirmLogisticsAccountDetails = async (companyId) => {
+  // approves or disapproves the company account details
+  let company = await Logistics.findById(companyId);
+  // check if rider exist
+  if (!company) return { err: "Company does not exist.", status: 404 };
+
+  // check if account details field exists
+  if (!company.account_details) return { err: "Account details not found.", status: 400 };
+
+  company.account_details.isVerified = !company.account_details.isVerified;
+  await company.save();
+  return company;
+};
+
 export {
   getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin,
   resetStorePassword, confirmStoreUpdate, createNotification, confirmStorePayout,
   createCompayLedger, getAllStoresUpdateRequests, getResetPasswordRequests,
-  toggleStoreActive, getAllStores, getUsers, getStoreById, getUserById, confirmLogisticsPayout, confirmRiderPayout, confirmRiderAccountDetails
+  toggleStoreActive, getAllStores, getUsers, getStoreById, getUserById, confirmLogisticsPayout, confirmRiderPayout, confirmRiderAccountDetails, confirmLogisticsAccountDetails
 };

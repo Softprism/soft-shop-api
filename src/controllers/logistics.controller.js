@@ -147,14 +147,14 @@ const viewCompanyRiders = async (req, res, next) => {
 
 const viewCompanyRiderDetails = async (req, res, next) => {
   try {
-    const data = await logisticsService.viewCompanyRiderDetails(req.params.riderId);
+    const data = await logisticsService.viewCompanyRiderDetails(req.logistics.id, req.params.riderId);
     // check for errors
     if (data.err) {
       return res.status(data.status).json({ success: false, result: data.err });
     }
     // send response
     res.status(200).json({
-      success: true, result: data, status: 200
+      success: true, result: data[0], status: 200
     });
   } catch (error) {
     return next(error);
@@ -177,6 +177,22 @@ const requestWithdrawal = async (req, res, next) => {
   }
 };
 
+const updateCompanyAccountDetails = async (req, res, next) => {
+  try {
+    const action = await logisticsService.updateCompanyAccountDetails(req.logistics.id, req.body);
+    // check for errors
+    if (action.err) {
+      return res.status(action.status).json({ success: false, result: action.err });
+    }
+    // send response
+    res.status(200).json({
+      success: true, result: action, status: 200
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
 export {
-  companySignup, companyLogin, companyDetails, updateCompanyAddress, updateLoginDetails, updateCompanyImage, updateCompanyDetails, viewCompanyRiders, viewCompanyRiderDetails, requestWithdrawal, getAllCompanies
+  companySignup, companyLogin, companyDetails, updateCompanyAddress, updateLoginDetails, updateCompanyImage, updateCompanyDetails, viewCompanyRiders, viewCompanyRiderDetails, requestWithdrawal, getAllCompanies, updateCompanyAccountDetails
 };

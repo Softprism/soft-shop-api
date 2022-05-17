@@ -1,6 +1,6 @@
 import express from "express";
 import {
-  companyDetails, companyLogin, companySignup, getAllCompanies, requestWithdrawal, updateCompanyAddress, updateCompanyDetails, updateCompanyImage, updateLoginDetails, viewCompanyRiderDetails, viewCompanyRiders
+  companyDetails, companyLogin, companySignup, getAllCompanies, requestWithdrawal, updateCompanyAccountDetails, updateCompanyAddress, updateCompanyDetails, updateCompanyImage, updateLoginDetails, viewCompanyRiderDetails, viewCompanyRiders
 } from "../controllers/logistics.controller";
 import auth from "../middleware/auth";
 
@@ -56,6 +56,13 @@ router.put(
   updateCompanyDetails,
 );
 
+// update company account details route
+router.put(
+  "/account",
+  auth,
+  updateCompanyAccountDetails,
+);
+
 // get company riders route
 router.get(
   "/riders",
@@ -76,4 +83,6 @@ router.post(
   auth,
   requestWithdrawal,
 );
+
+//
 export default router;

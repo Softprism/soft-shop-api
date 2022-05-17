@@ -20,6 +20,7 @@ const logisticsCompanySchema = mongoose.Schema({
     bank_code: { type: String },
     full_name: { type: String },
     bank_name: { type: String },
+    isVerified: { type: Boolean, default: false },
   },
   pendingWithdrawal: { type: Boolean, default: false },
   createdDate: { type: Date, default: Date.now },

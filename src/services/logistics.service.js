@@ -322,7 +322,7 @@ const viewCompanyRiders = async (id, urlParams) => {
   return riders;
 };
 
-const viewCompanyRiderDetails = async (riderId) => {
+const viewCompanyRiderDetails = async (companyId, riderId) => {
   // check if rider exists
   const riderExists = await Rider.findById(riderId);
   if (!riderExists) {
@@ -362,6 +362,11 @@ const viewCompanyRiderDetails = async (riderId) => {
       },
     },
   ]);
+
+  // return error if rider does not belong to company
+  if (riders[0].company_id.toString() !== companyId) {
+    return { err: "This rider does not belong to this company", status: 401 };
+  }
 
   return riders;
 };
@@ -436,6 +441,31 @@ const requestWithdrawal = async (id) => {
   return "Withdrawal Requested Successfully";
 };
 
+const updateCompanyAccountDetails = async (id, accountDetails) => {
+  // check if company exists
+  const companyExists = await Logistics.findById(id);
+  if (!companyExists) {
+    return { err: "This company does not exist", status: 401 };
+  }
+
+  const {
+    account_number,
+    bank_code,
+    full_name,
+    bank_name
+  } = accountDetails;
+
+  // update company account details
+  companyExists.account_details.account_number = account_number;
+  companyExists.account_details.bank_code = bank_code;
+  companyExists.account_details.full_name = full_name;
+  companyExists.account_details.bank_name = bank_name;
+  companyExists.account_details.isVerified = false;
+  await companyExists.save();
+
+  return "Account Details Updated Successfully";
+};
+
 export {
   getAllCompanies,
   companySignup,
@@ -447,5 +477,6 @@ export {
   updateCompanyDetails,
   viewCompanyRiders,
   viewCompanyRiderDetails,
-  requestWithdrawal
+  requestWithdrawal,
+  updateCompanyAccountDetails
 };

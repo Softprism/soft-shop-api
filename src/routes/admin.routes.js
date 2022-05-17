@@ -7,7 +7,7 @@ import {
   createNotification, createCompayLedger, getAllStoresUpdateRequests,
   getResetPasswordRequests, toggleStore, getAllStores, getUsers,
   getUserById, getStoreById, sendRiderMail, sendStoreMail, sendUserMail,
-  sendAllStoresMails, sendAllRidersMails, sendAllUsersMails, sendAllMails, inviteUsersToBeta, confirmRiderAccountDetails
+  sendAllStoresMails, sendAllRidersMails, sendAllUsersMails, sendAllMails, inviteUsersToBeta, confirmRiderAccountDetails, confirmLogisticsAccountDetails
 } from "../controllers/admin.controller";
 import validator from "../middleware/validator";
 import { register, login } from "../validations/adminValidation";
@@ -100,6 +100,9 @@ router.get("/transactions", auth, isAdmin, getTransactions);
 
 // approve rider update account details
 router.put("/riders/account/:riderId", auth, isAdmin, confirmRiderAccountDetails);
+
+// toggle approval for company account details
+router.put("/logistics/account/:companyId", auth, isAdmin, confirmLogisticsAccountDetails);
 
 router.post("/riders/:riderId", auth, isAdmin, sendRiderMail);
 router.post("/riders", auth, isAdmin, sendAllRidersMails);
