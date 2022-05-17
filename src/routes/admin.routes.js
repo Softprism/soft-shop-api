@@ -7,7 +7,7 @@ import {
   createNotification, createCompayLedger, getAllStoresUpdateRequests,
   getResetPasswordRequests, toggleStore, getAllStores, getUsers,
   getUserById, getStoreById, sendRiderMail, sendStoreMail, sendUserMail,
-  sendAllStoresMails, sendAllRidersMails, sendAllUsersMails, sendAllMails, inviteUsersToBeta
+  sendAllStoresMails, sendAllRidersMails, sendAllUsersMails, sendAllMails, inviteUsersToBeta, confirmRiderAccountDetails
 } from "../controllers/admin.controller";
 import validator from "../middleware/validator";
 import { register, login } from "../validations/adminValidation";
@@ -97,6 +97,9 @@ router.put("/stores/:storeId/toggle", auth, isAdmin, toggleStore);
 
 router.post("/ledger", auth, isAdmin, createCompayLedger);
 router.get("/transactions", auth, isAdmin, getTransactions);
+
+// approve rider update account details
+router.put("/riders/account/:riderId", auth, isAdmin, confirmRiderAccountDetails);
 
 router.post("/riders/:riderId", auth, isAdmin, sendRiderMail);
 router.post("/riders", auth, isAdmin, sendAllRidersMails);

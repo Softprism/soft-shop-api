@@ -8,11 +8,10 @@ import Store from "../models/store.model";
 import Notification from "../models/notification.models";
 import StoreUpdate from "../models/store-update.model";
 
-import sendEmail, { sendStorePasswordResetConfirmationMail, sendStorePayoutApprovalMail, sendStoreUpdateRequestApprovalMail } from "../utils/sendMail";
+import { sendStorePasswordResetConfirmationMail, sendStorePayoutApprovalMail, sendStoreUpdateRequestApprovalMail } from "../utils/sendMail";
 import getJwt from "../utils/jwtGenerator";
 import Transaction from "../models/transaction.model";
 import Ledger from "../models/ledger.model";
-import { createTransaction } from "./transaction.service";
 import { initiateTransfer } from "./payment.service";
 import Logistics from "../models/logistics-company.model";
 import Rider from "../models/rider.model";
@@ -178,7 +177,7 @@ const toggleStoreActive = async (urlParams) => {
   const { storeId } = urlParams;
   const fetchStore = await Store.findById(storeId);
   if (!fetchStore) {
-    return { err: "Store does not exists." };
+    return { err: "Store does not exists.", status: 400 };
   }
   let store = {};
   if (fetchStore.isActive) {
@@ -371,7 +370,7 @@ const getAllStores = async (urlParams) => {
 
 const getStoreById = async (storeId) => {
   const store = await Store.findById(storeId);
-  if (!store) return { err: "Store not found." };
+  if (!store) return { err: "Store not found.", status: 400 };
 
   return { store };
 };
@@ -396,14 +395,28 @@ const getUsers = async (urlParams) => {
 const getUserById = async (userId) => {
   const user = await User.findById(userId)
     .select("-password -orders -cart");
-  if (!user) return { err: "User does not exist." };
+  if (!user) return { err: "User does not exist.", status: 404 };
 
   return { user };
+};
+
+const confirmRiderAccountDetails = async (riderId) => {
+  // approves or disapproves the rider account details
+  let rider = await Rider.findById(riderId);
+  // check if rider exist
+  if (!rider) return { err: "Rider does not exist.", status: 404 };
+
+  // check if account details field exists
+  if (!rider.account_details) return { err: "Account details not found.", status: 400 };
+
+  rider.account_details.isVerified = !rider.account_details.isVerified;
+  await rider.save();
+  return rider;
 };
 
 export {
   getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin,
   resetStorePassword, confirmStoreUpdate, createNotification, confirmStorePayout,
   createCompayLedger, getAllStoresUpdateRequests, getResetPasswordRequests,
-  toggleStoreActive, getAllStores, getUsers, getStoreById, getUserById, confirmLogisticsPayout, confirmRiderPayout
+  toggleStoreActive, getAllStores, getUsers, getStoreById, getUserById, confirmLogisticsPayout, confirmRiderPayout, confirmRiderAccountDetails
 };

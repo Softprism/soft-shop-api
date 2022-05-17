@@ -1,6 +1,6 @@
 import express from "express";
 import {
-  getRiders, verifyToken, signup, signin, getLoggedInRider, requestToken, forgotPassword, createNewPassword, updateRiderProfile, requestPayoutCtrl, getPayoutHistoryCtrl
+  getRiders, verifyToken, signup, signin, getLoggedInRider, requestToken, forgotPassword, createNewPassword, updateRiderProfile, requestPayoutCtrl, getPayoutHistoryCtrl, updateRiderAccountDetailsCtrl
 } from "../controllers/rider.controller";
 import auth from "../middleware/auth";
 import validator from "../middleware/validator";
@@ -87,5 +87,8 @@ router.patch("/profile", auth, validator(updateRiderValidation), updateRiderProf
 
 router.get("/payout", auth, requestPayoutCtrl);
 router.get("/payout/history", auth, checkPagination, getPayoutHistoryCtrl);
+
+// update rider account details route
+router.patch("/profile/account", auth, updateRiderAccountDetailsCtrl);
 
 export default router;

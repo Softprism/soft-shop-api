@@ -346,11 +346,23 @@ const inviteUsersToBeta = async (req, res, next) => {
   }
 };
 
+const confirmRiderAccountDetails = async (req, res, next) => {
+  try {
+    const action = await adminService.confirmRiderAccountDetails(req.params.riderId);
+
+    return res.status(200).json({
+      success: true, result: action, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export {
   getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin,
   resetStorePassword, confirmStoreUpdate, createNotification, createTransaction,
   confirmStorePayout, createCompayLedger, getAllStoresUpdateRequests,
   getResetPasswordRequests, toggleStore, getAllStores, getUsers, getUserById,
   getStoreById, sendRiderMail, sendStoreMail, sendUserMail, sendAllStoresMails,
-  sendAllRidersMails, sendAllUsersMails, sendAllMails, confirmLogisticsPayout, inviteUsersToBeta
+  sendAllRidersMails, sendAllUsersMails, sendAllMails, confirmLogisticsPayout, inviteUsersToBeta, confirmRiderAccountDetails
 };

@@ -193,7 +193,6 @@ const updateRider = async (updateParam, id) => {
     // add points to riderFields location object
     riderFields.location.type = "Point";
   }
-  console.log(location);
 
   if (place_id) riderFields.place_id = place_id;
   if (first_name) riderFields.first_name = first_name;
@@ -374,6 +373,32 @@ const getPayoutHistory = async (riderId, urlParams) => {
     .limit(limit);
   return payoutHistory;
 };
+
+const updateRiderAccountDetails = async (riderId, accountDetails) => {
+  // this service is used to update rider account details
+  // successful request sends a update request to admin panel
+  // get fields to update
+  const {
+    account_number,
+    bank_code,
+    full_name,
+    bank_name
+  } = accountDetails;
+
+  // get rider details
+  const rider = await Rider.findById(riderId);
+
+  // update rider account details
+  rider.account_details.account_number = account_number;
+  rider.account_details.bank_code = bank_code;
+  rider.account_details.full_name = full_name;
+  rider.account_details.bank_name = bank_name;
+  rider.account_details.isVerified = false;
+  await rider.save();
+
+  // return success message
+  return "Account Details Updated.";
+};
 export {
   resetPassword,
   requestPasswordToken,
@@ -385,5 +410,6 @@ export {
   loginRider,
   updateRider,
   requestPayout,
-  getPayoutHistory
+  getPayoutHistory,
+  updateRiderAccountDetails
 };
