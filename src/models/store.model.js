@@ -7,7 +7,7 @@ const StoreSchema = mongoose.Schema({
   images: {
     profilePhoto: {
       type: String,
-      default: "https://soft-shop.app/../uploads/store/292672-edit.png"
+      default: "https://soft-shop.app/uploads/store/802559-no-thumbnail.jpeg"
     },
     pictures: [{ type: String }],
   }, // array to store multiple images

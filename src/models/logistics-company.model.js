@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const logisticsCompanySchema = mongoose.Schema({
   email: { type: String, required: true },
   companyName: { type: String, required: true },
-  image: { type: String },
+  image: { type: String, default: "https://soft-shop.app/uploads/store/802559-no-thumbnail.jpeg" },
   companyAddress: { type: String, required: true },
   location: {
     type: { type: String, default: "Point", enum: ["Point"] },
