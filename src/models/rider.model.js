@@ -37,7 +37,7 @@ const riderSchema = mongoose.Schema({
       }),
     ],
   },
-  corporate: { type: Boolean, required: true },
+  corporate: { type: Boolean, required: true, default: false },
   company_id: { type: mongoose.Types.ObjectId, ref: "logistics" },
   email: {
     type: String,
