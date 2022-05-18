@@ -148,10 +148,10 @@ const confirmStorePayout = async (req, res, next) => {
     if (req.query.companyId) {
       transaction = await adminService.confirmLogisticsPayout(req.query.companyId);
     }
-    if (req.query.rider) {
+    if (req.query.riderId) {
       transaction = await adminService.confirmRiderPayout(req.query.riderId);
     }
-
+    console.log(transaction);
     if (transaction.err) {
       res.status(transaction.status).json({
         success: false, msg: transaction.err, data: transaction.data, status: transaction.status

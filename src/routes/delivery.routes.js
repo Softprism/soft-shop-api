@@ -59,7 +59,7 @@ router.post(
         order: order._id,
         orderId: order.orderId,
         // add delivery fee minus 3%
-        deliveryFee: Number(order.deliveryPrice - Math.round(order.deliveryPrice * 0.03)),
+        deliveryFee: Number(order.deliveryPrice - Math.round(order.deliveryPrice * 0.04)),
         user: user._id,
         store: store._id
       };
@@ -139,6 +139,16 @@ router.patch(
     let order = await Order.findById(req.localData.order);
     let delivery = await Delivery.findOne({ order: order._id });
 
+    // calculate delivery fee, order fee and store fee
+    let deliveryFee = 0.04 * order.deliveryPrice;
+    let orderFee = 0.03 * order.subtotal;
+    let storeFee = 0.05 * order.subtotal;
+
+    // console log fees
+    console.log(`deliveryFee: ${deliveryFee}`);
+    console.log(`orderFee: ${orderFee}`);
+    console.log(`storeFee: ${storeFee}`);
+
     // update rider isBusy status to false
     rider.isBusy = false;
     await rider.save();
@@ -147,15 +157,16 @@ router.patch(
     if (rider.corporate) {
       // get rider logistics company
       let company = await Logistics.findById(rider.company_id);
+
       // create credit transaction for logistics company
       await createTransaction({
         amount: Number(delivery.deliveryFee),
         type: "Credit",
         to: "logistics",
         receiver: company._id,
-        status: "pending",
+        status: "completed",
         ref: delivery.orderId,
-        fee: 0
+        fee: deliveryFee
       });
     } else {
       // create credit transaction for rider
@@ -165,12 +176,38 @@ router.patch(
           type: "Credit",
           to: "Rider",
           receiver: rider._id,
-          status: "pending",
+          status: "completed",
           ref: delivery.orderId,
-          fee: 0
+          fee: deliveryFee
         }
       );
     }
+
+    // create credit transaction for store
+    await createTransaction(
+      {
+        amount: Number(order.subtotal - storeFee),
+        type: "Credit",
+        to: "Store",
+        receiver: store._id,
+        status: "completed",
+        ref: delivery.orderId,
+        fee: storeFee
+      }
+    );
+
+    // create credit transaction for ledger
+    await createTransaction(
+      {
+        amount: orderFee + storeFee + deliveryFee,
+        type: "Credit",
+        to: "Ledger",
+        receiver: delivery._id,
+        status: "completed",
+        ref: delivery.orderId,
+        fee: 0
+      }
+    );
 
     // send push notification to user
     await sendMany(

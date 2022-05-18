@@ -319,28 +319,27 @@ const requestPayout = async (riderId) => {
 
   // set payout variable and check if there's sufficient funds
   let payout = rider.account_details.account_balance;
-  if (payout === 0) return { err: "Insufficent Funds.", status: 400 };
+  if (payout < 1000) return { err: "Insufficent Funds. You need up to NGN1000 to request for payouts.", status: 400 };
 
   // check for rider and ledger pending request
-  let oldRequest = await Transaction.find({
+  let oldRequest = await Transaction.findOne({
     type: "Debit",
     ref: riderId,
-    status: "pending"
+    status: "pending",
+    to: "Rider",
   });
 
-  if (oldRequest.length === 2 && rider.pendingWithdrawal === true) {
-    await Transaction.updateMany(
+  if (oldRequest && rider.pendingWithdrawal === true) {
+    await Transaction.findOneAndUpdate(
       {
         type: "Debit",
         ref: riderId,
-        status: "pending"
+        status: "pending",
+        to: "Rider",
+
       },
       { $inc: { amount: Number(rider.account_details.account_balance) } }
     );
-    // oldRequest.amount += Number(rider.account_details.account_balance);
-    // await oldRequest.save();
-    // oldLedgerRequest.amount += Number(rider.account_details.account_balance);
-    // await oldLedgerRequest.save();
 
     // update rider account balance
     rider.account_details.total_debit += Number(rider.account_details.account_balance);
@@ -355,15 +354,6 @@ const requestPayout = async (riderId) => {
     type: "Debit",
     to: "Rider",
     receiver: riderId,
-    ref: riderId
-  });
-
-  // create Debit transaction for ledger
-  await createTransaction({
-    amount: payout,
-    type: "Debit",
-    to: "Ledger",
-    receiver: ledger._id,
     ref: riderId
   });
 

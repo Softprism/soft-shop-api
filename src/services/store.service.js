@@ -925,31 +925,23 @@ const requestPayout = async (storeId) => {
   if (payout < 1000) return { err: "Insufficent Funds. You need up to NGN1000 to request for payouts.", status: 400 };
 
   // check for pending store and ledger request
-  let oldStoreRequest = await Transaction.find({
+  let oldStoreRequest = await Transaction.findOne({
     type: "Debit",
     status: "pending",
-    ref: storeId
-
+    ref: storeId,
+    to: "Store"
   });
 
-  if (oldStoreRequest.length === 2 && store.pendingWithdrawal === true) {
-    await Transaction.updateMany(
+  if (oldStoreRequest && store.pendingWithdrawal === true) {
+    await Transaction.findOneAndUpdate(
       {
         type: "Debit",
         ref: storeId,
-        status: "pending"
+        status: "pending",
+        to: "Store"
       },
       { $inc: { amount: Number(store.account_details.account_balance) } }
     );
-    // add current payout to oldStoreRequest and oldLedgerRequest
-    // oldStoreRequest.amount += payout;
-    // oldStoreRequest.fee += payout * 0.02;
-    // oldLedgerRequest.amount += payout;
-    // oldLedgerRequest.fee += payout * 0.02;
-
-    // // update oldStoreRequest and oldLedgerRequest
-    // await oldStoreRequest.save();
-    // await oldLedgerRequest.save();
 
     // update store account balance
     store.account_details.total_debit += Number(payout);
@@ -969,18 +961,8 @@ const requestPayout = async (storeId) => {
     fee: 0
   });
 
-  // create Debit transaction for ledger
-  let newLedgerTransaction = await createTransaction({
-    amount: payout,
-    type: "Debit",
-    to: "Ledger",
-    receiver: ledger._id,
-    ref: storeId,
-    fee: 0
-  });
-
   // check for error while creating new transaction
-  if (!newStoreTransaction || !newLedgerTransaction) return { err: "Error requesting payout. Please try again", status: 400 };
+  if (!newStoreTransaction) return { err: "Error requesting payout. Please try again", status: 400 };
   store.pendingWithdrawal = true;
   await store.save();
 

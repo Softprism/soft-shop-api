@@ -258,24 +258,24 @@ const confirmStoreUpdate = async (storeID) => {
 
 const confirmStorePayout = async (storeId) => {
   let store = await Store.findById(storeId);
-  let payout = await Transaction.find({
+  let payout = await Transaction.findOne({
     ref: storeId,
     type: "Debit",
     status: "pending"
   });
 
-  if (payout.length < 2) return { err: "No pending payout for this store.", status: 400 };
+  if (payout) return { err: "No pending payout for this store.", status: 400 };
 
   let payload = {
     account_bank: store.account_details.bank_code,
     account_number: store.account_details.account_number,
-    amount: Number(payout[0].amount) - Number(payout[0].fee),
+    amount: Number(payout.amount) - Number(payout.fee),
     narration: storeId,
     currency: "NGN"
   };
   let request = await initiateTransfer(payload);
   // update store payout transaction status to approved
-  await Transaction.updateMany(
+  await Transaction.findOneAndUpdate(
     { ref: storeId, type: "Debit", status: "pending" },
     { $set: { status: "approved" } },
     { omitUndefined: true, new: true, useFindAndModify: false }
@@ -286,24 +286,24 @@ const confirmStorePayout = async (storeId) => {
 
 const confirmLogisticsPayout = async (companyId) => {
   let company = await Logistics.findById(companyId);
-  let payout = await Transaction.find({
+  let payout = await Transaction.findOne({
     ref: companyId,
     type: "Debit",
     status: "pending"
   });
 
-  if (payout.length < 2) return { err: "No pending payout for this logistics company.", status: 400 };
+  if (payout) return { err: "No pending payout for this logistics company.", status: 400 };
 
   let payload = {
     account_bank: company.account_details.bank_code,
     account_number: company.account_details.account_number,
-    amount: Number(payout[0].amount) - Number(payout[0].fee),
+    amount: Number(payout.amount) - Number(payout.fee),
     narration: company._id,
     currency: "NGN"
   };
   let request = await initiateTransfer(payload);
   // update store payout transaction status to approved
-  await Transaction.updateMany(
+  await Transaction.findOneAndUpdate(
     { ref: company._id, type: "Debit", status: "pending" },
     { $set: { status: "approved" } },
     { omitUndefined: true, new: true, useFindAndModify: false }
@@ -313,24 +313,35 @@ const confirmLogisticsPayout = async (companyId) => {
 
 const confirmRiderPayout = async (riderId) => {
   let rider = await Rider.findById(riderId);
-  let payout = await Transaction.find({
+  let payout = await Transaction.findOne({
     ref: riderId,
     type: "Debit",
     status: "pending"
   });
 
-  if (payout.length < 2) return { err: "No pending payout for this rider.", status: 400 };
+  if (!payout) return { err: "No pending payout for this rider.", status: 400 };
 
+  // create withdrawal reference
+  let ref = () => {
+    let s4 = () => {
+      return Math.floor((1 + Math.random()) * 0x10000)
+        .toString(16)
+        .substring(1);
+    };
+      // return id of format 'card - aaaaa'
+    return `rider ${s4()}`;
+  };
   let payload = {
     account_bank: rider.account_details.bank_code,
     account_number: rider.account_details.account_number,
-    amount: Number(payout[0].amount) - Number(payout[0].fee),
+    amount: Number(payout.amount) - Number(payout.fee),
     narration: rider._id,
+    reference: ref(),
     currency: "NGN"
   };
   let request = await initiateTransfer(payload);
   // update store payout transaction status to approved
-  await Transaction.updateMany(
+  await Transaction.findOneAndUpdate(
     { ref: rider._id, type: "Debit", status: "pending" },
     { $set: { status: "approved" } },
     { omitUndefined: true, new: true, useFindAndModify: false }

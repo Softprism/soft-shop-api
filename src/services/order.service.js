@@ -294,7 +294,7 @@ const createOrder = async (orderParam) => {
     .addFields({
       taxPrice: {
         $multiply: [
-          0.075,
+          0.03,
           { $add: ["$totalProductPrice", "$totalVariantPrice"] },
         ],
       },

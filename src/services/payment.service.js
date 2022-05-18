@@ -15,6 +15,8 @@ import {
 import { createTransaction } from "./transaction.service";
 import { sendMany } from "./push.service";
 import Transaction from "../models/transaction.model";
+import Rider from "../models/rider.model";
+import Logistics from "../models/logistics-company.model";
 
 // initial env variables
 dotenv.config();
@@ -43,7 +45,6 @@ const verifyTransaction = async (paymentDetails) => {
   // if it's a order transaction, it adds the payment details to the order payment result and credit store balance
 
   const response = await flw.Transaction.verify({ id: paymentDetails.data.id });
-  console.log(response);
 
   const { tx_ref } = response.data;
   if (tx_ref.includes("card")) {
@@ -87,6 +88,8 @@ const verifyTransaction = async (paymentDetails) => {
     user.cards.push(response.data.card);
     await user.save();
 
+    console.log(user.cards);
+
     // create credit transaction for Ledger
     let ledger = await Ledger.findOne({});
     let request = {
@@ -115,82 +118,9 @@ const verifyTransaction = async (paymentDetails) => {
     order.paymentResult = response.data;
     order.markModified("paymentResult");
 
-    // Update order status to sent and credit store balance when payment has been validated by flutterwave. Hitting this endpoint from softshop app will not update details.
+    // Update order status to sent. Hitting this endpoint from softshop app will not update details.
     if (response.data.status === "successful" && paymentDetails.softshop !== "true") {
       order.status = "sent";
-
-      // create a credit transaction for store and softshop
-      // calculate softshop commission with order.subtotal range and store category
-      let commission = 0;
-      if (store.category.name === "food") {
-        if (order.subtotal >= 0 && order.subtotal <= 2999) {
-          commission = 0.05;
-        }
-        if (order.subtotal > 2999 && order.subtotal <= 5999) {
-          commission = 0.04;
-        }
-        if (order.subtotal > 5999 && order.subtotal <= 9999) {
-          commission = 0.03;
-        }
-        if (order.subtotal > 9999 && order.subtotal <= 14999) {
-          commission = 0.02;
-        }
-        if (order.subtotal > 14999) {
-          commission = 0.015;
-        }
-      }
-      if (store.category.name === "Grocery") {
-        if (order.subtotal >= 0 && order.subtotal <= 19999) {
-          commission = 0.05;
-        }
-        if (order.subtotal > 19999 && order.subtotal <= 39999) {
-          commission = 0.04;
-        }
-        if (order.subtotal > 39999 && order.subtotal <= 59999) {
-          commission = 0.03;
-        }
-        if (order.subtotal > 59999 && order.subtotal <= 99999) {
-          commission = 0.02;
-        }
-        if (order.subtotal > 100000) {
-          commission = 0.015;
-        }
-      }
-      if (store.category.name === "Pharmacy") {
-        if (order.subtotal >= 0 && order.subtotal <= 3999) {
-          commission = 0.05;
-        }
-        if (order.subtotal > 3999 && order.subtotal <= 7999) {
-          commission = 0.04;
-        }
-        if (order.subtotal > 7999 && order.subtotal <= 11999) {
-          commission = 0.03;
-        }
-        if (order.subtotal > 11999 && order.subtotal <= 15999) {
-          commission = 0.02;
-        }
-        if (order.subtotal > 15999) {
-          commission = 0.015;
-        }
-      }
-      let storeReq = {
-        amount: Number(order.subtotal) - Number(order.subtotal * commission),
-        type: "Credit",
-        to: "Store",
-        receiver: store._id,
-        status: "completed",
-        ref: order._id
-      };
-      await createTransaction(storeReq);
-      let ledgerReq = {
-        amount: order.totalPrice,
-        type: "Credit",
-        to: "Ledger",
-        receiver: ledger._id,
-        status: "completed",
-        ref: order._id
-      };
-      await createTransaction(ledgerReq);
 
       // notify order app on new order
       let data = {
@@ -234,61 +164,91 @@ const verifyTransaction = async (paymentDetails) => {
 };
 
 const verifyPayout = async (payload) => {
-  // check for failed payment and retry
-
-  // else check for successful payment and update transaction status and send appropraite emails
-
   let flwpayload = {
     id: payload.data.id
   };
   const response = await flw.Transfer.get_a_transfer(flwpayload);
-
+  console.log(response);
   if (response.data.status === "SUCCESSFUL") {
-    let ledger = await Ledger.findOne({});
-    let store = await Store.findById(response.data.narration);
-    // check for approved store request
-    let oldStoreRequest = await Transaction.findOne({
-      type: "Debit",
-      to: "Store",
-      receiver: response.data.narration,
-      status: "approved",
-    });
-    // check for pending store request in ledger
-    let oldLedgerRequest = await Transaction.findOne({
-      type: "Debit",
-      to: "Ledger",
-      receiver: ledger._id,
-      status: "approved",
-      ref: response.data.narration
+    // check if reference starts with "rider" or "store" or "logistics"
+    if (payload.data.reference.startsWith("rider")) {
+      // set rider's pendingWithdrawal status to false
+      let rider = await Rider.findById(response.data.narration);
+      rider.pendingWithdrawal = false;
+      await rider.save();
 
-    });
-
-    if (oldStoreRequest && oldLedgerRequest) {
-      // update status of oldStoreRequest and oldLedgerRequest
-      oldStoreRequest.status = "completed";
-      oldLedgerRequest.status = "completed";
-
-      // update oldStoreRequest and oldLedgerRequest
-      await oldStoreRequest.save();
-      await oldLedgerRequest.save();
-
-      // change store's pending withdrawal to false
-      store.pendingWithdrawal = false;
-      store.save();
-
-      // send push notifications to vendor on successful payment
+      // send push notification to rider
       await sendMany(
         "ssa",
-        store.vendorPushDeviceToken,
-        "Payout Completed",
-        "Your withdrawal request has been paid successfully",
+        rider.pushDeviceToken,
+        "Withdrawal Completed",
+        `Your withdrawal of ${response.data.amount} was successful`,
+        {}
       );
-      // send payout sent email
-      await sendStorePayoutSentMail(store.email, response.data.amount);
-    }
 
-    return response;
+      // complete approved transaction
+      await Transaction.findOneAndUpdate(
+        {
+          type: "Debit",
+          to: "Rider",
+          receiver: rider._id,
+          status: "approved",
+        },
+        {
+          status: "completed",
+        }
+      );
+    }
+    if (payload.data.reference.startsWith("store")) {
+      // set store's pendingWithdrawal status to false
+      let store = await Store.findById(response.data.narration);
+      store.pendingWithdrawal = false;
+      await store.save();
+
+      // send push notification to store
+      await sendMany(
+        "ssa",
+        store.pushDeviceToken,
+        "Withdrawal Completed",
+        `Your withdrawal of ${response.data.amount} was successful`,
+        {} // data to be sent to store app
+      );
+
+      // complete approved transaction
+      await Transaction.findOneAndUpdate(
+        {
+          type: "Debit",
+          to: "Store",
+          receiver: store._id,
+          status: "approved",
+        },
+        {
+          status: "completed",
+        }
+      );
+    }
+    if (payload.data.reference.startsWith("logistics")) {
+      // set store's pendingWithdrawal status to false
+      let company = await Logistics.findById(response.data.narration);
+      company.pendingWithdrawal = false;
+      await company.save();
+
+      // complete approved transaction
+      await Transaction.findOneAndUpdate(
+        {
+          type: "Debit",
+          to: "Logistics",
+          receiver: company._id,
+          status: "approved",
+        },
+        {
+          status: "completed",
+        }
+      );
+      // send email to logistics
+    }
   }
+  return response;
 };
 
 const encryptCard = async (text) => {
