@@ -145,6 +145,20 @@ const reviewOrder = async (req, res, next) => {
   }
 };
 
+const calculateDeliveryFee = async (req, res, next) => {
+  try {
+    const fee = await orderService.calculateDeliveryFee(req.query);
+
+    if (fee.err) {
+      return res.status(fee.status).json({ success: false, msg: fee.err, status: fee.status });
+    }
+
+    res.status(200).json({ success: true, result: fee, status: 200 });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const encryptDetails = async (req, res, next) => {
   const result = await orderService.encryptDetails(req.body);
   return res.status(200).json({ success: true, result, status: 200 });
@@ -157,5 +171,6 @@ export {
   getOrderDetails,
   editOrder,
   reviewOrder,
-  encryptDetails
+  encryptDetails,
+  calculateDeliveryFee
 };

@@ -47,9 +47,7 @@ const getDistanceService = async (req, res, next) => {
     }
     return res.status(200).json({
       success: true,
-      result: {
-        distance: distance.data.rows[0].elements[0].duration.text
-      },
+      result: distance.data.rows[0].elements[0],
       status: 200
     });
   } catch (error) {
@@ -57,4 +55,27 @@ const getDistanceService = async (req, res, next) => {
   }
 };
 
-export { getDistance, getDistanceService };
+const getDistanceServiceForDelivery = async (destination, origin) => {
+  try {
+    if (!destination) return { err: "Please enter destination.", status: 400 };
+    if (!origin) return { err: "Please enter origin.", status: 400 };
+
+    let distance = await client.distancematrix({
+      params: {
+        origins: [`place_id:${origin}`],
+        destinations: [`place_id:${destination}`],
+        key: process.env.GOOGLE_MAPS_API_KEY
+      },
+      timeout: 50000
+    });
+    if (distance.data.rows[0].elements[0].status === "NOT_FOUND") {
+      throw { err: "Can't resolve", status: 400 };
+    }
+
+    return distance.data.rows[0].elements[0];
+  } catch (error) {
+    throw error;
+  }
+};
+
+export { getDistance, getDistanceService, getDistanceServiceForDelivery };

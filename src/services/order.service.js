@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { SubscribeRulesList } from "twilio/lib/rest/video/v1/room/roomParticipant/roomParticipantSubscribeRule";
 import Order from "../models/order.model";
 import User from "../models/user.model";
 import Store from "../models/store.model";
@@ -7,6 +8,8 @@ import Review from "../models/review.model";
 import {
   bankTransfer, ussdPayment, cardPayment, verifyTransaction
 } from "./payment.service";
+import { getDistanceService, getDistanceServiceForDelivery } from "../utils/get-distance";
+import Rider from "../models/rider.model";
 
 const getOrders = async (urlParams) => {
   // initialize match parameters, get limit, skip & sort values
@@ -145,7 +148,6 @@ const getOrders = async (urlParams) => {
 
 const createOrder = async (orderParam) => {
   const { store, user } = orderParam;
-  console.log(orderParam);
 
   // validate user
   const vUser = await User.findById(user);
@@ -698,6 +700,84 @@ const encryptDetails = async (cardDetails) => {
   return charge;
 };
 
+const calculateDeliveryFee = async ({ storeId, destination, origin }) => {
+  const distance = await getDistanceServiceForDelivery(destination, origin);
+
+  // find store and populate store's category
+  const store = await Store.findById(storeId).populate("category");
+  // if store is not found return error
+  if (!store) return { err: "Store not found.", status: 404 };
+
+  // get store's category
+  const category = store.category.name;
+
+  // category name can either be "Food" or "Groceries" or "Cosmetics"
+  // set base delivery fee for each category
+  let baseDeliveryFee = 0;
+  if (category === "Food") baseDeliveryFee = 400;
+  else if (category === "Groceries") baseDeliveryFee = 800;
+  else if (category === "Cosmetics") baseDeliveryFee = 700;
+
+  // convert distance value to km
+  distance.distance.value /= 1000;
+
+  // set distance fee based on distance
+  let distanceFee = distance.distance.value * 23;
+
+  // convert distance time to minutes
+  distance.duration.value /= 60;
+
+  // set time fee based on time
+  let timeFee = distance.duration.value * 10;
+
+  // set delivery fee
+  let deliveryFee = baseDeliveryFee + distanceFee + timeFee;
+
+  // check for surge by checking the amount of riders that isBusy is true and false
+  let surge = false;
+  const busyRiders = await Rider.find({
+    store: storeId,
+    isBusy: true,
+    location: {
+      $geoWithin: {
+        $centerSphere: [[store.location.coordinates[0], store.location.coordinates[1]], 0.0015],
+      }
+    }
+  });
+  console.log(busyRiders);
+  const busyRidersLength = busyRiders.length;
+
+  const otherRiders = await Rider.find({
+    "location.coordinates": {
+      $geoWithin: {
+        $centerSphere: [[store.location.coordinates[0], store.location.coordinates[1]], 0.0015],
+      }
+    }
+  });
+  console.log(otherRiders);
+  const freeRidersLength = otherRiders.length;
+
+  // check if there are more busy riders than free riders different ranges
+  if (freeRidersLength - busyRidersLength > 0 && freeRidersLength - busyRidersLength < 5) {
+    deliveryFee += deliveryFee * 0.15;
+    surge = true;
+  } else if (freeRidersLength - busyRidersLength > 5 && freeRidersLength - busyRidersLength < 10) {
+    deliveryFee += deliveryFee * 0.1;
+    surge = true;
+  }
+
+  // return ceiled values for all fees
+  return {
+    deliveryFee: Math.ceil(deliveryFee),
+    distanceFee: Math.ceil(distanceFee),
+    timeFee: Math.ceil(timeFee),
+    baseDeliveryFee: Math.ceil(baseDeliveryFee),
+    surge,
+    busyRiders: busyRidersLength,
+    freeRiders: freeRidersLength,
+  };
+};
+
 export {
   getOrders,
   createOrder,
@@ -706,7 +786,8 @@ export {
   getCartItems,
   editOrder,
   reviewOrder,
-  encryptDetails
+  encryptDetails,
+  calculateDeliveryFee
 };
 
 // Updates

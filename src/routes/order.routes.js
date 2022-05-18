@@ -9,7 +9,8 @@ import {
   getOrderDetails,
   editOrder,
   reviewOrder,
-  encryptDetails
+  encryptDetails,
+  calculateDeliveryFee
 } from "../controllers/order.controller";
 import validator from "../middleware/validator";
 import { order_validation, reviewValidation } from "../validations/orderValidation";
@@ -163,6 +164,9 @@ router.put("/review/:orderId?", auth, validator(reviewValidation), reviewOrder);
 // @desc
 // @access  Private
 router.post("/card/encrypt", encryptDetails);
+
+// get delivery fee route
+router.get("/delivery-fee", auth, calculateDeliveryFee);
 
 // @route   GET /:orderID
 // @desc    toggles an order's detail
