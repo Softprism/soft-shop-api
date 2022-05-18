@@ -48,7 +48,7 @@ const verifyEmailAddress = async ({ email }) => {
 
 const registerRider = async (riderParam) => {
   const {
-    first_name, last_name, email, phone_number, password
+    first_name, last_name, email, phone_number, password, corporate, company_id
   } = riderParam;
 
   // check if rider exists
@@ -72,7 +72,9 @@ const registerRider = async (riderParam) => {
     email,
     phone_number,
     password,
-    isVerified
+    isVerified,
+    corporate,
+    company_id
   };
     // Save rider to db
   const createdRider = await Rider.create(newRider);
