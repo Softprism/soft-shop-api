@@ -266,6 +266,9 @@ const loggedInRider = async (riderId) => {
     {
       $unset: [
         "password",
+        "deliveries",
+        "deliveryReview",
+        "orders"
       ],
     },
   ];
@@ -297,6 +300,7 @@ const loggedInRider = async (riderId) => {
       numOfReviews: { $size: "$deliveryReview" },
       averageRating: { $floor: { $avg: "$deliveryReview.star" } },
       deliveryCount: { $size: "$deliveries" },
+      amountEarned: { $sum: "$deliveries.deliveryFee" },
       orderCount: { $size: "$orders" },
     })
     .addFields({
