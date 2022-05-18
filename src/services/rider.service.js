@@ -60,7 +60,7 @@ const registerRider = async (riderParam) => {
   }
 
   // check if server is in production
-  if (process.env.NODE_ENV === "production") {
+  if (process.env.NODE_ENV === "production" && company_id) {
     // check if company exists
     let company = await Logistics.findById(company_id);
     if (!company) {
