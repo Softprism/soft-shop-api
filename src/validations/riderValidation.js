@@ -1,4 +1,5 @@
 import Joi from "joi";
+import { ObjectId } from "mongodb";
 import objectId from "./common";
 
 const registerValidation = {
@@ -27,6 +28,13 @@ const registerValidation = {
         "string.empty": "Sorry, phone number cannot be an empty field",
         "string.min": "Phone number should be 11 numbers"
       }),
+    company_id: objectId.empty().messages({
+      "string.empty": "Sorry, company id cannot be an empty field",
+      "string.length": "Company id must be a valid mongoose id.",
+    }),
+    corporate: Joi.boolean().empty().messages({
+      "boolean.empty": "Sorry, corporate cannot be an empty field",
+    }),
     password: Joi.string().min(6).empty().required()
       .messages({
         "any.required": "Password is required.",
@@ -175,6 +183,13 @@ const updateRiderValidation = {
           "string.empty": "Sorry, bank code cannot be an empty field",
           "string.min": "Bank code should be 3 characters or more",
         }),
+    }),
+    company_id: objectId.empty().messages({
+      "string.empty": "Sorry, company id cannot be an empty field",
+      "string.length": "Company id must be a valid mongoose id.",
+    }),
+    corporate: Joi.boolean().empty().messages({
+      "boolean.empty": "Sorry, corporate cannot be an empty field",
     }),
     pushNotifications: Joi.boolean().empty(),
     isBusy: Joi.boolean().empty(),

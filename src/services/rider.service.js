@@ -13,6 +13,7 @@ import { sendForgotPasswordSMS } from "../utils/sendSMS";
 import Transaction from "../models/transaction.model";
 import { createTransaction } from "./transaction.service";
 import Ledger from "../models/ledger.model";
+import Logistics from "../models/logistics-company.model";
 
 const getAllRiders = async (urlParams) => {
   const limit = Number(urlParams.limit);
@@ -47,6 +48,7 @@ const verifyEmailAddress = async ({ email }) => {
 };
 
 const registerRider = async (riderParam) => {
+  console.log(riderParam);
   const {
     first_name, last_name, email, phone_number, password, corporate, company_id
   } = riderParam;
@@ -57,13 +59,26 @@ const registerRider = async (riderParam) => {
     return { err: "Rider with this email already exists.", status: 409 };
   }
 
-  let isVerified;
-  // verify rider's signup token
-  let signupToken = await Token.findOne({ _id: riderParam.token, email });
-  if (signupToken) {
-    isVerified = true;
-  } else {
-    return { err: "Email Authentication failed. Please try again.", status: 409 };
+  // check if server is in production
+  if (process.env.NODE_ENV === "production") {
+    // check if company exists
+    let company = await Logistics.findById(company_id);
+    if (!company) {
+      return { err: "Company does not exists.", status: 404 };
+    }
+  }
+
+  let isVerified = false;
+
+  // check if server is in production
+  if (process.env.NODE_ENV === "production") {
+    // verify rider's signup token
+    let signupToken = await Token.findOne({ _id: riderParam.token, email });
+    if (signupToken) {
+      isVerified = true;
+    } else {
+      return { err: "Email Authentication failed. Please try again.", status: 409 };
+    }
   }
   // Create rider Object
   const newRider = {
