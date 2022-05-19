@@ -77,7 +77,7 @@ router.post(
         "Your order is now ready for delivery, we'll also notify you when your order has been picked up."
       );
 
-      await sendUserOrderReadyMail(order.orderId, user.email);
+      // await sendUserOrderReadyMail(order.orderId, user.email);
     } catch (error) {
       await createLog("error", "delivery.routes", "create_Delivery");
     }
@@ -121,7 +121,7 @@ router.patch(
       `The delivery for your order has been accepted by ${rider.last_name} ${rider.first_name}.`
     );
     // send mail to user, notify them of delivery acceptance
-    await sendUserOrderAcceptedMail(order.orderId, user.email);
+    // await sendUserOrderAcceptedMail(order.orderId, user.email);
   }
 );
 
@@ -287,7 +287,7 @@ router.patch(
         "Your order has been delivered to your location."
       );
       // send mail to user
-      await sendUserOrderDeliveredMail(order.orderId, user.email, order.deliveryAddress);
+      // await sendUserOrderDeliveredMail(order.orderId, user.email, order.deliveryAddress);
       // send sms to user
       await sendUserOrderDeliveredSMS(order.orderId, user.phone_number, order.deliveryAddress);
     }
@@ -311,7 +311,7 @@ router.patch(
         `The delivery for your order has been accepted by ${rider.last_name} ${rider.first_name}.`
       );
       // send mail to user
-      await sendUserOrderAcceptedMail(order.orderId, user.email, order.delivery_address);
+      // await sendUserOrderAcceptedMail(order.orderId, user.email, order.delivery_address);
     }
   }
 );

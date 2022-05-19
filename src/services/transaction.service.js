@@ -4,8 +4,10 @@ import Rider from "../models/rider.model";
 import Store from "../models/store.model";
 import Transaction from "../models/transaction.model";
 import {
-  sendRiderDebitMail, sendStoreDebitMail
+  sendRiderCreditMail,
+  sendRiderDebitMail, sendStoreCreditMail, sendStoreDebitMail
 } from "../utils/sendMail";
+import { sendMany } from "./push.service";
 
 const createTransaction = async ({
   amount, type, to, receiver, status, ref, fee
@@ -25,6 +27,18 @@ const createTransaction = async ({
     store.account_details.total_credit += Number(amount);
     store.account_details.account_balance = Number(store.account_details.total_credit) - Number(store.account_details.total_debit);
     await store.save();
+
+    // send email to store on credit
+    await sendStoreCreditMail(store.email, amount);
+
+    // send push notification to store on credit
+    await sendMany(
+      "ssa",
+      store.vendorPushDeviceToken,
+      "Your SoftShop Account Has Been Credited",
+      `Your SoftShop account has been credited with ${amount}`,
+      {}
+    );
   }
 
   // debit store
@@ -33,6 +47,18 @@ const createTransaction = async ({
     store.account_details.total_debit += Number(amount);
     store.account_details.account_balance = Number(store.account_details.total_credit) - Number(store.account_details.total_debit);
     await store.save();
+
+    // send email to store on debit
+    await sendStoreDebitMail(store.email, amount);
+
+    // send push notification to store on debit
+    await sendMany(
+      "ssa",
+      store.vendorPushDeviceToken,
+      "Your SoftShop Account Has Been Debited",
+      `Your SoftShop account has been debited with ${amount}`,
+      {}
+    );
   }
 
   // credit ledger
@@ -57,6 +83,18 @@ const createTransaction = async ({
     rider.account_details.total_credit += Number(amount);
     rider.account_details.account_balance = Number(rider.account_details.total_credit) - Number(rider.account_details.total_debit);
     await rider.save();
+
+    // send email to rider on credit
+    await sendRiderCreditMail(rider.email, amount);
+
+    // send push notification to rider on credit
+    await sendMany(
+      "ssa",
+      rider.pushDeviceToken,
+      "Your SoftShop Account Has Been Credited",
+      `Your SoftShop account has been credited with ${amount}`,
+      {}
+    );
   }
 
   // debit rider
@@ -65,7 +103,18 @@ const createTransaction = async ({
     rider.account_details.total_debit += Number(amount);
     rider.account_details.account_balance = Number(rider.account_details.total_credit) - Number(rider.account_details.total_debit);
     await rider.save();
+
+    // send email to rider on debit
     await sendRiderDebitMail(rider.email, Number(amount));
+
+    // send push notification to rider on debit
+    await sendMany(
+      "ssa",
+      rider.pushDeviceToken,
+      "Your SoftShop Account Has Been Debited",
+      `Your SoftShop account has been debited with ${amount}`,
+      {}
+    );
   }
 
   // credit logistics company
@@ -74,6 +123,9 @@ const createTransaction = async ({
     logistics.account_details.total_credit += Number(amount);
     logistics.account_details.account_balance = Number(logistics.account_details.total_credit) - Number(logistics.account_details.total_debit);
     await logistics.save();
+
+    // send email to logistics company on credit
+    await sendRiderCreditMail(logistics.email, amount);
   }
 
   // debit logistics company
@@ -82,6 +134,9 @@ const createTransaction = async ({
     logistics.account_details.total_debit += Number(amount);
     logistics.account_details.account_balance = Number(logistics.account_details.total_credit) - Number(logistics.account_details.total_debit);
     await logistics.save();
+
+    // send email to logistics company on debit
+    await sendRiderDebitMail(logistics.email, Number(amount));
   }
 
   return newTrans;

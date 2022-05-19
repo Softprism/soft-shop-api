@@ -15,6 +15,7 @@ import Ledger from "../models/ledger.model";
 import { initiateTransfer } from "./payment.service";
 import Logistics from "../models/logistics-company.model";
 import Rider from "../models/rider.model";
+import { sendMany } from "./push.service";
 
 const getAdmins = async () => {
   const admins = await Admin.find();
@@ -280,7 +281,9 @@ const confirmStorePayout = async (storeId) => {
     { $set: { status: "approved" } },
     { omitUndefined: true, new: true, useFindAndModify: false }
   );
-  await sendStorePayoutApprovalMail(store.email, payload.amount);
+  // send push notification to store vendorPushDeviceToken
+  await sendMany("ssa", store.vendorPushDeviceToken, "Payout Request Approved!", `Your request to withdraw ${payload.amount} has been approved`);
+  // await sendStorePayoutApprovalMail(store.email, payload.amount);
   return request;
 };
 

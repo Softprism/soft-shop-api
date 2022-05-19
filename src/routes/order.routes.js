@@ -60,9 +60,9 @@ router.put(
     let order = await Order.findById(req.localData.order_id);
     if (req.body.status === "approved") {
       // send mail
-      await sendUserNewOrderApprovedMail(order.orderId, req.localData.user_email, req.localData.store_name);
-      // send sms
-      await sendUserNewOrderAcceptedSMS(order.orderId, req.localData.user_phone, req.localData.store_name);
+      // await sendUserNewOrderApprovedMail(order.orderId, req.localData.user_email, req.localData.store_name);
+      // // send sms
+      // await sendUserNewOrderAcceptedSMS(order.orderId, req.localData.user_phone, req.localData.store_name);
       // send push notification
       await sendMany(
         "ssa",
@@ -86,7 +86,7 @@ router.put(
     }
     if (req.body.status === "ready") {
       // send mail
-      await sendUserOrderReadyMail(order.orderId, req.localData.user_email);
+      // await sendUserOrderReadyMail(order.orderId, req.localData.user_email);
       // await sendUserNewOrderRejectedSMS(req.localData.user_phone, req.localData.store_name);
 
       // send push notification to user

@@ -198,6 +198,9 @@ const verifyPayout = async (payload) => {
           status: "completed",
         }
       );
+
+      // send email to rider on successful withdrawal
+      await sendStorePayoutSentMail(rider.email, response.data.amount);
     }
     if (payload.data.reference.startsWith("store")) {
       // set store's pendingWithdrawal status to false
@@ -226,6 +229,9 @@ const verifyPayout = async (payload) => {
           status: "completed",
         }
       );
+
+      // send email to store on withdrawal completion
+      await sendStorePayoutSentMail(store.email, response.data.amount);
     }
     if (payload.data.reference.startsWith("logistics")) {
       // set store's pendingWithdrawal status to false
@@ -246,6 +252,7 @@ const verifyPayout = async (payload) => {
         }
       );
       // send email to logistics
+      await sendStorePayoutSentMail(company.email, response.data.amount);
     }
   }
   return response;
