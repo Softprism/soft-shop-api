@@ -147,7 +147,7 @@ const reviewOrder = async (req, res, next) => {
 
 const calculateDeliveryFee = async (req, res, next) => {
   try {
-    const fee = await orderService.calculateDeliveryFee(req.query);
+    const fee = await orderService.calculateDeliveryFee(req.user.id, req.query);
 
     if (fee.err) {
       return res.status(fee.status).json({ success: false, msg: fee.err, status: fee.status });

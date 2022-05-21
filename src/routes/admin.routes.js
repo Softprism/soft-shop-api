@@ -7,7 +7,7 @@ import {
   createNotification, createCompayLedger, getAllStoresUpdateRequests,
   getResetPasswordRequests, toggleStore, getAllStores, getUsers,
   getUserById, getStoreById, sendRiderMail, sendStoreMail, sendUserMail,
-  sendAllStoresMails, sendAllRidersMails, sendAllUsersMails, sendAllMails, inviteUsersToBeta, confirmRiderAccountDetails, confirmLogisticsAccountDetails
+  sendAllStoresMails, sendAllRidersMails, sendAllUsersMails, sendAllMails, inviteUsersToBeta, confirmRiderAccountDetails, confirmLogisticsAccountDetails, addUserDiscount
 } from "../controllers/admin.controller";
 import validator from "../middleware/validator";
 import { register, login } from "../validations/adminValidation";
@@ -117,5 +117,8 @@ router.post("/mails", auth, isAdmin, sendAllMails);
 
 // invite users to beta
 router.post("/invite/users", auth, isAdmin, inviteUsersToBeta);
+
+// add discount to user
+router.post("/discounts/user", auth, isAdmin, addUserDiscount);
 
 export default router;

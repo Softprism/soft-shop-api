@@ -370,11 +370,25 @@ const confirmLogisticsAccountDetails = async (req, res, next) => {
   }
 };
 
+const addUserDiscount = async (req, res, next) => {
+  try {
+    const discount = await adminService.addUserDiscount(req.body);
+
+    if (discount.err) {
+      return res.status(discount.status).json({ success: false, msg: discount.err, status: discount.status });
+    }
+
+    res.status(200).json({ success: true, result: discount, status: 200 });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export {
   getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin,
   resetStorePassword, confirmStoreUpdate, createNotification, createTransaction,
   confirmStorePayout, createCompayLedger, getAllStoresUpdateRequests,
   getResetPasswordRequests, toggleStore, getAllStores, getUsers, getUserById,
   getStoreById, sendRiderMail, sendStoreMail, sendUserMail, sendAllStoresMails,
-  sendAllRidersMails, sendAllUsersMails, sendAllMails, confirmLogisticsPayout, inviteUsersToBeta, confirmRiderAccountDetails, confirmLogisticsAccountDetails
+  sendAllRidersMails, sendAllUsersMails, sendAllMails, confirmLogisticsPayout, inviteUsersToBeta, confirmRiderAccountDetails, confirmLogisticsAccountDetails, addUserDiscount
 };

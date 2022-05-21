@@ -1,4 +1,3 @@
-import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 
 import mongoose from "mongoose";
@@ -8,7 +7,7 @@ import Store from "../models/store.model";
 import Notification from "../models/notification.models";
 import StoreUpdate from "../models/store-update.model";
 
-import { sendStorePasswordResetConfirmationMail, sendStorePayoutApprovalMail, sendStoreUpdateRequestApprovalMail } from "../utils/sendMail";
+import { sendStorePasswordResetConfirmationMail, sendStoreUpdateRequestApprovalMail } from "../utils/sendMail";
 import getJwt from "../utils/jwtGenerator";
 import Transaction from "../models/transaction.model";
 import Ledger from "../models/ledger.model";
@@ -16,6 +15,7 @@ import { initiateTransfer } from "./payment.service";
 import Logistics from "../models/logistics-company.model";
 import Rider from "../models/rider.model";
 import { sendMany } from "./push.service";
+import UserDiscount from "../models/user-discount.model";
 
 const getAdmins = async () => {
   const admins = await Admin.find();
@@ -441,10 +441,26 @@ const confirmLogisticsAccountDetails = async (companyId) => {
   await company.save();
   return company;
 };
+const addUserDiscount = async ({
+  userId, discount, expiredAt, discountType
+}) => {
+  let user = await User.findById(userId);
+  if (!user) return { err: "User does not exist.", status: 404 };
+
+  let discountObj = {
+    user: user._id,
+    discount,
+    expiredAt,
+    discountType
+  };
+  let newDiscount = new UserDiscount(discountObj);
+  await newDiscount.save();
+  return newDiscount;
+};
 
 export {
   getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin,
   resetStorePassword, confirmStoreUpdate, createNotification, confirmStorePayout,
   createCompayLedger, getAllStoresUpdateRequests, getResetPasswordRequests,
-  toggleStoreActive, getAllStores, getUsers, getStoreById, getUserById, confirmLogisticsPayout, confirmRiderPayout, confirmRiderAccountDetails, confirmLogisticsAccountDetails
+  toggleStoreActive, getAllStores, getUsers, getStoreById, getUserById, confirmLogisticsPayout, confirmRiderPayout, confirmRiderAccountDetails, confirmLogisticsAccountDetails, addUserDiscount
 };

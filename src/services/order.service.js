@@ -10,6 +10,8 @@ import {
 } from "./payment.service";
 import { getDistanceService, getDistanceServiceForDelivery } from "../utils/get-distance";
 import Rider from "../models/rider.model";
+import UserDiscount from "../models/user-discount.model";
+import { getUserBasketItems } from "./user.service";
 
 const getOrders = async (urlParams) => {
   // initialize match parameters, get limit, skip & sort values
@@ -700,7 +702,7 @@ const encryptDetails = async (cardDetails) => {
   return charge;
 };
 
-const calculateDeliveryFee = async ({ storeId, destination, origin }) => {
+const calculateDeliveryFee = async (userId, { storeId, destination, origin }) => {
   const distance = await getDistanceServiceForDelivery(destination, origin);
 
   // find store and populate store's category
@@ -744,7 +746,6 @@ const calculateDeliveryFee = async ({ storeId, destination, origin }) => {
       }
     }
   });
-  console.log(busyRiders);
   const busyRidersLength = busyRiders.length;
 
   const otherRiders = await Rider.find({
@@ -754,7 +755,6 @@ const calculateDeliveryFee = async ({ storeId, destination, origin }) => {
       }
     }
   });
-  console.log(otherRiders);
   const freeRidersLength = otherRiders.length;
 
   // check if there are more busy riders than free riders different ranges
@@ -766,15 +766,59 @@ const calculateDeliveryFee = async ({ storeId, destination, origin }) => {
     surge = true;
   }
 
+  // get users basket
+  const userbasketItems = await getUserBasketItems(userId);
+  console.log(userbasketItems);
+
+  // calculate subtotal fee from userbascket items totalPrice
+  let taxFee = 0.03 * userbasketItems.totalPrice;
+
+  // check for deliveryFee userDiscount
+  let deliveryDiscountPrice = 0;
+  let deliveryDiscount = false;
+  const userDeliveryDiscount = await UserDiscount.findOne({ user: userId, discountType: "deliveryFee" });
+  if (userDeliveryDiscount) {
+    let discount = userDeliveryDiscount.discount / 100;
+    deliveryDiscountPrice = deliveryFee - deliveryFee * discount;
+    deliveryDiscount = true;
+  }
+
+  // check for taxFee userDiscount
+  let taxDiscountPrice = 0;
+  let taxDiscount = false;
+  const userTaxDiscount = await UserDiscount.findOne({ user: userId, discountType: "taxFee" });
+  if (userTaxDiscount) {
+    let discount = userTaxDiscount.discount / 100;
+    taxDiscountPrice = subtotalFee - taxFee * discount;
+    taxDiscount = true;
+  }
+
+  // check for subtotal userDiscount
+  let subtotalDiscountPrice = 0;
+  let subtotalDiscount = false;
+  const userSubtotalDiscount = await UserDiscount.findOne({ user: userId, discountType: "subtotal" });
+  if (userSubtotalDiscount) {
+    let discount = userSubtotalDiscount.discount / 100;
+    subtotalDiscountPrice = userbasketItems.totalPrice - userbasketItems.totalPrice * discount;
+    subtotalDiscount = true;
+  }
   // return ceiled values for all fees
   return {
+    subtotalFee: Math.ceil(userbasketItems.totalPrice),
     deliveryFee: Math.ceil(deliveryFee),
+    platformFee: Math.ceil(taxFee),
     distanceFee: Math.ceil(distanceFee),
     timeFee: Math.ceil(timeFee),
     baseDeliveryFee: Math.ceil(baseDeliveryFee),
     surge,
     busyRiders: busyRidersLength,
     freeRiders: freeRidersLength,
+    deliveryDiscount,
+    deliveryDiscountPrice: Math.ceil(deliveryDiscountPrice),
+    taxDiscount,
+    taxDiscountPrice: Math.ceil(taxDiscountPrice),
+    subtotalDiscount,
+    subtotalDiscountPrice: Math.ceil(subtotalDiscountPrice)
   };
 };
 
