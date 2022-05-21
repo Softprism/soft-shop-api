@@ -315,6 +315,11 @@ const createOrder = async (orderParam) => {
       },
     })
     .append(pipeline);
+
+  // check for discount
+  if (orderParam.totalDiscountedPrice > 0) {
+    neworder[0].totalPrice = orderParam.totalDiscountedPrice;
+  }
   // check if payment type is transfer
   if (neworder[0].paymentMethod === "Transfer") {
     const payload = {
@@ -789,7 +794,7 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
   const userTaxDiscount = await UserDiscount.findOne({ user: userId, discountType: "taxFee" });
   if (userTaxDiscount) {
     let discount = userTaxDiscount.discount / 100;
-    taxDiscountPrice = subtotalFee - taxFee * discount;
+    taxDiscountPrice = taxFee - taxFee * discount;
     taxDiscount = true;
   }
 
@@ -818,7 +823,8 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
     platformFeeDiscount: taxDiscount,
     platformFeeDiscountPrice: Math.ceil(taxDiscountPrice),
     subtotalDiscount,
-    subtotalDiscountPrice: Math.ceil(subtotalDiscountPrice)
+    subtotalDiscountPrice: Math.ceil(subtotalDiscountPrice),
+    totalDiscountedPrice: Math.ceil(deliveryDiscountPrice + taxDiscountPrice + subtotalDiscountPrice),
   };
 };
 
