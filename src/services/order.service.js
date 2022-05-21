@@ -815,8 +815,8 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
     freeRiders: freeRidersLength,
     deliveryDiscount,
     deliveryDiscountPrice: Math.ceil(deliveryDiscountPrice),
-    taxDiscount,
-    taxDiscountPrice: Math.ceil(taxDiscountPrice),
+    platformFeeDiscount: taxDiscount,
+    platformFeeDiscountPrice: Math.ceil(taxDiscountPrice),
     subtotalDiscount,
     subtotalDiscountPrice: Math.ceil(subtotalDiscountPrice)
   };
