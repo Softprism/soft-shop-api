@@ -461,7 +461,7 @@ const getUserBasketItems = async (userId) => {
         $arrayElemAt: ["$store_name", 0],
       },
       store_placeId: {
-        $arrayElemAt: ["$store_place_id", 0],
+        $arrayElemAt: ["$store_placeId", 0],
       },
     });
 
