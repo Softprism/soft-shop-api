@@ -448,7 +448,7 @@ const getUserBasketItems = async (userId) => {
       _id: "$stores._id",
       store_location: { $first: "$stores.location" },
       store_name: { $first: "$stores.name" },
-      store_place_id: { $first: "$stores.place_id" }
+      store_placeId: { $first: "$stores.place_id" }
     })
     .addFields({
       _id: {
@@ -460,7 +460,7 @@ const getUserBasketItems = async (userId) => {
       store_name: {
         $arrayElemAt: ["$store_name", 0],
       },
-      store_place_id: {
+      store_placeId: {
         $arrayElemAt: ["$store_place_id", 0],
       },
     });
