@@ -728,6 +728,10 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
   // convert distance value to km
   distance.distance.value /= 1000;
 
+  // if distance too far
+  let tooFar = false;
+  if (distance.distance.value > 20) tooFar = true;
+
   // set distance fee based on distance
   let distanceFee = distance.distance.value * 23;
 
@@ -816,6 +820,7 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
     timeFee: Math.ceil(timeFee),
     baseDeliveryFee: Math.ceil(baseDeliveryFee),
     surge,
+    tooFar,
     busyRiders: busyRidersLength,
     freeRiders: freeRidersLength,
     deliveryDiscount,
