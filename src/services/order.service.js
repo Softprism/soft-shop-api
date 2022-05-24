@@ -346,7 +346,7 @@ const createOrder = async (orderParam) => {
       token: orderParam.card, // This is the card token returned from the transaction verification endpoint as data.card.token
       currency: "NGN",
       country: "NG",
-      amount: discountCheck ? neworder[0].totalDiscountedPrice : neworder[0].totalPrice,,
+      amount: discountCheck ? neworder[0].totalDiscountedPrice : neworder[0].totalPrice,
       email: neworder[0].user.email,
       first_name: neworder[0].user.first_name,
       last_name: neworder[0].user.last_name,
@@ -360,7 +360,7 @@ const createOrder = async (orderParam) => {
     const payload = {
       tx_ref: neworder[0].orderId,
       account_bank: orderParam.bankCode,
-      amount: discountCheck ? neworder[0].totalDiscountedPrice : neworder[0].totalPrice,,
+      amount: discountCheck ? neworder[0].totalDiscountedPrice : neworder[0].totalPrice,
       currency: "NGN",
       email: neworder[0].user.email,
       phone_number: neworder[0].user.phone_number,
