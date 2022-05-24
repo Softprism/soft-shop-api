@@ -28,6 +28,13 @@ const order_validation = {
         "number.base": "Please provide a valid number.",
         "any.required": "Delivery Price is required.",
       }),
+    deliveryDiscount: Joi.boolean(),
+    deliveryDiscountPrice: Joi.number(),
+    platformFeeDiscount: Joi.boolean(),
+    platformFeeDiscountPrice: Joi.number(),
+    subtotalDiscount: Joi.boolean(),
+    subtotalDiscountPrice: Joi.number(),
+    totalDiscountedPrice: Joi.number(),
     card: Joi.string().empty().messages({
       "string.empty": "Sorry, user card token is empty",
     }),

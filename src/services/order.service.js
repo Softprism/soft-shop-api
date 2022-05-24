@@ -316,15 +316,18 @@ const createOrder = async (orderParam) => {
     })
     .append(pipeline);
 
-  // check for discount
-  if (orderParam.totalDiscountedPrice > 0) {
-    neworder[0].totalPrice = orderParam.totalDiscountedPrice;
-  }
+  // console.log(1, orderParam.totalDiscountedPrice > 0, !neworder[0].deliveryDiscount || !neworder[0].platformFeeDiscount || !neworder[0].subtotalDiscount, (!(orderParam.totalDiscountedPrice > 0 && (!neworder[0].deliveryDiscount || !neworder[0].platformFeeDiscount || !neworder[0].subtotalDiscount))));
+  // // check for discount
+  // if (orderParam.totalDiscountedPrice > 0 && (neworder[0].deliveryDiscount === false || neworder[0].platformFeeDiscount === false || neworder[0].subtotalDiscount === false)) {
+  //   // return error
+  //   return { err: "Discounts are not set for this store.", status: 409 };
+  // }
   // check if payment type is transfer
+  let discountCheck = orderParam.totalDiscountedPrice > 0;
   if (neworder[0].paymentMethod === "Transfer") {
     const payload = {
       tx_ref: neworder[0].orderId,
-      amount: neworder[0].totalPrice,
+      amount: discountCheck ? neworder[0].totalDiscountedPrice : neworder[0].totalPrice,
       email: neworder[0].user.email,
       phone_number: neworder[0].user.phone_number,
       currency: "NGN",
@@ -332,7 +335,7 @@ const createOrder = async (orderParam) => {
       narration: `softshop payment - ${neworder[0].orderId}`,
       is_permanent: 0,
     };
-      // eslint-disable-next-line no-use-before-define
+    // eslint-disable-next-line no-use-before-define
     neworder[0].paymentResult = await bankTransfer(payload);
 
     // add account name to response
@@ -343,7 +346,7 @@ const createOrder = async (orderParam) => {
       token: orderParam.card, // This is the card token returned from the transaction verification endpoint as data.card.token
       currency: "NGN",
       country: "NG",
-      amount: neworder[0].totalPrice,
+      amount: discountCheck ? neworder[0].totalDiscountedPrice : neworder[0].totalPrice,,
       email: neworder[0].user.email,
       first_name: neworder[0].user.first_name,
       last_name: neworder[0].user.last_name,
@@ -357,7 +360,7 @@ const createOrder = async (orderParam) => {
     const payload = {
       tx_ref: neworder[0].orderId,
       account_bank: orderParam.bankCode,
-      amount: neworder[0].totalPrice,
+      amount: discountCheck ? neworder[0].totalDiscountedPrice : neworder[0].totalPrice,,
       currency: "NGN",
       email: neworder[0].user.email,
       phone_number: neworder[0].user.phone_number,

@@ -120,6 +120,13 @@ const OrderSchema = mongoose.Schema(
         ],
       },
     ],
+    deliveryDiscount: { type: Boolean, default: false },
+    deliveryDiscountPrice: { type: Number, default: 0.0 },
+    platformFeeDiscount: { type: Boolean, default: false },
+    platformFeeDiscountPrice: { type: Number, default: 0.0 },
+    subtotalDiscount: { type: Boolean, default: false },
+    subtotalDiscountPrice: { type: Number, default: 0.0 },
+    totalDiscountedPrice: { type: Number, default: 0.0 },
     createdAt: { type: Date, default: Date.now },
   },
   { timestamps: true }
