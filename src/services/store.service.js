@@ -15,8 +15,9 @@ import Category from "../models/category.model";
 
 import { getDistance } from "../utils/get-distance";
 import {
-  sendPasswordChangeMail, sendStorePasswordResetRequestMail, sendStorePayoutRequestMail, sendStoreSignUpMail, sendStoreUpdateRequestMail
+  sendPasswordChangeMail, sendStorePasswordResetRequestMail, sendStoreSignUpMail, sendStoreUpdateRequestMail
 } from "../utils/sendMail";
+import Ledger from "../models/ledger.model";
 
 const getStores = async (urlParams) => {
   // declare fields to exclude from response
@@ -115,7 +116,7 @@ const getStores = async (urlParams) => {
       pipeline: [
         {
           $match: {
-            status: { $in: ["sent", "ready", "accepted", "enroute", "delivered", "completed"] },
+            status: { $in: ["sent", "ready", "accepted", "enroute", "arrived", "delivered"] },
             $expr: {
               $eq: ["$$storeId", "$store"]
             }
@@ -244,7 +245,7 @@ const getStoresNoGeo = async (urlParams) => {
       pipeline: [
         {
           $match: {
-            status: { $in: ["sent", "ready", "accepted", "enroute", "delivered", "completed"] },
+            status: { $in: ["sent", "ready", "accepted", "enroute", "delivered", "arrived"] },
             $expr: {
               $eq: ["$$storeId", "$store"]
             }
@@ -336,7 +337,7 @@ const getStore = async (urlParams, storeId) => {
       pipeline: [
         {
           $match: {
-            status: { $in: ["sent", "ready", "accepted", "enroute", "delivered", "completed"] },
+            status: { $in: ["sent", "ready", "accepted", "enroute", "delivered", "arrived"] },
             $expr: {
               $eq: ["$$storeId", "$store"]
             }
@@ -383,7 +384,7 @@ const getStore = async (urlParams, storeId) => {
         pipeline: [
           {
             $match: {
-              status: { $in: ["sent", "ready", "accepted", "enroute", "delivered", "completed"] },
+              status: { $in: ["sent", "ready", "accepted", "enroute", "delivered", "arrived"] },
               $expr: {
                 $eq: ["$$storeId", "$store"]
               }
@@ -470,26 +471,27 @@ const createStore = async (StoreParam) => {
 
 const loginStore = async (StoreParam) => {
   const {
-    email, password, orderPushDeivceToken, vendorPushDeivceToken
+    email, password
   } = StoreParam;
 
-  let store = await Store.findOne({ email }).select("password isVerified isActive resetPassword pendingUpdates name pendingWithdrawal vendorPushDeivceToken orderPushDeivceToken category");
+  let store = await Store.findOne({ email }).select("password isVerified isActive resetPassword pendingUpdates name pendingWithdrawal vendorPushDeviceToken orderPushDeviceToken category");
 
   if (!store) {
     return { err: "Invalid email. Please try again.", status: 400 };
   }
 
-  if (process.env.NODE_ENV === "production" && store.isVerified === false) {
-    return { err: "Please complete your verification.", status: 401 };
-  }
-  if (!store.isActive) {
-    return { err: "Sorry store is inactive, kindly contact an admin.", status: 401 };
-  }
   // Check if password matches with stored hash
   const isMatch = await bcrypt.compare(password, store.password);
 
   if (!isMatch) {
     return { err: "The password entered is invalid, please try again.", status: 401 };
+  }
+
+  if (process.env.NODE_ENV === "production" && store.isVerified === false) {
+    return { err: "Please complete your verification.", status: 401 };
+  }
+  if (store.isVerified === false) {
+    return { err: "Sorry store is not yet verified, kindly contact stores@soft-shop.app", status: 401 };
   }
 
   let token = await getJwt(store.id, "store");
@@ -734,7 +736,7 @@ const getStoreSalesStats = async (storeId, days) => {
   let salesStats = await Order.aggregate()
     .match({
       store: mongoose.Types.ObjectId(storeId),
-      status: "completed",
+      status: "arrived",
       createdAt: { $gt: d },
     })
     .addFields({
@@ -767,21 +769,29 @@ const bestSellers = async (storeId, pagingParam) => {
     .match(
       {
         store: mongoose.Types.ObjectId(storeId),
-        status: { $in: ["sent", "ready", "accepted", "enroute", "delivered", "completed"] }
+        status: { $in: ["sent", "ready", "accepted", "enroute", "delivered", "arrived"] }
       }
     )
+    // lookup the products in each order
     .lookup({
       from: "products",
       localField: "orderItems.product",
       foreignField: "_id",
       as: "products",
     })
+    // unwind the products array to get each product for each order
     .unwind("products")
+    // unwind the orderItems field so we can get each item for each product
+    // the goal is to eventually have an object with same product in the orderItems and product field
     .unwind("orderItems")
+    // group by product and push the orderItems to each group
+    // so we can eventually get our goal
     .group({
       _id: "$products",
       orders: { $push: "$orderItems" },
+      allSubTotals: { $sum: "$subtotal" },
     })
+    // filter the orders array so we only have same product in the orderItems field and product field
     .project({
       orders: {
         $filter: {
@@ -825,17 +835,22 @@ const getStoreFeedback = async (storeId, pagingParam) => {
   const pipeline = [
     {
       $unset: [
-        "taxPrice",
-        "deliveryPrice",
-        "subtotal",
-        "totalPrice",
-        "isPaid",
-        "isDelivered",
-        "isFavorite",
-        "status",
-        "orderItems",
-        "paymentMethod",
-        "deliveryAddress",
+        // "taxPrice",
+        // "deliveryPrice",
+        // "subtotal",
+        // "totalPrice",
+        // "isPaid",
+        // "isDelivered",
+        // "isFavorite",
+        // "status",
+        // "orderItems",
+        // "paymentMethod",
+        // "deliveryAddress",
+        "orderReview.user.pushNotifications",
+        "orderReview.user.smsNotifications",
+        "orderReview.user.promotionalNotifications",
+        "orderReview.user.cards",
+        "orderReview.user.pushDeviceToken",
         "orderReview.user.orders",
         "orderReview.user.password",
         "orderReview.user.phone_number",
@@ -851,7 +866,7 @@ const getStoreFeedback = async (storeId, pagingParam) => {
   const feedbacks = await Order.aggregate()
     .match({
       store: mongoose.Types.ObjectId(storeId),
-      status: "completed"
+      status: "arrived"
     })
     .lookup({
       from: "reviews",
@@ -877,6 +892,7 @@ const getStoreFeedback = async (storeId, pagingParam) => {
     .unwind("orderReview.user")
     .project({
       orderReview: 1,
+      orderId: 1
     })
     .sort("-orderReview.star")
     .skip(skip)
@@ -899,37 +915,58 @@ const getInventoryList = async (queryParam) => {
 
 const requestPayout = async (storeId) => {
   // get store details
-  const store = await Store.findById(storeId);
+  let store = await Store.findById(storeId);
+
+  // get ledger details
+  let ledger = await Ledger.findOne({});
 
   // set payout variable and check if there's sufficient funds
   let payout = store.account_details.account_balance;
-  if (payout === 0) return { err: "Insufficent Funds.", status: 400 };
+  if (payout < 1000) return { err: "Insufficent Funds. You need up to NGN1000 to request for payouts.", status: 400 };
 
-  // check for pending request
-  let oldRequest = await Transaction.findOne({
+  // check for pending store and ledger request
+  let oldStoreRequest = await Transaction.findOne({
     type: "Debit",
-    receiver: storeId,
-    status: "pending"
+    status: "pending",
+    ref: storeId,
+    to: "Store"
   });
 
-  if (oldRequest && store.pendingWithdrawal === true) return { err: "You have a pending payout request. Please wait for its approval", status: 400 };
+  if (oldStoreRequest && store.pendingWithdrawal === true) {
+    await Transaction.findOneAndUpdate(
+      {
+        type: "Debit",
+        ref: storeId,
+        status: "pending",
+        to: "Store"
+      },
+      { $inc: { amount: Number(store.account_details.account_balance) } }
+    );
 
-  // create transaction
-  let newTransaction = createTransaction({
+    // update store account balance
+    store.account_details.total_debit += Number(payout);
+    store.account_details.account_balance = Number(store.account_details.total_credit) - Number(store.account_details.total_debit);
+    await store.save();
+
+    return { email: store.email, payout, transaction: oldStoreRequest };
+  }
+
+  // create  debit transaction for store
+  let newStoreTransaction = await createTransaction({
     amount: payout,
     type: "Debit",
     to: "Store",
     receiver: storeId,
-    ref: storeId
+    ref: storeId,
+    fee: 0
   });
 
   // check for error while creating new transaction
-  if (!newTransaction) return { err: "Error requesting payout. Please try again", status: 400 };
+  if (!newStoreTransaction) return { err: "Error requesting payout. Please try again", status: 400 };
   store.pendingWithdrawal = true;
   await store.save();
 
-  await sendStorePayoutRequestMail(store.email, payout);
-  return newTransaction;
+  return { email: store.email, payout, transaction: newStoreTransaction };
 };
 
 const getPayoutHistory = async (storeId, urlParams) => {

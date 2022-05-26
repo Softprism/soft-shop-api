@@ -1,4 +1,5 @@
 import createWaitlist from "../services/waitlist.service";
+import { sendWaitListSignupMail } from "../utils/sendMail";
 
 // ========================================================================== //
 const create_waitlist = async (req, res, next) => {
@@ -11,7 +12,9 @@ const create_waitlist = async (req, res, next) => {
           success: false, msg: action.err, status: action.status
         });
     }
-    return res.status(201).json({ success: true, result: action.waitlist, status: 201 });
+    res.status(201).json({ success: true, result: action.waitlist, status: 201 });
+    // send waitlist email
+    await sendWaitListSignupMail(action.waitlist.email);
   } catch (error) {
     next(error);
   }

@@ -24,7 +24,7 @@ const getGeocode = async (req, res, next) => {
       params: {
         ...geoCodeParams
       },
-      timeout: 10000
+      timeout: 100000
     });
     if (req.query.place_id) {
       return res.status(200).json({ success: true, result: geocode.data.results[0].geometry.location, status: 200 });

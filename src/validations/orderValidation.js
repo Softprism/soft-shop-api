@@ -8,6 +8,11 @@ const order_validation = {
       "string.length": "Store id must be a valid mongoose id.",
       "string.empty": "Sorry, store id cannot be an empty field",
     }),
+    user: objectId.empty().messages({
+      "any.required": "User id is required.",
+      "string.length": "User id must be a valid mongoose id.",
+      "string.empty": "Sorry, store id cannot be an empty field",
+    }),
     paymentMethod: Joi.string().required().empty().messages({
       "any.required": "Payment method is required.",
       "string.empty": "Sorry, payment method cannot be an empty field",
@@ -16,12 +21,20 @@ const order_validation = {
       "any.required": "Delivery address is required.",
       "string.empty": "Sorry, Delivery address cannot be an empty field",
     }),
-    deliveryPrice: Joi.number().positive().required().empty()
+    customerNote: Joi.string(),
+    deliveryPrice: Joi.number().required().empty()
       .messages({
         "number.empty": "Delivery Price cannot be an empty field.",
         "number.base": "Please provide a valid number.",
         "any.required": "Delivery Price is required.",
       }),
+    deliveryDiscount: Joi.boolean(),
+    deliveryDiscountPrice: Joi.number(),
+    platformFeeDiscount: Joi.boolean(),
+    platformFeeDiscountPrice: Joi.number(),
+    subtotalDiscount: Joi.boolean(),
+    subtotalDiscountPrice: Joi.number(),
+    totalDiscountedPrice: Joi.number(),
     card: Joi.string().empty().messages({
       "string.empty": "Sorry, user card token is empty",
     }),
@@ -43,7 +56,7 @@ const order_validation = {
           "string.empty": "Sorry, product id cannot be an empty field",
           "string.length": "Product id must be a valid mongoose id.",
         }),
-        price: Joi.number().empty().positive().required()
+        price: Joi.number().empty().required()
           .messages({
             "any.required": "Price is required.",
             "number.empty": "Price cannot be an empty field.",
@@ -55,7 +68,36 @@ const order_validation = {
             "number.empty": "Quantity cannot be an empty field.",
             "number.base": "Please provide a valid number.",
           }),
-      })
+        selectedVariants: Joi.array().items(
+          Joi.object({
+            itemName: Joi.string().empty().required().messages({
+              "any.required": "Variant item name is required.",
+              "string.empty": "Sorry, Variant item name cannot be an empty field",
+            }),
+            variantTitle: Joi.string().empty().required().messages({
+              "any.required": "Variant title is required.",
+              "string.empty": "Sorry, Variant title cannot be an empty field",
+            }),
+            itemPrice: Joi.number().empty().required()
+              .messages({
+                "any.required": "Variant item price is required.",
+                "number.empty": "Variant item price cannot be an empty field.",
+                "number.base": "Please provide a valid number.",
+              }),
+            quantity: Joi.number().empty().positive().required()
+              .messages({
+                "any.required": "Variant item quantity is required.",
+                "number.empty": "Variant item quantity cannot be an empty field.",
+                "number.base": "Please provide a valid number.",
+              }),
+            variantId: objectId.required().empty().messages({
+              "any.required": "Variant id is required.",
+              "string.empty": "Sorry, Variant id cannot be an empty field",
+              "string.length": "Variant id must be a valid mongoose id.",
+            }),
+          }),
+        ),
+      }),
     ),
   }).messages({
     "object.unknown": "You have used an invalid key."

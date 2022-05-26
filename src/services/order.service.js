@@ -1,16 +1,17 @@
 import mongoose from "mongoose";
+import { SubscribeRulesList } from "twilio/lib/rest/video/v1/room/roomParticipant/roomParticipantSubscribeRule";
 import Order from "../models/order.model";
 import User from "../models/user.model";
 import Store from "../models/store.model";
 import Review from "../models/review.model";
-import Rider from "../models/rider.model";
 
 import {
   bankTransfer, ussdPayment, cardPayment, verifyTransaction
 } from "./payment.service";
-import { createNotification } from "./notification.service";
-
-import { sendNewOrderInitiatedMail, sendUserNewOrderRejectedMail } from "../utils/sendMail";
+import { getDistanceService, getDistanceServiceForDelivery } from "../utils/get-distance";
+import Rider from "../models/rider.model";
+import UserDiscount from "../models/user-discount.model";
+import { getUserBasketItems } from "./user.service";
 
 const getOrders = async (urlParams) => {
   // initialize match parameters, get limit, skip & sort values
@@ -82,6 +83,12 @@ const getOrders = async (urlParams) => {
       as: "productData",
     })
     .lookup({
+      from: "stores",
+      localField: "store",
+      foreignField: "_id",
+      as: "store",
+    })
+    .lookup({
       from: "users",
       localField: "user",
       foreignField: "_id",
@@ -100,6 +107,7 @@ const getOrders = async (urlParams) => {
       as: "delivery",
     })
     .project({
+      "store.name": 1,
       status: 1,
       deliveryPrice: 1,
       totalPrice: 1,
@@ -123,7 +131,15 @@ const getOrders = async (urlParams) => {
       orderId: 1,
       createdAt: 1,
     })
-    .unwind("$user")
+    .unwind("$user", "$store")
+    // .unwind({
+    //   path: "$rider",
+    //   preserveNullAndEmptyArrays: true
+    // })
+    // .unwind({
+    //   path: "$delivery",
+    //   preserveNullAndEmptyArrays: true
+    // })
     .append(pipeline)
     .sort(sort)
     .skip(skip)
@@ -280,7 +296,7 @@ const createOrder = async (orderParam) => {
     .addFields({
       taxPrice: {
         $multiply: [
-          0.075,
+          0.03,
           { $add: ["$totalProductPrice", "$totalVariantPrice"] },
         ],
       },
@@ -288,20 +304,30 @@ const createOrder = async (orderParam) => {
     // calculate total price for the order
     .addFields({
       totalPrice: {
-        $add: [
-          "$taxPrice",
-          "$totalProductPrice",
-          "$totalVariantPrice",
-          "$deliveryPrice",
-        ],
+        $ceil: {
+          $add: [
+            "$taxPrice",
+            "$totalProductPrice",
+            "$totalVariantPrice",
+            "$deliveryPrice",
+          ]
+        },
       },
     })
     .append(pipeline);
+
+  // console.log(1, orderParam.totalDiscountedPrice > 0, !neworder[0].deliveryDiscount || !neworder[0].platformFeeDiscount || !neworder[0].subtotalDiscount, (!(orderParam.totalDiscountedPrice > 0 && (!neworder[0].deliveryDiscount || !neworder[0].platformFeeDiscount || !neworder[0].subtotalDiscount))));
+  // // check for discount
+  // if (orderParam.totalDiscountedPrice > 0 && (neworder[0].deliveryDiscount === false || neworder[0].platformFeeDiscount === false || neworder[0].subtotalDiscount === false)) {
+  //   // return error
+  //   return { err: "Discounts are not set for this store.", status: 409 };
+  // }
   // check if payment type is transfer
+  let discountCheck = orderParam.totalDiscountedPrice > 0;
   if (neworder[0].paymentMethod === "Transfer") {
     const payload = {
       tx_ref: neworder[0].orderId,
-      amount: neworder[0].totalPrice,
+      amount: discountCheck ? neworder[0].totalDiscountedPrice : neworder[0].totalPrice,
       email: neworder[0].user.email,
       phone_number: neworder[0].user.phone_number,
       currency: "NGN",
@@ -309,7 +335,7 @@ const createOrder = async (orderParam) => {
       narration: `softshop payment - ${neworder[0].orderId}`,
       is_permanent: 0,
     };
-      // eslint-disable-next-line no-use-before-define
+    // eslint-disable-next-line no-use-before-define
     neworder[0].paymentResult = await bankTransfer(payload);
 
     // add account name to response
@@ -320,7 +346,7 @@ const createOrder = async (orderParam) => {
       token: orderParam.card, // This is the card token returned from the transaction verification endpoint as data.card.token
       currency: "NGN",
       country: "NG",
-      amount: neworder[0].totalPrice,
+      amount: discountCheck ? neworder[0].totalDiscountedPrice : neworder[0].totalPrice,
       email: neworder[0].user.email,
       first_name: neworder[0].user.first_name,
       last_name: neworder[0].user.last_name,
@@ -334,7 +360,7 @@ const createOrder = async (orderParam) => {
     const payload = {
       tx_ref: neworder[0].orderId,
       account_bank: orderParam.bankCode,
-      amount: neworder[0].totalPrice,
+      amount: discountCheck ? neworder[0].totalDiscountedPrice : neworder[0].totalPrice,
       currency: "NGN",
       email: neworder[0].user.email,
       phone_number: neworder[0].user.phone_number,
@@ -467,6 +493,7 @@ const getOrderDetails = async (orderID) => {
     })
     .addFields({
       averageRating: { $ifNull: ["$deliveryReview", 0] },
+      rider: { $ifNull: ["$rider", []] },
     })
     .append(pipeline);
 
@@ -645,9 +672,9 @@ const reviewOrder = async (review) => {
   const order = await Order.findOne({
     _id: mongoose.Types.ObjectId(review.order),
     user: mongoose.Types.ObjectId(review.user),
-    status: "completed"
+    status: "delivered"
   });
-  if (!order) return { err: "Order not found.", status: 404 };
+  if (!order) return { err: "We couldn't add your feedback at this time. The order may not exist or still in progress, please try again later.", status: 404 };
 
   // check if user has made any review
   const isReviewed = await Review.findOne({
@@ -656,18 +683,157 @@ const reviewOrder = async (review) => {
   });
   if (isReviewed) return { err: "Your review has been submitted for this order already.", status: 409 };
 
+  // add store to review object
+  review.store = order.store;
+
+  // save review
   const userReview = new Review(review);
   await userReview.save();
 
-  const newReview = Review.findById(userReview._id).populate("user", "first_name last_name");
+  // change order isReviewed to true
+  await Order.findByIdAndUpdate(
+    review.order,
+    { $set: { isReviewed: true } },
+    { omitUndefined: true, new: true, useFindAndModify: false }
+  );
 
-  return newReview;
+  return "Review submitted successfully.";
+
+  // const newReview = await Review.findById(userReview._id).populate("user", "first_name last_name");
+
+  // return newReview;
 };
 
 const encryptDetails = async (cardDetails) => {
   // let result = await encryptCard(cardDetails);
   let charge = await cardPayment(cardDetails);
   return charge;
+};
+
+const calculateDeliveryFee = async (userId, { storeId, destination, origin }) => {
+  const distance = await getDistanceServiceForDelivery(destination, origin);
+
+  // find store and populate store's category
+  const store = await Store.findById(storeId).populate("category");
+  // if store is not found return error
+  if (!store) return { err: "Store not found.", status: 404 };
+
+  // get store's category
+  const category = store.category.name;
+
+  // category name can either be "Food" or "Groceries" or "Cosmetics"
+  // set base delivery fee for each category
+  let baseDeliveryFee = 0;
+  if (category === "Food") baseDeliveryFee = 400;
+  else if (category === "Groceries") baseDeliveryFee = 800;
+  else if (category === "Cosmetics") baseDeliveryFee = 700;
+
+  // convert distance value to km
+  distance.distance.value /= 1000;
+
+  // if distance too far
+  let tooFar = false;
+  if (distance.distance.value > 20) tooFar = true;
+
+  // set distance fee based on distance
+  let distanceFee = distance.distance.value * 23;
+
+  // convert distance time to minutes
+  distance.duration.value /= 60;
+
+  // set time fee based on time
+  let timeFee = distance.duration.value * 10;
+
+  // set delivery fee
+  let deliveryFee = baseDeliveryFee + distanceFee + timeFee;
+
+  // check for surge by checking the amount of riders that isBusy is true and false
+  let surge = false;
+  const busyRiders = await Rider.find({
+    store: storeId,
+    isBusy: true,
+    location: {
+      $geoWithin: {
+        $centerSphere: [[store.location.coordinates[0], store.location.coordinates[1]], 0.0015],
+      }
+    }
+  });
+  const busyRidersLength = busyRiders.length;
+
+  const otherRiders = await Rider.find({
+    "location.coordinates": {
+      $geoWithin: {
+        $centerSphere: [[store.location.coordinates[0], store.location.coordinates[1]], 0.0015],
+      }
+    }
+  });
+  const freeRidersLength = otherRiders.length;
+
+  // check if there are more busy riders than free riders different ranges
+  if (freeRidersLength - busyRidersLength > 0 && freeRidersLength - busyRidersLength < 5) {
+    deliveryFee += deliveryFee * 0.15;
+    surge = true;
+  } else if (freeRidersLength - busyRidersLength > 5 && freeRidersLength - busyRidersLength < 10) {
+    deliveryFee += deliveryFee * 0.1;
+    surge = true;
+  }
+
+  // get users basket
+  const userbasketItems = await getUserBasketItems(userId);
+  console.log(userbasketItems);
+
+  // calculate subtotal fee from userbascket items totalPrice
+  let taxFee = 0.03 * userbasketItems.totalPrice;
+
+  // check for deliveryFee userDiscount
+  let deliveryDiscountPrice = 0;
+  let deliveryDiscount = false;
+  const userDeliveryDiscount = await UserDiscount.findOne({ user: userId, discountType: "deliveryFee" });
+  if (userDeliveryDiscount) {
+    let discount = userDeliveryDiscount.discount / 100;
+    deliveryDiscountPrice = deliveryFee - deliveryFee * discount;
+    deliveryDiscount = true;
+  }
+
+  // check for taxFee userDiscount
+  let taxDiscountPrice = 0;
+  let taxDiscount = false;
+  const userTaxDiscount = await UserDiscount.findOne({ user: userId, discountType: "taxFee" });
+  if (userTaxDiscount) {
+    let discount = userTaxDiscount.discount / 100;
+    taxDiscountPrice = taxFee - taxFee * discount;
+    taxDiscount = true;
+  }
+
+  // check for subtotal userDiscount
+  let subtotalDiscountPrice = 0;
+  let subtotalDiscount = false;
+  const userSubtotalDiscount = await UserDiscount.findOne({ user: userId, discountType: "subtotal" });
+  if (userSubtotalDiscount) {
+    let discount = userSubtotalDiscount.discount / 100;
+    subtotalDiscountPrice = userbasketItems.totalPrice - userbasketItems.totalPrice * discount;
+    subtotalDiscount = true;
+  }
+  // return ceiled values for all fees
+  return {
+    subtotalFee: Math.ceil(userbasketItems.totalPrice),
+    deliveryFee: Math.ceil(deliveryFee),
+    platformFee: Math.ceil(taxFee),
+    distanceFee: Math.ceil(distanceFee),
+    timeFee: Math.ceil(timeFee),
+    baseDeliveryFee: Math.ceil(baseDeliveryFee),
+    surge,
+    tooFar,
+    busyRiders: busyRidersLength,
+    freeRiders: freeRidersLength,
+    deliveryDiscount,
+    deliveryDiscountPrice: Math.ceil(deliveryDiscountPrice),
+    platformFeeDiscount: taxDiscount,
+    platformFeeDiscountPrice: Math.ceil(taxDiscountPrice),
+    subtotalDiscount,
+    subtotalDiscountPrice: Math.ceil(subtotalDiscountPrice),
+    totalDiscountedPrice: Math.ceil(deliveryDiscountPrice + taxDiscountPrice + subtotalDiscountPrice),
+  };
 };
 
 export {
@@ -678,7 +844,8 @@ export {
   getCartItems,
   editOrder,
   reviewOrder,
-  encryptDetails
+  encryptDetails,
+  calculateDeliveryFee
 };
 
 // Updates

@@ -1,4 +1,3 @@
-import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 
 import mongoose from "mongoose";
@@ -8,12 +7,15 @@ import Store from "../models/store.model";
 import Notification from "../models/notification.models";
 import StoreUpdate from "../models/store-update.model";
 
-import sendEmail, { sendStorePasswordResetConfirmationMail, sendStorePayoutApprovalMail, sendStoreUpdateRequestApprovalMail } from "../utils/sendMail";
+import { sendStorePasswordResetConfirmationMail, sendStoreUpdateRequestApprovalMail } from "../utils/sendMail";
 import getJwt from "../utils/jwtGenerator";
 import Transaction from "../models/transaction.model";
 import Ledger from "../models/ledger.model";
-import { createTransaction } from "./transaction.service";
 import { initiateTransfer } from "./payment.service";
+import Logistics from "../models/logistics-company.model";
+import Rider from "../models/rider.model";
+import { sendMany } from "./push.service";
+import UserDiscount from "../models/user-discount.model";
 
 const getAdmins = async () => {
   const admins = await Admin.find();
@@ -176,7 +178,7 @@ const toggleStoreActive = async (urlParams) => {
   const { storeId } = urlParams;
   const fetchStore = await Store.findById(storeId);
   if (!fetchStore) {
-    return { err: "Store does not exists." };
+    return { err: "Store does not exists.", status: 400 };
   }
   let store = {};
   if (fetchStore.isActive) {
@@ -257,96 +259,106 @@ const confirmStoreUpdate = async (storeID) => {
 
 const confirmStorePayout = async (storeId) => {
   let store = await Store.findById(storeId);
-  let ledger = await Ledger.findOne({});
   let payout = await Transaction.findOne({
-    receiver: storeId,
+    ref: storeId,
     type: "Debit",
     status: "pending"
   });
 
-  /* get total credit and total debit transactions for stores
-    so we can compare with the total credit and total debit fields
-    in store profile */
-  let transactions = await Transaction.aggregate()
-    .match({
-      receiver: mongoose.Types.ObjectId(storeId),
-    })
-    .group({
-      _id: "$receiver",
-      totalCredit: {
-        $sum: {
-          $cond:
-       [{
-         $and: [
-           { $eq: ["$type", "Credit"] },
-           { $eq: ["$status", "completed"] }
-         ]
-       },
-       "$amount", 0]
-        }
-      },
-      totalDebit: {
-        $sum: {
-          $cond:
-       [
-         { $eq: ["$type", "Debit"] },
-         "$amount", 0
-       ]
-        }
-      }
-    });
+  if (payout) return { err: "No pending payout for this store.", status: 400 };
 
-  let totalStoreCredits = Number(store.account_details.total_credit);
-  let totalStoreDebits = Number(store.account_details.total_debit);
-  let totalTransactionCredits = Number(transactions[0].totalCredit);
-  let totalTransactionDebits = Number(transactions[0].totalDebit);
-
-  if (totalStoreCredits === totalTransactionCredits && totalTransactionDebits === totalStoreDebits && ledger.account_balance >= store.account_details.account_balance) {
-    // create withdrwal request code
-    // create card index
-    let withdrawalRequest = () => {
-      let s4 = () => {
-        return Math.floor((1 + Math.random()) * 0x10000)
-          .toString(16)
-          .substring(1);
-      };
-        // return id of format 'card - aaaaa'
-      return `wtdrqt-${s4()}`;
-    };
-    // initiate transfer
-    let payload = {
-      account_bank: store.account_details.bank_code,
-      account_number: store.account_details.account_number,
-      amount: payout.amount,
-      narration: `Softshop - ${store.name} Withdrawal`,
-      currency: "NGN",
-      reference: withdrawalRequest(),
-      debit_currency: "NGN"
-    };
-    // let request = await initiateTransfer(payload);
-    store.pendingWithdrawal = false;
-    await store.save();
-    await sendStorePayoutApprovalMail(store.email, payload.amount);
-    return payload;
-  }
-
-  return {
-    err: "Store money not consistent. Please pull transaction records.",
-    data: {
-      totalStoreCredits,
-      totalTransactionCredits,
-      totalTransactionDebits,
-      totalStoreDebits,
-      account_balance: store.account_details.account_balance
-    },
-    status: 400
+  let payload = {
+    account_bank: store.account_details.bank_code,
+    account_number: store.account_details.account_number,
+    amount: Number(payout.amount) - Number(payout.fee),
+    narration: storeId,
+    currency: "NGN"
   };
+  let request = await initiateTransfer(payload);
+  // update store payout transaction status to approved
+  await Transaction.findOneAndUpdate(
+    { ref: storeId, type: "Debit", status: "pending" },
+    { $set: { status: "approved" } },
+    { omitUndefined: true, new: true, useFindAndModify: false }
+  );
+  // send push notification to store vendorPushDeviceToken
+  await sendMany("ssa", store.vendorPushDeviceToken, "Payout Request Approved!", `Your request to withdraw ${payload.amount} has been approved`);
+  // await sendStorePayoutApprovalMail(store.email, payload.amount);
+  return request;
 };
 
+const confirmLogisticsPayout = async (companyId) => {
+  let company = await Logistics.findById(companyId);
+  let payout = await Transaction.findOne({
+    ref: companyId,
+    type: "Debit",
+    status: "pending"
+  });
+
+  if (payout) return { err: "No pending payout for this logistics company.", status: 400 };
+
+  let payload = {
+    account_bank: company.account_details.bank_code,
+    account_number: company.account_details.account_number,
+    amount: Number(payout.amount) - Number(payout.fee),
+    narration: company._id,
+    currency: "NGN"
+  };
+  let request = await initiateTransfer(payload);
+  // update store payout transaction status to approved
+  await Transaction.findOneAndUpdate(
+    { ref: company._id, type: "Debit", status: "pending" },
+    { $set: { status: "approved" } },
+    { omitUndefined: true, new: true, useFindAndModify: false }
+  );
+  return request;
+};
+
+const confirmRiderPayout = async (riderId) => {
+  let rider = await Rider.findById(riderId);
+  let payout = await Transaction.findOne({
+    ref: riderId,
+    type: "Debit",
+    status: "pending"
+  });
+
+  if (!payout) return { err: "No pending payout for this rider.", status: 400 };
+
+  // create withdrawal reference
+  let ref = () => {
+    let s4 = () => {
+      return Math.floor((1 + Math.random()) * 0x10000)
+        .toString(16)
+        .substring(1);
+    };
+      // return id of format 'card - aaaaa'
+    return `rider ${s4()}`;
+  };
+  let payload = {
+    account_bank: rider.account_details.bank_code,
+    account_number: rider.account_details.account_number,
+    amount: Number(payout.amount) - Number(payout.fee),
+    narration: rider._id,
+    reference: ref(),
+    currency: "NGN"
+  };
+  let request = await initiateTransfer(payload);
+  // update store payout transaction status to approved
+  await Transaction.findOneAndUpdate(
+    { ref: rider._id, type: "Debit", status: "pending" },
+    { $set: { status: "approved" } },
+    { omitUndefined: true, new: true, useFindAndModify: false }
+  );
+  return request;
+};
 const createCompayLedger = async () => {
   let details = {
     account_name: "SoftShop Ledger",
   };
+  let oldLedger = await Ledger.findOne({});
+  if (oldLedger) {
+    return { err: "Ledger already exists.", status: 400 };
+  }
   let newLedger = new Ledger(details);
   await newLedger.save();
   return newLedger;
@@ -372,7 +384,7 @@ const getAllStores = async (urlParams) => {
 
 const getStoreById = async (storeId) => {
   const store = await Store.findById(storeId);
-  if (!store) return { err: "Store not found." };
+  if (!store) return { err: "Store not found.", status: 400 };
 
   return { store };
 };
@@ -397,14 +409,58 @@ const getUsers = async (urlParams) => {
 const getUserById = async (userId) => {
   const user = await User.findById(userId)
     .select("-password -orders -cart");
-  if (!user) return { err: "User does not exist." };
+  if (!user) return { err: "User does not exist.", status: 404 };
 
   return { user };
+};
+
+const confirmRiderAccountDetails = async (riderId) => {
+  // approves or disapproves the rider account details
+  let rider = await Rider.findById(riderId);
+  // check if rider exist
+  if (!rider) return { err: "Rider does not exist.", status: 404 };
+
+  // check if account details field exists
+  if (!rider.account_details) return { err: "Account details not found.", status: 400 };
+
+  rider.account_details.isVerified = !rider.account_details.isVerified;
+  await rider.save();
+  return rider;
+};
+
+const confirmLogisticsAccountDetails = async (companyId) => {
+  // approves or disapproves the company account details
+  let company = await Logistics.findById(companyId);
+  // check if rider exist
+  if (!company) return { err: "Company does not exist.", status: 404 };
+
+  // check if account details field exists
+  if (!company.account_details) return { err: "Account details not found.", status: 400 };
+
+  company.account_details.isVerified = !company.account_details.isVerified;
+  await company.save();
+  return company;
+};
+const addUserDiscount = async ({
+  userId, discount, expiredAt, discountType
+}) => {
+  let user = await User.findById(userId);
+  if (!user) return { err: "User does not exist.", status: 404 };
+
+  let discountObj = {
+    user: user._id,
+    discount,
+    expiredAt,
+    discountType
+  };
+  let newDiscount = new UserDiscount(discountObj);
+  await newDiscount.save();
+  return newDiscount;
 };
 
 export {
   getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin,
   resetStorePassword, confirmStoreUpdate, createNotification, confirmStorePayout,
   createCompayLedger, getAllStoresUpdateRequests, getResetPasswordRequests,
-  toggleStoreActive, getAllStores, getUsers, getStoreById, getUserById
+  toggleStoreActive, getAllStores, getUsers, getStoreById, getUserById, confirmLogisticsPayout, confirmRiderPayout, confirmRiderAccountDetails, confirmLogisticsAccountDetails, addUserDiscount
 };

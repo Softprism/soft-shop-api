@@ -44,7 +44,7 @@ const registerValidation = {
 
 const loginValidation = {
   body: Joi.object({
-    pushDeivceToken: Joi.string(),
+    pushDeviceToken: Joi.string(),
     email: Joi.string().email().empty().required()
       .messages({
         "any.required": "Email is required.",
@@ -139,7 +139,7 @@ const updateUserValidation = {
         "string.min": "Phone number should be 11 numbers"
       }),
     pushNotifications: Joi.boolean(),
-    pushDeivceToken: Joi.string(),
+    pushDeviceToken: Joi.string(),
     smsNotifications: Joi.boolean(),
     promotionalNotifications: Joi.boolean(),
   }).messages({
@@ -172,7 +172,7 @@ const editbasketValidation = {
         "any.required": "Product id is required.",
         "string.length": "Product id must be a valid mongoose id.",
       }),
-      price: Joi.number().empty().positive()
+      price: Joi.number().empty()
         .messages({
           "number.empty": "Price cannot be an empty field.",
           "number.base": "Please provide a valid number.",
@@ -212,7 +212,7 @@ const addbasketValidation = {
         "any.required": "Product id is required.",
         "string.length": "Product id must be a valid mongoose id.",
       }),
-      price: Joi.number().empty().positive().required()
+      price: Joi.number().empty().required()
         .messages({
           "any.required": "Price is required.",
           "number.empty": "Price cannot be an empty field.",
@@ -233,7 +233,7 @@ const addbasketValidation = {
             "any.required": "Item Name is required.",
             "string.empty": "Sorry, Item Name cannot be an empty field",
           }),
-          itemPrice: Joi.number().empty().positive().required()
+          itemPrice: Joi.number().empty().required()
             .messages({
               "any.required": "Item Price is required.",
               "number.empty": "Item Price cannot be an empty field.",

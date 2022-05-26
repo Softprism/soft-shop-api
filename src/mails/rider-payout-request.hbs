@@ -1,0 +1,81 @@
+
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Softshop</title>
+		<style>
+			body {
+				overflow-x: hidden;
+				font-family: 'Cera Pro', sans-serif;
+				width: 100vw;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+			}
+
+			.container {
+				margin: 20px;
+				width: 50%;
+			}
+
+			.logo img {
+				margin: 0 20px;
+			}
+
+			.logo hr {
+				height: 1px;
+				background-color: #ccc;
+				border: none;
+			}
+
+			.text {
+				text-align: left;
+				margin: 20px;
+				color: #384860;
+				font-weight: 300;
+			}
+
+			.text h2 {
+				font-size: 24px;
+				font-weight: 700;
+			}
+
+			@media (max-width: 600px) {
+				.container {
+					width: 90%;
+				}
+
+				.logo {
+					margin-top: 20px;
+				}
+			}
+		</style>
+	</head>
+
+	<body>
+		<div class="container">
+			<div class="logo">
+				<img src="cid:logo" />
+				<hr />
+			</div>
+
+			<div class="text">
+
+				<p>
+					Hello 👋
+					<br />
+				  We've received your request to withdraw ₦{{amount}} from your SoftShop account, we settle payments to delivery agents on a daily basis.
+					<br />
+          <br />
+					Cheers,
+					<br />
+					SoftShop Team.
+				</p>
+			</div>
+		</div>
+	</body>
+</html>

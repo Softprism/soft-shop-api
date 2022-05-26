@@ -2,19 +2,26 @@ import Order from "../models/order.model";
 import Delivery from "../models/delivery.model";
 import Review from "../models/review.model";
 import Store from "../models/store.model";
+import Rider from "../models/rider.model";
 
 const createDelivery = async (orderId, storeId) => {
   // find the order
   const order = await Order.findById(orderId).populate([
-    { path: "store", select: "_id name address" },
+    { path: "store", select: "_id name address location" },
     { path: "user", select: "_id first_name last_name phone_number email" },
   ]);
   // check for if order exist
   if (!order) {
     return { err: "Order does not exists.", status: 404, };
   }
+
+  // check for existing delivery
+  const delivery = await Delivery.findOne({ order: orderId });
+  if (delivery) {
+    return { err: "Delivery already exists.", status: 400, };
+  }
   // check for order status
-  if (order.status === "sent" || order.status === "accepted" || order.status === "enroute" || order.status === "delivered" || order.status === "completed") {
+  if (order.status === "sent" || order.status === "accepted" || order.status === "enroute" || order.status === "arrived" || order.status === "delivered") {
     return { err: "Sorry you can't create delivery for this Order.", status: 409, };
   }
   // check for order payment status
@@ -25,29 +32,8 @@ const createDelivery = async (orderId, storeId) => {
   if ((order.store._id).toString() !== storeId) {
     return { err: "You're not permitted to carry out this action", status: 403, };
   }
-  const {
-    orderItems, user, store, deliveryAddress,
-  } = order;
-  let items = [];
-  // create item name and quantity
-  items = orderItems.map((orderItem) => {
-    return `${orderItem.qty}X ${orderItem.productName}`;
-  });
-  // new delivery pbject to be created
-  const newDelivery = {
-    item: items.toString(),
-    pickup: store.address,
-    location: store.location,
-    dropOff: deliveryAddress,
-    receiver: `${user.first_name} ${user.last_name}`,
-    phone_number: user.phone_number,
-    order: orderId,
-    user: user._id,
-    store: store._id
-  };
-  // create delivery
-  const delivery = await Delivery.create(newDelivery);
-  return { delivery };
+
+  return { delivery: "Delivery Created Successfully" };
 };
 
 const acceptDelivery = async (deliveryId, riderId, urlParams) => {
@@ -81,6 +67,7 @@ const acceptDelivery = async (deliveryId, riderId, urlParams) => {
     { status: "accepted", rider: riderId },
     { new: true }
   );
+
   return { updatedDelivery };
 };
 
@@ -121,19 +108,23 @@ const updatedRiderStatus = async (deliveryId, riderId, status) => {
     return { err: "Delivery hasn't been accepted.", status: 409, };
   }
   // update order Status
-  if (status === "Start Delivery") {
-    await Order.findByIdAndUpdate({ _id: delivery.order }, { status: "enroute" }, { new: true });
-  }
-  // update order Status
+  // if (status === "Start Delivery") {
+  //   await Order.findByIdAndUpdate({ _id: delivery.order }, { status: "enroute" }, { new: true });
+  // }
+  // // update order Status
   if (status === "Complete Drop off") {
-    await Order.findByIdAndUpdate({ _id: delivery.order }, { status: "completed" }, { new: true });
-    await Delivery.findByIdAndUpdate(deliveryId, { status: "delivered" });
+  //   await Order.findByIdAndUpdate({ _id: delivery.order }, { status: "completed" }, { new: true });
+    await Delivery.findByIdAndUpdate(deliveryId, { status: "arrived" });
+  //   // change rider isBusy status to false
+  //   await Rider.findByIdAndUpdate(riderId, { isBusy: false });
   }
   // update order Status
-  if (status === "Cancelled") {
-    await Order.findByIdAndUpdate({ _id: delivery.order }, { status: "cancelled" }, { new: true });
-    await Delivery.findByIdAndUpdate(deliveryId, { status: "failed" });
-  }
+  // if (status === "Cancelled") {
+  //   await Order.findByIdAndUpdate({ _id: delivery.order }, { status: "cancelled" }, { new: true });
+  //   await Delivery.findByIdAndUpdate(deliveryId, { status: "failed" });
+  //   // change rider isBusy status to false
+  //   await Rider.findByIdAndUpdate(riderId, { isBusy: false });
+  // }
   // update delivery Status
   const updatedstatus = await Delivery.findByIdAndUpdate(
     deliveryId,
@@ -143,17 +134,19 @@ const updatedRiderStatus = async (deliveryId, riderId, status) => {
   return { updatedstatus };
 };
 
-const completeDelivery = async (orderId, userId) => {
+const completeDelivery = async (orderId, riderId) => {
   const order = await Order.findById(orderId);
   if (!order) {
     return { err: "Order does not exists.", status: 404, };
   }
   // check if user who requested for order is the same with the logged in user
-  if (order.user.toString() !== userId.toString()) {
+  if (order.rider.toString() !== riderId.toString()) {
     return { err: "You're not permitted to carry out this action", status: 403, };
   }
   // check for delivery
-  const delivery = await Delivery.findOne({ order: orderId });
+  let delivery = await Delivery.findOne({ order: orderId });
+  delivery.status = "delivered";
+  await delivery.save();
   if (!delivery) {
     return { err: "Delivery does not exists.", status: 404, };
   }
@@ -164,7 +157,7 @@ const completeDelivery = async (orderId, userId) => {
   // update order Status
   const updatedOrder = await Order.findByIdAndUpdate(
     orderId,
-    { status: "completed" },
+    { status: "delivered" },
     { new: true }
   );
   return { updatedOrder, delivery };
@@ -191,6 +184,7 @@ const getAllDeliveries = async (urlParams) => {
   let long;
   let lat;
   let radian;
+
   if (urlParams.long && urlParams.lat && urlParams.radius) {
     long = parseFloat(urlParams.long);
     lat = parseFloat(urlParams.lat);
@@ -202,6 +196,9 @@ const getAllDeliveries = async (urlParams) => {
     };
   }
 
+  if (urlParams.rider) {
+    condition.rider = urlParams.rider;
+  }
   const deliveries = await Delivery.find(condition)
     .populate([
       { path: "rider", select: "_id first_name last_name" },

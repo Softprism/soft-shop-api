@@ -7,7 +7,7 @@ const StoreSchema = mongoose.Schema({
   images: {
     profilePhoto: {
       type: String,
-      default: "https://soft-shop.app/../uploads/store/292672-edit.png"
+      default: "https://soft-shop.app/uploads/store/802559-no-thumbnail.jpeg"
     },
     pictures: [{ type: String }],
   }, // array to store multiple images
@@ -41,8 +41,8 @@ const StoreSchema = mongoose.Schema({
   pushNotifications: { type: Boolean, default: false },
   smsNotifications: { type: Boolean, default: false },
   promotionalNotifications: { type: Boolean, default: false },
-  orderPushDeivceToken: { type: String },
-  vendorPushDeivceToken: { type: String },
+  orderPushDeviceToken: [{ type: String }],
+  vendorPushDeviceToken: [{ type: String }],
   tax: { type: String },
   account_details: {
     account_balance: { type: Number, default: 0.00 },

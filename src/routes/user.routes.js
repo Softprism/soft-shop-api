@@ -36,7 +36,7 @@ router.post(
   verifyEmailAddress,
   async (req, res) => {
     // send otp
-    let token = await getOTP("user-signup", email);
+    let token = await getOTP("user-signup", req.data.email);
     await sendSignUpOTPmail(req.data.email, token.otp);
   }
 );
@@ -51,14 +51,18 @@ router.post(
   registerUser,
   async (req, res, next) => {
     // delete sign up token
-    await Token.findByIdAndDelete(req.body.token);
-    let user = await User.findOne({ email: req.data.user_id });
+    // await Token.findByIdAndDelete(req.body.token);
+    let user = await User.findById(req.data.user_id);
     // send email to user
-    await sendUserSignUpMail(req.data.email);
+    // capitalize user's first name
+    user.first_name = user.first_name.charAt(0).toUpperCase() + user.first_name.slice(1);
+    await sendUserSignUpMail(user.email, user.first_name);
     // send sms to user
     await sendUserSignupSMS(req.data.phone);
     // create log
     await createLog("user signup", "user", `A new user - ${user.first_name} ${user.last_name} with email - ${user.email} just signed on softshop`);
+    // delete newly created user account
+    await User.findByIdAndDelete(req.data.user_id);
   }
 );
 
@@ -73,8 +77,16 @@ router.post("/login",
   async (req, res) => {
     // add push token to user profile
     let user = await User.findById(req.data.id);
-    user.pushDeivceToken = req.data.deviceToken;
-    await user.save();
+    if (req.body.pushDeviceToken) {
+      console.log(req.body.pushDeviceToken);
+      let existingToken = user.pushDeviceToken.find((res) => {
+        return res === req.body.pushDeviceToken;
+      });
+      if (!existingToken) {
+        user.pushDeviceToken.push(req.body.pushDeviceToken);
+        await user.save();
+      }
+    }
 
     // create log
     await createLog("user Login", "user", `A new login from ${user.first_name} ${user.last_name} with email - ${user.email}`);
@@ -108,8 +120,8 @@ router.put(
   async (req, res) => {
     let { user } = req.localData;
     // send mail to notify user of password change
-    if (user.password && req.body.password) {
-      sendPasswordChangeMail(user.email);
+    if (req.body.password && req.body.original_password) {
+      await sendPasswordChangeMail(user.email);
       // create log
       await createLog("user update prfile", "user", `A user - ${user.first_name} ${user.last_name} with email - ${user.email} just updated their profile`);
     }

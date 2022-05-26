@@ -37,7 +37,7 @@ const OrderSchema = mongoose.Schema(
     },
     customerNote: {
       type: String,
-      default: "Nothing."
+      default: "none"
     },
     paymentMethod: {
       type: String,
@@ -70,7 +70,11 @@ const OrderSchema = mongoose.Schema(
       required: true,
       default: false,
     },
-    // initiated (after creating order and await payment) => sent(payment confirmation) => approved(when store approves an order) => ready(store sends order for delivery => accepted(when rider accepts an order) => enroute(item is on the way) => delivered(item is at user's location) =>  completed(user receives order)
+    isReviewed: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
     status: {
       type: String,
       required: true,
@@ -83,9 +87,10 @@ const OrderSchema = mongoose.Schema(
         "ready", // order ready for delivery
         "accepted", // order accepted by rider
         "enroute", // order is on the way user
-        "delivered", // order delivered to user
-        "completed", // delivery completed
+        "arrived", // order delivered to user
+        "delivered", // delivery completed
       ]
+      // initiated (after creating order and await payment) => sent(payment confirmation) => approved(when store approves an order) => ready(store sends order for delivery => accepted(when rider accepts an order) => enroute(item is on the way) => delivered(item is at user's location) =>  completed(user receives order)
     },
     orderItems: [
       {
@@ -115,6 +120,13 @@ const OrderSchema = mongoose.Schema(
         ],
       },
     ],
+    deliveryDiscount: { type: Boolean, default: false },
+    deliveryDiscountPrice: { type: Number, default: 0.0 },
+    platformFeeDiscount: { type: Boolean, default: false },
+    platformFeeDiscountPrice: { type: Number, default: 0.0 },
+    subtotalDiscount: { type: Boolean, default: false },
+    subtotalDiscountPrice: { type: Number, default: 0.0 },
+    totalDiscountedPrice: { type: Number, default: 0.0 },
     createdAt: { type: Date, default: Date.now },
   },
   { timestamps: true }

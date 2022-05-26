@@ -7,7 +7,7 @@ const router = express.Router();
 router.get("/", (req, res, next) => {
   return res.status(200).json({
     success: true,
-    result: `API is working! Cpanel Server - the time is ${new Date().toString()}`,
+    result: `API is working! in ${process.env.NODE_ENV} mode on Cpanel Server - the time is ${new Date().toString()}`,
     status: 200
   });
 });

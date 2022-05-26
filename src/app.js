@@ -1,5 +1,5 @@
 import express from "express";
-import compression from "compression";
+import helmet from "helmet";
 import dotenv from "dotenv";
 import cors from "cors";
 import mongoSanitize from "express-mongo-sanitize";
@@ -15,6 +15,7 @@ connectDB();
 
 const app = express();
 
+app.use(helmet());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(cors());
@@ -35,10 +36,12 @@ app.use("/dev/v1", (req, res, next) => {
   next();
 }, router);
 
+app.get("/", (req, res) => res.send({ message: "Welcome to Soft-Shop server!" }));
+
 app.all("*", (req, res, next) => {
   res
     .status(404)
-    .json({ success: true, msg: "Resource not found, please try logging in" });
+    .json({ success: false, msg: "Resource not found, please try logging in" });
   next();
 });
 
@@ -47,8 +50,8 @@ app.use(errorHandler);
 
 // Start server
 const PORT = process.env.PORT || 5000;
-
 app.listen(
   PORT,
   console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`)
+
 );

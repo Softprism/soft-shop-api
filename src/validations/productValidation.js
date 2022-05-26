@@ -62,7 +62,7 @@ const createFees = {
       "any.required": "Title is required.",
       "string.empty": "Sorry, title cannot be an empty field",
     }),
-    amount: Joi.number().empty().positive().required()
+    amount: Joi.number().empty().required()
       .messages({
         "any.required": "Amount is required.",
         "number.empty": "Amount cannot be an empty field.",

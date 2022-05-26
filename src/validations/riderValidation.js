@@ -1,4 +1,5 @@
 import Joi from "joi";
+import { ObjectId } from "mongodb";
 import objectId from "./common";
 
 const registerValidation = {
@@ -27,6 +28,13 @@ const registerValidation = {
         "string.empty": "Sorry, phone number cannot be an empty field",
         "string.min": "Phone number should be 11 numbers"
       }),
+    company_id: objectId.empty().messages({
+      "string.empty": "Sorry, company id cannot be an empty field",
+      "string.length": "Company id must be a valid mongoose id.",
+    }),
+    corporate: Joi.boolean().empty().messages({
+      "boolean.empty": "Sorry, corporate cannot be an empty field",
+    }),
     password: Joi.string().min(6).empty().required()
       .messages({
         "any.required": "Password is required.",
@@ -135,6 +143,12 @@ const updateRiderValidation = {
     first_name: Joi.string().empty().messages({
       "string.empty": "Sorry, First name cannot be an empty field",
     }),
+    location: Joi.object().empty().messages({
+      "object.unknown": "You have used an invalid key."
+    }),
+    place_id: Joi.string().empty().messages({
+      "string.empty": "Sorry, field cannot be an empty field",
+    }),
     last_name: Joi.string().empty().messages({
       "string.empty": "Sorry, Last name cannot be an empty field",
     }),
@@ -148,9 +162,39 @@ const updateRiderValidation = {
         "string.empty": "Sorry, profile photo cannot be an empty field",
         "string.min": "Profile photo should be 11 numbers"
       }),
+    account_details: Joi.object({
+      account_number: Joi.string().empty().min(10)
+        .messages({
+          "string.empty": "Sorry, account number cannot be an empty field",
+          "string.min": "Account number should be 10 numbers",
+        }),
+      bank_name: Joi.string().empty().min(3)
+        .messages({
+          "string.empty": "Sorry, bank name cannot be an empty field",
+          "string.min": "Bank name should be 3 characters or more",
+        }),
+      full_name: Joi.string().empty().min(3)
+        .messages({
+          "string.empty": "Sorry, full name cannot be an empty field",
+          "string.min": "Full name should be 3 characters or more",
+        }),
+      bank_code: Joi.string().empty().min(3)
+        .messages({
+          "string.empty": "Sorry, bank code cannot be an empty field",
+          "string.min": "Bank code should be 3 characters or more",
+        }),
+    }),
+    company_id: objectId.empty().messages({
+      "string.empty": "Sorry, company id cannot be an empty field",
+      "string.length": "Company id must be a valid mongoose id.",
+    }),
+    corporate: Joi.boolean().empty().messages({
+      "boolean.empty": "Sorry, corporate cannot be an empty field",
+    }),
     pushNotifications: Joi.boolean().empty(),
+    isBusy: Joi.boolean().empty(),
     smsNotifications: Joi.boolean().empty(),
-    pushDeivceToken: Joi.string(),
+    pushDeviceToken: Joi.string(),
     promotionalNotifications: Joi.boolean().empty()
   }).messages({
     "object.unknown": "You have used an invalid key."

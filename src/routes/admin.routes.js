@@ -6,7 +6,8 @@ import {
   resetStorePassword, confirmStoreUpdate, createTransaction, confirmStorePayout,
   createNotification, createCompayLedger, getAllStoresUpdateRequests,
   getResetPasswordRequests, toggleStore, getAllStores, getUsers,
-  getUserById, getStoreById
+  getUserById, getStoreById, sendRiderMail, sendStoreMail, sendUserMail,
+  sendAllStoresMails, sendAllRidersMails, sendAllUsersMails, sendAllMails, inviteUsersToBeta, confirmRiderAccountDetails, confirmLogisticsAccountDetails, addUserDiscount
 } from "../controllers/admin.controller";
 import validator from "../middleware/validator";
 import { register, login } from "../validations/adminValidation";
@@ -26,6 +27,11 @@ router.get("/all", auth, isAdmin, getAdmins);
 // @desc    Get all Stores
 // @access  Private
 router.get("/stores", auth, isAdmin, checkPagination, getAllStores);
+
+// @route   GET /stores
+// @desc    Get all update requests from all stores.
+// @access  Private
+router.get("/stores/updates", auth, checkPagination, getAllStoresUpdateRequests);
 
 // @route   GET /admins/stores/:storeId
 // @desc    Get a Store
@@ -84,17 +90,35 @@ router.patch("/password-reset/store/:email", auth, isAdmin, resetStorePassword);
 // @access  Private
 router.put("/store/:storeId", auth, isAdmin, confirmStoreUpdate);
 
-// @route   GET /stores
-// @desc    Get all update requests from all stores.
-// @access  Private
-router.get("/stores/updates", auth, checkPagination, getAllStoresUpdateRequests);
-
 router.post("/transactions", auth, isAdmin, createTransaction);
 
-router.put("/transactions/:storeId", auth, isAdmin, confirmStorePayout);
+router.put("/transactions/", auth, isAdmin, confirmStorePayout);
 router.put("/stores/:storeId/toggle", auth, isAdmin, toggleStore);
 
 router.post("/ledger", auth, isAdmin, createCompayLedger);
 router.get("/transactions", auth, isAdmin, getTransactions);
+
+// approve rider update account details
+router.put("/riders/account/:riderId", auth, isAdmin, confirmRiderAccountDetails);
+
+// toggle approval for company account details
+router.put("/logistics/account/:companyId", auth, isAdmin, confirmLogisticsAccountDetails);
+
+router.post("/riders/:riderId", auth, isAdmin, sendRiderMail);
+router.post("/riders", auth, isAdmin, sendAllRidersMails);
+
+router.post("/stores/:storeId", auth, isAdmin, sendStoreMail);
+router.post("/stores", auth, isAdmin, sendAllStoresMails);
+
+router.post("/users/:userId", auth, isAdmin, sendUserMail);
+router.post("/users", auth, isAdmin, sendAllUsersMails);
+
+router.post("/mails", auth, isAdmin, sendAllMails);
+
+// invite users to beta
+router.post("/invite/users", auth, isAdmin, inviteUsersToBeta);
+
+// add discount to user
+router.post("/discounts/user", auth, isAdmin, addUserDiscount);
 
 export default router;

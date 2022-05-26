@@ -93,13 +93,24 @@ router.post(
   async (req, res) => {
     // device token registration
     let pushReg = await Store.findById(req.data.id);
-    if (req.body.vendorPushDeivceToken) {
-      pushReg.vendorPushDeivceToken = req.body.vendorPushDeivceToken;
-      await pushReg.save();
+
+    if (req.body.vendorPushDeviceToken) {
+      let existingToken = pushReg.vendorPushDeviceToken.find((res) => {
+        return res === req.body.vendorPushDeviceToken;
+      });
+      if (!existingToken) {
+        pushReg.vendorPushDeviceToken.push(req.body.vendorPushDeviceToken);
+        await pushReg.save();
+      }
     }
-    if (req.body.orderPushDeivceToken) {
-      pushReg.orderPushDeivceToken = req.body.orderPushDeivceToken;
-      await pushReg.save();
+    if (req.body.orderPushDeviceToken) {
+      let existingToken = pushReg.orderPushDeviceToken.find((res) => {
+        return res === req.body.orderPushDeviceToken;
+      });
+      if (!existingToken) {
+        pushReg.orderPushDeviceToken.push(req.body.orderPushDeviceToken);
+        await pushReg.save();
+      }
     }
     // create log
     await createLog("store Login", "store", `A new login from ${pushReg.name} with email - ${req.body.email}`);

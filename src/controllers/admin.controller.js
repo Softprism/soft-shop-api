@@ -1,7 +1,9 @@
 import { validationResult } from "express-validator";
 
 import * as adminService from "../services/admin.service";
+import * as emailService from "../services/email.service";
 import * as transactionService from "../services/transaction.service";
+import { sendWaitListInvite } from "../utils/sendMail";
 
 const getAdmins = async (req, res) => {
   try {
@@ -139,8 +141,17 @@ const createTransaction = async (req, res, next) => {
 
 const confirmStorePayout = async (req, res, next) => {
   try {
-    const transaction = await adminService.confirmStorePayout(req.params.storeId);
-
+    let transaction;
+    if (req.query.storeId) {
+      transaction = await adminService.confirmStorePayout(req.query.storeId);
+    }
+    if (req.query.companyId) {
+      transaction = await adminService.confirmLogisticsPayout(req.query.companyId);
+    }
+    if (req.query.riderId) {
+      transaction = await adminService.confirmRiderPayout(req.query.riderId);
+    }
+    console.log(transaction);
     if (transaction.err) {
       res.status(transaction.status).json({
         success: false, msg: transaction.err, data: transaction.data, status: transaction.status
@@ -156,6 +167,10 @@ const confirmStorePayout = async (req, res, next) => {
 const createCompayLedger = async (req, res, next) => {
   try {
     const ledger = await adminService.createCompayLedger(req.params.storeId);
+
+    if (ledger.err) {
+      res.status(ledger.status).json({ success: false, msg: ledger.err, status: ledger.status });
+    }
     res.status(200).json({ success: true, result: ledger, status: 200 });
   } catch (error) {
     next(error);
@@ -219,9 +234,161 @@ const getStoreById = async (req, res, next) => {
   }
 };
 
+const sendRiderMail = async (req, res, next) => {
+  try {
+    const rider = await emailService.sendRiderEmail(req.params.riderId, req.body);
+
+    return res.status(200).json({
+      success: true, result: rider, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const sendUserMail = async (req, res, next) => {
+  try {
+    const user = await emailService.sendUserEmail(req.params.userId, req.body);
+
+    return res.status(200).json({
+      success: true, result: user, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const sendStoreMail = async (req, res, next) => {
+  try {
+    const store = await emailService.sendStoreEmail(req.params.storeId, req.body);
+
+    return res.status(200).json({
+      success: true, result: store, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const sendAllStoresMails = async (req, res, next) => {
+  try {
+    const stores = await emailService.sendAllStoresEmails(req.body);
+
+    return res.status(200).json({
+      success: true, result: stores, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const sendAllUsersMails = async (req, res, next) => {
+  try {
+    const users = await emailService.sendAllUsersEmails(req.body);
+
+    return res.status(200).json({
+      success: true, result: users, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const sendAllRidersMails = async (req, res, next) => {
+  try {
+    const riders = await emailService.sendAllRidersEmails(req.body);
+
+    return res.status(200).json({
+      success: true, result: riders, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const sendAllMails = async (req, res, next) => {
+  try {
+    const data = await emailService.sendAllEmails(req.body);
+
+    return res.status(200).json({
+      success: true, result: data, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const confirmLogisticsPayout = async (req, res, next) => {
+  try {
+    const transaction = await adminService.confirmStorePayout(req.params.companyId);
+
+    if (transaction.err) {
+      res.status(transaction.status).json({
+        success: false, msg: transaction.err, data: transaction.data, status: transaction.status
+      });
+    } else {
+      res.status(200).json({ success: true, result: transaction, status: 200 });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+const inviteUsersToBeta = async (req, res, next) => {
+  try {
+    const action = await sendWaitListInvite(req.body.emails);
+
+    return res.status(200).json({
+      success: true, result: action, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const confirmRiderAccountDetails = async (req, res, next) => {
+  try {
+    const action = await adminService.confirmRiderAccountDetails(req.params.riderId);
+
+    return res.status(200).json({
+      success: true, result: action, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const confirmLogisticsAccountDetails = async (req, res, next) => {
+  try {
+    const action = await adminService.confirmLogisticsAccountDetails(req.params.companyId);
+
+    return res.status(200).json({
+      success: true, result: action, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const addUserDiscount = async (req, res, next) => {
+  try {
+    const discount = await adminService.addUserDiscount(req.body);
+
+    if (discount.err) {
+      return res.status(discount.status).json({ success: false, msg: discount.err, status: discount.status });
+    }
+
+    res.status(200).json({ success: true, result: discount, status: 200 });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export {
   getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin,
   resetStorePassword, confirmStoreUpdate, createNotification, createTransaction,
   confirmStorePayout, createCompayLedger, getAllStoresUpdateRequests,
-  getResetPasswordRequests, toggleStore, getAllStores, getUsers, getUserById, getStoreById
+  getResetPasswordRequests, toggleStore, getAllStores, getUsers, getUserById,
+  getStoreById, sendRiderMail, sendStoreMail, sendUserMail, sendAllStoresMails,
+  sendAllRidersMails, sendAllUsersMails, sendAllMails, confirmLogisticsPayout, inviteUsersToBeta, confirmRiderAccountDetails, confirmLogisticsAccountDetails, addUserDiscount
 };

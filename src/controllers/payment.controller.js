@@ -1,7 +1,12 @@
 import * as paymentService from "../services/payment.service";
 
 const verifyTransaction = async (req, res, next) => {
+  console.log(req.body);
   try {
+    if (req.body.event === "transfer.completed") {
+      let verify = await paymentService.verifyPayout(req.body);
+      return res.status(200).json({ success: true, result: verify, status: 200 });
+    }
     let verify = await paymentService.verifyTransaction(req.body);
     return res.status(200).json({ success: true, result: verify, status: 200 });
   } catch (error) {
@@ -9,10 +14,30 @@ const verifyTransaction = async (req, res, next) => {
   }
 };
 
+// const verifyPayout = async (req, res, next) => {
+//   try {
+//     let verify = await paymentService.verifyPayout(req.body);
+//     return res.status(200).json({ success: true, result: verify, status: 200 });
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
 const acknowledgeFlwWebhook = async (req, res, next) => {
-  if (req.body.softshop !== "true") {
-    res.status(200).json({ success: true });
-    paymentService.verifyTransaction(req.body);
+  try {
+    console.log(req.body);
+    if (req.body.event === "transfer.completed") {
+      res.status(200).json({ success: true, status: 200 });
+      await paymentService.verifyPayout(req.body);
+      return;
+    }
+    if (req.body.softshop !== "true") {
+      res.status(200).json({ success: true });
+      paymentService.verifyTransaction(req.body);
+      return 1;
+    }
+  } catch (error) {
+    next(error);
   }
 };
 

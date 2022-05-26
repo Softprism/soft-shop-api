@@ -5,7 +5,10 @@ const VariantSchema = mongoose.Schema({
   variantItems: [
     {
       itemName: { type: String },
-      itemThumbnail: { type: String },
+      itemThumbnail: {
+        type: String,
+        default: "https://soft-shop.app/../uploads/store/292672-edit.png"
+      },
       itemPrice: { type: Number },
       required: { type: Boolean, default: false },
       quantityOpt: { type: Boolean },

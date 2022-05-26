@@ -1,6 +1,6 @@
 import express from "express";
 import {
-  getRiders, verifyToken, signup, signin, getLoggedInRider, requestToken, forgotPassword, createNewPassword, updateRiderProfile
+  getRiders, verifyToken, signup, signin, getLoggedInRider, requestToken, forgotPassword, createNewPassword, updateRiderProfile, requestPayoutCtrl, getPayoutHistoryCtrl, updateRiderAccountDetailsCtrl
 } from "../controllers/rider.controller";
 import auth from "../middleware/auth";
 import validator from "../middleware/validator";
@@ -12,6 +12,7 @@ import {
 import { hashPassword } from "../middleware/validationMiddleware";
 import Rider from "../models/rider.model";
 import { createLog } from "../services/logs.service";
+import { sendSignUpOTPmail } from "../utils/sendMail";
 
 const router = express.Router();
 
@@ -29,7 +30,12 @@ router.get("/login", auth, getLoggedInRider);
 // @route   POST /riders/verify
 // @desc    send OTP to verify new rider signup email
 // @access  Public
-router.post("/token", validator(emailValidation), requestToken);
+router.post("/token",
+  validator(emailValidation),
+  requestToken,
+  async (req, res) => {
+    await sendSignUpOTPmail(req.data.email, req.data.otp);
+  });
 
 // @route   GET /riders/token
 // @desc    validates a token
@@ -50,8 +56,15 @@ router.post("/signin",
   async (req, res) => {
     // device token registration
     let rider = await Rider.findById(req.data.id);
-    rider.pushDeviceToken = req.body.pushDeviceToken;
-    await rider.save();
+    if (req.body.pushDeviceToken) {
+      let existingToken = rider.pushDeviceToken.find((res) => {
+        return res === req.body.pushDeviceToken;
+      });
+      if (!existingToken) {
+        rider.pushDeviceToken.push(req.body.pushDeviceToken);
+        await rider.save();
+      }
+    }
 
     // create log
     await createLog("rider Login", "rider", `A new login from ${rider.last_name} ${rider.first_name} with email - ${req.body.email}`);
@@ -71,5 +84,11 @@ router.patch("/reset-password", hashPassword, validator(resetValidation), create
 // @desc    creates new password for user after forget password
 // @access  Public
 router.patch("/profile", auth, validator(updateRiderValidation), updateRiderProfile);
+
+router.get("/payout", auth, requestPayoutCtrl);
+router.get("/payout/history", auth, checkPagination, getPayoutHistoryCtrl);
+
+// update rider account details route
+router.patch("/profile/account", auth, updateRiderAccountDetailsCtrl);
 
 export default router;

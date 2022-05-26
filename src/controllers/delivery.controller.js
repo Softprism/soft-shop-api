@@ -18,6 +18,7 @@ const create_Delivery = async (req, res, next) => {
     req.data = {
       order_id: action.delivery.order,
       user_id: action.delivery.user,
+      delivery: action.delivery
     };
     next();
   } catch (error) {
@@ -44,7 +45,7 @@ const accept_Delivery = async (req, res, next) => {
       order_id: action.updatedDelivery.order,
       user_id: action.updatedDelivery.user,
       store_id: action.updatedDelivery.store,
-      rider_id: action.updatedDelivery.rider,
+      rider_id: _id,
     };
     next();
   } catch (error) {
@@ -83,7 +84,7 @@ const update_DeliveryStatus = async (req, res, next) => {
 const complete_Delivery = async (req, res, next) => {
   try {
     const { orderId } = req.params;
-    const { id } = req.user;
+    const { id } = req.rider;
     const action = await completeDelivery(orderId, id);
     if (action.err) {
       return res
@@ -92,11 +93,20 @@ const complete_Delivery = async (req, res, next) => {
           success: false, msg: action.err, status: action.status
         });
     }
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
       result: { order: action.updatedOrder, delivery: action.delivery },
       status: 200
     });
+
+    //
+    req.localData = {
+      user: action.delivery.user,
+      store: action.delivery.store,
+      rider: action.delivery.rider,
+      order: action.delivery.order
+    };
+    next();
   } catch (error) {
     next(error);
   }

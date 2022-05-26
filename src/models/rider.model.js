@@ -37,6 +37,8 @@ const riderSchema = mongoose.Schema({
       }),
     ],
   },
+  corporate: { type: Boolean, required: true, default: false },
+  company_id: { type: mongoose.Types.ObjectId, ref: "logistics" },
   email: {
     type: String,
     unique: true,
@@ -56,16 +58,42 @@ const riderSchema = mongoose.Schema({
   },
   profilePhoto: {
     type: String,
-    default: "https://soft-shop.app/../uploads/store/292672-edit.png"
+    default: "https://soft-shop.app/uploads/store/802559-no-thumbnail.jpeg"
   },
   isVerified: { type: Boolean, required: true, default: false },
   orders: [{ type: mongoose.Types.ObjectId, ref: "Order" }], // array to store multiple orders
   createdDate: { type: Date, default: Date.now },
   pushNotifications: { type: Boolean, default: false },
   smsNotifications: { type: Boolean, default: false },
-  pushDeviceToken: { type: String },
+  pushDeviceToken: [{ type: String }],
   promotionalNotifications: { type: Boolean, default: false },
+  pendingWithdrawal: { type: Boolean, default: false },
+  account_details: {
+    account_balance: { type: Number, default: 0.00 },
+    total_credit: { type: Number, default: 0.00 },
+    total_debit: { type: Number, default: 0.00 },
+    account_number: { type: String },
+    bank_code: { type: String },
+    full_name: { type: String },
+    bank_name: { type: String },
+    pending_payout: { type: Boolean },
+    isVerified: { type: Boolean, default: false },
+  },
+  isBusy: { type: Boolean, default: false },
+  location: {
+    type: {
+      type: String,
+      default: "Point",
+    },
+    coordinates: {
+      type: [Number],
+      default: [0, 0],
+    },
+  },
+  place_id: { type: String },
 });
+
+riderSchema.index({ location: "2dsphere" });
 
 const Rider = mongoose.model("Rider", riderSchema);
 

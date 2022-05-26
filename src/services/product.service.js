@@ -131,9 +131,9 @@ const getProductDetails = async (productId) => {
     })
     .lookup({
       from: "variants",
-      localField: "variant",
+      localField: "variants",
       foreignField: "_id",
-      as: "variant",
+      as: "variants",
     })
   // // $lookup produces array, $unwind go destructure everything to object
     .unwind("$store")
@@ -286,11 +286,19 @@ const addVariantItem = async (storeId, variantId, variantParam) => {
 };
 
 const editVariantItem = async (storeId, variantItemId, variantParam) => {
-  const {
+  let {
     itemName, itemThumbnail, itemPrice, required, quantityOpt
   } = variantParam;
   let variantItem = await Variant.findOne({ "variantItems._id": variantItemId, store: storeId });
   if (!variantItem) return { err: "Variant item not found.", status: 400 };
+
+  // check if required & quantityOpt exists then convert them to string
+  if (required === true) required = "true";
+  if (quantityOpt === true) quantityOpt = "true";
+
+  // check if required & quantityOpt is === false then convert them to string
+  if (required === false) required = "false";
+  if (quantityOpt === false) quantityOpt = "false";
 
   await Variant.updateOne(
     {

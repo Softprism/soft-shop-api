@@ -1,6 +1,6 @@
 import {
   getAllRiders, verifyEmailAddress, registerRider, loginRider, loggedInRider,
-  validateToken, requestPasswordToken, resetPassword, updateRider
+  validateToken, requestPasswordToken, resetPassword, updateRider, requestPayout, getPayoutHistory, updateRiderAccountDetails
 } from "../services/rider.service";
 
 // ========================================================================== //
@@ -181,7 +181,56 @@ const getLoggedInRider = async (req, res, next) => {
   }
 };
 
+const requestPayoutCtrl = async (req, res, next) => {
+  try {
+    const payout = await requestPayout(req.rider.id);
+
+    if (payout.err) {
+      return res.status(payout.status).json(
+        { success: false, msg: payout.err, status: payout.status }
+      );
+    }
+
+    return res.status(200).json({
+      success: true,
+      result: payout,
+      status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getPayoutHistoryCtrl = async (req, res, next) => {
+  try {
+    const payouts = await getPayoutHistory(req.rider.id, req.query);
+
+    return res.status(200).json({
+      success: true,
+      result: payouts,
+      size: payouts.length,
+      status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const updateRiderAccountDetailsCtrl = async (req, res, next) => {
+  try {
+    const action = await updateRiderAccountDetails(req.rider.id, req.body);
+
+    return res.status(200).json({
+      success: true,
+      result: action,
+      status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export {
   createNewPassword, forgotPassword, getRiders, getLoggedInRider,
-  signin, signup, verifyToken, requestToken, updateRiderProfile
+  signin, signup, verifyToken, requestToken, updateRiderProfile, requestPayoutCtrl, getPayoutHistoryCtrl, updateRiderAccountDetailsCtrl
 };

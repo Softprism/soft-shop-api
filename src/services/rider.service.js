@@ -4,10 +4,16 @@ import mongoose from "mongoose";
 import Rider from "../models/rider.model";
 import Token from "../models/tokens.model";
 
-import { sendSignUpOTPmail, sendPasswordChangeMail, sendForgotPasswordMail } from "../utils/sendMail";
+import {
+  sendPasswordChangeMail, sendForgotPasswordMail, sendRiderPayoutRequestMail
+} from "../utils/sendMail";
 import getOTP from "../utils/sendOTP";
 import getJwt from "../utils/jwtGenerator";
 import { sendForgotPasswordSMS } from "../utils/sendSMS";
+import Transaction from "../models/transaction.model";
+import { createTransaction } from "./transaction.service";
+import Ledger from "../models/ledger.model";
+import Logistics from "../models/logistics-company.model";
 
 const getAllRiders = async (urlParams) => {
   const limit = Number(urlParams.limit);
@@ -42,8 +48,9 @@ const verifyEmailAddress = async ({ email }) => {
 };
 
 const registerRider = async (riderParam) => {
+  console.log(riderParam);
   const {
-    first_name, last_name, email, phone_number, password
+    first_name, last_name, email, phone_number, password, corporate, company_id
   } = riderParam;
 
   // check if rider exists
@@ -52,13 +59,26 @@ const registerRider = async (riderParam) => {
     return { err: "Rider with this email already exists.", status: 409 };
   }
 
-  let isVerified;
-  // verify rider's signup token
-  let signupToken = await Token.findOne({ _id: riderParam.token, email });
-  if (signupToken) {
-    isVerified = true;
-  } else {
-    return { err: "Email Authentication failed. Please try again.", status: 409 };
+  // check if server is in production
+  if (process.env.NODE_ENV === "production" && company_id) {
+    // check if company exists
+    let company = await Logistics.findById(company_id);
+    if (!company) {
+      return { err: "Company does not exists.", status: 404 };
+    }
+  }
+
+  let isVerified = false;
+
+  // check if server is in production
+  if (process.env.NODE_ENV === "production") {
+    // verify rider's signup token
+    let signupToken = await Token.findOne({ _id: riderParam.token, email });
+    if (signupToken) {
+      isVerified = true;
+    } else {
+      return { err: "Email Authentication failed. Please try again.", status: 409 };
+    }
   }
   // Create rider Object
   const newRider = {
@@ -67,7 +87,9 @@ const registerRider = async (riderParam) => {
     email,
     phone_number,
     password,
-    isVerified
+    isVerified,
+    corporate,
+    company_id
   };
     // Save rider to db
   const createdRider = await Rider.create(newRider);
@@ -176,24 +198,41 @@ const resetPassword = async ({ token, email, password }) => {
 // Update Rider Details
 const updateRider = async (updateParam, id) => {
   const {
-    first_name, last_name, email, original_password, password, phone_number, profilePhoto, pushNotifications, smsNotifications, promotionalNotifications, pushDeivceToken
+    first_name, last_name, email, original_password, password, phone_number, profilePhoto, pushNotifications, smsNotifications, promotionalNotifications, pushDeviceToken, account_details, location, place_id, isBusy
   } = updateParam;
   // Build Rider Object
   const riderFields = {};
 
   // Check for fields
+  if (location) {
+    // add location to riderFields
+    riderFields.location = location;
+    // add points to riderFields location object
+    riderFields.location.type = "Point";
+  }
+
+  if (place_id) riderFields.place_id = place_id;
   if (first_name) riderFields.first_name = first_name;
   if (last_name) riderFields.last_name = last_name;
   if (phone_number) riderFields.phone_number = phone_number;
   if (email) riderFields.email = email;
   if (profilePhoto) riderFields.profilePhoto = profilePhoto;
   if (pushNotifications === true || pushNotifications === false) riderFields.pushNotifications = pushNotifications;
+  if (isBusy === true || isBusy === false) riderFields.isBusy = isBusy;
+
   if (smsNotifications === true || smsNotifications === false) riderFields.smsNotifications = smsNotifications;
   if (promotionalNotifications === true || promotionalNotifications === false) riderFields.promotionalNotifications = promotionalNotifications;
-  if (pushDeivceToken) riderFields.pushDeivceToken = pushDeivceToken;
+  if (pushDeviceToken) riderFields.pushDeviceToken = pushDeviceToken;
+  if (account_details) riderFields.account_details = account_details;
 
   // Find rider from DB Collection
   let rider = await Rider.findById(id);
+  if (!rider) {
+    return {
+      err: "Rider does not exists.",
+      status: 404,
+    };
+  }
 
   if (password) {
     if (!original_password) return { err: "please enter old password", status: 400 };
@@ -205,12 +244,6 @@ const updateRider = async (updateParam, id) => {
 
     // Replace password from rider object with encrypted one
     riderFields.password = await bcrypt.hash(password, salt);
-  }
-  if (!rider) {
-    return {
-      err: "Rider does not exists.",
-      status: 404,
-    };
   }
 
   // Updates the rider Object with the changed values
@@ -233,6 +266,9 @@ const loggedInRider = async (riderId) => {
     {
       $unset: [
         "password",
+        "deliveries",
+        "deliveryReview",
+        "orders"
       ],
     },
   ];
@@ -264,6 +300,7 @@ const loggedInRider = async (riderId) => {
       numOfReviews: { $size: "$deliveryReview" },
       averageRating: { $floor: { $avg: "$deliveryReview.star" } },
       deliveryCount: { $size: "$deliveries" },
+      amountEarned: { $sum: "$deliveries.deliveryFee" },
       orderCount: { $size: "$orders" },
     })
     .addFields({
@@ -273,7 +310,117 @@ const loggedInRider = async (riderId) => {
   return rider[0];
 };
 
+const requestPayout = async (riderId) => {
+  // get rider details
+  const rider = await Rider.findById(riderId);
+
+  // get ledger
+  let ledger = await Ledger.findOne({});
+
+  // set payout variable and check if there's sufficient funds
+  let payout = rider.account_details.account_balance;
+  if (payout < 1000) return { err: "Insufficent Funds. You need up to NGN1000 to request for payouts.", status: 400 };
+
+  // check for rider and ledger pending request
+  let oldRequest = await Transaction.findOne({
+    type: "Debit",
+    ref: riderId,
+    status: "pending",
+    to: "Rider",
+  });
+
+  if (oldRequest && rider.pendingWithdrawal === true) {
+    await Transaction.findOneAndUpdate(
+      {
+        type: "Debit",
+        ref: riderId,
+        status: "pending",
+        to: "Rider",
+
+      },
+      { $inc: { amount: Number(rider.account_details.account_balance) } }
+    );
+
+    // update rider account balance
+    rider.account_details.total_debit += Number(rider.account_details.account_balance);
+    rider.account_details.account_balance = Number(rider.account_details.total_credit - rider.account_details.total_debit);
+    await rider.save();
+    return "Withdrawal Request Sent.";
+  }
+
+  // create Debit transaction for rider
+  let newTransaction = await createTransaction({
+    amount: payout,
+    type: "Debit",
+    to: "Rider",
+    receiver: riderId,
+    ref: riderId
+  });
+
+  // check for error while creating new transaction
+  if (!newTransaction) return { err: "Error requesting payout. Please try again", status: 400 };
+  rider.pendingWithdrawal = true;
+  await rider.save();
+
+  await sendRiderPayoutRequestMail(rider.email, payout);
+  return "Withdrawal Request Sent.";
+};
+
+const getPayoutHistory = async (riderId, urlParams) => {
+  const limit = Number(urlParams.limit);
+  const skip = Number(urlParams.skip);
+  const payoutHistory = await Transaction
+    .find({
+      receiver: riderId,
+      type: "Debit",
+      status: "completed"
+    })
+    .populate({
+      path: "receiver",
+      select: "account_details"
+    })
+    .sort("createdDate")
+    .skip(skip)
+    .limit(limit);
+  return payoutHistory;
+};
+
+const updateRiderAccountDetails = async (riderId, accountDetails) => {
+  // this service is used to update rider account details
+  // successful request sends a update request to admin panel
+  // get fields to update
+  const {
+    account_number,
+    bank_code,
+    full_name,
+    bank_name
+  } = accountDetails;
+
+  // get rider details
+  const rider = await Rider.findById(riderId);
+
+  // update rider account details
+  rider.account_details.account_number = account_number;
+  rider.account_details.bank_code = bank_code;
+  rider.account_details.full_name = full_name;
+  rider.account_details.bank_name = bank_name;
+  rider.account_details.isVerified = false;
+  await rider.save();
+
+  // return success message
+  return "Account Details Updated.";
+};
 export {
-  resetPassword, requestPasswordToken, verifyEmailAddress, loggedInRider,
-  validateToken, getAllRiders, registerRider, loginRider, updateRider
+  resetPassword,
+  requestPasswordToken,
+  verifyEmailAddress,
+  loggedInRider,
+  validateToken,
+  getAllRiders,
+  registerRider,
+  loginRider,
+  updateRider,
+  requestPayout,
+  getPayoutHistory,
+  updateRiderAccountDetails
 };

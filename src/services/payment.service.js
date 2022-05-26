@@ -8,10 +8,15 @@ import Order from "../models/order.model";
 import Store from "../models/store.model";
 import Ledger from "../models/ledger.model";
 
-import { sendStoreNewOrderSentMail, sendUserNewOrderSentMail } from "../utils/sendMail";
+import {
+  sendStoreNewOrderSentMail, sendStorePayoutSentMail, sendUserNewOrderPaymentFailedMail, sendUserNewOrderSentMail
+} from "../utils/sendMail";
 
 import { createTransaction } from "./transaction.service";
-import { sendOne } from "./push.service";
+import { sendMany } from "./push.service";
+import Transaction from "../models/transaction.model";
+import Rider from "../models/rider.model";
+import Logistics from "../models/logistics-company.model";
 
 // initial env variables
 dotenv.config();
@@ -50,17 +55,6 @@ const verifyTransaction = async (paymentDetails) => {
       return { err: response.message, status: 400 };
     }
 
-    // create card index
-    let card_index = () => {
-      let s4 = () => {
-        return Math.floor((1 + Math.random()) * 0x10000)
-          .toString(16)
-          .substring(1);
-      };
-        // return id of format 'card - aaaaa'
-      return `cindex-${s4()}`;
-    };
-
     // check if card has already been added
     let checker = await User.findOne({
       _id: response.data.meta.user_id,
@@ -76,6 +70,17 @@ const verifyTransaction = async (paymentDetails) => {
 
     // find user from payment initiated
     let user = await User.findById(response.data.meta.user_id).select("-orders");
+
+    // create card index
+    let card_index = () => {
+      let s4 = () => {
+        return Math.floor((1 + Math.random()) * 0x10000)
+          .toString(16)
+          .substring(1);
+      };
+        // return id of format 'card - aaaaa'
+      return `cindex-${s4()}`;
+    };
     // add card index to initiated payment card details
     response.data.card.card_index = card_index();
 
@@ -83,8 +88,10 @@ const verifyTransaction = async (paymentDetails) => {
     user.cards.push(response.data.card);
     await user.save();
 
+    console.log(user.cards);
+
     // create credit transaction for Ledger
-    let ledger = Ledger.findOne({});
+    let ledger = await Ledger.findOne({});
     let request = {
       amount: 100,
       type: "Credit",
@@ -104,80 +111,151 @@ const verifyTransaction = async (paymentDetails) => {
     // user is paying for an order
 
     let order = await Order.findOne({ orderId: tx_ref }).populate("user");
-    let store = await Store.findById(order.store);
-    let ledger = Ledger.findOne({});
+    let user = await User.findById(order.user._id);
+    let store = await Store.findById(order.store).populate("category");
+    let ledger = await Ledger.findOne({});
 
     order.paymentResult = response.data;
     order.markModified("paymentResult");
 
-    // Update order status to sent and credit store balance when payment has been validated by flutterwave. Hitting this endpoint from softshop app will not update details.
+    // Update order status to sent. Hitting this endpoint from softshop app will not update details.
     if (response.data.status === "successful" && paymentDetails.softshop !== "true") {
       order.status = "sent";
-      // send email to user to notify them of sent order
-      await sendUserNewOrderSentMail(order.orderId, order.user.email);
-
-      // create a credit transaction for store and softshop
-      let storeReq = {
-        amount: order.subtotal,
-        type: "Credit",
-        to: "Store",
-        receiver: store._id,
-        status: "completed",
-        ref: order._id
-      };
-      await createTransaction(storeReq);
-      let ledgerReq = {
-        amount: order.totalPrice,
-        type: "Credit",
-        to: "Ledger",
-        receiver: ledger._id,
-        status: "completed",
-        ref: order._id
-      };
-      await createTransaction(ledgerReq);
 
       // notify order app on new order
       let data = {
         event: "new_order",
-        route: "newOrdersView"
+        route: "/",
+        index: "0"
       };
-      await sendOne(
-        "sso",
-        store.orderPushDeivceToken,
+      await sendMany(
+        "ssa",
+        store.orderPushDeviceToken,
         "New Order",
-        `You have a new order from ${order.user.firstName} ${order.user.lastName}`,
+        `You have a new order from ${order.user.first_name} ${order.user.last_name}`,
         data // data to be sent to order app
       );
+
+      // send email to store on new order
+      await sendStoreNewOrderSentMail(order.orderId, store.email);
+
+      // send email to user to notify them of sent order
+      await sendUserNewOrderSentMail(order.orderId, order.user.email, store.email);
+
+      await store.save();
+      await order.save();
+      return order;
     }
+    if (response.data.status === "failed") {
+      // mark order as failed
+      // order.status = "cancelled";
+      // await order.save();
+      // delete order from user orders
+      user.orders.pull(order._id);
+      await user.save();
+      // delete order
+      await Order.findOneAndDelete({ orderId: tx_ref });
+      // send payment failed email to user
+      await sendUserNewOrderPaymentFailedMail(order.orderId, order.user.email);
 
-    // send email to store on new order
-    await sendStoreNewOrderSentMail(order.orderId, store.email);
-
-    await store.save();
-    await order.save();
-    return order;
+      return order;
+    }
   }
+};
 
-  // if (tx_ref.includes("")) {
-  //   // store can only have one  withdrawal request
-  //   let approval = await Transaction.findOne({ receiver: storeId, status: "pending" });
-  //   if (!approval) return { err: "Cannot find store's withdrawal request", status: 400 };
-  //   approval.status = "completed";
-  //   await approval.save();
+const verifyPayout = async (payload) => {
+  let flwpayload = {
+    id: payload.data.id
+  };
+  const response = await flw.Transfer.get_a_transfer(flwpayload);
+  console.log(response);
+  if (response.data.status === "SUCCESSFUL") {
+    // check if reference starts with "rider" or "store" or "logistics"
+    if (payload.data.reference.startsWith("rider")) {
+      // set rider's pendingWithdrawal status to false
+      let rider = await Rider.findById(response.data.narration);
+      rider.pendingWithdrawal = false;
+      await rider.save();
 
-  //   // create transaction
-  //   let request = {
-  //     amount: approval.amount,
-  //     type: "Debit",
-  //     to: "Ledger",
-  //     receiver: ledger._id,
-  //     status: "completed",
-  //     ref: approval.ref
-  //   };
-  //   await createTransaction(request);
+      // send push notification to rider
+      await sendMany(
+        "ssa",
+        rider.pushDeviceToken,
+        "Withdrawal Completed",
+        `Your withdrawal of ${response.data.amount} was successful`,
+        {}
+      );
 
-  //   return approval;
-  // }
+      // complete approved transaction
+      await Transaction.findOneAndUpdate(
+        {
+          type: "Debit",
+          to: "Rider",
+          receiver: rider._id,
+          status: "approved",
+        },
+        {
+          status: "completed",
+        }
+      );
+
+      // send email to rider on successful withdrawal
+      await sendStorePayoutSentMail(rider.email, response.data.amount);
+    }
+    if (payload.data.reference.startsWith("store")) {
+      // set store's pendingWithdrawal status to false
+      let store = await Store.findById(response.data.narration);
+      store.pendingWithdrawal = false;
+      await store.save();
+
+      // send push notification to store
+      await sendMany(
+        "ssa",
+        store.pushDeviceToken,
+        "Withdrawal Completed",
+        `Your withdrawal of ${response.data.amount} was successful`,
+        {} // data to be sent to store app
+      );
+
+      // complete approved transaction
+      await Transaction.findOneAndUpdate(
+        {
+          type: "Debit",
+          to: "Store",
+          receiver: store._id,
+          status: "approved",
+        },
+        {
+          status: "completed",
+        }
+      );
+
+      // send email to store on withdrawal completion
+      await sendStorePayoutSentMail(store.email, response.data.amount);
+    }
+    if (payload.data.reference.startsWith("logistics")) {
+      // set store's pendingWithdrawal status to false
+      let company = await Logistics.findById(response.data.narration);
+      company.pendingWithdrawal = false;
+      await company.save();
+
+      // complete approved transaction
+      await Transaction.findOneAndUpdate(
+        {
+          type: "Debit",
+          to: "Logistics",
+          receiver: company._id,
+          status: "approved",
+        },
+        {
+          status: "completed",
+        }
+      );
+      // send email to logistics
+      await sendStorePayoutSentMail(company.email, response.data.amount);
+    }
+  }
+  return response;
 };
 
 const encryptCard = async (text) => {
@@ -230,7 +308,8 @@ const getTransactions = async () => {
 
 const initiateTransfer = async (payload) => {
   const response = await flw.Transfer.initiate(payload);
+  return response;
 };
 export {
-  flw, bankTransfer, verifyTransaction, encryptCard, ussdPayment, cardPayment, verifyCardRequest, getAllBanks, getBankDetails, getTransactions, initiateTransfer
+  flw, bankTransfer, verifyTransaction, encryptCard, ussdPayment, cardPayment, verifyCardRequest, getAllBanks, getBankDetails, getTransactions, initiateTransfer, verifyPayout
 };
