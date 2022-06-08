@@ -83,8 +83,8 @@ const sendWaitListSignupMail = async (toEmail) => {
       to: toEmail,
       subject: "Early Access To SoftShop 🎉",
       attachments: [{
-        fileName: "logo.svg",
-        path: `${__dirname}/../mails/logo.svg`,
+        fileName: "logo.png",
+        path: `${__dirname}/../mails/logo.png`,
         cid: "logo"
       }],
       html: source,
@@ -133,8 +133,8 @@ const sendWaitListInvite = async (toEmails) => {
       subject: "Invitation To SoftShop Beta🥳",
       attachments: [
         {
-          fileName: "logo.svg",
-          path: `${__dirname}/../mails/logo.svg`,
+          fileName: "logo.png",
+          path: `${__dirname}/../mails/logo.png`,
           cid: "logo"
         },
         {
@@ -166,8 +166,8 @@ const sendSignUpOTPmail = async (toEmail, otp) => {
   };
   const htmlToSend = template(replacements);
   let subject = "OTP For SoftShop Signup";
-  let fileName = "logo.svg";
-  let filePath = `${__dirname}/../mails/logo.svg`;
+  let fileName = "logo.png";
+  let filePath = `${__dirname}/../mails/logo.png`;
   let cid = "logo";
 
   let sendAction = await sendEmail(toEmail, subject, htmlToSend, fileName, filePath, cid);
@@ -185,8 +185,8 @@ const sendUserSignUpMail = async (toEmail, firstName) => {
   };
   const htmlToSend = template(replacements);
   let subject = "Welcome To SoftShop 😊 ";
-  let fileName = "logo.svg";
-  let filePath = `${__dirname}/../mails/logo.svg`;
+  let fileName = "logo.png";
+  let filePath = `${__dirname}/../mails/logo.png`;
   let cid = "logo";
 
   let sendAction = await sendEmail(toEmail, subject, htmlToSend, fileName, filePath, cid);
@@ -201,8 +201,8 @@ const sendPasswordChangeMail = async (toEmail) => {
   const source = fs.readFileSync(textWLogo, "utf-8").toString();
 
   let subject = "SoftShop Account Password Change";
-  let fileName = "logo.svg";
-  let filePath = `${__dirname}/../mails/logo.svg`;
+  let fileName = "logo.png";
+  let filePath = `${__dirname}/../mails/logo.png`;
   let cid = "logo";
 
   let sendAction = await sendEmail(toEmail, subject, source, fileName, filePath, cid);
@@ -220,8 +220,8 @@ const sendForgotPasswordMail = async (toEmail, otp) => {
   };
   const htmlToSend = template(replacements);
   let subject = "SoftShop Account Password Reset";
-  let fileName = "logo.svg";
-  let filePath = `${__dirname}/../mails/logo.svg`;
+  let fileName = "logo.png";
+  let filePath = `${__dirname}/../mails/logo.png`;
   let cid = "logo";
 
   let sendAction = await sendEmail(toEmail, subject, htmlToSend, fileName, filePath, cid);
@@ -241,8 +241,8 @@ const sendNewOrderInitiatedMail = async (orderId, toEmail, amount, store) => {
   const htmlToSend = template(replacements);
 
   let subject = `New Order ${orderId} Initiated`;
-  let fileName = "logo.svg";
-  let filePath = `${__dirname}/../mails/logo.svg`;
+  let fileName = "logo.png";
+  let filePath = `${__dirname}/../mails/logo.png`;
   let cid = "logo";
 
   let sendAction = await sendEmail(toEmail, subject, htmlToSend, fileName, filePath, cid);
@@ -260,8 +260,8 @@ const sendUserNewOrderSentMail = async (orderId, toEmail, store) => {
   const htmlToSend = template(replacements);
 
   let subject = `Order ${orderId} sent`;
-  let fileName = "logo.svg";
-  let filePath = `${__dirname}/../mails/logo.svg`;
+  let fileName = "logo.png";
+  let filePath = `${__dirname}/../mails/logo.png`;
   let cid = "logo";
   let sendAction = await sendEmail(toEmail, subject, htmlToSend, fileName, filePath, cid);
   if (!sendAction) {
@@ -277,8 +277,8 @@ const sendUserNewOrderPaymentFailedMail = async (orderId, toEmail) => {
   const htmlToSend = template(replacements);
 
   let subject = `Payment For Order ${orderId} failed`;
-  let fileName = "logo.svg";
-  let filePath = `${__dirname}/../mails/logo.svg`;
+  let fileName = "logo.png";
+  let filePath = `${__dirname}/../mails/logo.png`;
   let cid = "logo";
   let sendAction = await sendEmail(toEmail, subject, htmlToSend, fileName, filePath, cid);
   if (!sendAction) {
@@ -294,8 +294,8 @@ const sendStoreNewOrderSentMail = async (orderId, toEmail) => {
   const htmlToSend = template(replacements);
 
   let subject = `You have a new order -  ${orderId}`;
-  let fileName = "logo.svg";
-  let filePath = `${__dirname}/../mails/logo.svg`;
+  let fileName = "logo.png";
+  let filePath = `${__dirname}/../mails/logo.png`;
   let cid = "logo";
   let sendAction = await sendEmail(toEmail, subject, htmlToSend, fileName, filePath, cid);
 
@@ -331,8 +331,8 @@ const sendUserNewOrderRejectedMail = async (orderId, toEmail, store) => {
   const htmlToSend = template(replacements);
 
   let subject = `Order ${orderId} Rejected`;
-  let fileName = "logo.svg";
-  let filePath = `${__dirname}/../mails/logo.svg`;
+  let fileName = "logo.png";
+  let filePath = `${__dirname}/../mails/logo.png`;
   let cid = "logo";
 
   let sendAction = await sendEmail(toEmail, subject, htmlToSend, fileName, filePath, cid);
@@ -385,8 +385,8 @@ const sendUserOrderCompletedMail = async (orderId, toEmail) => {
   const htmlToSend = template(replacements);
 
   let subject = `Your ${orderId} Order is now completed 😌`;
-  let fileName = "logo.svg";
-  let filePath = `${__dirname}/../mails/logo.svg`;
+  let fileName = "logo.png";
+  let filePath = `${__dirname}/../mails/logo.png`;
   let cid = "logo";
   let sendAction = await sendEmail(toEmail, subject, htmlToSend, fileName, filePath, cid);
   if (!sendAction) {
@@ -402,8 +402,8 @@ const sendStoreSignUpMail = async (toEmail) => {
   const htmlToSend = template(replacements);
 
   let subject = "Welcome To SoftShop!";
-  let fileName = "logo.svg";
-  let filePath = `${__dirname}/../mails/logo.svg`;
+  let fileName = "logo.png";
+  let filePath = `${__dirname}/../mails/logo.png`;
   let cid = "logo";
   let sendAction = await sendEmail(toEmail, subject, htmlToSend, fileName, filePath, cid);
   if (!sendAction) {
@@ -419,8 +419,8 @@ const sendStoreUpdateRequestMail = async (toEmail) => {
   const htmlToSend = template(replacements);
 
   let subject = "Request To Change Sensitive Data";
-  let fileName = "logo.svg";
-  let filePath = `${__dirname}/../mails/logo.svg`;
+  let fileName = "logo.png";
+  let filePath = `${__dirname}/../mails/logo.png`;
   let cid = "logo";
   let sendAction = await sendEmail(toEmail, subject, htmlToSend, fileName, filePath, cid);
   if (!sendAction) {
@@ -436,8 +436,8 @@ const sendStoreUpdateRequestApprovalMail = async (toEmail) => {
   const htmlToSend = template(replacements);
 
   let subject = "Request To Change Sensitive Data Approved";
-  let fileName = "logo.svg";
-  let filePath = `${__dirname}/../mails/logo.svg`;
+  let fileName = "logo.png";
+  let filePath = `${__dirname}/../mails/logo.png`;
   let cid = "logo";
   let sendAction = await sendEmail(toEmail, subject, htmlToSend, fileName, filePath, cid);
   if (!sendAction) {
@@ -455,8 +455,8 @@ const sendStoreCreditMail = async (toEmail, amount) => {
   const htmlToSend = template(replacements);
 
   let subject = "Softshop Acccount Credited!";
-  let fileName = "logo.svg";
-  let filePath = `${__dirname}/../mails/logo.svg`;
+  let fileName = "logo.png";
+  let filePath = `${__dirname}/../mails/logo.png`;
   let cid = "logo";
   let sendAction = await sendEmail(toEmail, subject, htmlToSend, fileName, filePath, cid);
 
@@ -475,8 +475,8 @@ const sendStoreDebitMail = async (toEmail, amount) => {
   const htmlToSend = template(replacements);
 
   let subject = "Softshop Acccount Debited!";
-  let fileName = "logo.svg";
-  let filePath = `${__dirname}/../mails/logo.svg`;
+  let fileName = "logo.png";
+  let filePath = `${__dirname}/../mails/logo.png`;
   let cid = "logo";
   let sendAction = await sendEmail(toEmail, subject, htmlToSend, fileName, filePath, cid);
 
@@ -495,8 +495,8 @@ const sendStorePayoutRequestMail = async (toEmail, amount) => {
   const htmlToSend = template(replacements);
 
   let subject = "Payout Request";
-  let fileName = "logo.svg";
-  let filePath = `${__dirname}/../mails/logo.svg`;
+  let fileName = "logo.png";
+  let filePath = `${__dirname}/../mails/logo.png`;
   let cid = "logo";
   let sendAction = await sendEmail(toEmail, subject, htmlToSend, fileName, filePath, cid);
   if (!sendAction) {
@@ -514,8 +514,8 @@ const sendStorePayoutApprovalMail = async (toEmail, amount) => {
   const htmlToSend = template(replacements);
 
   let subject = "Payout Request Approved!";
-  let fileName = "logo.svg";
-  let filePath = `${__dirname}/../mails/logo.svg`;
+  let fileName = "logo.png";
+  let filePath = `${__dirname}/../mails/logo.png`;
   let cid = "logo";
   let sendAction = await sendEmail(toEmail, subject, htmlToSend, fileName, filePath, cid);
 
@@ -534,8 +534,8 @@ const sendStorePayoutSentMail = async (toEmail, amount) => {
   const htmlToSend = template(replacements);
 
   let subject = "Payout Sent!";
-  let fileName = "logo.svg";
-  let filePath = `${__dirname}/../mails/logo.svg`;
+  let fileName = "logo.png";
+  let filePath = `${__dirname}/../mails/logo.png`;
   let cid = "logo";
   let sendAction = await sendEmail(toEmail, subject, htmlToSend, fileName, filePath, cid);
 
@@ -552,8 +552,8 @@ const sendStorePasswordResetRequestMail = async (toEmail) => {
   const htmlToSend = template(replacements);
 
   let subject = "Request To Reset Password";
-  let fileName = "logo.svg";
-  let filePath = `${__dirname}/../mails/logo.svg`;
+  let fileName = "logo.png";
+  let filePath = `${__dirname}/../mails/logo.png`;
   let cid = "logo";
   let sendAction = await sendEmail(toEmail, subject, htmlToSend, fileName, filePath, cid);
 
@@ -572,8 +572,8 @@ const sendStorePasswordResetConfirmationMail = async (toEmail, randomCode) => {
   const htmlToSend = template(replacements);
 
   let subject = "Reset Password Successful";
-  let fileName = "logo.svg";
-  let filePath = `${__dirname}/../mails/logo.svg`;
+  let fileName = "logo.png";
+  let filePath = `${__dirname}/../mails/logo.png`;
   let cid = "logo";
   let sendAction = await sendEmail(toEmail, subject, htmlToSend, fileName, filePath, cid);
   if (!sendAction) {
@@ -590,8 +590,8 @@ const sendRiderPayoutRequestMail = async (toEmail, amount) => {
   const htmlToSend = template(replacements);
 
   let subject = "Payout Request";
-  let fileName = "logo.svg";
-  let filePath = `${__dirname}/../mails/logo.svg`;
+  let fileName = "logo.png";
+  let filePath = `${__dirname}/../mails/logo.png`;
   let cid = "logo";
   let sendAction = await sendEmail(toEmail, subject, htmlToSend, fileName, filePath, cid);
 
@@ -609,8 +609,8 @@ const sendRiderCreditMail = async (toEmail, amount) => {
   const htmlToSend = template(replacements);
 
   let subject = "Softshop Acccount Credited!";
-  let fileName = "logo.svg";
-  let filePath = `${__dirname}/../mails/logo.svg`;
+  let fileName = "logo.png";
+  let filePath = `${__dirname}/../mails/logo.png`;
   let cid = "logo";
   let sendAction = await sendEmail(toEmail, subject, htmlToSend, fileName, filePath, cid);
 
@@ -628,8 +628,8 @@ const sendRiderDebitMail = async (toEmail, amount) => {
   const htmlToSend = template(replacements);
 
   let subject = "Softshop Acccount Debited!";
-  let fileName = "logo.svg";
-  let filePath = `${__dirname}/../mails/logo.svg`;
+  let fileName = "logo.png";
+  let filePath = `${__dirname}/../mails/logo.png`;
   let cid = "logo";
   let sendAction = await sendEmail(toEmail, subject, htmlToSend, fileName, filePath, cid);
 
