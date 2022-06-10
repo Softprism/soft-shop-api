@@ -51,7 +51,7 @@ router.post(
   registerUser,
   async (req, res, next) => {
     // delete sign up token
-    // await Token.findByIdAndDelete(req.body.token);
+    await Token.findByIdAndDelete(req.body.token);
     let user = await User.findById(req.data.user_id);
     // send email to user
     // capitalize user's first name

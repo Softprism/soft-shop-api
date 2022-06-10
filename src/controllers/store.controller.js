@@ -1,3 +1,4 @@
+import Store from "../models/store.model";
 import * as storeService from "../services/store.service";
 import { sendStoreDebitMail, sendStorePayoutRequestMail } from "../utils/sendMail";
 
@@ -36,8 +37,10 @@ const createStore = async (req, res, next) => {
       res.status(201).json({ success: true, result: store, status: 201 });
     }
 
+    // find store with email
+    const storeData = await Store.findOne({ email: req.body.email });
     req.data = {
-      id: store._id
+      store: storeData
     };
     next();
   } catch (error) {
