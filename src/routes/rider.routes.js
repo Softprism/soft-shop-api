@@ -50,7 +50,7 @@ router.post("/register",
   validator(registerValidation),
   signup,
   async (req, res) => {
-    if (NODE_ENV === "production") {
+    if (process.env.NODE_ENV === "production") {
       // find rider by id
       let rider = await Rider.findById(req.data.riderId);
       // create log

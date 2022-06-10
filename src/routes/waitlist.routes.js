@@ -14,7 +14,7 @@ router.post("/",
   create_waitlist,
   // check if node env is production
   async (req, res) => {
-    if (NODE_ENV === "production") {
+    if (process.env.NODE_ENV === "production") {
     // create log
       await createLog("new waitlist", "waitlist", `A new waitlist from ${req.data.email}`);
       await sendPlainEmail(

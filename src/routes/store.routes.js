@@ -87,7 +87,7 @@ router.post("/",
   hashPassword,
   createStore,
   async (req, res) => {
-    if (NODE_ENV === "production") {
+    if (process.env.NODE_ENV === "production") {
       // find store by id
       const store = await Store.findById(req.data.id);
 
