@@ -3,7 +3,7 @@ import { validationResult } from "express-validator";
 import * as adminService from "../services/admin.service";
 import * as emailService from "../services/email.service";
 import * as transactionService from "../services/transaction.service";
-import { sendWaitListInvite } from "../utils/sendMail";
+import { sendStoreSignUpFollowUpMail, sendWaitListInvite } from "../utils/sendMail";
 
 const getAdmins = async (req, res) => {
   try {
@@ -270,6 +270,18 @@ const sendStoreMail = async (req, res, next) => {
   }
 };
 
+const sendStoreSignUpFollowUpMailCtrl = async (req, res, next) => {
+  try {
+    const store = await sendStoreSignUpFollowUpMail(req.body);
+
+    return res.status(200).json({
+      success: true, result: store, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const sendAllStoresMails = async (req, res, next) => {
   try {
     const stores = await emailService.sendAllStoresEmails(req.body);
@@ -390,5 +402,5 @@ export {
   confirmStorePayout, createCompayLedger, getAllStoresUpdateRequests,
   getResetPasswordRequests, toggleStore, getAllStores, getUsers, getUserById,
   getStoreById, sendRiderMail, sendStoreMail, sendUserMail, sendAllStoresMails,
-  sendAllRidersMails, sendAllUsersMails, sendAllMails, confirmLogisticsPayout, inviteUsersToBeta, confirmRiderAccountDetails, confirmLogisticsAccountDetails, addUserDiscount
+  sendAllRidersMails, sendAllUsersMails, sendAllMails, confirmLogisticsPayout, inviteUsersToBeta, confirmRiderAccountDetails, confirmLogisticsAccountDetails, addUserDiscount, sendStoreSignUpFollowUpMailCtrl
 };

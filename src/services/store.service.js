@@ -1,5 +1,4 @@
 /* eslint-disable no-await-in-loop */
-import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
 
@@ -15,7 +14,7 @@ import Category from "../models/category.model";
 
 import { getDistance } from "../utils/get-distance";
 import {
-  sendPasswordChangeMail, sendStorePasswordResetRequestMail, sendStoreSignUpMail, sendStoreUpdateRequestMail
+  sendPasswordChangeMail, sendStorePasswordResetRequestMail, sendStoreUpdateRequestMail
 } from "../utils/sendMail";
 import Ledger from "../models/ledger.model";
 
@@ -463,7 +462,6 @@ const createStore = async (StoreParam) => {
   const newStore = new Store(StoreParam);
   await newStore.save();
 
-  await sendStoreSignUpMail(email);
   let token = await getJwt(newStore.id, "store");
 
   return token;

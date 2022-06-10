@@ -16,7 +16,7 @@ import {
   resetPassword, updateUserValidation, addbasketValidation, editbasketValidation
 } from "../validations/userValidation";
 import {
-  sendForgotPasswordMail, sendPasswordChangeMail, sendSignUpOTPmail, sendUserSignUpMail
+  sendForgotPasswordMail, sendPasswordChangeMail, sendPlainEmail, sendSignUpOTPmail, sendUserSignUpMail
 } from "../utils/sendMail";
 import { sendForgotPasswordSMS, sendUserSignupSMS } from "../utils/sendSMS";
 
@@ -59,10 +59,17 @@ router.post(
     await sendUserSignUpMail(user.email, user.first_name);
     // send sms to user
     await sendUserSignupSMS(req.data.phone);
+    // check if node is in production
+    if (NODE_ENV === "production") {
     // create log
-    await createLog("user signup", "user", `A new user - ${user.first_name} ${user.last_name} with email - ${user.email} just signed on softshop`);
-    // delete newly created user account
-    await User.findByIdAndDelete(req.data.user_id);
+      await createLog("user signup", "user", `A new user - ${user.first_name} ${user.last_name} with email - ${user.email} just signed on softshop`);
+      // send log email
+      await sendPlainEmail(
+        "logs@soft-shop.app",
+        "A new user has signed up",
+        `A new user has signed up with email: ${user.email}`
+      );
+    }
   }
 );
 

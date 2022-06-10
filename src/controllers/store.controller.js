@@ -35,6 +35,11 @@ const createStore = async (req, res, next) => {
     } else {
       res.status(201).json({ success: true, result: store, status: 201 });
     }
+
+    req.data = {
+      id: store._id
+    };
+    next();
   } catch (error) {
     next(error);
   }

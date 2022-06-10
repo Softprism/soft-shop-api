@@ -60,8 +60,7 @@ const signup = async (req, res, next) => {
       });
 
     req.data = {
-      email: result.createdRider.email,
-      phone: result.createdRider.phone_number
+      riderId: result.createdRider._id
     };
     next();
   } catch (error) {
