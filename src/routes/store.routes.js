@@ -26,7 +26,7 @@ import {
 
 import Store from "../models/store.model";
 import { createLog } from "../services/logs.service";
-import { sendStoreSignUpMail } from "../utils/sendMail";
+import { sendPlainEmail, sendStoreSignUpMail } from "../utils/sendMail";
 
 const router = express.Router();
 

@@ -3,6 +3,7 @@ import validator from "../middleware/validator";
 import auth from "../middleware/auth";
 import create_waitlist from "../controllers/waitlist.controller";
 import waitlistValidation from "../validations/waitlistValidation";
+import { sendPlainEmail } from "../utils/sendMail";
 
 const router = express.Router();
 
