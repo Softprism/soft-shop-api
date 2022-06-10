@@ -15,6 +15,11 @@ const create_waitlist = async (req, res, next) => {
     res.status(201).json({ success: true, result: action.waitlist, status: 201 });
     // send waitlist email
     await sendWaitListSignupMail(action.waitlist.email);
+
+    req.data = {
+      email: action.waitlist.email,
+    };
+    next();
   } catch (error) {
     next(error);
   }

@@ -87,20 +87,18 @@ router.post("/",
   hashPassword,
   createStore,
   async (req, res) => {
-    if (process.env.NODE_ENV === "production") {
-      // find store by id
-      const store = await Store.findById(req.data.id);
+    // find store by id
+    const store = await Store.findById(req.data.id);
 
-      // send welcome email
-      await sendStoreSignUpMail(store.owner_email);
-      // create log
-      await createLog("new vendor signup", "store", `A new signup from ${store.owner_name} with email - ${store.owner_email}`);
-      await sendPlainEmail(
-        "logs@soft-shop.app",
-        "A new vendor has signed up",
-        `A new vendor has signed up with email: ${store.owner_email}`,
-      );
-    }
+    // send welcome email
+    await sendStoreSignUpMail(store.owner_email);
+    // create log
+    await createLog("new vendor signup", "store", `A new signup from ${store.owner_name} with email - ${store.owner_email}`);
+    await sendPlainEmail(
+      "logs@soft-shop.app",
+      "A new vendor has signed up",
+      `A new vendor has signed up with email: ${store.owner_email}`,
+    );
   });
 
 // @route   POST /store/login

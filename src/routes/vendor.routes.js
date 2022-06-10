@@ -4,6 +4,7 @@ import auth from "../middleware/auth";
 import recommend_vendor from "../controllers/vendor.controller";
 import recommendVendorValidation from "../validations/vendorValidation";
 import { sendPlainEmail } from "../utils/sendMail";
+import { createLog } from "../services/logs.service";
 
 const router = express.Router();
 
@@ -16,15 +17,13 @@ router.post(
   recommend_vendor,
   // check if node env is production
   async (req, res) => {
-    if (process.env.NODE_ENV === "production") {
-      // create log
-      await createLog("new vendor recommended", "vendor", `A new vendor recommended from ${req.data.email}`);
-      await sendPlainEmail(
-        "logs@soft-shop.app",
-        "A new vendor recommended",
-        `A new vendor recommended with email: ${req.data.email}`,
-      );
-    }
+    // create log
+    await createLog("new vendor recommended", "vendor", `A new vendor recommended from ${req.data.email}`);
+    await sendPlainEmail(
+      "logs@soft-shop.app",
+      "A new vendor recommended",
+      `A new vendor recommended with email: ${req.data.email}`,
+    );
   }
 );
 

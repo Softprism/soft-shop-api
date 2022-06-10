@@ -60,16 +60,14 @@ router.post(
     // send sms to user
     await sendUserSignupSMS(req.data.phone);
     // check if node is in production
-    if (process.env.NODE_ENV === "production") {
     // create log
-      await createLog("user signup", "user", `A new user - ${user.first_name} ${user.last_name} with email - ${user.email} just signed on softshop`);
-      // send log email
-      await sendPlainEmail(
-        "logs@soft-shop.app",
-        "A new user has signed up",
-        `A new user has signed up with email: ${user.email}`
-      );
-    }
+    await createLog("user signup", "user", `A new user - ${user.first_name} ${user.last_name} with email - ${user.email} just signed on softshop`);
+    // send log email
+    await sendPlainEmail(
+      "logs@soft-shop.app",
+      "A new user has signed up",
+      `A new user has signed up with email: ${user.email}`
+    );
   }
 );
 

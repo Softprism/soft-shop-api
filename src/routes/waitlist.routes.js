@@ -4,6 +4,7 @@ import auth from "../middleware/auth";
 import create_waitlist from "../controllers/waitlist.controller";
 import waitlistValidation from "../validations/waitlistValidation";
 import { sendPlainEmail } from "../utils/sendMail";
+import { createLog } from "../services/logs.service";
 
 const router = express.Router();
 
@@ -15,15 +16,13 @@ router.post("/",
   create_waitlist,
   // check if node env is production
   async (req, res) => {
-    if (process.env.NODE_ENV === "production") {
     // create log
-      await createLog("new waitlist", "waitlist", `A new waitlist from ${req.data.email}`);
-      await sendPlainEmail(
-        "logs@soft-shop.app",
-        "A new waitlist has signed up",
-        `A new waitlist has signed up with email: ${req.body.email}`,
-      );
-    }
+    await createLog("new waitlist", "waitlist", `A new waitlist from ${req.data.email}`);
+    await sendPlainEmail(
+      "logs@soft-shop.app",
+      "A new waitlist has signed up",
+      `A new waitlist has signed up with email: ${req.body.email}`,
+    );
   });
 
 export default router;

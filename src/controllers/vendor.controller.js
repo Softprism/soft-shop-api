@@ -11,7 +11,12 @@ const recommend_vendor = async (req, res, next) => {
           success: false, msg: action.err, status: action.status
         });
     }
-    return res.status(201).json({ success: true, result: action.recommendedVendor, status: 201 });
+    res.status(201).json({ success: true, result: action.recommendedVendor, status: 201 });
+
+    req.data = {
+      email: action.recommendedVendor.email,
+    };
+    next();
   } catch (error) {
     next(error);
   }
