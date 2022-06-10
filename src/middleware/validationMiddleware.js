@@ -5,8 +5,9 @@ import User from "../models/user.model";
 
 const isUserVerified = async (req, res, next) => {
   if (process.env.NODE_ENV === "production") {
-    const user = await User.findOne({ email: req.body.email, isVerified: true });
-    if (!user) return res.status(400).json({ success: false, msg: "Please complete your signup verification.", status: 400 });
+    const user = await User.findOne({ email: req.body.email });
+    if (!user) return res.status(400).json({ success: false, msg: "This email hasn't been registered.", status: 400 });
+    if (!user.isVerified) return res.status(400).json({ success: false, msg: "Please complete your signup verification.", status: 400 });
   }
   next();
 };
