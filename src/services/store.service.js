@@ -101,6 +101,8 @@ const getStores = async (urlParams) => {
     })
   // matching stores with matchParam
     .match(matchParam)
+  // match verified stores
+    .match({ isVerified: true })
   // looking up the product collection for each stores
     .lookup({
       from: "products",
@@ -230,6 +232,8 @@ const getStoresNoGeo = async (urlParams) => {
   const stores = await Store.aggregate()
   // matching stores with matchParam
     .match(matchParam)
+    // match verified stores
+    .match({ isVerified: true })
   // looking up the product collection for each stores
     .lookup({
       from: "products",
@@ -317,6 +321,7 @@ const getStore = async (urlParams, storeId) => {
   // matching with requested store
     .match({
       _id: mongoose.Types.ObjectId(storeId),
+      isVerified: true,
     })
   // looking up the store in the product collection
     .lookup({
@@ -324,10 +329,6 @@ const getStore = async (urlParams, storeId) => {
       localField: "_id",
       foreignField: "store",
       as: "products",
-    })
-  // returning only active products
-    .match({
-      "products.status": "active",
     })
   // looking up the order collection for each stores
     .lookup({
