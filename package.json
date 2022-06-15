@@ -1,29 +1,63 @@
 {
 	"name": "soft-shop-api",
 	"version": "1.0.0",
-	"description": "api endpoint for the soft shop app",
-  "engines": {
-    "node": "14.x"
-  },
-	"type": "module",
+	"description": "api endpoint for the softshop app",
+	"engines": {
+		"node": "16.x"
+	},
 	"scripts": {
-		"start": "node ./server.js",
-		"start:dev": "nodemon ./server.js"
+		"clean": "rm -rf build && npm run build-babel",
+		"build-babel": "babel -d ./build ./src -s --copy-files",
+		"build": "npm run clean && npm run build-babel",
+		"start": " npm run build && node ./build/app.js",
+		"dev": "nodemon --exec babel-node src/app.js"
 	},
 	"dependencies": {
+		"@googlemaps/google-maps-services-js": "^3.3.6",
+		"axios": "^0.24.0",
 		"bcryptjs": "^2.4.3",
 		"body-parser": "^1.19.0",
+		"capitalize": "^2.0.4",
+		"compression": "^1.7.4",
 		"cors": "^2.8.5",
 		"dotenv": "^10.0.0",
+		"email-templates": "^9.0.0",
 		"express": "^4.17.1",
 		"express-jwt": "^6.0.0",
-		"express-validator": "^6.9.2",
+		"express-mongo-sanitize": "^2.1.0",
+		"express-validator": "^6.14.0",
+		"firebase-admin": "^10.0.2",
+		"flutterwave-node-v3": "^1.0.9",
+		"handlebars": "^4.7.7",
+		"helmet": "^5.0.2",
+		"hpp": "^0.2.3",
+		"joi": "^17.5.0",
 		"jsonwebtoken": "^8.5.1",
 		"mongodb": "^3.5.9",
 		"mongoose": "^5.9.21",
-		"rootpath": "^0.1.2"
+		"mongoose-validator": "^2.1.0",
+		"node-gcm": "^1.0.5",
+		"nodemailer": "^6.7.0",
+		"otp-generator": "^3.0.0",
+		"path": "^0.12.7",
+		"pug": "^3.0.2",
+		"rootpath": "^0.1.2",
+		"socket.io": "^4.4.1",
+		"twilio": "^3.73.1",
+		"validator": "^13.7.0",
+		"xss-clean": "^0.1.1"
 	},
 	"devDependencies": {
+		"@babel/cli": "^7.16.0",
+		"@babel/core": "^7.16.0",
+		"@babel/node": "^7.16.0",
+		"@babel/plugin-transform-runtime": "^7.16.4",
+		"@babel/preset-env": "^7.16.4",
+		"@babel/register": "^7.16.0",
+		"@babel/runtime": "^7.16.3",
+		"eslint": "^7.25.0",
+		"eslint-config-airbnb-base": "^14.2.1",
+		"eslint-plugin-import": "^2.22.1",
 		"nodemon": "^2.0.4"
 	},
 	"repository": {
