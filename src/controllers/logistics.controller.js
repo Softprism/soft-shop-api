@@ -23,6 +23,11 @@ const companySignup = async (req, res, next) => {
     res.status(201).json({
       success: true, result: action.saveAction, token: action.token, status: 201
     });
+
+    req.data = {
+      company_id: action.saveAction._id,
+    };
+    next();
   } catch (error) {
     return next(error);
   }

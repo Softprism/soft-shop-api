@@ -3,6 +3,7 @@ import {
   companyDetails, companyLogin, companySignup, getAllCompanies, requestWithdrawal, updateCompanyAccountDetails, updateCompanyAddress, updateCompanyDetails, updateCompanyImage, updateLoginDetails, viewCompanyRiderDetails, viewCompanyRiders
 } from "../controllers/logistics.controller";
 import auth from "../middleware/auth";
+import Logistics from "../models/logistics-company.model";
 
 const router = express.Router();
 
@@ -13,6 +14,18 @@ router.get("/all", getAllCompanies);
 router.post(
   "/signup",
   companySignup,
+  async (req, res, next) => {
+    // find logistics company
+    const company = await Logistics.findById(req.data.company_id);
+    // create log
+    await createLog("logistics company signup", "logistics", `A new logistics company - ${company.companyName} with email - ${company.email} just signed up on softshop`);
+    // send log email
+    await sendPlainEmail(
+      "logs@soft-shop.app",
+      "A new user has signed up",
+      `A new user has signed up with email: ${company.email}`
+    );
+  }
 );
 
 // signin company route
