@@ -27,8 +27,8 @@ router.post(
     // send log email
     await sendPlainEmail(
       "logs@soft-shop.app",
-      "A new user has signed up",
-      `A new user has signed up with email: ${company.email}`
+      "A new logistics company has signed up",
+      `A new logistics company has signed up with email: ${company.email}`
     );
   }
 );
