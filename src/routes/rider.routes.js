@@ -12,7 +12,7 @@ import {
 import { hashPassword } from "../middleware/validationMiddleware";
 import Rider from "../models/rider.model";
 import { createLog } from "../services/logs.service";
-import { sendPlainEmail, sendSignUpOTPmail } from "../utils/sendMail";
+import { sendPlainEmail, sendRiderSignupMail, sendSignUpOTPmail } from "../utils/sendMail";
 
 const router = express.Router();
 
@@ -51,8 +51,12 @@ router.post("/register",
   signup,
   async (req, res) => {
     if (process.env.NODE_ENV === "production") {
-      // find rider by id
+    // find rider by id
       let rider = await Rider.findById(req.data.riderId);
+
+      // send signup mail
+      let fullName = `${rider.last_name} ${rider.first_name}`;
+      await sendRiderSignupMail(rider.email, fullName);
       // create log
       await createLog("new rider signup", "rider", `A new signup from ${rider.last_name} ${rider.first_name} with email - ${rider.email}`);
       await sendPlainEmail(

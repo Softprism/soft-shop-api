@@ -635,6 +635,25 @@ const sendStorePasswordResetConfirmationMail = async (toEmail, randomCode) => {
     console.log("signup mail not sent");
   }
 };
+const sendRiderSignupMail = async (toEmail, companyName) => {
+  const textWLogo = path.join(__dirname, "../mails/rider-signup.hbs");
+  const source = fs.readFileSync(textWLogo, "utf-8").toString();
+  const template = handlebars.compile(source);
+  const replacements = {
+    companyName
+  };
+  const htmlToSend = template(replacements);
+  let subject = "Welcome To SoftShop!";
+  let fileName = "logo.png";
+  let filePath = `${__dirname}/../mails/logo.png`;
+  let cid = "logo";
+  let sendAction = await sendEmail(toEmail, subject, htmlToSend, fileName, filePath, cid);
+
+  if (!sendAction) {
+    console.log("signup mail not sent");
+  }
+};
+
 const sendRiderPayoutRequestMail = async (toEmail, amount) => {
   const textWLogo = path.join(__dirname, "../mails/rider-payout-request.hbs");
   const source = fs.readFileSync(textWLogo, "utf-8").toString();
@@ -725,5 +744,6 @@ export {
   sendRiderPayoutRequestMail,
   sendRiderCreditMail,
   sendRiderDebitMail,
-  sendStoreSignUpFollowUpMail
+  sendStoreSignUpFollowUpMail,
+  sendRiderSignupMail
 };

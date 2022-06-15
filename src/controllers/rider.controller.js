@@ -45,6 +45,7 @@ const verifyToken = async (req, res, next) => {
 // ========================================================================== //
 const signup = async (req, res, next) => {
   try {
+    if (req.body.corporate === false) req.body.company_id = null;
     const result = await registerRider(req.body);
 
     if (result.err) {
