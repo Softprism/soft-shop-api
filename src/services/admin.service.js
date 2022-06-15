@@ -16,6 +16,7 @@ import Logistics from "../models/logistics-company.model";
 import Rider from "../models/rider.model";
 import { sendMany } from "./push.service";
 import UserDiscount from "../models/user-discount.model";
+import Deletion from "../models/delete-requests.model";
 
 const getAdmins = async () => {
   const admins = await Admin.find();
@@ -458,9 +459,59 @@ const addUserDiscount = async ({
   return newDiscount;
 };
 
+const getDeletionRequests = async (urlParams) => {
+  const limit = Number(urlParams.limit);
+  const skip = Number(urlParams.skip);
+
+  delete urlParams.limit;
+  delete urlParams.skip;
+  delete urlParams.page;
+
+  const requests = await Deletion.find(urlParams)
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit);
+
+  return requests;
+};
+
+const approveDeleteRquest = async (requestId) => {
+  // find which user the request is for
+  let request = await Deletion.findById(requestId);
+  if (!request) return { err: "Request does not exist.", status: 404 };
+
+  // find the user
+  switch (request.account_type) {
+    case "User": {
+      let user = await User.findById(request.account_id);
+      if (!user) return { err: "User does not exist.", status: 404 };
+      await User.findByIdAndDelete(request.account_id);
+      break; }
+    case "Rider": {
+      let rider = await Rider.findById(request.account_id);
+      if (!rider) return { err: "Rider does not exist.", status: 404 };
+      await Rider.findByIdAndDelete(request.account_id);
+      break; }
+    case "logistics": {
+      let logistics = await Logistics.findById(request.account_id);
+      if (!logistics) return { err: "Logistics does not exist.", status: 404 };
+      await Logistics.findByIdAndDelete(request.account_id);
+      break; }
+    case "Store": {
+      let store = await Store.findById(request.account_id);
+      if (!store) return { err: "Store does not exist.", status: 404 };
+      await Store.findByIdAndDelete(request.account_id);
+      break; }
+    default:
+      return { err: "Account type not found.", status: 400 };
+  }
+  await Deletion.findByIdAndDelete(requestId);
+  return "Request approved successfully.";
+};
+
 export {
   getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin,
   resetStorePassword, confirmStoreUpdate, createNotification, confirmStorePayout,
   createCompayLedger, getAllStoresUpdateRequests, getResetPasswordRequests,
-  toggleStoreActive, getAllStores, getUsers, getStoreById, getUserById, confirmLogisticsPayout, confirmRiderPayout, confirmRiderAccountDetails, confirmLogisticsAccountDetails, addUserDiscount
+  toggleStoreActive, getAllStores, getUsers, getStoreById, getUserById, confirmLogisticsPayout, confirmRiderPayout, confirmRiderAccountDetails, confirmLogisticsAccountDetails, addUserDiscount, getDeletionRequests, approveDeleteRquest
 };
