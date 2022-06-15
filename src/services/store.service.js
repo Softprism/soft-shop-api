@@ -17,6 +17,7 @@ import {
   sendPasswordChangeMail, sendStorePasswordResetRequestMail, sendStoreUpdateRequestMail
 } from "../utils/sendMail";
 import Ledger from "../models/ledger.model";
+import Deletion from "../models/delete-requests.model";
 
 const getStores = async (urlParams) => {
   // declare fields to exclude from response
@@ -1008,6 +1009,22 @@ const resetPassword = async ({ email }) => {
   return { err: "Please enter your email registered with softshop", status: 400 };
 };
 
+const deleteAccount = async (storeId) => {
+  // this service is used to delete store account
+  // successful request sends a delete request to admin panel
+  // set store isVerified to false
+  const store = await Store.findById(storeId);
+  store.isVerified = false;
+  await store.save();
+
+  // delete store account
+  await Deletion.create({
+    account_type: "Store",
+    account_id: storeId
+  });
+  return "Your account has been scheduled for deletion. We will contact you shortly.";
+};
+
 export {
   getStores,
   createStore,
@@ -1028,5 +1045,6 @@ export {
   requestPayout,
   getPayoutHistory,
   resetPassword,
-  updateStorePhoto
+  updateStorePhoto,
+  deleteAccount
 };
