@@ -26,6 +26,7 @@ import {
 
 import Store from "../models/store.model";
 import { createLog } from "../services/logs.service";
+import { sendPlainEmail, sendStoreSignUpMail } from "../utils/sendMail";
 
 const router = express.Router();
 
@@ -81,7 +82,21 @@ router.get("/:storeId", auth, getStore);
 // @route   POST /store/create
 // @desc    Register a store
 // @access  Public
-router.post("/", validator(registerStore), hashPassword, createStore);
+router.post("/",
+  validator(registerStore),
+  hashPassword,
+  createStore,
+  async (req, res) => {
+    // send welcome email
+    await sendStoreSignUpMail(req.data.store.owner_email);
+    // create log
+    await createLog("new vendor signup", "store", `A new signup from ${req.data.store.owner_name} with email - ${req.data.store.owner_email}`);
+    await sendPlainEmail(
+      "logs@soft-shop.app",
+      "A new vendor has signed up",
+      `A new vendor has signed up with email: ${req.data.store.owner_email}`,
+    );
+  });
 
 // @route   POST /store/login
 // @desc    Login a store

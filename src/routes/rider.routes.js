@@ -12,7 +12,7 @@ import {
 import { hashPassword } from "../middleware/validationMiddleware";
 import Rider from "../models/rider.model";
 import { createLog } from "../services/logs.service";
-import { sendSignUpOTPmail } from "../utils/sendMail";
+import { sendPlainEmail, sendSignUpOTPmail } from "../utils/sendMail";
 
 const router = express.Router();
 
@@ -45,7 +45,23 @@ router.post("/verify", validator(tokenValidation), verifyToken);
 // @route   POST /riders/register
 // @desc    Register a rider
 // @access  Public
-router.post("/register", hashPassword, validator(registerValidation), signup);
+router.post("/register",
+  hashPassword,
+  validator(registerValidation),
+  signup,
+  async (req, res) => {
+    if (process.env.NODE_ENV === "production") {
+      // find rider by id
+      let rider = await Rider.findById(req.data.riderId);
+      // create log
+      await createLog("new rider signup", "rider", `A new signup from ${rider.last_name} ${rider.first_name} with email - ${rider.email}`);
+      await sendPlainEmail(
+        "logs@soft-shop.app",
+        "A new rider has signed up",
+        `A new rider has signed up with email: ${rider.email}`,
+      );
+    }
+  });
 
 // @route   POST /riders/login
 // @desc    Login a User & get token

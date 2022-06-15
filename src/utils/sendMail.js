@@ -46,6 +46,42 @@ const sendEmail = async (toEmail, mailSubj, mailBody, fileName, path, cid) => {
   }
 };
 
+const sendPlainEmail = async (toEmail, mailSubj, mailBody) => {
+  try {
+    let transporter = nodemailer.createTransport({
+      host: "mail.soft-shop.app",
+      port: 465,
+      secure: true,
+      auth: {
+        user: "nduka@soft-shop.app",
+        pass: "2021@Softprism",
+      }
+    });
+
+    // Verify connection configuration
+    transporter.verify((error, success) => {
+      if (error) {
+        console.log(error.message);
+      } else {
+        console.log("Server is ready to take our messages");
+      }
+    });
+
+    // Set mail options
+    let mailOptions = {
+      from: "\"Logs from SoftShop\" <nduka@soft-shop.app>",
+      to: toEmail,
+      subject: mailSubj,
+      html: mailBody,
+    };
+
+    // Send email
+    let sender = await transporter.sendMail(mailOptions);
+    return sender;
+  } catch (error) {
+    throw error;
+  }
+};
 const sendWaitListSignupMail = async (toEmail) => {
   // get path to email template
   const textWLogo = path.join(__dirname, "../mails/excited.hbs");
@@ -411,6 +447,25 @@ const sendStoreSignUpMail = async (toEmail) => {
   }
 };
 
+const sendStoreSignUpFollowUpMail = async ({ owner_email, owner_name }) => {
+  const textWLogo = path.join(__dirname, "../mails/store-signup-follow-up.hbs");
+  const source = fs.readFileSync(textWLogo, "utf-8").toString();
+  const template = handlebars.compile(source);
+  const replacements = {
+    owner_name
+  };
+  const htmlToSend = template(replacements);
+
+  let subject = "Welcome to SoftShop. Are you ready to step up?";
+  let fileName = "logo.png";
+  let filePath = `${__dirname}/../mails/logo.png`;
+  let cid = "logo";
+  let sendAction = await sendEmail(owner_email, subject, htmlToSend, fileName, filePath, cid);
+  if (!sendAction) {
+    console.log("signup follow up mail not sent");
+  }
+};
+
 const sendStoreUpdateRequestMail = async (toEmail) => {
   const textWLogo = path.join(__dirname, "../mails/store-update-request.hbs");
   const source = fs.readFileSync(textWLogo, "utf-8").toString();
@@ -641,6 +696,7 @@ export {
   sendWaitListSignupMail,
   sendWaitListInvite,
   sendEmail,
+  sendPlainEmail,
   sendSignUpOTPmail,
   sendPasswordChangeMail,
   sendForgotPasswordMail,
@@ -668,5 +724,6 @@ export {
   sendStoreDebitMail,
   sendRiderPayoutRequestMail,
   sendRiderCreditMail,
-  sendRiderDebitMail
+  sendRiderDebitMail,
+  sendStoreSignUpFollowUpMail
 };
