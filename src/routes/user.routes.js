@@ -5,7 +5,7 @@ import {
   updateUser, addItemToBasket, forgotPassword, validateToken,
   createNewPassword, verifyEmailAddress, getUserBasketItems,
   // createUserBasket,
-  editBasketItems, deleteBasketItem, deleteAllBasketItems, addCard, removeCard
+  editBasketItems, deleteBasketItem, deleteAllBasketItems, addCard, removeCard, deleteAccount
 } from "../controllers/user.controller";
 import validator from "../middleware/validator";
 import auth from "../middleware/auth";
@@ -196,5 +196,8 @@ router.patch(
     await sendPasswordChangeMail(user.email);
   }
 );
+
+// delete account
+router.post("/account", auth, deleteAccount);
 
 export default router;

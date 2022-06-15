@@ -396,11 +396,39 @@ const addUserDiscount = async (req, res, next) => {
   }
 };
 
+const getDeletionRequests = async (req, res, next) => {
+  try {
+    const requests = await adminService.getDeletionRequests(req.query);
+
+    return res.status(200).json({
+      success: true, result: requests, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const approveDeleteRquest = async (req, res, next) => {
+  try {
+    const action = await adminService.approveDeleteRquest(req.params.id);
+
+    if (action.err) {
+      return res.status(action.status).json({ success: false, msg: action.err, status: action.status });
+    }
+
+    return res.status(200).json({
+      success: true, result: action, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export {
   getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin,
   resetStorePassword, confirmStoreUpdate, createNotification, createTransaction,
   confirmStorePayout, createCompayLedger, getAllStoresUpdateRequests,
   getResetPasswordRequests, toggleStore, getAllStores, getUsers, getUserById,
   getStoreById, sendRiderMail, sendStoreMail, sendUserMail, sendAllStoresMails,
-  sendAllRidersMails, sendAllUsersMails, sendAllMails, confirmLogisticsPayout, inviteUsersToBeta, confirmRiderAccountDetails, confirmLogisticsAccountDetails, addUserDiscount, sendStoreSignUpFollowUpMailCtrl
+  sendAllRidersMails, sendAllUsersMails, sendAllMails, confirmLogisticsPayout, inviteUsersToBeta, confirmRiderAccountDetails, confirmLogisticsAccountDetails, addUserDiscount, sendStoreSignUpFollowUpMailCtrl, getDeletionRequests, approveDeleteRquest
 };

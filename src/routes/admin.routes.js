@@ -7,7 +7,7 @@ import {
   createNotification, createCompayLedger, getAllStoresUpdateRequests,
   getResetPasswordRequests, toggleStore, getAllStores, getUsers,
   getUserById, getStoreById, sendRiderMail, sendStoreMail, sendUserMail,
-  sendAllStoresMails, sendAllRidersMails, sendAllUsersMails, sendAllMails, inviteUsersToBeta, confirmRiderAccountDetails, confirmLogisticsAccountDetails, addUserDiscount, sendStoreSignUpFollowUpMailCtrl
+  sendAllStoresMails, sendAllRidersMails, sendAllUsersMails, sendAllMails, inviteUsersToBeta, confirmRiderAccountDetails, confirmLogisticsAccountDetails, addUserDiscount, sendStoreSignUpFollowUpMailCtrl, approveDeleteRquest, getDeletionRequests
 } from "../controllers/admin.controller";
 import validator from "../middleware/validator";
 import { register, login } from "../validations/adminValidation";
@@ -123,5 +123,11 @@ router.post("/discounts/user", auth, isAdmin, addUserDiscount);
 
 // send store signup follow up mail
 router.post("/mails/follow-up/store/sign-up", auth, isAdmin, sendStoreSignUpFollowUpMailCtrl);
+
+// get deletion requests
+router.get("/deletion", auth, isAdmin, getDeletionRequests);
+
+// approve deletion request
+router.delete("/deletion/requests/:id", auth, isAdmin, approveDeleteRquest);
 
 export default router;

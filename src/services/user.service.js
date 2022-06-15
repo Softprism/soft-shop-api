@@ -10,6 +10,7 @@ import Product from "../models/product.model";
 
 import getJwt from "../utils/jwtGenerator";
 import { verifyCardRequest } from "./payment.service";
+import Deletion from "../models/delete-requests.model";
 
 // send otp to Verify user email before sign up
 const verifyEmailAddress = async ({ email }) => {
@@ -594,6 +595,22 @@ const createNewPassword = async ({ token, email, password }) => {
   return user;
 };
 
+const deleteAccount = async (userId) => {
+  // this service is used to delete user account
+  // successful request sends a delete request to admin panel
+  // set user isVerified to false
+  const user = await User.findById(userId);
+  user.isVerified = false;
+  await user.save();
+
+  // delete store account
+  await Deletion.create({
+    account_type: "User",
+    account_id: userId
+  });
+  return "Your account has been scheduled for deletion. We will contact you shortly.";
+};
+
 export {
   verifyEmailAddress,
   registerUser,
@@ -611,5 +628,6 @@ export {
   deleteBasketItem,
   deleteAllBasketItems,
   addCard,
-  removeCard
+  removeCard,
+  deleteAccount
 };

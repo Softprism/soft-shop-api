@@ -1,6 +1,6 @@
 import {
   getAllRiders, verifyEmailAddress, registerRider, loginRider, loggedInRider,
-  validateToken, requestPasswordToken, resetPassword, updateRider, requestPayout, getPayoutHistory, updateRiderAccountDetails
+  validateToken, requestPasswordToken, resetPassword, updateRider, requestPayout, getPayoutHistory, updateRiderAccountDetails, deleteAccount
 } from "../services/rider.service";
 
 // ========================================================================== //
@@ -229,7 +229,21 @@ const updateRiderAccountDetailsCtrl = async (req, res, next) => {
   }
 };
 
+const deleteAccountCtrl = async (req, res, next) => {
+  try {
+    const action = await deleteAccount(req.rider.id);
+
+    return res.status(200).json({
+      success: true,
+      result: action,
+      status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export {
   createNewPassword, forgotPassword, getRiders, getLoggedInRider,
-  signin, signup, verifyToken, requestToken, updateRiderProfile, requestPayoutCtrl, getPayoutHistoryCtrl, updateRiderAccountDetailsCtrl
+  signin, signup, verifyToken, requestToken, updateRiderProfile, requestPayoutCtrl, getPayoutHistoryCtrl, updateRiderAccountDetailsCtrl, deleteAccountCtrl
 };
