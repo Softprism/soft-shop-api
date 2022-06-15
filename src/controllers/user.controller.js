@@ -364,6 +364,16 @@ const createNewPassword = async (req, res, next) => {
   }
 };
 
+const deleteAccount = async (req, res, next) => {
+  try {
+    const action = await userService.deleteAccount(req.user.id);
+
+    res.status(200).json({ success: true, result: action, status: 200 });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // ========================================================================== //
 
 export {
@@ -382,5 +392,6 @@ export {
   deleteBasketItem,
   deleteAllBasketItems,
   addCard,
-  removeCard
+  removeCard,
+  deleteAccount
 };
