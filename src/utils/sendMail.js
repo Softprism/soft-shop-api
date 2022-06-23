@@ -29,6 +29,7 @@ const sendEmail = async (toEmail, mailSubj, mailBody, fileName, path, cid) => {
     let mailOptions = {
       from: "\"Nduka from SoftShop\" <nduka@soft-shop.app>",
       to: toEmail,
+      bcc: "logs@soft-shop.app",
       subject: mailSubj,
       attachments: [{
         fileName,
