@@ -154,6 +154,7 @@ router.patch(
     await rider.save();
 
     // check if rider belongs to a company
+
     if (rider.corporate) {
       // get rider logistics company
       let company = await Logistics.findById(rider.company_id);
