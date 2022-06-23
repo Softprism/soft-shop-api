@@ -431,11 +431,11 @@ const sendUserOrderCompletedMail = async (orderId, toEmail) => {
   }
 };
 
-const sendStoreSignUpMail = async (toEmail) => {
+const sendStoreSignUpMail = async (toEmail, store_name) => {
   const textWLogo = path.join(__dirname, "../mails/store-signup.hbs");
   const source = fs.readFileSync(textWLogo, "utf-8").toString();
   const template = handlebars.compile(source);
-  const replacements = {};
+  const replacements = { store_name };
   const htmlToSend = template(replacements);
 
   let subject = "Welcome To SoftShop!";
