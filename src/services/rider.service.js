@@ -125,6 +125,13 @@ const loginRider = async (loginParam) => {
     };
   }
 
+  if (process.env.NODE_ENV === "production" && rider.isVerified === false) {
+    return { err: "Sorry, your is yet to be verified, kindly contact support@soft-shop.app.", status: 401 };
+  }
+  if (rider.isVerified === false) {
+    return { err: "Sorry, your is yet to be verified, kindly contact support@soft-shop.app", status: 401 };
+  }
+
   // Define payload for token
   let token = await getJwt(rider._id, "rider");
 
