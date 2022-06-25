@@ -735,7 +735,7 @@ const getStoreSalesStats = async (storeId, days) => {
   let salesStats = await Order.aggregate()
     .match({
       store: mongoose.Types.ObjectId(storeId),
-      status: "arrived",
+      status: "delivered",
       createdAt: { $gt: d },
     })
     .addFields({
