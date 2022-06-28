@@ -131,12 +131,10 @@ const sendTopic = async (app, topic, title, body, data) => {
       title,
       body
     },
-    apns: {
-      payload: {
-        aps: {
-          sound: "default"
-        },
-      }
+    payload: {
+      aps: {
+        sound: "softshopnotif.wav"
+      },
     },
     data,
     topic
