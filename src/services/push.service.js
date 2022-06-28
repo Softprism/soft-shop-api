@@ -36,6 +36,13 @@ const sendOne = async (app, deviceToken, title, body, data) => {
         title,
         body
       },
+      apns: {
+        payload: {
+          aps: {
+            sound: "softshopnotif.wav"
+          },
+        }
+      },
       data,
       token: deviceToken
     };
@@ -65,6 +72,7 @@ const sendOne = async (app, deviceToken, title, body, data) => {
       return sendPush;
     }
   } catch (error) {
+    console.log(error);
     await createLog("send_notification failed", "server", error.message);
   }
 };
@@ -76,6 +84,13 @@ const sendMany = async (app, deviceTokens, title, body, data) => {
       notification: {
         title,
         body
+      },
+      apns: {
+        payload: {
+          aps: {
+            sound: "softshopnotif.wav"
+          },
+        }
       },
       data,
       tokens: deviceTokens
@@ -115,6 +130,13 @@ const sendTopic = async (app, topic, title, body, data) => {
     notification: {
       title,
       body
+    },
+    apns: {
+      payload: {
+        aps: {
+          sound: "default"
+        },
+      }
     },
     data,
     topic
