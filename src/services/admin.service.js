@@ -23,9 +23,9 @@ const getAdmins = async () => {
 };
 
 const registerAdmin = async (params) => {
-  const { username, password } = params;
+  const { email, password } = params;
 
-  let admin = await Admin.findOne({ username });
+  let admin = await Admin.findOne({ email });
 
   if (admin) {
     return { err: "Admin account already exists.", status: 409 };
@@ -33,7 +33,7 @@ const registerAdmin = async (params) => {
 
   // Create Admin Object
   admin = new Admin({
-    username,
+    email,
     password,
   });
 
@@ -51,12 +51,12 @@ const registerAdmin = async (params) => {
 };
 
 const loginAdmin = async (loginParam) => {
-  const { username, password } = loginParam;
+  const { email, password } = loginParam;
   // Find admin with email
-  let admin = await Admin.findOne({ username });
+  let admin = await Admin.findOne({ email });
 
   if (!admin) {
-    return { err: "Admin not found.", status: 404 };
+    return { err: "Admin account not found.", status: 404 };
   }
 
   // Check if password matches with stored hash
@@ -87,13 +87,13 @@ const createNotification = async (body) => {
 };
 
 const updateAdmin = async (updateParam, id) => {
-  const { username, password } = updateParam;
+  const { email, password } = updateParam;
 
   // Build Admin Object
   const adminFields = {};
 
   // Check for fields
-  if (username) adminFields.username = username;
+  if (email) adminFields.email = email;
   if (password) {
     const salt = await bcrypt.genSalt(10);
 
