@@ -865,7 +865,7 @@ const getStoreFeedback = async (storeId, pagingParam) => {
   const feedbacks = await Order.aggregate()
     .match({
       store: mongoose.Types.ObjectId(storeId),
-      status: "arrived"
+      status: "delivered"
     })
     .lookup({
       from: "reviews",
