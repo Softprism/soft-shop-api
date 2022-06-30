@@ -140,7 +140,7 @@ const verifyTransaction = async (paymentDetails) => {
       await sendStoreNewOrderSentMail(order.orderId, store.email);
 
       // send email to user to notify them of sent order
-      await sendUserNewOrderSentMail(order.orderId, order.user.email, store.email);
+      await sendUserNewOrderSentMail(order.orderId, order.user.email, store.name);
 
       await store.save();
       await order.save();
