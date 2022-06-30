@@ -770,13 +770,13 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
   const freeRidersLength = otherRiders.length;
 
   // check if there are more busy riders than free riders different ranges
-  if (freeRidersLength - busyRidersLength > 0 && freeRidersLength - busyRidersLength < 5) {
-    deliveryFee += deliveryFee * 0.15;
-    surge = true;
-  } else if (freeRidersLength - busyRidersLength > 5 && freeRidersLength - busyRidersLength < 10) {
-    deliveryFee += deliveryFee * 0.1;
-    surge = true;
-  }
+  // if (freeRidersLength - busyRidersLength > 0 && freeRidersLength - busyRidersLength < 5) {
+  //   deliveryFee += deliveryFee * 0.15;
+  //   surge = true;
+  // } else if (freeRidersLength - busyRidersLength > 5 && freeRidersLength - busyRidersLength < 10) {
+  //   deliveryFee += deliveryFee * 0.1;
+  //   surge = true;
+  // }
 
   // get users basket
   const userbasketItems = await getUserBasketItems(userId);
