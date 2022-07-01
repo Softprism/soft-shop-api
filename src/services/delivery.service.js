@@ -130,7 +130,7 @@ const updatedRiderStatus = async (deliveryId, riderId, status) => {
   const updatedstatus = await Delivery.findByIdAndUpdate(
     deliveryId,
     { riderStatus: status },
-    { new: true }
+    { new: true, runValidators: true }
   );
   return { updatedstatus };
 };
