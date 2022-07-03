@@ -48,13 +48,16 @@ const acceptDelivery = async (deliveryId, riderId, urlParams) => {
   long = parseFloat(urlParams.long);
   lat = parseFloat(urlParams.lat);
   radian = parseFloat(urlParams.radius / 6378.1); // calculate in km
-  condition.location = {
-    $geoWithin: {
-      $centerSphere: [[long, lat], radian],
-    },
-  };
+  if (process.env.NODE_ENV === "production") {
+    condition.location = {
+      $geoWithin: {
+        $centerSphere: [[long, lat], radian],
+      },
+    };
+  }
   condition._id = deliveryId;
   const delivery = await Delivery.findOne(condition);
+
   if (!delivery) {
     return { err: "Please select a delivery that's close to your location", status: 404, };
   }
