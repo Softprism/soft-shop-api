@@ -182,7 +182,7 @@ const verifyPayout = async (payload) => {
         "ssa",
         rider.pushDeviceToken,
         "Withdrawal Completed",
-        `Your withdrawal of ${response.data.amount} was successful`,
+        `Your withdrawal of ₦${response.data.amount} was successful`,
         {}
       );
 
@@ -213,7 +213,7 @@ const verifyPayout = async (payload) => {
         "ssa",
         store.pushDeviceToken,
         "Withdrawal Completed",
-        `Your withdrawal of ${response.data.amount} was successful`,
+        `Your withdrawal of ₦${response.data.amount} was successful`,
         {} // data to be sent to store app
       );
 
