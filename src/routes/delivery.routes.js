@@ -4,7 +4,7 @@ import express from "express";
 import auth from "../middleware/auth";
 import {
   create_Delivery, accept_Delivery, update_DeliveryStatus, complete_Delivery,
-  update_RiderStatus, getAll_Deliveries, get_DeliveryById, review_delivery, getPickupTimeCtrl
+  update_RiderStatus, getAll_Deliveries, get_DeliveryById, review_delivery, getPickupTimeCtrl, getDeliveryTimeCtrl
 } from "../controllers/delivery.controller";
 import checkPagination from "../middleware/checkPagination";
 import { isStoreAdmin } from "../middleware/Permissions";
@@ -425,7 +425,7 @@ router.get("/pickup/:deliveryId", auth, getPickupTimeCtrl);
 // @route   GET /deliveries/:deliveryId
 // @desc    Get rider delivery by id
 // @access  Private
-router.get("/arrival/:deliveryId", auth, getPickupTimeCtrl);
+router.get("/arrival/:deliveryId", auth, getDeliveryTimeCtrl);
 
 // @route   GET /deliveries/:deliveryId
 // @desc    Get rider delivery by id
