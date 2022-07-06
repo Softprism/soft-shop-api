@@ -322,8 +322,13 @@ const requestPayout = async (riderId) => {
   const rider = await Rider.findById(riderId);
 
   // check if rider has set account details
-  if (!rider.account_details.account_number && !rider.account_details.isVerified === false) {
+  if (!rider.account_details.account_number) {
     return { err: "Please update your account details.", status: 400 };
+  }
+
+  // check if there's a pending update
+  if (rider.account_details.isVerified === false) {
+    return { err: "Please wait for your account details to be approved. Contact support@soft-shop.app", status: 400 };
   }
 
   // get ledger
