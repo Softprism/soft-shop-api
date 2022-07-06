@@ -376,7 +376,7 @@ const requestWithdrawal = async (id) => {
   const companyExists = await Logistics.findById(id);
 
   // check if companyExists has set account details
-  if (!companyExists.account_number) {
+  if (!companyExists.account_details.account_number) {
     return { err: "Please update your account details.", status: 400 };
   }
   if (!companyExists) {
