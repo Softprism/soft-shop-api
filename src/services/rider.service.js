@@ -418,7 +418,9 @@ const updateRiderAccountDetails = async (riderId, accountDetails) => {
   rider.account_details.full_name = full_name;
   rider.account_details.bank_name = bank_name;
   rider.account_details.isVerified = false;
+  console.log(rider);
   await rider.save();
+  console.log(rider);
 
   // return success message
   return "Account Details Updated.";
