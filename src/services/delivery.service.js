@@ -272,7 +272,7 @@ const getPickupTime = async ({ lat, long }, deliveryID) => {
   return distance;
 };
 
-const getDeliveryTime = async (lat, long, deliveryID) => {
+const getDeliveryTime = async ({ lat, long }, deliveryID) => {
   // get the distance between driver's location and customer's location.
 
   // find delivery
