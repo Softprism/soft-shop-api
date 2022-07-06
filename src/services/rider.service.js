@@ -322,7 +322,7 @@ const requestPayout = async (riderId) => {
   const rider = await Rider.findById(riderId);
 
   // check if rider has set account details
-  if (!rider.account_details.account_number) {
+  if (!rider.account_details.account_number && !rider.account_details.isVerified === false) {
     return { err: "Please update your account details.", status: 400 };
   }
 
