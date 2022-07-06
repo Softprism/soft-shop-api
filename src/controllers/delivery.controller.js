@@ -1,6 +1,6 @@
 import {
   createDelivery, acceptDelivery, updatedDeliveryStatus, updatedRiderStatus,
-  getAllDeliveries, getDeliveryById, completeDelivery, reviewDelivery, getPickupTime
+  getAllDeliveries, getDeliveryById, completeDelivery, reviewDelivery, getPickupTime, getDeliveryTime
 } from "../services/delivery.service";
 
 // ========================================================================== //
@@ -213,7 +213,7 @@ const getPickupTimeCtrl = async (req, res, next) => {
 
 const getDeliveryTimeCtrl = async (req, res, next) => {
   try {
-    const deliveryTime = await getPickupTime(req.query, req.params.deliveryId);
+    const deliveryTime = await getDeliveryTime(req.query, req.params.deliveryId);
 
     if (deliveryTime.err) {
       return res.status(deliveryTime.status).json({ success: false, msg: deliveryTime.err, status: deliveryTime.status });
