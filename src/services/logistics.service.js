@@ -374,6 +374,11 @@ const viewCompanyRiderDetails = async (companyId, riderId) => {
 const requestWithdrawal = async (id) => {
   // check if company exists
   const companyExists = await Logistics.findById(id);
+
+  // check if companyExists has set account details
+  if (!companyExists.account_number) {
+    return { err: "Please update your account details.", status: 400 };
+  }
   if (!companyExists) {
     return { err: "This company does not exist", status: 401 };
   }

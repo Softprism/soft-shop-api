@@ -321,6 +321,11 @@ const requestPayout = async (riderId) => {
   // get rider details
   const rider = await Rider.findById(riderId);
 
+  // check if rider has set account details
+  if (!rider.account_number) {
+    return { err: "Please update your account details.", status: 400 };
+  }
+
   // get ledger
   let ledger = await Ledger.findOne({});
 

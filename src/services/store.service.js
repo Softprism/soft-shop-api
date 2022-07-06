@@ -916,6 +916,11 @@ const requestPayout = async (storeId) => {
   // get store details
   let store = await Store.findById(storeId);
 
+  // check if store has set account details
+  if (!store.account_number) {
+    return { err: "Please update your account details.", status: 400 };
+  }
+
   // get ledger details
   let ledger = await Ledger.findOne({});
 
