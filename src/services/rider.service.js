@@ -393,6 +393,7 @@ const getPayoutHistory = async (riderId, urlParams) => {
 };
 
 const updateRiderAccountDetails = async (riderId, accountDetails) => {
+  console.log(accountDetails);
   // this service is used to update rider account details
   // successful request sends a update request to admin panel
   // get fields to update
