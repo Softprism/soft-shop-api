@@ -22,6 +22,7 @@ import Delivery from "../models/delivery.model";
 import { createLog } from "../services/logs.service";
 import { createTransaction } from "../services/transaction.service";
 import Logistics from "../models/logistics-company.model";
+import { createVat } from "../services/vat.service";
 
 const router = express.Router();
 
@@ -144,6 +145,11 @@ router.patch(
     let orderFee = 0.03 * order.subtotal;
     let storeFee = 0.05 * order.subtotal;
 
+    // calculate VAT for paying parties
+    let deliveryTax = 0.075 * deliveryFee;
+    let orderTax = 0.075 * orderFee;
+    let storeTax = 0.075 * storeFee;
+
     // console log fees
     console.log(`deliveryFee: ${deliveryFee}`);
     console.log(`orderFee: ${orderFee}`);
@@ -159,9 +165,9 @@ router.patch(
       // get rider logistics company
       let company = await Logistics.findById(rider.company_id);
 
-      // create credit transaction for logistics company
+      // create credit transaction and VAT log for logistics company
       await createTransaction({
-        amount: Number(delivery.deliveryFee),
+        amount: Number(delivery.deliveryFee - deliveryTax),
         type: "Credit",
         to: "logistics",
         receiver: company._id,
@@ -169,11 +175,15 @@ router.patch(
         ref: delivery.orderId,
         fee: deliveryFee
       });
+
+      await createVat(
+        deliveryFee, deliveryTax, req.localData.order, "Delivery Partner"
+      );
     } else {
-      // create credit transaction for rider
+      // create credit transaction and VAT log for rider
       await createTransaction(
         {
-          amount: Number(delivery.deliveryFee),
+          amount: Number(delivery.deliveryFee - deliveryTax),
           type: "Credit",
           to: "Rider",
           receiver: rider._id,
@@ -184,10 +194,14 @@ router.patch(
       );
     }
 
+    await createVat(
+      deliveryFee, deliveryTax, req.localData.order, "Delivery Partner"
+    );
+
     // create credit transaction for store
     await createTransaction(
       {
-        amount: Number(order.subtotal - storeFee),
+        amount: Number(order.subtotal - storeFee - storeTax),
         type: "Credit",
         to: "Store",
         receiver: store._id,
@@ -195,6 +209,15 @@ router.patch(
         ref: delivery.orderId,
         fee: storeFee
       }
+    );
+
+    await createVat(
+      storeFee, storeTax, req.localData.order, "Vendor"
+    );
+
+    // create VAT log for users
+    await createVat(
+      orderFee, orderTax, req.localData.order, "Customer"
     );
 
     // create credit transaction for ledger

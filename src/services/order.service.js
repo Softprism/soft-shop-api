@@ -198,6 +198,8 @@ const createOrder = async (orderParam) => {
         "user.password",
         "user.cart",
         "user.orders",
+        "taxFee",
+        "orderFee"
       ],
     },
   ];
@@ -294,11 +296,29 @@ const createOrder = async (orderParam) => {
       subtotal: { $add: ["$totalProductPrice", "$totalVariantPrice"] },
     })
     .addFields({
-      taxPrice: {
+      orderFee: {
         $multiply: [
           0.03,
           { $add: ["$totalProductPrice", "$totalVariantPrice"] },
         ],
+      },
+    })
+    .addFields({
+      taxFee: {
+        $multiply: [
+          0.075,
+          "$orderFee",
+        ],
+      },
+    })
+    .addFields({
+      taxPrice: {
+        $ceil: {
+          $add: [
+            "$taxFee",
+            "$orderFee",
+          ],
+        }
       },
     })
     // calculate total price for the order
