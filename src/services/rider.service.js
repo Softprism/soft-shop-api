@@ -346,7 +346,10 @@ const requestPayout = async (riderId) => {
     to: "Rider",
   });
 
+  console.log(oldRequest);
+
   if (oldRequest && rider.pendingWithdrawal === true) {
+    console.log(1);
     await Transaction.findOneAndUpdate(
       {
         type: "Debit",
@@ -365,6 +368,7 @@ const requestPayout = async (riderId) => {
     return "Withdrawal Request Sent.";
   }
 
+  console.log(12);
   // create Debit transaction for rider
   let newTransaction = await createTransaction({
     amount: payout,
