@@ -367,6 +367,8 @@ const createOrder = async (orderParam) => {
       fullname: `${neworder[0].user.first_name} ${neworder[0].user.last_name}`
     };
     neworder[0].paymentResult = await ussdPayment(payload);
+    neworder[0].paymentResult.meta.authorization.ussdBank = orderParam.ussdBank;
+    console.log(neworder[0].paymentResult.meta.authorization);
   }
 
   if (neworder[0].paymentResult.status === "error") {
