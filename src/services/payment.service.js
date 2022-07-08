@@ -212,7 +212,7 @@ const verifyPayout = async (payload) => {
       // send push notification to store
       await sendMany(
         "ssa",
-        store.pushDeviceToken,
+        store.vendorPushDeviceToken,
         "Withdrawal Completed",
         `Your withdrawal of ₦${response.data.amount} was successful`,
         {} // data to be sent to store app

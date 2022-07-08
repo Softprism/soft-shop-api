@@ -267,11 +267,22 @@ const confirmStorePayout = async (storeId) => {
 
   if (!payout) return { err: "No pending payout for this store.", status: 400 };
 
+  // create withdrawal reference
+  let ref = () => {
+    let s4 = () => {
+      return Math.floor((1 + Math.random()) * 0x10000)
+        .toString(16)
+        .substring(1);
+    };
+      // return id of format 'card - aaaaa'
+    return `store ${s4()}`;
+  };
   let payload = {
     account_bank: store.account_details.bank_code,
     account_number: store.account_details.account_number,
     amount: Number(payout.amount) - Number(payout.fee),
     narration: storeId,
+    reference: ref(),
     currency: "NGN"
   };
   let request = await initiateTransfer(payload);
@@ -297,11 +308,23 @@ const confirmLogisticsPayout = async (companyId) => {
 
   if (!payout) return { err: "No pending payout for this logistics company.", status: 400 };
 
+  // create withdrawal reference
+  let ref = () => {
+    let s4 = () => {
+      return Math.floor((1 + Math.random()) * 0x10000)
+        .toString(16)
+        .substring(1);
+    };
+      // return id of format 'card - aaaaa'
+    return `logistics ${s4()}`;
+  };
+
   let payload = {
     account_bank: company.account_details.bank_code,
     account_number: company.account_details.account_number,
     amount: Number(payout.amount) - Number(payout.fee),
     narration: company._id,
+    reference: ref(),
     currency: "NGN"
   };
   let request = await initiateTransfer(payload);
