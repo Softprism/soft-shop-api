@@ -337,7 +337,7 @@ const getStore = async (urlParams, storeId) => {
       pipeline: [
         {
           $match: {
-            status: { $in: ["sent", "ready", "accepted", "enroute", "delivered", "arrived"] },
+            status: "delivered",
             $expr: {
               $eq: ["$$storeId", "$store"]
             }
