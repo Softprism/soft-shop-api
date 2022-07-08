@@ -265,7 +265,7 @@ const confirmStorePayout = async (storeId) => {
     status: "pending"
   });
 
-  if (payout) return { err: "No pending payout for this store.", status: 400 };
+  if (!payout) return { err: "No pending payout for this store.", status: 400 };
 
   let payload = {
     account_bank: store.account_details.bank_code,
@@ -295,7 +295,7 @@ const confirmLogisticsPayout = async (companyId) => {
     status: "pending"
   });
 
-  if (payout) return { err: "No pending payout for this logistics company.", status: 400 };
+  if (!payout) return { err: "No pending payout for this logistics company.", status: 400 };
 
   let payload = {
     account_bank: company.account_details.bank_code,
