@@ -293,7 +293,7 @@ const confirmStorePayout = async (storeId) => {
     { omitUndefined: true, new: true, useFindAndModify: false }
   );
   // send push notification to store vendorPushDeviceToken
-  await sendMany("ssa", store.vendorPushDeviceToken, "Payout Request Approved!", `Your request to withdraw ${payload.amount} has been approved`);
+  await sendMany("ssa", store.vendorPushDeviceToken, "Payout Request Approved!", `Your request to withdraw ₦${payload.amount} has been approved`);
   // await sendStorePayoutApprovalMail(store.email, payload.amount);
   return request;
 };
