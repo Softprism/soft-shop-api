@@ -164,6 +164,7 @@ const verifyTransaction = async (paymentDetails) => {
 };
 
 const verifyPayout = async (payload) => {
+  console.log(payload);
   let flwpayload = {
     id: payload.data.id
   };
