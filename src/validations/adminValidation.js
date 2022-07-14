@@ -2,9 +2,8 @@ import Joi from "joi";
 
 const register = {
   body: Joi.object({
-    username: Joi.string().min(2).required().messages({
-      "string.empty": "Sorry, username cannot be an empty field",
-      "string.min": "Username should be 2 characters or more"
+    email: Joi.string().required().messages({
+      "string.empty": "Sorry, email cannot be an empty field"
     }),
     password: Joi.string().min(5).required().messages({
       "string.empty": "Sorry, password cannot be an empty field",
@@ -17,9 +16,8 @@ const register = {
 
 const login = {
   body: Joi.object({
-    username: Joi.string().min(2).required().messages({
-      "string.empty": "Sorry, username cannot be an empty field",
-      "string.min": "Username should be 2 characters or more"
+    email: Joi.string().required().messages({
+      "string.empty": "Sorry, email cannot be an empty field"
     }),
     password: Joi.string().min(5).required().messages({
       "string.empty": "Sorry, password cannot be an empty field",

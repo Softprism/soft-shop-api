@@ -1,6 +1,6 @@
 import {
   createDelivery, acceptDelivery, updatedDeliveryStatus, updatedRiderStatus,
-  getAllDeliveries, getDeliveryById, completeDelivery, reviewDelivery
+  getAllDeliveries, getDeliveryById, completeDelivery, reviewDelivery, getPickupTime, getDeliveryTime
 } from "../services/delivery.service";
 
 // ========================================================================== //
@@ -197,7 +197,34 @@ const review_delivery = async (req, res, next) => {
   }
 };
 
+const getPickupTimeCtrl = async (req, res, next) => {
+  try {
+    const pickupTime = await getPickupTime(req.query, req.params.deliveryId);
+
+    if (pickupTime.err) {
+      return res.status(pickupTime.status).json({ success: false, msg: pickupTime.err, status: pickupTime.status });
+    }
+
+    res.status(200).json({ success: true, result: pickupTime, status: 200 });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getDeliveryTimeCtrl = async (req, res, next) => {
+  try {
+    const deliveryTime = await getDeliveryTime(req.query, req.params.deliveryId);
+
+    if (deliveryTime.err) {
+      return res.status(deliveryTime.status).json({ success: false, msg: deliveryTime.err, status: deliveryTime.status });
+    }
+
+    res.status(200).json({ success: true, result: deliveryTime, status: 200 });
+  } catch (error) {
+    next(error);
+  }
+};
 export {
   create_Delivery, accept_Delivery, update_DeliveryStatus, complete_Delivery,
-  update_RiderStatus, getAll_Deliveries, get_DeliveryById, review_delivery
+  update_RiderStatus, getAll_Deliveries, get_DeliveryById, review_delivery, getPickupTimeCtrl, getDeliveryTimeCtrl
 };

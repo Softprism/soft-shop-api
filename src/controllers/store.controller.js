@@ -32,10 +32,9 @@ const createStore = async (req, res, next) => {
     const store = await storeService.createStore(req.body);
 
     if (store.err) {
-      res.status(store.status).json({ success: false, msg: store.err, status: store.status });
-    } else {
-      res.status(201).json({ success: true, result: store, status: 201 });
+      return res.status(store.status).json({ success: false, msg: store.err, status: store.status });
     }
+    res.status(201).json({ success: true, result: store, status: 201 });
 
     // find store with email
     const storeData = await Store.findOne({ email: req.body.email });

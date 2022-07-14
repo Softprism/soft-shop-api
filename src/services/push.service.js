@@ -36,6 +36,13 @@ const sendOne = async (app, deviceToken, title, body, data) => {
         title,
         body
       },
+      apns: {
+        payload: {
+          aps: {
+            sound: "softshopnotif.wav"
+          },
+        }
+      },
       data,
       token: deviceToken
     };
@@ -65,6 +72,7 @@ const sendOne = async (app, deviceToken, title, body, data) => {
       return sendPush;
     }
   } catch (error) {
+    console.log(error);
     await createLog("send_notification failed", "server", error.message);
   }
 };
@@ -77,12 +85,20 @@ const sendMany = async (app, deviceTokens, title, body, data) => {
         title,
         body
       },
+      apns: {
+        payload: {
+          aps: {
+            sound: "softshopnotif.wav"
+          },
+        }
+      },
       data,
       tokens: deviceTokens
     };
     if (app === "ssa") {
       // Send a message to devices subscribed to the provided topic.
       let sendPush = await ssa.messaging().sendMulticast(message);
+      console.log(sendPush);
       return sendPush;
     }
     if (app === "sso") {
@@ -115,6 +131,11 @@ const sendTopic = async (app, topic, title, body, data) => {
     notification: {
       title,
       body
+    },
+    payload: {
+      aps: {
+        sound: "softshopnotif.wav"
+      },
     },
     data,
     topic

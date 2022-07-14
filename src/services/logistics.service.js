@@ -375,6 +375,16 @@ const viewCompanyRiderDetails = async (companyId, riderId) => {
 const requestWithdrawal = async (id) => {
   // check if company exists
   const companyExists = await Logistics.findById(id);
+
+  // check if companyExists has set account details
+  if (!companyExists.account_details.account_number) {
+    return { err: "Please update your account details.", status: 400 };
+  }
+
+  // check if there's a pending update
+  if (companyExists.account_details.isVerified === false) {
+    return { err: "Please wait for your account details to be approved. Contact support@soft-shop.app", status: 400 };
+  }
   if (!companyExists) {
     return { err: "This company does not exist", status: 401 };
   }

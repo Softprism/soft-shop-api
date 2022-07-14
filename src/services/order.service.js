@@ -198,6 +198,8 @@ const createOrder = async (orderParam) => {
         "user.password",
         "user.cart",
         "user.orders",
+        "taxFee",
+        "orderFee"
       ],
     },
   ];
@@ -294,11 +296,29 @@ const createOrder = async (orderParam) => {
       subtotal: { $add: ["$totalProductPrice", "$totalVariantPrice"] },
     })
     .addFields({
-      taxPrice: {
+      orderFee: {
         $multiply: [
           0.03,
           { $add: ["$totalProductPrice", "$totalVariantPrice"] },
         ],
+      },
+    })
+    .addFields({
+      taxFee: {
+        $multiply: [
+          0.075,
+          "$orderFee",
+        ],
+      },
+    })
+    .addFields({
+      taxPrice: {
+        $ceil: {
+          $add: [
+            "$taxFee",
+            "$orderFee",
+          ],
+        }
       },
     })
     // calculate total price for the order
@@ -367,6 +387,8 @@ const createOrder = async (orderParam) => {
       fullname: `${neworder[0].user.first_name} ${neworder[0].user.last_name}`
     };
     neworder[0].paymentResult = await ussdPayment(payload);
+    neworder[0].paymentResult.meta.authorization.ussdBank = orderParam.ussdBank;
+    console.log(neworder[0].paymentResult.meta.authorization);
   }
 
   if (neworder[0].paymentResult.status === "error") {
@@ -770,12 +792,14 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
   const freeRidersLength = otherRiders.length;
 
   // check if there are more busy riders than free riders different ranges
-  if (freeRidersLength - busyRidersLength > 0 && freeRidersLength - busyRidersLength < 5) {
-    deliveryFee += deliveryFee * 0.15;
-    surge = true;
-  } else if (freeRidersLength - busyRidersLength > 5 && freeRidersLength - busyRidersLength < 10) {
-    deliveryFee += deliveryFee * 0.1;
-    surge = true;
+  if (process.env.NODE_ENV === "production") {
+    if (freeRidersLength - busyRidersLength > 0 && freeRidersLength - busyRidersLength < 5) {
+      deliveryFee += deliveryFee * 0.15;
+      surge = true;
+    } else if (freeRidersLength - busyRidersLength > 5 && freeRidersLength - busyRidersLength < 10) {
+      deliveryFee += deliveryFee * 0.1;
+      surge = true;
+    }
   }
 
   // get users basket
@@ -783,7 +807,9 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
   console.log(userbasketItems);
 
   // calculate subtotal fee from userbascket items totalPrice
-  let taxFee = 0.03 * userbasketItems.totalPrice;
+  let subtotalFee = 0.03 * userbasketItems.totalPrice;
+  let vatFee = 0.075 * subtotalFee;
+  let taxFee = subtotalFee + vatFee;
 
   // check for deliveryFee userDiscount
   let deliveryDiscountPrice = 0;
@@ -801,7 +827,9 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
   const userTaxDiscount = await UserDiscount.findOne({ user: userId, discountType: "taxFee" });
   if (userTaxDiscount) {
     let discount = userTaxDiscount.discount / 100;
-    taxDiscountPrice = taxFee - taxFee * discount;
+    taxDiscountPrice = subtotalFee - (subtotalFee * discount);
+    let newVatFee = 0.075 * taxDiscountPrice;
+    taxDiscountPrice += newVatFee;
     taxDiscount = true;
   }
 

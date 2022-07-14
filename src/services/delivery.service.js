@@ -3,6 +3,7 @@ import Delivery from "../models/delivery.model";
 import Review from "../models/review.model";
 import Store from "../models/store.model";
 import Rider from "../models/rider.model";
+import { getDistanceMultiUse } from "../utils/get-distance";
 
 const createDelivery = async (orderId, storeId) => {
   // find the order
@@ -47,13 +48,16 @@ const acceptDelivery = async (deliveryId, riderId, urlParams) => {
   long = parseFloat(urlParams.long);
   lat = parseFloat(urlParams.lat);
   radian = parseFloat(urlParams.radius / 6378.1); // calculate in km
-  condition.location = {
-    $geoWithin: {
-      $centerSphere: [[long, lat], radian],
-    },
-  };
+  if (process.env.NODE_ENV === "production") {
+    condition.location = {
+      $geoWithin: {
+        $centerSphere: [[long, lat], radian],
+      },
+    };
+  }
   condition._id = deliveryId;
   const delivery = await Delivery.findOne(condition);
+
   if (!delivery) {
     return { err: "Please select a delivery that's close to your location", status: 404, };
   }
@@ -129,7 +133,7 @@ const updatedRiderStatus = async (deliveryId, riderId, status) => {
   const updatedstatus = await Delivery.findByIdAndUpdate(
     deliveryId,
     { riderStatus: status },
-    { new: true }
+    { new: true, runValidators: true }
   );
   return { updatedstatus };
 };
@@ -255,7 +259,33 @@ const reviewDelivery = async (review) => {
   return newReview;
 };
 
+const getPickupTime = async ({ lat, long }, deliveryID) => {
+  // get the distance between driver's location and store's location.
+
+  // find delivery
+  let delivery = await Delivery.findById(deliveryID);
+  if (!delivery) return { err: "Delivery not found.", status: 404 };
+
+  // set origin to rider's location
+  let origin = `${lat},${long}`;
+  let distance = await getDistanceMultiUse(delivery.pickup, origin);
+  return distance;
+};
+
+const getDeliveryTime = async ({ lat, long }, deliveryID) => {
+  // get the distance between driver's location and customer's location.
+
+  // find delivery
+  let delivery = await Delivery.findById(deliveryID);
+  if (!delivery) return { err: "Delivery not found.", status: 404 };
+
+  // set origin to rider's location
+  let origin = `${lat},${long}`;
+  let distance = await getDistanceMultiUse(delivery.dropOff, origin);
+  return distance;
+};
+
 export {
   createDelivery, acceptDelivery, updatedDeliveryStatus, updatedRiderStatus,
-  getAllDeliveries, getDeliveryById, completeDelivery, reviewDelivery
+  getAllDeliveries, getDeliveryById, completeDelivery, reviewDelivery, getPickupTime, getDeliveryTime
 };

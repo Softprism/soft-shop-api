@@ -89,7 +89,7 @@ router.post("/",
   createStore,
   async (req, res) => {
     // send welcome email
-    await sendStoreSignUpMail(req.data.store.owner_email);
+    await sendStoreSignUpMail(req.data.store.owner_email, req.data.store.name);
     // create log
     await createLog("new vendor signup", "store", `A new signup from ${req.data.store.owner_name} with email - ${req.data.store.owner_email}`);
     await sendPlainEmail(

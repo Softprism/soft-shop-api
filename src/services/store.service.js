@@ -338,7 +338,7 @@ const getStore = async (urlParams, storeId) => {
       pipeline: [
         {
           $match: {
-            status: { $in: ["sent", "ready", "accepted", "enroute", "delivered", "arrived"] },
+            status: "delivered",
             $expr: {
               $eq: ["$$storeId", "$store"]
             }
@@ -736,7 +736,7 @@ const getStoreSalesStats = async (storeId, days) => {
   let salesStats = await Order.aggregate()
     .match({
       store: mongoose.Types.ObjectId(storeId),
-      status: "arrived",
+      status: "delivered",
       createdAt: { $gt: d },
     })
     .addFields({
@@ -866,7 +866,7 @@ const getStoreFeedback = async (storeId, pagingParam) => {
   const feedbacks = await Order.aggregate()
     .match({
       store: mongoose.Types.ObjectId(storeId),
-      status: "arrived"
+      status: "delivered"
     })
     .lookup({
       from: "reviews",
@@ -916,6 +916,11 @@ const getInventoryList = async (queryParam) => {
 const requestPayout = async (storeId) => {
   // get store details
   let store = await Store.findById(storeId);
+
+  // check if store has set account details
+  if (!store.account_details.account_number) {
+    return { err: "Please update your account details.", status: 400 };
+  }
 
   // get ledger details
   let ledger = await Ledger.findOne({});

@@ -61,7 +61,7 @@ const registerRider = async (riderParam) => {
   }
 
   // check if server is in production
-  if (process.env.NODE_ENV === "production" && company_id) {
+  if (process.env.NODE_ENV === "production" && company_id && corporate === false) {
     // check if company exists
     let company = await Logistics.findById(company_id);
     if (!company) {
@@ -133,6 +133,13 @@ const loginRider = async (loginParam) => {
       err: "The password entered in incorrect, please try again.",
       status: 401,
     };
+  }
+
+  if (process.env.NODE_ENV === "production" && rider.isVerified === false) {
+    return { err: "Sorry, your is yet to be verified, kindly contact support@soft-shop.app.", status: 401 };
+  }
+  if (rider.isVerified === false) {
+    return { err: "Sorry, your is yet to be verified, kindly contact support@soft-shop.app", status: 401 };
   }
 
   // Define payload for token
@@ -324,6 +331,16 @@ const requestPayout = async (riderId) => {
   // get rider details
   const rider = await Rider.findById(riderId);
 
+  // check if rider has set account details
+  if (!rider.account_details.account_number) {
+    return { err: "Please update your account details.", status: 400 };
+  }
+
+  // check if there's a pending update
+  if (rider.account_details.isVerified === false) {
+    return { err: "Please wait for your account details to be approved. Contact support@soft-shop.app", status: 400 };
+  }
+
   // get ledger
   let ledger = await Ledger.findOne({});
 
@@ -339,7 +356,10 @@ const requestPayout = async (riderId) => {
     to: "Rider",
   });
 
+  console.log(oldRequest);
+
   if (oldRequest && rider.pendingWithdrawal === true) {
+    console.log(1);
     await Transaction.findOneAndUpdate(
       {
         type: "Debit",
@@ -358,6 +378,7 @@ const requestPayout = async (riderId) => {
     return "Withdrawal Request Sent.";
   }
 
+  console.log(12);
   // create Debit transaction for rider
   let newTransaction = await createTransaction({
     amount: payout,
@@ -396,6 +417,7 @@ const getPayoutHistory = async (riderId, urlParams) => {
 };
 
 const updateRiderAccountDetails = async (riderId, accountDetails) => {
+  console.log(accountDetails);
   // this service is used to update rider account details
   // successful request sends a update request to admin panel
   // get fields to update
@@ -415,7 +437,9 @@ const updateRiderAccountDetails = async (riderId, accountDetails) => {
   rider.account_details.full_name = full_name;
   rider.account_details.bank_name = bank_name;
   rider.account_details.isVerified = false;
+  console.log(rider);
   await rider.save();
+  console.log(rider);
 
   // return success message
   return "Account Details Updated.";

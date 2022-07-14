@@ -24,9 +24,9 @@ const getAdmins = async () => {
 };
 
 const registerAdmin = async (params) => {
-  const { username, password } = params;
+  const { email, password } = params;
 
-  let admin = await Admin.findOne({ username });
+  let admin = await Admin.findOne({ email });
 
   if (admin) {
     return { err: "Admin account already exists.", status: 409 };
@@ -34,7 +34,7 @@ const registerAdmin = async (params) => {
 
   // Create Admin Object
   admin = new Admin({
-    username,
+    email,
     password,
   });
 
@@ -52,12 +52,12 @@ const registerAdmin = async (params) => {
 };
 
 const loginAdmin = async (loginParam) => {
-  const { username, password } = loginParam;
+  const { email, password } = loginParam;
   // Find admin with email
-  let admin = await Admin.findOne({ username });
+  let admin = await Admin.findOne({ email });
 
   if (!admin) {
-    return { err: "Admin not found.", status: 404 };
+    return { err: "Admin account not found.", status: 404 };
   }
 
   // Check if password matches with stored hash
@@ -88,13 +88,13 @@ const createNotification = async (body) => {
 };
 
 const updateAdmin = async (updateParam, id) => {
-  const { username, password } = updateParam;
+  const { email, password } = updateParam;
 
   // Build Admin Object
   const adminFields = {};
 
   // Check for fields
-  if (username) adminFields.username = username;
+  if (email) adminFields.email = email;
   if (password) {
     const salt = await bcrypt.genSalt(10);
 
@@ -266,13 +266,24 @@ const confirmStorePayout = async (storeId) => {
     status: "pending"
   });
 
-  if (payout) return { err: "No pending payout for this store.", status: 400 };
+  if (!payout) return { err: "No pending payout for this store.", status: 400 };
 
+  // create withdrawal reference
+  let ref = () => {
+    let s4 = () => {
+      return Math.floor((1 + Math.random()) * 0x10000)
+        .toString(16)
+        .substring(1);
+    };
+      // return id of format 'card - aaaaa'
+    return `store ${s4()}`;
+  };
   let payload = {
     account_bank: store.account_details.bank_code,
     account_number: store.account_details.account_number,
     amount: Number(payout.amount) - Number(payout.fee),
     narration: storeId,
+    reference: ref(),
     currency: "NGN"
   };
   let request = await initiateTransfer(payload);
@@ -283,7 +294,7 @@ const confirmStorePayout = async (storeId) => {
     { omitUndefined: true, new: true, useFindAndModify: false }
   );
   // send push notification to store vendorPushDeviceToken
-  await sendMany("ssa", store.vendorPushDeviceToken, "Payout Request Approved!", `Your request to withdraw ${payload.amount} has been approved`);
+  await sendMany("ssa", store.vendorPushDeviceToken, "Payout Request Approved!", `Your request to withdraw ₦${payload.amount} has been approved`);
   // await sendStorePayoutApprovalMail(store.email, payload.amount);
   return request;
 };
@@ -296,13 +307,25 @@ const confirmLogisticsPayout = async (companyId) => {
     status: "pending"
   });
 
-  if (payout) return { err: "No pending payout for this logistics company.", status: 400 };
+  if (!payout) return { err: "No pending payout for this logistics company.", status: 400 };
+
+  // create withdrawal reference
+  let ref = () => {
+    let s4 = () => {
+      return Math.floor((1 + Math.random()) * 0x10000)
+        .toString(16)
+        .substring(1);
+    };
+      // return id of format 'card - aaaaa'
+    return `logistics ${s4()}`;
+  };
 
   let payload = {
     account_bank: company.account_details.bank_code,
     account_number: company.account_details.account_number,
     amount: Number(payout.amount) - Number(payout.fee),
     narration: company._id,
+    reference: ref(),
     currency: "NGN"
   };
   let request = await initiateTransfer(payload);
