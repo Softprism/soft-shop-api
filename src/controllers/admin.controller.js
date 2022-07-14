@@ -1,6 +1,7 @@
 import { validationResult } from "express-validator";
 import Admin from "../models/admin.model";
 import Roles from "../models/user-roles.model";
+import { createActivity } from "../services/activities.service";
 
 import * as adminService from "../services/admin.service";
 import * as emailService from "../services/email.service";
@@ -27,6 +28,15 @@ const registerAdmin = async (req, res, next) => {
       res.status(token.status).json({ success: false, msg: token.err, status: token.status });
     } else {
       res.status(201).json({ success: true, result: token, status: 201 });
+
+      // log activity
+      let admin = await Admin.findOne({ email: req.body.email });
+      await createActivity(
+        "Admin",
+        admin._id,
+        "Signed up",
+        `Admin with role ${admin.email} logged in`
+      );
     }
   } catch (error) {
     next(error);
@@ -42,6 +52,15 @@ const loginAdmin = async (req, res, next) => {
       res.status(token.status).json({ success: false, msg: token.err, status: token.status });
     } else {
       res.status(200).json({ success: true, result: token, status: 200 });
+
+      // create activity log
+      let admin = await Admin.findOne({ email: req.body.email }).populate("role");
+      await createActivity(
+        "Admin",
+        admin._id,
+        "Logged in",
+        `Admin with role ${admin.role.name} logged in`
+      );
     }
   } catch (error) {
     next(error);

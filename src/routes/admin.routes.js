@@ -1,6 +1,6 @@
 /* eslint-disable import/named */
 import express from "express";
-import { isAdmin, isOwner } from "../middleware/Permissions";
+import { isAdmin, isFinance, isOwner } from "../middleware/Permissions";
 import {
   getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin,
   resetStorePassword, confirmStoreUpdate, createTransaction, confirmStorePayout,
@@ -17,6 +17,7 @@ import { register, login } from "../validations/adminValidation";
 import auth from "../middleware/auth";
 import { getTransactions } from "../controllers/payment.controller";
 import checkPagination from "../middleware/checkPagination";
+import { getActivitiesCtrl, getActivityCtrl, getUserActivitiesCtrl } from "../controllers/activities.controller";
 
 const router = express.Router();
 
@@ -136,9 +137,18 @@ router.delete("/deletion/requests/:id", auth, isAdmin, approveDeleteRquest);
 router.post("/roles", auth, isAdmin, isOwner, createRoles);
 
 // get roles
-router.get("/roles", auth, isAdmin, isOwner, checkPagination, getRoles);
+router.get("/roles", auth, isAdmin, isFinance, checkPagination, getRoles);
 
 // get a role
 router.get("/roles/:roleId", auth, isAdmin, isOwner, getRole);
+
+// get all activities
+router.get("/activities/all", auth, isAdmin, isOwner, checkPagination, getActivitiesCtrl);
+
+// get an activity
+router.get("/activities/info/:activityId", auth, isAdmin, isOwner, getActivityCtrl);
+
+// get user activities
+router.get("/activities/:actorId", auth, isAdmin, isOwner, checkPagination, getUserActivitiesCtrl);
 
 export default router;
