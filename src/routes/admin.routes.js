@@ -7,7 +7,9 @@ import {
   createNotification, createCompayLedger, getAllStoresUpdateRequests,
   getResetPasswordRequests, toggleStore, getAllStores, getUsers,
   getUserById, getStoreById, sendRiderMail, sendStoreMail, sendUserMail,
-  sendAllStoresMails, sendAllRidersMails, sendAllUsersMails, sendAllMails, inviteUsersToBeta, confirmRiderAccountDetails, confirmLogisticsAccountDetails, addUserDiscount, sendStoreSignUpFollowUpMailCtrl, createRoles, getRoles, getRole
+
+  sendAllStoresMails, sendAllRidersMails, sendAllUsersMails, sendAllMails, inviteUsersToBeta, confirmRiderAccountDetails, confirmLogisticsAccountDetails, addUserDiscount, sendStoreSignUpFollowUpMailCtrl, createRoles, getRoles, getRole, pproveDeleteRquest, getDeletionRequests
+
 } from "../controllers/admin.controller";
 import validator from "../middleware/validator";
 import { register, login } from "../validations/adminValidation";
@@ -124,6 +126,13 @@ router.post("/discounts/user", auth, isAdmin, addUserDiscount);
 // send store signup follow up mail
 router.post("/mails/follow-up/store/sign-up", auth, isAdmin, sendStoreSignUpFollowUpMailCtrl);
 
+
+// get deletion requests
+router.get("/deletion", auth, isAdmin, getDeletionRequests);
+
+// approve deletion request
+router.delete("/deletion/requests/:id", auth, isAdmin, approveDeleteRquest);
+
 // create roles
 router.post("/roles", auth, isAdmin, isOwner, createRoles);
 
@@ -132,5 +141,6 @@ router.get("/roles", auth, isAdmin, isOwner, checkPagination, getRoles);
 
 // get a role
 router.get("/roles/:roleId", auth, isAdmin, isOwner, getRole);
+
 
 export default router;

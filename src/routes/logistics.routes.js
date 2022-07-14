@@ -1,6 +1,6 @@
 import express from "express";
 import {
-  companyDetails, companyLogin, companySignup, getAllCompanies, requestWithdrawal, updateCompanyAccountDetails, updateCompanyAddress, updateCompanyDetails, updateCompanyImage, updateLoginDetails, viewCompanyRiderDetails, viewCompanyRiders
+  companyDetails, companyLogin, companySignup, deleteAccount, getAllCompanies, requestWithdrawal, updateCompanyAccountDetails, updateCompanyAddress, updateCompanyDetails, updateCompanyImage, updateLoginDetails, viewCompanyRiderDetails, viewCompanyRiders
 } from "../controllers/logistics.controller";
 import auth from "../middleware/auth";
 import Logistics from "../models/logistics-company.model";
@@ -102,5 +102,7 @@ router.post(
   requestWithdrawal,
 );
 
-//
+// delete account
+router.post("/account", auth, deleteAccount);
+
 export default router;

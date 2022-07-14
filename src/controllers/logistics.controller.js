@@ -198,6 +198,20 @@ const updateCompanyAccountDetails = async (req, res, next) => {
   }
 };
 
+const deleteAccount = async (req, res, next) => {
+  try {
+    const action = await logisticsService.deleteAccount(req.logistics.id);
+
+    return res.status(200).json({
+      success: true,
+      result: action,
+      status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export {
-  companySignup, companyLogin, companyDetails, updateCompanyAddress, updateLoginDetails, updateCompanyImage, updateCompanyDetails, viewCompanyRiders, viewCompanyRiderDetails, requestWithdrawal, getAllCompanies, updateCompanyAccountDetails
+  companySignup, companyLogin, companyDetails, updateCompanyAddress, updateLoginDetails, updateCompanyImage, updateCompanyDetails, viewCompanyRiders, viewCompanyRiderDetails, requestWithdrawal, getAllCompanies, updateCompanyAccountDetails, deleteAccount
 };

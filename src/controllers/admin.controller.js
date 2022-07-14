@@ -400,6 +400,13 @@ const addUserDiscount = async (req, res, next) => {
   }
 };
 
+const getDeletionRequests = async (req, res, next) => {
+  try {
+    const requests = await adminService.getDeletionRequests(req.query);
+
+    return res.status(200).json({
+      success: true, result: requests, status: 200
+
 const createRoles = async (req, res, next) => {
   try {
     const action = await adminService.createRoles();
@@ -430,6 +437,17 @@ const getRoles = async (req, res, next) => {
   }
 };
 
+const approveDeleteRquest = async (req, res, next) => {
+  try {
+    const action = await adminService.approveDeleteRquest(req.params.id);
+
+    if (action.err) {
+      return res.status(action.status).json({ success: false, msg: action.err, status: action.status });
+    }
+
+    return res.status(200).json({
+      success: true, result: action, status: 200
+
 const getRole = async (req, res, next) => {
   try {
     const role = await adminService.getRole(req.params.roleId);
@@ -440,6 +458,7 @@ const getRole = async (req, res, next) => {
 
     res.status(200).json({
       success: true, result: role[0], status: 200
+
     });
   } catch (error) {
     next(error);
@@ -478,6 +497,8 @@ export {
   confirmLogisticsAccountDetails,
   addUserDiscount,
   sendStoreSignUpFollowUpMailCtrl,
+  getDeletionRequests, 
+  approveDeleteRquest
   createRoles,
   getRoles,
   getRole

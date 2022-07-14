@@ -325,6 +325,20 @@ const resetPassword = async (req, res, next) => {
   }
 };
 
+const deleteAccount = async (req, res, next) => {
+  try {
+    const request = await storeService.deleteAccount(req.store.id);
+
+    return res.status(200).json({
+      success: true,
+      result: request,
+      status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export {
   getStores,
   createStore,
@@ -345,5 +359,6 @@ export {
   requestPayout,
   getPayoutHistory,
   resetPassword,
-  updateStorePhoto
+  updateStorePhoto,
+  deleteAccount
 };

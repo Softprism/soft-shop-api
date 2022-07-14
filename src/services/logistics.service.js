@@ -1,6 +1,7 @@
 // import logistics model es6 destructuring
 import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
+import Deletion from "../models/delete-requests.model";
 
 import Logistics from "../models/logistics-company.model";
 import Rider from "../models/rider.model";
@@ -476,6 +477,23 @@ const updateCompanyAccountDetails = async (id, accountDetails) => {
   return "Account Details Updated Successfully";
 };
 
+const deleteAccount = async (companyId) => {
+  // this service is used to delete rider account
+  // successful request sends a delete request to admin panel
+  // set rider isVerified to false
+  const company = await Logistics.findById(companyId);
+  company.verified = false;
+  await company.save();
+
+  // delete rider account
+  await Deletion.create({
+    account_type: "Logistics",
+    account_id: companyId
+  });
+
+  return "Account Deleted Successfully";
+};
+
 export {
   getAllCompanies,
   companySignup,
@@ -488,5 +506,6 @@ export {
   viewCompanyRiders,
   viewCompanyRiderDetails,
   requestWithdrawal,
-  updateCompanyAccountDetails
+  updateCompanyAccountDetails,
+  deleteAccount
 };

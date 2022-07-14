@@ -14,6 +14,7 @@ import Transaction from "../models/transaction.model";
 import { createTransaction } from "./transaction.service";
 import Ledger from "../models/ledger.model";
 import Logistics from "../models/logistics-company.model";
+import Deletion from "../models/delete-requests.model";
 
 const getAllRiders = async (urlParams) => {
   const limit = Number(urlParams.limit);
@@ -115,6 +116,15 @@ const loginRider = async (loginParam) => {
       status: 401,
     };
   }
+
+  // check if rider is verified
+  if (!rider.isVerified) {
+    return {
+      err: "Please verify your email address before logging in.",
+      status: 401,
+    };
+  }
+
   // Check if password matches with stored hash
   const isMatch = await bcrypt.compare(password, rider.password);
 
@@ -434,6 +444,22 @@ const updateRiderAccountDetails = async (riderId, accountDetails) => {
   // return success message
   return "Account Details Updated.";
 };
+
+const deleteAccount = async (riderId) => {
+  // this service is used to delete rider account
+  // successful request sends a delete request to admin panel
+  // set rider isVerified to false
+  const rider = await Rider.findById(riderId);
+  rider.isVerified = false;
+  await rider.save();
+
+  // delete rider account
+  await Deletion.create({
+    account_type: "Rider",
+    account_id: riderId
+  });
+  return "Your account has been scheduled for deletion. We will contact you shortly.";
+};
 export {
   resetPassword,
   requestPasswordToken,
@@ -446,5 +472,6 @@ export {
   updateRider,
   requestPayout,
   getPayoutHistory,
-  updateRiderAccountDetails
+  updateRiderAccountDetails,
+  deleteAccount
 };
