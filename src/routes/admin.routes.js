@@ -1,13 +1,13 @@
 /* eslint-disable import/named */
 import express from "express";
-import { isAdmin } from "../middleware/Permissions";
+import { isAdmin, isOwner } from "../middleware/Permissions";
 import {
   getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin,
   resetStorePassword, confirmStoreUpdate, createTransaction, confirmStorePayout,
   createNotification, createCompayLedger, getAllStoresUpdateRequests,
   getResetPasswordRequests, toggleStore, getAllStores, getUsers,
   getUserById, getStoreById, sendRiderMail, sendStoreMail, sendUserMail,
-  sendAllStoresMails, sendAllRidersMails, sendAllUsersMails, sendAllMails, inviteUsersToBeta, confirmRiderAccountDetails, confirmLogisticsAccountDetails, addUserDiscount, sendStoreSignUpFollowUpMailCtrl
+  sendAllStoresMails, sendAllRidersMails, sendAllUsersMails, sendAllMails, inviteUsersToBeta, confirmRiderAccountDetails, confirmLogisticsAccountDetails, addUserDiscount, sendStoreSignUpFollowUpMailCtrl, createRoles, getRoles, getRole
 } from "../controllers/admin.controller";
 import validator from "../middleware/validator";
 import { register, login } from "../validations/adminValidation";
@@ -21,7 +21,7 @@ const router = express.Router();
 // @route   GET /admins/stores
 // @desc    Get all Admin Users
 // @access  Public
-router.get("/all", auth, isAdmin, getAdmins);
+router.get("/all", auth, isAdmin, checkPagination, getAdmins);
 
 // @route   GET /admins/stores
 // @desc    Get all Stores
@@ -79,7 +79,7 @@ router.get("/", auth, isAdmin, getLoggedInAdmin);
 // @route   PUT admins/:id
 // @desc    Update User Details
 // @access  Private
-router.put("/", auth, isAdmin, updateAdmin);
+router.put("/:id", auth, isAdmin, updateAdmin);
 
 router.get("/password-reset/store", auth, checkPagination, getResetPasswordRequests);
 
@@ -123,5 +123,14 @@ router.post("/discounts/user", auth, isAdmin, addUserDiscount);
 
 // send store signup follow up mail
 router.post("/mails/follow-up/store/sign-up", auth, isAdmin, sendStoreSignUpFollowUpMailCtrl);
+
+// create roles
+router.post("/roles", auth, isAdmin, isOwner, createRoles);
+
+// get roles
+router.get("/roles", auth, isAdmin, isOwner, checkPagination, getRoles);
+
+// get a role
+router.get("/roles/:roleId", auth, isAdmin, isOwner, getRole);
 
 export default router;
