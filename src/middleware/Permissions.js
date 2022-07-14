@@ -1,3 +1,6 @@
+import Admin from "../models/admin.model";
+import Roles from "../models/user-roles.model";
+
 // verifiy if request is coming from a store or admin account
 const isStoreAdmin = (req, res, next) => {
   if (req.admin === undefined && req.store === undefined) {
@@ -9,8 +12,10 @@ const isStoreAdmin = (req, res, next) => {
   }
   next();
 };
-const isAdmin = (req, res, next) => {
-  if (req.admin === undefined) {
+const isAdmin = async (req, res, next) => {
+  console.log(req.admin);
+  let verifyAdmin = await Admin.findById(req.admin.id);
+  if (req.admin === undefined || verifyAdmin.verified === false || !verifyAdmin.role) {
     return res.status(403).json({
       success: false,
       msg: "You're not permitted to carry out this action",
@@ -20,4 +25,60 @@ const isAdmin = (req, res, next) => {
   next();
 };
 
-export { isStoreAdmin, isAdmin };
+// const isUserRole = (roleLevel) => (req, res, next) => {
+//   if(roleLevel === )
+// };
+const isOwner = async (req, res, next) => {
+  // find role
+  let verifyAdmin = await Admin.findById(req.admin.id);
+  let role = await Roles.findById(verifyAdmin.role);
+  if (role.level !== 2) {
+    return res.status(403).json({
+      success: false,
+      msg: "You don't have access to this resource",
+      status: 403
+    });
+  }
+  next();
+};
+const isFinance = async (req, res, next) => {
+  // find role
+  let role = await Roles.findById(req.admin.role);
+  if (role.level !== 3) {
+    return res.status(403).json({
+      success: false,
+      msg: "You don't have access to this resource",
+      status: 403
+    });
+  }
+  next();
+};
+
+const isSupport = async (req, res, next) => {
+  // find role
+  let role = await Roles.findById(req.admin.role);
+  if (role.level !== 3) {
+    return res.status(403).json({
+      success: false,
+      msg: "You don't have access to this resource",
+      status: 403
+    });
+  }
+  next();
+};
+
+const isLogistics = async (req, res, next) => {
+  // find role
+  let role = await Roles.findById(req.admin.role);
+  if (role.level !== 3) {
+    return res.status(403).json({
+      success: false,
+      msg: "You don't have access to this resource",
+      status: 403
+    });
+  }
+  next();
+};
+export {
+  isStoreAdmin, isAdmin, isOwner, isFinance, isSupport, isLogistics
+};
