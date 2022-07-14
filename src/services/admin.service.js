@@ -1,13 +1,16 @@
 import bcrypt from "bcryptjs";
 
-import mongoose from "mongoose";
+import mongoose, { Mongoose } from "mongoose";
 import Admin from "../models/admin.model";
 import User from "../models/user.model";
 import Store from "../models/store.model";
 import Notification from "../models/notification.models";
 import StoreUpdate from "../models/store-update.model";
 
-import { sendStorePasswordResetConfirmationMail, sendStoreUpdateRequestApprovalMail } from "../utils/sendMail";
+import {
+  sendStorePasswordResetConfirmationMail,
+  sendStoreUpdateRequestApprovalMail,
+} from "../utils/sendMail";
 import getJwt from "../utils/jwtGenerator";
 import Transaction from "../models/transaction.model";
 import Ledger from "../models/ledger.model";
@@ -16,15 +19,33 @@ import Logistics from "../models/logistics-company.model";
 import Rider from "../models/rider.model";
 import { sendMany } from "./push.service";
 import UserDiscount from "../models/user-discount.model";
+
 import Deletion from "../models/delete-requests.model";
 
-const getAdmins = async () => {
-  const admins = await Admin.find();
+import Roles from "../models/user-roles.model";
+
+
+const getAdmins = async (urlParams) => {
+  const limit = Number(urlParams.limit);
+  const skip = Number(urlParams.skip);
+
+  delete urlParams.limit;
+  delete urlParams.skip;
+  delete urlParams.page;
+
+  const admins = await Admin.find(urlParams)
+    .populate({ path: "role", select: "name level" })
+    .select("first_name last_name email image")
+    .sort("createdDate")
+    .skip(skip)
+    .limit(limit);
   return admins;
 };
 
 const registerAdmin = async (params) => {
-  const { email, password } = params;
+  const {
+    email, password, first_name, last_name, image, role, phone_number
+  } = params;
 
   let admin = await Admin.findOne({ email });
 
@@ -36,6 +57,11 @@ const registerAdmin = async (params) => {
   admin = new Admin({
     email,
     password,
+    first_name,
+    last_name,
+    image,
+    role,
+    phone_number
   });
 
   const salt = await bcrypt.genSalt(10);
@@ -64,7 +90,10 @@ const loginAdmin = async (loginParam) => {
   const isMatch = await bcrypt.compare(password, admin.password);
 
   if (!isMatch) {
-    return { err: "The password entered is invalid, please try again.", status: 401 };
+    return {
+      err: "The password entered is invalid, please try again.",
+      status: 401,
+    };
   }
 
   let token = await getJwt(admin.id, "admin");
@@ -88,13 +117,21 @@ const createNotification = async (body) => {
 };
 
 const updateAdmin = async (updateParam, id) => {
-  const { email, password } = updateParam;
+  const {
+    email, password, first_name, last_name, image, role, phone_number, verified
+  } = updateParam;
 
   // Build Admin Object
   const adminFields = {};
 
   // Check for fields
   if (email) adminFields.email = email;
+  if (first_name) adminFields.first_name = first_name;
+  if (last_name) adminFields.last_name = last_name;
+  if (image) adminFields.image = image;
+  if (phone_number) adminFields.phone_number = phone_number;
+  if (verified) adminFields.verified = verified;
+
   if (password) {
     const salt = await bcrypt.genSalt(10);
 
@@ -124,10 +161,7 @@ const getResetPasswordRequests = async (urlParams) => {
   const limit = Number(urlParams.limit);
   const skip = Number(urlParams.skip);
   let requests = await Store.find({
-    $or: [
-      { resetPassword: "initiated" },
-      { resetPassword: "done" }
-    ]
+    $or: [{ resetPassword: "initiated" }, { resetPassword: "done" }],
   })
     .sort("createdAt")
     .skip(skip)
@@ -144,19 +178,17 @@ const resetStorePassword = async (storeEmail) => {
         .toString(16)
         .substring(1);
     };
-      // return id of format 'resetpasswordaaaa'
+    // return id of format 'resetpasswordaaaa'
     return `resetpassword${s4()}`;
   };
   const salt = await bcrypt.genSalt(10);
   let randomCode = orderId();
   const password = await bcrypt.hash(randomCode, salt);
-  let store = await Store
-    .findOneAndUpdate(
-      { email: storeEmail, resetPassword: "initiated" },
-      { $set: { resetPassword: "done", password } },
-      { omitUndefined: true, new: true, useFindAndModify: false }
-
-    );
+  let store = await Store.findOneAndUpdate(
+    { email: storeEmail, resetPassword: "initiated" },
+    { $set: { resetPassword: "done", password } },
+    { omitUndefined: true, new: true, useFindAndModify: false }
+  );
 
   if (!store) return { error: "Store not found", status: 404 };
   await sendStorePasswordResetConfirmationMail(storeEmail, randomCode);
@@ -183,10 +215,18 @@ const toggleStoreActive = async (urlParams) => {
   }
   let store = {};
   if (fetchStore.isActive) {
-    store = await Store.findByIdAndUpdate(storeId, { isActive: false }, { new: true });
+    store = await Store.findByIdAndUpdate(
+      storeId,
+      { isActive: false },
+      { new: true }
+    );
   }
   if (!fetchStore.isActive) {
-    store = await Store.findByIdAndUpdate(storeId, { isActive: true }, { new: true });
+    store = await Store.findByIdAndUpdate(
+      storeId,
+      { isActive: true },
+      { new: true }
+    );
   }
 
   return store;
@@ -198,7 +238,9 @@ const confirmStoreUpdate = async (storeID) => {
 
   let updateParams = await StoreUpdate.findOne({ store: storeID });
   // check if there are inputs to update
-  if (!updateParams) return { err: "No pending update for this store.", status: 400 };
+  if (!updateParams) {
+    return { err: "No pending update for this store.", status: 400 };
+  }
   const { newDetails } = updateParams;
 
   // get fields to update
@@ -211,7 +253,7 @@ const confirmStoreUpdate = async (storeID) => {
     phone_number,
     category,
     tax,
-    account_details
+    account_details,
   } = newDetails;
 
   const updateParam = {};
@@ -232,11 +274,12 @@ const confirmStoreUpdate = async (storeID) => {
       full_name: account_details.full_name,
       bank_name: account_details.bank_name,
       bank_code: account_details.bank_code,
-
     };
   }
 
-  if (location.type && location.coordinates.length > 0) updateParam.location = location;
+  if (location.type && location.coordinates.length > 0) {
+    updateParam.location = location;
+  }
   if (phone_number) updateParam.phone_number = phone_number;
   if (category) updateParam.category = category;
   if (name) updateParam.name = name;
@@ -263,7 +306,7 @@ const confirmStorePayout = async (storeId) => {
   let payout = await Transaction.findOne({
     ref: storeId,
     type: "Debit",
-    status: "pending"
+    status: "pending",
   });
 
   if (!payout) return { err: "No pending payout for this store.", status: 400 };
@@ -275,7 +318,7 @@ const confirmStorePayout = async (storeId) => {
         .toString(16)
         .substring(1);
     };
-      // return id of format 'card - aaaaa'
+    // return id of format 'card - aaaaa'
     return `store ${s4()}`;
   };
   let payload = {
@@ -284,7 +327,7 @@ const confirmStorePayout = async (storeId) => {
     amount: Number(payout.amount) - Number(payout.fee),
     narration: storeId,
     reference: ref(),
-    currency: "NGN"
+    currency: "NGN",
   };
   let request = await initiateTransfer(payload);
   // update store payout transaction status to approved
@@ -294,7 +337,12 @@ const confirmStorePayout = async (storeId) => {
     { omitUndefined: true, new: true, useFindAndModify: false }
   );
   // send push notification to store vendorPushDeviceToken
-  await sendMany("ssa", store.vendorPushDeviceToken, "Payout Request Approved!", `Your request to withdraw ₦${payload.amount} has been approved`);
+  await sendMany(
+    "ssa",
+    store.vendorPushDeviceToken,
+    "Payout Request Approved!",
+    `Your request to withdraw ₦${payload.amount} has been approved`
+  );
   // await sendStorePayoutApprovalMail(store.email, payload.amount);
   return request;
 };
@@ -304,10 +352,15 @@ const confirmLogisticsPayout = async (companyId) => {
   let payout = await Transaction.findOne({
     ref: companyId,
     type: "Debit",
-    status: "pending"
+    status: "pending",
   });
 
-  if (!payout) return { err: "No pending payout for this logistics company.", status: 400 };
+  if (!payout) {
+    return {
+      err: "No pending payout for this logistics company.",
+      status: 400,
+    };
+  }
 
   // create withdrawal reference
   let ref = () => {
@@ -316,7 +369,7 @@ const confirmLogisticsPayout = async (companyId) => {
         .toString(16)
         .substring(1);
     };
-      // return id of format 'card - aaaaa'
+    // return id of format 'card - aaaaa'
     return `logistics ${s4()}`;
   };
 
@@ -326,7 +379,7 @@ const confirmLogisticsPayout = async (companyId) => {
     amount: Number(payout.amount) - Number(payout.fee),
     narration: company._id,
     reference: ref(),
-    currency: "NGN"
+    currency: "NGN",
   };
   let request = await initiateTransfer(payload);
   // update store payout transaction status to approved
@@ -343,7 +396,7 @@ const confirmRiderPayout = async (riderId) => {
   let payout = await Transaction.findOne({
     ref: riderId,
     type: "Debit",
-    status: "pending"
+    status: "pending",
   });
 
   if (!payout) return { err: "No pending payout for this rider.", status: 400 };
@@ -355,7 +408,7 @@ const confirmRiderPayout = async (riderId) => {
         .toString(16)
         .substring(1);
     };
-      // return id of format 'card - aaaaa'
+    // return id of format 'card - aaaaa'
     return `rider ${s4()}`;
   };
   let payload = {
@@ -364,7 +417,7 @@ const confirmRiderPayout = async (riderId) => {
     amount: Number(payout.amount) - Number(payout.fee),
     narration: rider._id,
     reference: ref(),
-    currency: "NGN"
+    currency: "NGN",
   };
   let request = await initiateTransfer(payload);
   // update store payout transaction status to approved
@@ -399,9 +452,7 @@ const getAllStores = async (urlParams) => {
   if (urlParams.isActive) {
     condition.isActive = urlParams.isActive;
   }
-  const stores = await Store.find(condition)
-    .skip(skip)
-    .limit(limit);
+  const stores = await Store.find(condition).skip(skip).limit(limit);
 
   return { stores };
 };
@@ -431,8 +482,7 @@ const getUsers = async (urlParams) => {
 };
 
 const getUserById = async (userId) => {
-  const user = await User.findById(userId)
-    .select("-password -orders -cart");
+  const user = await User.findById(userId).select("-password -orders -cart");
   if (!user) return { err: "User does not exist.", status: 404 };
 
   return { user };
@@ -445,7 +495,9 @@ const confirmRiderAccountDetails = async (riderId) => {
   if (!rider) return { err: "Rider does not exist.", status: 404 };
 
   // check if account details field exists
-  if (!rider.account_details) return { err: "Account details not found.", status: 400 };
+  if (!rider.account_details) {
+    return { err: "Account details not found.", status: 400 };
+  }
 
   rider.account_details.isVerified = !rider.account_details.isVerified;
   await rider.save();
@@ -459,14 +511,19 @@ const confirmLogisticsAccountDetails = async (companyId) => {
   if (!company) return { err: "Company does not exist.", status: 404 };
 
   // check if account details field exists
-  if (!company.account_details) return { err: "Account details not found.", status: 400 };
+  if (!company.account_details) {
+    return { err: "Account details not found.", status: 400 };
+  }
 
   company.account_details.isVerified = !company.account_details.isVerified;
   await company.save();
   return company;
 };
 const addUserDiscount = async ({
-  userId, discount, expiredAt, discountType
+  userId,
+  discount,
+  expiredAt,
+  discountType,
 }) => {
   let user = await User.findById(userId);
   if (!user) return { err: "User does not exist.", status: 404 };
@@ -475,7 +532,7 @@ const addUserDiscount = async ({
     user: user._id,
     discount,
     expiredAt,
-    discountType
+    discountType,
   };
   let newDiscount = new UserDiscount(discountObj);
   await newDiscount.save();
@@ -532,9 +589,109 @@ const approveDeleteRquest = async (requestId) => {
   return "Request approved successfully.";
 };
 
+const createRoles = async () => {
+  let existingRoles = await Roles.find();
+
+  // check if there are roles
+  if (existingRoles.length > 1) {
+    return {
+      err: "This action can only be performed once, Delete all roles and try again",
+      status: 400,
+    };
+  }
+
+  // create new roles
+  await Roles.create([
+    { name: "admin", level: 1 },
+    { name: "owner", level: 2 },
+    { name: "finance", level: 3 },
+    { name: "support", level: 4 },
+    { name: "logistics", level: 2 },
+  ]);
+
+  return "Roles created successfully";
+};
+
+const getRoles = async (urlParams) => {
+  // setting pagination params
+  const limit = Number(urlParams.limit);
+  const skip = Number(urlParams.skip);
+  // declare fields to remove after aggregating
+  const pipeline = [
+    {
+      $unset: ["admins"],
+    },
+  ];
+
+  const roles = await Roles.aggregate()
+    .lookup({
+      from: "admins",
+      localField: "_id",
+      foreignField: "role",
+      as: "admins"
+    })
+    .addFields({
+      teamMembers: { $size: "$admins" }
+    })
+    .sort("level")
+    .skip(skip)
+    .limit(limit)
+    // appends the pipeline specified above
+    .append(pipeline);
+
+  return roles;
+};
+
+const getRole = async (id) => {
+  // declare fields to remove after aggregating
+  const pipeline = [
+    {
+      $unset: ["admins.password"],
+    },
+  ];
+
+  const role = await Roles.aggregate()
+    .match({
+      _id: mongoose.Types.ObjectId(id)
+    })
+    // .lookup({
+    //   from: "admins",
+    //   localField: "_id",
+    //   foreignField: "role",
+    //   as: "admins"
+    // })
+    // appends the pipeline specified above
+    .append(pipeline);
+
+  return role;
+};
+
 export {
-  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin,
-  resetStorePassword, confirmStoreUpdate, createNotification, confirmStorePayout,
-  createCompayLedger, getAllStoresUpdateRequests, getResetPasswordRequests,
-  toggleStoreActive, getAllStores, getUsers, getStoreById, getUserById, confirmLogisticsPayout, confirmRiderPayout, confirmRiderAccountDetails, confirmLogisticsAccountDetails, addUserDiscount, getDeletionRequests, approveDeleteRquest
+  getAdmins,
+  registerAdmin,
+  loginAdmin,
+  getLoggedInAdmin,
+  updateAdmin,
+  resetStorePassword,
+  confirmStoreUpdate,
+  createNotification,
+  confirmStorePayout,
+  createCompayLedger,
+  getAllStoresUpdateRequests,
+  getResetPasswordRequests,
+  toggleStoreActive,
+  getAllStores,
+  getUsers,
+  getStoreById,
+  getUserById,
+  confirmLogisticsPayout,
+  confirmRiderPayout,
+  confirmRiderAccountDetails,
+  confirmLogisticsAccountDetails,
+  addUserDiscount,
+getDeletionRequests, 
+approveDeleteRquest
+  createRoles,
+  getRoles,
+  getRole
 };

@@ -1,15 +1,19 @@
 import { validationResult } from "express-validator";
+import Admin from "../models/admin.model";
+import Roles from "../models/user-roles.model";
 
 import * as adminService from "../services/admin.service";
 import * as emailService from "../services/email.service";
 import * as transactionService from "../services/transaction.service";
 import { sendStoreSignUpFollowUpMail, sendWaitListInvite } from "../utils/sendMail";
 
-const getAdmins = async (req, res) => {
+const getAdmins = async (req, res, next) => {
   try {
-    const admins = await adminService.getAdmins();
+    const admins = await adminService.getAdmins(req.query);
 
-    return res.status(200).json({ success: true, result: admins, status: 200 });
+    return res.status(200).json({
+      success: true, result: admins, size: admins.length, status: 200
+    });
   } catch (error) {
     next(error);
   }
@@ -55,7 +59,7 @@ const getLoggedInAdmin = async (req, res, next) => {
 };
 
 const updateAdmin = async (req, res, next) => {
-  const admin = await adminService.updateAdmin(req.body, req.admin.id);
+  const admin = await adminService.updateAdmin(req.body, req.params.id);
 
   if (admin.msg) {
     res.status(admin.status).json({ success: false, msg: admin.msg, status: admin.status });
@@ -402,6 +406,31 @@ const getDeletionRequests = async (req, res, next) => {
 
     return res.status(200).json({
       success: true, result: requests, status: 200
+
+const createRoles = async (req, res, next) => {
+  try {
+    const action = await adminService.createRoles();
+
+    if (action.err) {
+      return res.status(action.status).json({ success: false, msg: action.err, status: action.status });
+    }
+
+    res.status(200).json({ success: true, result: action, status: 200 });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getRoles = async (req, res, next) => {
+  try {
+    const roles = await adminService.getRoles(req.query);
+
+    if (roles.err) {
+      return res.status(roles.status).json({ success: false, msg: roles.err, status: roles.status });
+    }
+
+    res.status(200).json({
+      success: true, result: roles, size: roles.length, status: 200
     });
   } catch (error) {
     next(error);
@@ -418,6 +447,18 @@ const approveDeleteRquest = async (req, res, next) => {
 
     return res.status(200).json({
       success: true, result: action, status: 200
+
+const getRole = async (req, res, next) => {
+  try {
+    const role = await adminService.getRole(req.params.roleId);
+
+    if (role.err) {
+      return res.status(roles.status).json({ success: false, msg: role.err, status: role.status });
+    }
+
+    res.status(200).json({
+      success: true, result: role[0], status: 200
+
     });
   } catch (error) {
     next(error);
@@ -425,10 +466,40 @@ const approveDeleteRquest = async (req, res, next) => {
 };
 
 export {
-  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin,
-  resetStorePassword, confirmStoreUpdate, createNotification, createTransaction,
-  confirmStorePayout, createCompayLedger, getAllStoresUpdateRequests,
-  getResetPasswordRequests, toggleStore, getAllStores, getUsers, getUserById,
-  getStoreById, sendRiderMail, sendStoreMail, sendUserMail, sendAllStoresMails,
-  sendAllRidersMails, sendAllUsersMails, sendAllMails, confirmLogisticsPayout, inviteUsersToBeta, confirmRiderAccountDetails, confirmLogisticsAccountDetails, addUserDiscount, sendStoreSignUpFollowUpMailCtrl, getDeletionRequests, approveDeleteRquest
+  getAdmins,
+  registerAdmin,
+  loginAdmin,
+  getLoggedInAdmin,
+  updateAdmin,
+  resetStorePassword,
+  confirmStoreUpdate,
+  createNotification,
+  createTransaction,
+  confirmStorePayout,
+  createCompayLedger,
+  getAllStoresUpdateRequests,
+  getResetPasswordRequests,
+  toggleStore,
+  getAllStores,
+  getUsers,
+  getUserById,
+  getStoreById,
+  sendRiderMail,
+  sendStoreMail,
+  sendUserMail,
+  sendAllStoresMails,
+  sendAllRidersMails,
+  sendAllUsersMails,
+  sendAllMails,
+  confirmLogisticsPayout,
+  inviteUsersToBeta,
+  confirmRiderAccountDetails,
+  confirmLogisticsAccountDetails,
+  addUserDiscount,
+  sendStoreSignUpFollowUpMailCtrl,
+  getDeletionRequests, 
+  approveDeleteRquest
+  createRoles,
+  getRoles,
+  getRole
 };
