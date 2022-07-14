@@ -126,7 +126,6 @@ router.post("/discounts/user", auth, isAdmin, addUserDiscount);
 // send store signup follow up mail
 router.post("/mails/follow-up/store/sign-up", auth, isAdmin, sendStoreSignUpFollowUpMailCtrl);
 
-
 // get deletion requests
 router.get("/deletion", auth, isAdmin, getDeletionRequests);
 
@@ -141,6 +140,5 @@ router.get("/roles", auth, isAdmin, isOwner, checkPagination, getRoles);
 
 // get a role
 router.get("/roles/:roleId", auth, isAdmin, isOwner, getRole);
-
 
 export default router;

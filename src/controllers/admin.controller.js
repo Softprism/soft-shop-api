@@ -406,6 +406,11 @@ const getDeletionRequests = async (req, res, next) => {
 
     return res.status(200).json({
       success: true, result: requests, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 const createRoles = async (req, res, next) => {
   try {
@@ -447,6 +452,11 @@ const approveDeleteRquest = async (req, res, next) => {
 
     return res.status(200).json({
       success: true, result: action, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 const getRole = async (req, res, next) => {
   try {
@@ -497,8 +507,8 @@ export {
   confirmLogisticsAccountDetails,
   addUserDiscount,
   sendStoreSignUpFollowUpMailCtrl,
-  getDeletionRequests, 
-  approveDeleteRquest
+  getDeletionRequests,
+  approveDeleteRquest,
   createRoles,
   getRoles,
   getRole
