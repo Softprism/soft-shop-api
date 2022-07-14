@@ -24,7 +24,6 @@ import Deletion from "../models/delete-requests.model";
 
 import Roles from "../models/user-roles.model";
 
-
 const getAdmins = async (urlParams) => {
   const limit = Number(urlParams.limit);
   const skip = Number(urlParams.skip);
@@ -566,22 +565,26 @@ const approveDeleteRquest = async (requestId) => {
       let user = await User.findById(request.account_id);
       if (!user) return { err: "User does not exist.", status: 404 };
       await User.findByIdAndDelete(request.account_id);
-      break; }
+      break;
+    }
     case "Rider": {
       let rider = await Rider.findById(request.account_id);
       if (!rider) return { err: "Rider does not exist.", status: 404 };
       await Rider.findByIdAndDelete(request.account_id);
-      break; }
+      break;
+    }
     case "logistics": {
       let logistics = await Logistics.findById(request.account_id);
       if (!logistics) return { err: "Logistics does not exist.", status: 404 };
       await Logistics.findByIdAndDelete(request.account_id);
-      break; }
+      break;
+    }
     case "Store": {
       let store = await Store.findById(request.account_id);
       if (!store) return { err: "Store does not exist.", status: 404 };
       await Store.findByIdAndDelete(request.account_id);
-      break; }
+      break;
+    }
     default:
       return { err: "Account type not found.", status: 400 };
   }
@@ -689,8 +692,8 @@ export {
   confirmRiderAccountDetails,
   confirmLogisticsAccountDetails,
   addUserDiscount,
-getDeletionRequests, 
-approveDeleteRquest
+  getDeletionRequests,
+  approveDeleteRquest,
   createRoles,
   getRoles,
   getRole
