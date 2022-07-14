@@ -8,7 +8,7 @@ import {
   getResetPasswordRequests, toggleStore, getAllStores, getUsers,
   getUserById, getStoreById, sendRiderMail, sendStoreMail, sendUserMail,
 
-  sendAllStoresMails, sendAllRidersMails, sendAllUsersMails, sendAllMails, inviteUsersToBeta, confirmRiderAccountDetails, confirmLogisticsAccountDetails, addUserDiscount, sendStoreSignUpFollowUpMailCtrl, createRoles, getRoles, getRole, pproveDeleteRquest, getDeletionRequests
+  sendAllStoresMails, sendAllRidersMails, sendAllUsersMails, sendAllMails, inviteUsersToBeta, confirmRiderAccountDetails, confirmLogisticsAccountDetails, addUserDiscount, sendStoreSignUpFollowUpMailCtrl, createRoles, getRoles, getRole, pproveDeleteRquest, getDeletionRequests, approveDeleteRquest
 
 } from "../controllers/admin.controller";
 import validator from "../middleware/validator";
