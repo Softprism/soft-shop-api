@@ -1,3 +1,5 @@
+import Rider from "../models/rider.model";
+import { createActivity } from "../services/activities.service";
 import {
   getAllRiders, verifyEmailAddress, registerRider, loginRider, loggedInRider,
   validateToken, requestPasswordToken, resetPassword, updateRider, requestPayout, getPayoutHistory, updateRiderAccountDetails, deleteAccount
@@ -63,6 +65,14 @@ const signup = async (req, res, next) => {
     req.data = {
       riderId: result.createdRider._id
     };
+    // log activity
+    let rider = await Rider.findOne({ email: req.body.email });
+    await createActivity(
+      "Rider",
+      rider._id,
+      "Signed up",
+      `Rider with email ${rider.email} created successfully`
+    );
     next();
   } catch (error) {
     next(error);
@@ -91,6 +101,15 @@ const signin = async (req, res, next) => {
     req.data = {
       id: loginRequest.rider._id
     };
+
+    // log activity
+    let rider = await Rider.findOne({ email: req.body.email });
+    await createActivity(
+      "Rider",
+      rider._id,
+      "Logged in",
+      `Rider with email ${rider.email} logged in successfully`
+    );
     next();
   } catch (error) {
     next(error);
