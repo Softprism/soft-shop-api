@@ -23,6 +23,8 @@ import UserDiscount from "../models/user-discount.model";
 import Deletion from "../models/delete-requests.model";
 
 import Roles from "../models/user-roles.model";
+import { getLoggedInStore, getStoresNoGeo } from "./store.service";
+import { allUserProfiles, getLoggedInUser } from "./user.service";
 
 const getAdmins = async (urlParams) => {
   const limit = Number(urlParams.limit);
@@ -441,23 +443,24 @@ const createCompayLedger = async () => {
 };
 
 const getAllStores = async (urlParams) => {
-  const limit = Number(urlParams.limit);
-  const skip = Number(urlParams.skip);
+  // const limit = Number(urlParams.limit);
+  // const skip = Number(urlParams.skip);
 
-  delete urlParams.limit;
-  delete urlParams.skip;
-  delete urlParams.page;
-  let condition = {};
-  if (urlParams.isActive) {
-    condition.isActive = urlParams.isActive;
-  }
-  const stores = await Store.find(condition).skip(skip).limit(limit);
+  // delete urlParams.limit;
+  // delete urlParams.skip;
+  // delete urlParams.page;
+  // let condition = {};
+  // if (urlParams.isActive) {
+  //   condition.isActive = urlParams.isActive;
+  // }
+  const stores = await getStoresNoGeo(urlParams);
+  // Store.find(condition).skip(skip).limit(limit);
 
   return { stores };
 };
 
 const getStoreById = async (storeId) => {
-  const store = await Store.findById(storeId);
+  const store = await getLoggedInStore(storeId);
   if (!store) return { err: "Store not found.", status: 400 };
 
   return { store };
@@ -465,23 +468,24 @@ const getStoreById = async (storeId) => {
 
 // Get all Users
 const getUsers = async (urlParams) => {
-  const limit = Number(urlParams.limit);
-  const skip = Number(urlParams.skip);
+  // const limit = Number(urlParams.limit);
+  // const skip = Number(urlParams.skip);
 
-  delete urlParams.limit;
-  delete urlParams.skip;
-  delete urlParams.page;
+  // delete urlParams.limit;
+  // delete urlParams.skip;
+  // delete urlParams.page;
 
-  const users = await User.find(urlParams)
-    .select("-password -orders -cart")
-    .skip(skip)
-    .limit(limit);
+  const users = await allUserProfiles(urlParams);
+  // await User.find(urlParams)
+  //   .select("-password -orders -cart")
+  //   .skip(skip)
+  //   .limit(limit);
 
   return users;
 };
 
 const getUserById = async (userId) => {
-  const user = await User.findById(userId).select("-password -orders -cart");
+  const user = await getLoggedInUser(userId);
   if (!user) return { err: "User does not exist.", status: 404 };
 
   return { user };

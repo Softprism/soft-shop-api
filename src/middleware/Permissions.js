@@ -13,8 +13,8 @@ const isStoreAdmin = (req, res, next) => {
   next();
 };
 const isAdmin = async (req, res, next) => {
-  let verifyAdmin = await Admin.findById(req.admin.id);
-  if (req.admin === undefined || verifyAdmin.verified === false || !verifyAdmin.role) {
+  // let verifyAdmin = await Admin.findById(req.admin.id);
+  if (req.admin === undefined) {
     return res.status(403).json({
       success: false,
       msg: "You're not permitted to carry out this action",

@@ -213,7 +213,7 @@ const getAllStores = async (req, res, next) => {
   try {
     const stores = await adminService.getAllStores(req.query);
     res.status(200).json({
-      success: true, result: stores, size: stores.length, status: 200
+      success: true, result: stores.stores, size: stores.stores.length, status: 200
     });
   } catch (error) {
     next(error);
