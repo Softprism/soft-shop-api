@@ -8,7 +8,7 @@ import {
   getResetPasswordRequests, toggleStore, getAllStores, getUsers,
   getUserById, getStoreById, sendRiderMail, sendStoreMail, sendUserMail,
 
-  sendAllStoresMails, sendAllRidersMails, sendAllUsersMails, sendAllMails, inviteUsersToBeta, confirmRiderAccountDetails, confirmLogisticsAccountDetails, addUserDiscount, sendStoreSignUpFollowUpMailCtrl, createRoles, getRoles, getRole, pproveDeleteRquest, getDeletionRequests, approveDeleteRquest
+  sendAllStoresMails, sendAllRidersMails, sendAllUsersMails, sendAllMails, inviteUsersToBeta, confirmRiderAccountDetails, confirmLogisticsAccountDetails, addUserDiscount, sendStoreSignUpFollowUpMailCtrl, createRoles, getRoles, getRole, pproveDeleteRquest, getDeletionRequests, approveDeleteRquest, getRiderById, getAllRiders
 
 } from "../controllers/admin.controller";
 import validator from "../middleware/validator";
@@ -50,6 +50,16 @@ router.get("/users", auth, isAdmin, checkPagination, getUsers);
 // @desc    Get a User
 // @access  Private
 router.get("/users/:userId", auth, isAdmin, getUserById,);
+
+// @route   GET /admins/riders
+// @desc    Get all riders
+// @access  Private
+router.get("/riders", auth, isAdmin, checkPagination, getAllRiders);
+
+// @route   GET /admins/rider/id
+// @desc    Get rider details
+// @access  Private
+router.get("/riders/:riderId", auth, isAdmin, getRiderById);
 
 // @route   POST admin/register
 // @desc    Register an Admin account

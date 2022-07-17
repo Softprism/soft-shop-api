@@ -25,6 +25,7 @@ import Deletion from "../models/delete-requests.model";
 import Roles from "../models/user-roles.model";
 import { getLoggedInStore, getStoresNoGeo } from "./store.service";
 import { allUserProfiles, getLoggedInUser } from "./user.service";
+import { getAllRiders, loggedInRider } from "./rider.service";
 
 const getAdmins = async (urlParams) => {
   const limit = Number(urlParams.limit);
@@ -461,8 +462,6 @@ const getAllStores = async (urlParams) => {
 
 const getStoreById = async (storeId) => {
   const store = await getLoggedInStore(storeId);
-  if (!store) return { err: "Store not found.", status: 400 };
-
   return { store };
 };
 
@@ -486,9 +485,21 @@ const getUsers = async (urlParams) => {
 
 const getUserById = async (userId) => {
   const user = await getLoggedInUser(userId);
-  if (!user) return { err: "User does not exist.", status: 404 };
-
+  if (user.length === 0) {
+    return { err: "user not found", status: 404 };
+  }
   return { user };
+};
+
+const getRiders = async (urlParams) => {
+  console.log(urlParams);
+  let riders = await getAllRiders(urlParams);
+  return riders;
+};
+
+const getRiderById = async (riderId) => {
+  let rider = await loggedInRider(riderId);
+  return rider;
 };
 
 const confirmRiderAccountDetails = async (riderId) => {
@@ -700,5 +711,7 @@ export {
   approveDeleteRquest,
   createRoles,
   getRoles,
-  getRole
+  getRole,
+  getRiderById,
+  getRiders
 };

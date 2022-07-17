@@ -24,11 +24,51 @@ const getAllRiders = async (urlParams) => {
   delete urlParams.skip;
   delete urlParams.page;
 
-  const riders = await Rider.find(urlParams)
-    .select("-password -orders")
-    .sort({ createdDate: -1 }) // -1 for descending sorting
-    .skip(skip)
-    .limit(limit);
+  const pipeline = [
+    {
+      $unset: [
+        "password",
+        "deliveries",
+        "deliveryReview",
+        "orders"
+      ],
+    },
+  ];
+
+  const riders = await Rider.aggregate()
+    .match(urlParams)
+    .lookup({
+      from: "orders",
+      localField: "_id",
+      foreignField: "rider",
+      as: "orders",
+    })
+    .lookup({
+      from: "deliveries",
+      localField: "_id",
+      foreignField: "rider",
+      as: "deliveries",
+    })
+    .lookup({
+      from: "reviews",
+      localField: "_id",
+      foreignField: "rider",
+      as: "deliveryReview",
+    })
+
+    // adding metrics to the response
+    .addFields({
+      sumOfStars: { $sum: "$deliveryReview.star" },
+      numOfReviews: { $size: "$deliveryReview" },
+      averageRating: { $floor: { $avg: "$deliveryReview.star" } },
+      deliveryCount: { $size: "$deliveries" },
+      amountEarned: { $sum: "$deliveries.deliveryFee" },
+      orderCount: { $size: "$orders" },
+    })
+    .addFields({
+      averageRating: { $ifNull: ["$averageRating", 0] },
+    })
+    .append(pipeline);
 
   return riders;
 };
@@ -92,7 +132,7 @@ const registerRider = async (riderParam) => {
     corporate,
     company_id
   };
-    // Save rider to db
+  // Save rider to db
   const createdRider = await Rider.create(newRider);
 
   // delete sign up token
@@ -311,7 +351,7 @@ const loggedInRider = async (riderId) => {
       as: "deliveryReview",
     })
 
-  // adding metrics to the response
+    // adding metrics to the response
     .addFields({
       sumOfStars: { $sum: "$deliveryReview.star" },
       numOfReviews: { $size: "$deliveryReview" },

@@ -236,9 +236,11 @@ const getUsers = async (req, res, next) => {
 const getUserById = async (req, res, next) => {
   try {
     const user = await adminService.getUserById(req.params.userId);
-
+    if (user.err) {
+      res.status(user.status).json({ success: false, msg: user.err, status: user.status });
+    }
     return res.status(200).json({
-      success: true, result: user, status: 200
+      success: true, result: user.user[0], status: 200
     });
   } catch (error) {
     next(error);
@@ -248,9 +250,36 @@ const getUserById = async (req, res, next) => {
 const getStoreById = async (req, res, next) => {
   try {
     const store = await adminService.getStoreById(req.params.storeId);
-
+    if (store.err) {
+      res.status(store.status).json({ success: false, msg: store.err, status: store.status });
+    }
     return res.status(200).json({
-      success: true, result: store, status: 200
+      success: true, result: store.store, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getRiderById = async (req, res, next) => {
+  try {
+    const rider = await adminService.getRiderById(req.params.riderId);
+    if (rider.err) {
+      res.status(rider.status).json({ success: false, msg: rider.err, status: rider.status });
+    }
+    return res.status(200).json({
+      success: true, result: rider, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getAllRiders = async (req, res, next) => {
+  try {
+    const riders = await adminService.getRiders(req.query);
+    return res.status(200).json({
+      success: true, result: riders, size: riders.length, status: 200
     });
   } catch (error) {
     next(error);
@@ -530,5 +559,7 @@ export {
   approveDeleteRquest,
   createRoles,
   getRoles,
-  getRole
+  getRole,
+  getRiderById,
+  getAllRiders
 };
