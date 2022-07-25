@@ -37,9 +37,13 @@ const getActivities = async (urlParams) => {
   delete urlParams.page;
   delete urlParams.sort;
 
+  if (urlParams.description) {
+    urlParams.description = new RegExp(urlParams.description, "i");
+  }
+
   let activities = await Activities.find(urlParams)
-    .populate({ path: "actorId", select: "-password -email" })
-    .select("-actorId -description")
+    .populate({ path: "actorId", select: "email" })
+    // .select("-actorId")
     .sort(sort)
     .skip(skip)
     .limit(limit);
