@@ -26,6 +26,7 @@ import Roles from "../models/user-roles.model";
 import { getLoggedInStore, getStoresNoGeo } from "./store.service";
 import { allUserProfiles, getLoggedInUser } from "./user.service";
 import { getAllRiders, loggedInRider } from "./rider.service";
+import Order from "../models/order.model";
 
 const getAdmins = async (urlParams) => {
   const limit = Number(urlParams.limit);
@@ -684,6 +685,220 @@ const getRole = async (id) => {
   return role;
 };
 
+const storeSignUpStats = async (days) => {
+  if (!days) return { err: "Please, specify amount of days to get stats for.", status: 400 };
+
+  let d = new Date();
+  d.setDate(d.getDate() - days);
+  d.setHours(23);
+  d.setMinutes(59);
+  d.setSeconds(59);
+
+  let stores = await Store.aggregate()
+    .match({
+      isVerified: true,
+      createdAt: { $gt: d },
+    })
+    .addFields({
+      dayOfSignUp: { $dayOfWeek: "$createdAt" },
+      dateOfSignUp: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } }
+    })
+    .group({
+      _id: "$dateOfSignUp",
+      signUps: { $push: "$_id" },
+    })
+    .addFields({
+      weekday: { $dayOfWeek: { $dateFromString: { dateString: "$_id" } } },
+      weekdate: "$_id",
+      // totalSales: { $sum: "$sales" },
+      totalSignUps: { $size: "$signUps" },
+    })
+    .sort("weekday")
+    .project({
+      _id: 0,
+      sales: 0,
+    });
+
+  return stores;
+};
+
+const riderSignUpStats = async (days) => {
+  if (!days) return { err: "Please, specify amount of days to get stats for.", status: 400 };
+
+  let d = new Date();
+  d.setDate(d.getDate() - days);
+  d.setHours(23);
+  d.setMinutes(59);
+  d.setSeconds(59);
+
+  let riders = await Rider.aggregate()
+    .match({
+      isVerified: true,
+      createdDate: { $gt: d },
+    })
+    .addFields({
+      dayOfSignUp: { $dayOfWeek: "$createdDate" },
+      dateOfSignUp: { $dateToString: { format: "%Y-%m-%d", date: "$createdDate" } }
+    })
+    .group({
+      _id: "$dateOfSignUp",
+      signUps: { $push: "$_id" },
+    })
+    .addFields({
+      weekday: { $dayOfWeek: { $dateFromString: { dateString: "$_id" } } },
+      weekdate: "$_id",
+      // totalSales: { $sum: "$sales" },
+      totalSignUps: { $size: "$signUps" },
+    })
+    .sort("weekday")
+    .project({
+      _id: 0,
+      sales: 0,
+    });
+  return riders;
+};
+
+const userSignUpStats = async (days) => {
+  if (!days) return { err: "Please, specify amount of days to get stats for.", status: 400 };
+
+  let d = new Date();
+  d.setDate(d.getDate() - days);
+  d.setHours(23);
+  d.setMinutes(59);
+  d.setSeconds(59);
+
+  let users = await User.aggregate()
+    .match({
+      isVerified: true,
+      createdDate: { $gt: d },
+    })
+    .addFields({
+      dayOfSignUp: { $dayOfWeek: "$createdDate" },
+      dateOfSignUp: { $dateToString: { format: "%Y-%m-%d", date: "$createdDate" } }
+    })
+    .group({
+      _id: "$dateOfSignUp",
+      signUps: { $push: "$_id" },
+    })
+    .addFields({
+      weekday: { $dayOfWeek: { $dateFromString: { dateString: "$_id" } } },
+      weekdate: "$_id",
+      // totalSales: { $sum: "$sales" },
+      totalSignUps: { $size: "$signUps" },
+    })
+    .sort("weekday")
+    .project({
+      _id: 0,
+      sales: 0,
+    });
+  return users;
+};
+
+const completedOrderStats = async (days) => {
+  if (!days) return { err: "Please, specify amount of days to get stats for.", status: 400 };
+
+  let d = new Date();
+  d.setDate(d.getDate() - days);
+  d.setHours(23);
+  d.setMinutes(59);
+  d.setSeconds(59);
+
+  let completedOrders = await Order.aggregate()
+    .match({
+      // store: mongoose.Types.ObjectId(storeId),
+      status: "delivered",
+      createdAt: { $gt: d },
+    })
+    .addFields({
+      dayOfOrder: { $dayOfWeek: "$createdAt" },
+      dateOfOrder: { $dateToString: { format: "%Y-%m-%d", date: "$updatedAt" } }
+    })
+    .group({
+      _id: "$dateOfOrder",
+      orders: { $push: "$_id" },
+    })
+    .addFields({
+      weekday: { $dayOfWeek: { $dateFromString: { dateString: "$_id" } } },
+      weekdate: "$_id",
+      // totalSales: { $sum: "$sales" },
+      totalOrders: { $size: "$orders" },
+    })
+    .sort("weekday")
+    .project({
+      _id: 0,
+      orders: 0,
+    });
+
+  return completedOrders;
+};
+
+const completedSalesStats = async (days) => {
+  if (!days) return { err: "Please, specify amount of days to get stats for.", status: 400 };
+
+  let d = new Date();
+  d.setDate(d.getDate() - days);
+  d.setHours(23);
+  d.setMinutes(59);
+  d.setSeconds(59);
+
+  let completedSales = await Order.aggregate()
+    .match({
+      // store: mongoose.Types.ObjectId(storeId),
+      status: "delivered",
+      createdAt: { $gt: d },
+    })
+    .addFields({
+      dayOfOrder: { $dayOfWeek: "$createdAt" },
+      dateOfOrder: { $dateToString: { format: "%Y-%m-%d", date: "$updatedAt" } }
+    })
+    .group({
+      _id: "$dateOfOrder",
+      sales: { $push: "$totalPrice" },
+    })
+    .addFields({
+      weekday: { $dayOfWeek: { $dateFromString: { dateString: "$_id" } } },
+      weekdate: "$_id",
+      totalSales: { $sum: "$sales" },
+      // totalOrders: { $size: "$orders" },
+    })
+    .sort("weekday")
+    .project({
+      _id: 0,
+      sales: 0,
+    });
+
+  return completedSales;
+};
+
+const statsOverview = async () => {
+  const totalStores = await Store.find({ isVerified: true });
+  const totalUsers = await User.find({ isVerified: true });
+  const totalRiders = await Rider.find({ isVerified: true });
+  const totalOrders = await Order.find({ status: "delivered" });
+  const totalSales = await Order.aggregate()
+    .match({
+      status: "delivered",
+    })
+    .group({
+      _id: "$status",
+      sales: { $push: "$totalPrice" },
+    })
+    .addFields({
+      totalSales: { $sum: "$sales" },
+    })
+    .project({
+      _id: 0,
+    });
+  return {
+    totalOrders, totalRiders, totalStores, totalUsers, totalSales
+  };
+};
+
+const incomeChecker = async () => {
+  const ledger = await Ledger.findOne({}).select("-createdDate -_id -__v");
+  return ledger;
+};
+
 export {
   getAdmins,
   registerAdmin,
@@ -713,5 +928,12 @@ export {
   getRoles,
   getRole,
   getRiderById,
-  getRiders
+  getRiders,
+  storeSignUpStats,
+  riderSignUpStats,
+  userSignUpStats,
+  completedOrderStats,
+  completedSalesStats,
+  statsOverview,
+  incomeChecker
 };

@@ -8,7 +8,7 @@ import {
   getResetPasswordRequests, toggleStore, getAllStores, getUsers,
   getUserById, getStoreById, sendRiderMail, sendStoreMail, sendUserMail,
 
-  sendAllStoresMails, sendAllRidersMails, sendAllUsersMails, sendAllMails, inviteUsersToBeta, confirmRiderAccountDetails, confirmLogisticsAccountDetails, addUserDiscount, sendStoreSignUpFollowUpMailCtrl, createRoles, getRoles, getRole, pproveDeleteRquest, getDeletionRequests, approveDeleteRquest, getRiderById, getAllRiders
+  sendAllStoresMails, sendAllRidersMails, sendAllUsersMails, sendAllMails, inviteUsersToBeta, confirmRiderAccountDetails, confirmLogisticsAccountDetails, addUserDiscount, sendStoreSignUpFollowUpMailCtrl, createRoles, getRoles, getRole, pproveDeleteRquest, getDeletionRequests, approveDeleteRquest, getRiderById, getAllRiders, storeSignUpStats, riderSignUpStats, userSignUpStats, completedOrderStats, completedSalesStats, statsOverview, incomeChecker
 
 } from "../controllers/admin.controller";
 import validator from "../middleware/validator";
@@ -161,4 +161,24 @@ router.get("/activities/info/:activityId", auth, isAdmin, isOwner, getActivityCt
 // get user activities
 router.get("/activities/:actorId", auth, isAdmin, isOwner, checkPagination, getUserActivitiesCtrl);
 
+// get store signup stats
+router.get("/stats/stores/signup", auth, isAdmin, isOwner, storeSignUpStats);
+
+// get rider signup stats
+router.get("/stats/riders/signup", auth, isAdmin, isOwner, riderSignUpStats);
+
+// get user signup stats
+router.get("/stats/consumers/signup", auth, isAdmin, isOwner, userSignUpStats);
+
+// get order stats
+router.get("/stats/orders/completed", auth, isAdmin, isOwner, completedOrderStats);
+
+// get sales stats
+router.get("/stats/sales/completed", auth, isAdmin, isOwner, completedSalesStats);
+
+// get stats overview
+router.get("/stats/overview", auth, isAdmin, isOwner, statsOverview);
+
+// get income overview
+router.get("/stats/income", auth, isAdmin, isOwner, incomeChecker);
 export default router;

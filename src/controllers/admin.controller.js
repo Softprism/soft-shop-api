@@ -523,6 +523,90 @@ const getRole = async (req, res, next) => {
   }
 };
 
+const storeSignUpStats = async (req, res, next) => {
+  try {
+    const stores = await adminService.storeSignUpStats(req.query.days);
+    res.status(200).json({
+      success: true, result: stores, size: stores.length, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const riderSignUpStats = async (req, res, next) => {
+  try {
+    const riders = await adminService.riderSignUpStats(req.query.days);
+    res.status(200).json({
+      success: true, result: riders, size: riders.length, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const userSignUpStats = async (req, res, next) => {
+  try {
+    const riders = await adminService.userSignUpStats(req.query.days);
+    res.status(200).json({
+      success: true, result: riders, size: riders.length, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const completedOrderStats = async (req, res, next) => {
+  try {
+    const orders = await adminService.completedOrderStats(req.query.days);
+    res.status(200).json({
+      success: true, result: orders, size: orders.length, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const completedSalesStats = async (req, res, next) => {
+  try {
+    const orders = await adminService.completedSalesStats(req.query.days);
+    res.status(200).json({
+      success: true, result: orders, size: orders.length, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const statsOverview = async (req, res, next) => {
+  try {
+    const overview = await adminService.statsOverview();
+    res.status(200).json({
+      success: true,
+      result: {
+        totalStores: overview.totalStores.length,
+        totalConsumers: overview.totalUsers.length,
+        totalRiders: overview.totalRiders.length,
+        totalOrders: overview.totalOrders.length,
+        totalSales: overview.totalSales[0].totalSales
+      },
+      status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const incomeChecker = async (req, res, next) => {
+  try {
+    const orders = await adminService.incomeChecker();
+    res.status(200).json({
+      success: true, result: orders, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 export {
   getAdmins,
   registerAdmin,
@@ -561,5 +645,12 @@ export {
   getRoles,
   getRole,
   getRiderById,
-  getAllRiders
+  getAllRiders,
+  storeSignUpStats,
+  riderSignUpStats,
+  userSignUpStats,
+  completedOrderStats,
+  completedSalesStats,
+  statsOverview,
+  incomeChecker
 };
