@@ -30,6 +30,10 @@ const createOrder = async (req, res, next) => {
     res.status(201).json({ success: true, result: newOrder });
 
     // update order
+    // cehck for discount
+    if (req.body.totalDiscountedPrice > 0) {
+      newOrder.totalPrice = req.body.totalDiscountedPrice;
+    }
     let orderUpdate = await Order.findById(newOrder._id);
     orderUpdate.orderItems = newOrder.orderItems;
     orderUpdate.totalPrice = newOrder.totalPrice;

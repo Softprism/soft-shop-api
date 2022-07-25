@@ -1,4 +1,5 @@
 import Store from "../models/store.model";
+import { createActivity } from "../services/activities.service";
 import * as storeService from "../services/store.service";
 import { sendStoreDebitMail, sendStorePayoutRequestMail } from "../utils/sendMail";
 
@@ -41,6 +42,13 @@ const createStore = async (req, res, next) => {
     req.data = {
       store: storeData
     };
+    // log activity
+    await createActivity(
+      "Store",
+      storeData._id,
+      "Signed Up",
+      `${storeData.name} created successfully`
+    );
     next();
   } catch (error) {
     next(error);
@@ -58,6 +66,13 @@ const loginStore = async (req, res, next) => {
     req.data = {
       id: store.store._id
     };
+    // log activity
+    await createActivity(
+      "Store",
+      store.store._id,
+      "Logged  in",
+      `${store.store.name} logged in`
+    );
     console.log(123);
     next();
   } catch (error) {

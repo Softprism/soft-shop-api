@@ -168,7 +168,7 @@ const createOrder = async (orderParam) => {
         .toString(16)
         .substring(1);
     };
-      // return id of format 'soft - aaaaa'
+    // return id of format 'soft - aaaaa'
     return `soft-${s4()}`;
   };
 
@@ -266,7 +266,7 @@ const createOrder = async (orderParam) => {
         },
       },
     })
-  // operations to calculate total price of all products' totalPrice field
+    // operations to calculate total price of all products' totalPrice field
     .addFields({
       totalProductPrice: {
         $sum: {
@@ -395,7 +395,7 @@ const createOrder = async (orderParam) => {
     // Update order with more details regardless of failed payment
     let orderUpdate = await Order.findById(neworder[0]._id);
     orderUpdate.orderItems = neworder[0].orderItems;
-    orderUpdate.totalPrice = neworder[0].totalPrice;
+    orderUpdate.totalPrice = discountCheck ? neworder[0].totalDiscountedPrice : neworder[0].totalPrice;
     orderUpdate.taxPrice = neworder[0].taxPrice;
     orderUpdate.subtotal = neworder[0].subtotal;
     orderUpdate.paymentResult = neworder[0].paymentResult;
@@ -804,7 +804,6 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
 
   // get users basket
   const userbasketItems = await getUserBasketItems(userId);
-  console.log(userbasketItems);
 
   // calculate subtotal fee from userbascket items totalPrice
   let subtotalFee = 0.03 * userbasketItems.totalPrice;

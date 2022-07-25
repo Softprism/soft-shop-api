@@ -62,6 +62,65 @@ const userProfile = async (userId) => {
   return userDetails;
 };
 
+const allUserProfiles = async (urlParams) => {
+  // setting pagination params
+  const limit = Number(urlParams.limit);
+  const skip = Number(urlParams.skip);
+  let { sort } = urlParams;
+
+  // check for sort type
+  if (urlParams.sortType === "desc") sort = `-${sort}`;
+  if (!urlParams.sort) sort = "createdAt";
+
+  // cleaning up the urlParams
+  delete urlParams.limit;
+  delete urlParams.skip;
+  delete urlParams.page;
+  delete urlParams.rating;
+  delete urlParams.long;
+  delete urlParams.lat;
+  const pipeline = [
+    { $unset: ["userReviews", "userOrders", "cart", "password", "orders"] },
+  ];
+
+  console.log(urlParams);
+
+  const userDetails = await User.aggregate()
+    .match(urlParams)
+    .lookup({
+      from: "reviews",
+      localField: "_id",
+      foreignField: "user",
+      as: "userReviews",
+    })
+    .lookup({
+      from: "orders",
+      let: { userId: "$_id" },
+      pipeline: [
+        {
+          $match: {
+            status: "delivered",
+            $expr: {
+              $eq: ["$$userId", "$user"]
+            }
+          }
+        }
+      ],
+      as: "userOrders",
+    })
+    .addFields({
+      totalReviews: { $size: "$userReviews" },
+      totalOrders: { $size: "$userOrders" },
+    })
+    .append(pipeline)
+    // sorting and pagination
+    .sort(sort)
+    .skip(skip)
+    .limit(limit);
+
+  return userDetails;
+};
+
 // Register User
 const registerUser = async (userParam) => {
   const {
@@ -120,7 +179,7 @@ const loginUser = async (loginParam) => {
     };
   }
   if (process.env.NODE_ENV === "production" && user.password !== "testing") {
-  // Check if password matches with stored hash
+    // Check if password matches with stored hash
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
@@ -149,7 +208,7 @@ const addCard = async (userId) => {
         .toString(16)
         .substring(1);
     };
-      // return id of format 'soft - aaaaa'
+    // return id of format 'soft - aaaaa'
     return `card-${s4()}`;
   };
   const payload = {
@@ -307,7 +366,7 @@ const updateBasketPrice = async (basketId) => {
     {
       $set: {
         "product.selectedVariants":
-           newBasketItemChore[0].product.selectedVariants,
+          newBasketItemChore[0].product.selectedVariants,
         "product.totalPrice": newBasketItemChore[0].product.totalPrice,
       },
     },
@@ -421,7 +480,7 @@ const getUserBasketItems = async (userId) => {
       _id: "$user",
       total: { $sum: "$product.totalPrice" },
     });
-    // get store location
+  // get store location
   const storeLocation = await Basket.aggregate()
     .match({
       user: mongoose.Types.ObjectId(userId),
@@ -629,5 +688,6 @@ export {
   deleteAllBasketItems,
   addCard,
   removeCard,
-  deleteAccount
+  deleteAccount,
+  allUserProfiles
 };

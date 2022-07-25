@@ -1,6 +1,7 @@
 import { validationResult } from "express-validator";
 import Admin from "../models/admin.model";
 import Roles from "../models/user-roles.model";
+import { createActivity } from "../services/activities.service";
 
 import * as adminService from "../services/admin.service";
 import * as emailService from "../services/email.service";
@@ -27,6 +28,15 @@ const registerAdmin = async (req, res, next) => {
       res.status(token.status).json({ success: false, msg: token.err, status: token.status });
     } else {
       res.status(201).json({ success: true, result: token, status: 201 });
+
+      // log activity
+      let admin = await Admin.findOne({ email: req.body.email });
+      await createActivity(
+        "Admin",
+        admin._id,
+        "Signed up",
+        `Admin with role ${admin.email} logged in`
+      );
     }
   } catch (error) {
     next(error);
@@ -42,6 +52,15 @@ const loginAdmin = async (req, res, next) => {
       res.status(token.status).json({ success: false, msg: token.err, status: token.status });
     } else {
       res.status(200).json({ success: true, result: token, status: 200 });
+
+      // create activity log
+      let admin = await Admin.findOne({ email: req.body.email }).populate("role");
+      await createActivity(
+        "Admin",
+        admin._id,
+        "Logged in",
+        `Admin with role ${admin.role.name} logged in`
+      );
     }
   } catch (error) {
     next(error);
@@ -194,7 +213,7 @@ const getAllStores = async (req, res, next) => {
   try {
     const stores = await adminService.getAllStores(req.query);
     res.status(200).json({
-      success: true, result: stores, size: stores.length, status: 200
+      success: true, result: stores.stores, size: stores.stores.length, status: 200
     });
   } catch (error) {
     next(error);
@@ -217,9 +236,11 @@ const getUsers = async (req, res, next) => {
 const getUserById = async (req, res, next) => {
   try {
     const user = await adminService.getUserById(req.params.userId);
-
+    if (user.err) {
+      res.status(user.status).json({ success: false, msg: user.err, status: user.status });
+    }
     return res.status(200).json({
-      success: true, result: user, status: 200
+      success: true, result: user.user[0], status: 200
     });
   } catch (error) {
     next(error);
@@ -229,9 +250,36 @@ const getUserById = async (req, res, next) => {
 const getStoreById = async (req, res, next) => {
   try {
     const store = await adminService.getStoreById(req.params.storeId);
-
+    if (store.err) {
+      res.status(store.status).json({ success: false, msg: store.err, status: store.status });
+    }
     return res.status(200).json({
-      success: true, result: store, status: 200
+      success: true, result: store.store, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getRiderById = async (req, res, next) => {
+  try {
+    const rider = await adminService.getRiderById(req.params.riderId);
+    if (rider.err) {
+      res.status(rider.status).json({ success: false, msg: rider.err, status: rider.status });
+    }
+    return res.status(200).json({
+      success: true, result: rider, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getAllRiders = async (req, res, next) => {
+  try {
+    const riders = await adminService.getRiders(req.query);
+    return res.status(200).json({
+      success: true, result: riders, size: riders.length, status: 200
     });
   } catch (error) {
     next(error);
@@ -475,6 +523,90 @@ const getRole = async (req, res, next) => {
   }
 };
 
+const storeSignUpStats = async (req, res, next) => {
+  try {
+    const stores = await adminService.storeSignUpStats(req.query.days);
+    res.status(200).json({
+      success: true, result: stores, size: stores.length, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const riderSignUpStats = async (req, res, next) => {
+  try {
+    const riders = await adminService.riderSignUpStats(req.query.days);
+    res.status(200).json({
+      success: true, result: riders, size: riders.length, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const userSignUpStats = async (req, res, next) => {
+  try {
+    const riders = await adminService.userSignUpStats(req.query.days);
+    res.status(200).json({
+      success: true, result: riders, size: riders.length, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const completedOrderStats = async (req, res, next) => {
+  try {
+    const orders = await adminService.completedOrderStats(req.query.days);
+    res.status(200).json({
+      success: true, result: orders, size: orders.length, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const completedSalesStats = async (req, res, next) => {
+  try {
+    const orders = await adminService.completedSalesStats(req.query.days);
+    res.status(200).json({
+      success: true, result: orders, size: orders.length, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const statsOverview = async (req, res, next) => {
+  try {
+    const overview = await adminService.statsOverview();
+    res.status(200).json({
+      success: true,
+      result: {
+        totalStores: overview.totalStores.length,
+        totalConsumers: overview.totalUsers.length,
+        totalRiders: overview.totalRiders.length,
+        totalOrders: overview.totalOrders.length,
+        totalSales: overview.totalSales[0].totalSales
+      },
+      status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const incomeChecker = async (req, res, next) => {
+  try {
+    const orders = await adminService.incomeChecker();
+    res.status(200).json({
+      success: true, result: orders, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 export {
   getAdmins,
   registerAdmin,
@@ -511,5 +643,14 @@ export {
   approveDeleteRquest,
   createRoles,
   getRoles,
-  getRole
+  getRole,
+  getRiderById,
+  getAllRiders,
+  storeSignUpStats,
+  riderSignUpStats,
+  userSignUpStats,
+  completedOrderStats,
+  completedSalesStats,
+  statsOverview,
+  incomeChecker
 };
