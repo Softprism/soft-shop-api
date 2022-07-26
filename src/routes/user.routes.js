@@ -61,7 +61,7 @@ router.post(
     await sendUserSignupSMS(req.data.phone);
     // check if node is in production
     // create log
-    await createLog("user signup", "user", `A new user - ${user.first_name} ${user.last_name} with email - ${user.email} just signed on softshop`);
+    // await createLog("user signup", "user", `A new user - ${user.first_name} ${user.last_name} with email - ${user.email} just signed on softshop`);
     // send log email
     await sendPlainEmail(
       "logs@soft-shop.app",
@@ -94,7 +94,7 @@ router.post("/login",
     }
 
     // create log
-    await createLog("user Login", "user", `A new login from ${user.first_name} ${user.last_name} with email - ${user.email}`);
+    // await createLog("user Login", "user", `A new login from ${user.first_name} ${user.last_name} with email - ${user.email}`);
   });
 
 // @route   GET /user/card
@@ -128,7 +128,7 @@ router.put(
     if (req.body.password && req.body.original_password) {
       await sendPasswordChangeMail(user.email);
       // create log
-      await createLog("user update prfile", "user", `A user - ${user.first_name} ${user.last_name} with email - ${user.email} just updated their profile`);
+      // await createLog("user update prfile", "user", `A user - ${user.first_name} ${user.last_name} with email - ${user.email} just updated their profile`);
     }
   }
 );
