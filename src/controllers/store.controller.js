@@ -73,7 +73,6 @@ const loginStore = async (req, res, next) => {
       "Logged  in",
       `${store.store.name} logged in`
     );
-    console.log(123);
     next();
   } catch (error) {
     next(error);
