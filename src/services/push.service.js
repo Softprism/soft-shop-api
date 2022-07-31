@@ -29,7 +29,6 @@ let ssa = admin.initializeApp({
 }, "ssa");
 
 const sendOne = async (app, deviceToken, title, body, data) => {
-  console.log("sending one", app, deviceToken, title, body, data);
   try {
     const message = {
       notification: {
@@ -52,7 +51,7 @@ const sendOne = async (app, deviceToken, title, body, data) => {
       return sendPush;
     }
     if (app === "sso") {
-    // Send a message to devices subscribed to the provided topic.
+      // Send a message to devices subscribed to the provided topic.
       let sendPush = await sso.messaging().send(message);
       return sendPush;
     }
@@ -72,13 +71,11 @@ const sendOne = async (app, deviceToken, title, body, data) => {
       return sendPush;
     }
   } catch (error) {
-    console.log(error);
     await createLog("send_notification failed", "server", error.message);
   }
 };
 
 const sendMany = async (app, deviceTokens, title, body, data) => {
-  console.log("sending many", app, deviceTokens, title, body, data);
   try {
     const message = {
       notification: {
@@ -98,7 +95,6 @@ const sendMany = async (app, deviceTokens, title, body, data) => {
     if (app === "ssa") {
       // Send a message to devices subscribed to the provided topic.
       let sendPush = await ssa.messaging().sendMulticast(message);
-      console.log(sendPush);
       return sendPush;
     }
     if (app === "sso") {
@@ -165,12 +161,10 @@ const sendTopic = async (app, topic, title, body, data) => {
 
 const sendPushToNearbyRiders = async (newDelivery, store, user) => {
   try {
-    console.log(newDelivery);
     // find riders close to delivery location and send a push notifiction to the delivery app
     let long = parseFloat(newDelivery.location.coordinates[0]);
     let lat = parseFloat(newDelivery.location.coordinates[1]);
     let radian = parseFloat(200 / 6378.1);
-    console.log(`searching for riders... long:  ${long}, " lat: ${lat}, radian: ${radian}`);
     const riders = await Rider.find({
       "location.coordinates": {
         $geoWithin: {
@@ -179,7 +173,6 @@ const sendPushToNearbyRiders = async (newDelivery, store, user) => {
       }
     }).lean();
     if (riders.length > 0) {
-      console.log(`found ${riders.length} riders`);
       let ridersToken = await Promise.all(riders.map(async (rider) => {
         // conver device token array to string
         rider.pushDeviceToken = rider.pushDeviceToken.toString();
@@ -191,9 +184,7 @@ const sendPushToNearbyRiders = async (newDelivery, store, user) => {
       await sendMany("ssa", ridersToken, title, body);
       return "success";
     }
-    console.log("no riders found, creating log...");
     await createLog("find_riders_for_delivery", "store", `can't find any riders for delivery requested by  ${store.name} for ${user.first_name} ${user.last_name}`);
-    console.log("no riders found, creating log... Done!");
 
     return "no_rider_available";
   } catch (error) {

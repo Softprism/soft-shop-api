@@ -40,7 +40,6 @@ const accept_Delivery = async (req, res, next) => {
         });
     }
     res.status(200).json({ success: true, result: action.updatedDelivery, status: 200 });
-    console.log(action);
     req.data = {
       order_id: action.updatedDelivery.order,
       user_id: action.updatedDelivery.user,

@@ -388,7 +388,6 @@ const createOrder = async (orderParam) => {
     };
     neworder[0].paymentResult = await ussdPayment(payload);
     neworder[0].paymentResult.meta.authorization.ussdBank = orderParam.ussdBank;
-    console.log(neworder[0].paymentResult.meta.authorization);
   }
 
   if (neworder[0].paymentResult.status === "error") {

@@ -5,8 +5,6 @@ const createActivity = async (actor, actorId, title, description) => {
   try {
     await Activities.create({
       actor, actorId, title, description
-    }).then((res) => {
-      console.log(res);
     });
     return true;
   } catch (error) {

@@ -2,7 +2,6 @@ import { Client } from "@googlemaps/google-maps-services-js";
 
 const client = new Client({});
 const getDistance = async (destination, origin) => {
-  console.log(destination, origin);
   if (!destination) return { err: "Please enter users destination.", status: 400 };
   if (!origin) return { err: "Please enter users origin.", status: 400 };
 
@@ -21,7 +20,6 @@ const getDistance = async (destination, origin) => {
       }
     };
   }
-  console.log(distance.data.rows[0]);
   if (distance.data.rows[0].elements[0].status === "ZERO_RESULTS") {
     distance.data.rows[0].elements[0].duration = { text: "No Results" };
   }
@@ -30,7 +28,6 @@ const getDistance = async (destination, origin) => {
 
 const getDistanceService = async (req, res, next) => {
   const { destination, origin } = req.query;
-  console.log(req.query);
   try {
     if (!destination) return { err: "Please enter users destination.", status: 400 };
     if (!origin) return { err: "Please enter users origin.", status: 400 };

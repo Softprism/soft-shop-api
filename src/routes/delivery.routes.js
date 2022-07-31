@@ -150,11 +150,6 @@ router.patch(
     let orderTax = 0.075 * orderFee;
     let storeTax = 0.075 * storeFee;
 
-    // console log fees
-    console.log(`deliveryFee: ${deliveryFee}`);
-    console.log(`orderFee: ${orderFee}`);
-    console.log(`storeFee: ${storeFee}`);
-
     // update rider isBusy status to false
     rider.isBusy = false;
     await rider.save();

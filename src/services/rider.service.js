@@ -15,6 +15,7 @@ import { createTransaction } from "./transaction.service";
 import Ledger from "../models/ledger.model";
 import Logistics from "../models/logistics-company.model";
 import Deletion from "../models/delete-requests.model";
+import Delivery from "../models/delivery.model";
 
 const getAllRiders = async (urlParams) => {
   const limit = Number(urlParams.limit);
@@ -89,7 +90,6 @@ const verifyEmailAddress = async ({ email }) => {
 };
 
 const registerRider = async (riderParam) => {
-  console.log(riderParam);
   const {
     first_name, last_name, email, phone_number, password, corporate, company_id
   } = riderParam;
@@ -275,8 +275,19 @@ const updateRider = async (updateParam, id) => {
   if (email) riderFields.email = email;
   if (profilePhoto) riderFields.profilePhoto = profilePhoto;
   if (pushNotifications === true || pushNotifications === false) riderFields.pushNotifications = pushNotifications;
-  if (isBusy === true || isBusy === false) riderFields.isBusy = isBusy;
+  if (isBusy === true || isBusy === false) {
+    // check if rider is on an ongoing delivery
+    let ongoingDelivery = await Delivery.findOne({
+      rider: id,
+      status: { $in: ["pending", "accepted"] },
+      riderStatus: { $in: ["Arrive at pickup", "Start Delivery", "pending"] }
+    });
 
+    if (ongoingDelivery) {
+      return { err: "You can't change your status while you're on a delivery", status: 400 };
+    }
+    riderFields.isBusy = isBusy;
+  }
   if (smsNotifications === true || smsNotifications === false) riderFields.smsNotifications = smsNotifications;
   if (promotionalNotifications === true || promotionalNotifications === false) riderFields.promotionalNotifications = promotionalNotifications;
   if (pushDeviceToken) riderFields.pushDeviceToken = pushDeviceToken;
@@ -396,10 +407,7 @@ const requestPayout = async (riderId) => {
     to: "Rider",
   });
 
-  console.log(oldRequest);
-
   if (oldRequest && rider.pendingWithdrawal === true) {
-    console.log(1);
     await Transaction.findOneAndUpdate(
       {
         type: "Debit",
@@ -418,7 +426,6 @@ const requestPayout = async (riderId) => {
     return "Withdrawal Request Sent.";
   }
 
-  console.log(12);
   // create Debit transaction for rider
   let newTransaction = await createTransaction({
     amount: payout,
@@ -457,7 +464,6 @@ const getPayoutHistory = async (riderId, urlParams) => {
 };
 
 const updateRiderAccountDetails = async (riderId, accountDetails) => {
-  console.log(accountDetails);
   // this service is used to update rider account details
   // successful request sends a update request to admin panel
   // get fields to update
@@ -477,9 +483,7 @@ const updateRiderAccountDetails = async (riderId, accountDetails) => {
   rider.account_details.full_name = full_name;
   rider.account_details.bank_name = bank_name;
   rider.account_details.isVerified = false;
-  console.log(rider);
   await rider.save();
-  console.log(rider);
 
   // return success message
   return "Account Details Updated.";

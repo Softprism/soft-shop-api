@@ -493,7 +493,6 @@ const getUserById = async (userId) => {
 };
 
 const getRiders = async (urlParams) => {
-  console.log(urlParams);
   let riders = await getAllRiders(urlParams);
   return riders;
 };

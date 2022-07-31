@@ -83,7 +83,6 @@ router.post("/login",
     // add push token to user profile
     let user = await User.findById(req.data.id);
     if (req.body.pushDeviceToken) {
-      console.log(req.body.pushDeviceToken);
       let existingToken = user.pushDeviceToken.find((res) => {
         return res === req.body.pushDeviceToken;
       });
