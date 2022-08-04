@@ -38,6 +38,9 @@ const getActivities = async (urlParams) => {
   if (urlParams.description) {
     urlParams.description = new RegExp(urlParams.description, "i");
   }
+  if (urlParams.title) {
+    urlParams.title = new RegExp(urlParams.title, "i");
+  }
 
   let activities = await Activities.find(urlParams)
     .populate({ path: "actorId", select: "email" })

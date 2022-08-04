@@ -175,8 +175,8 @@ const getStoresNoGeo = async (urlParams) => {
         "products",
         "orderReview",
         "password",
-        "email",
-        "phone_number",
+        // "email",
+        // "phone_number",
         "labels",
         "orders",
       ],
@@ -265,6 +265,12 @@ const getStoresNoGeo = async (urlParams) => {
       foreignField: "order",
       as: "orderReview",
     })
+    .lookup({
+      from: "categories",
+      localField: "category",
+      foreignField: "_id",
+      as: "category",
+    })
     // adding metrics to the response
     .addFields({
       sumOfStars: { $sum: "$orderReview.star" },
@@ -272,6 +278,7 @@ const getStoresNoGeo = async (urlParams) => {
       averageRating: { $floor: { $avg: "$orderReview.star" } },
       productCount: { $size: "$products" },
       orderCount: { $size: "$orders" },
+      category: { $arrayElemAt: ["$category", 0] },
     })
     .addFields({
       averageRating: { $ifNull: ["$averageRating", 0] },
