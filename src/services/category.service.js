@@ -36,7 +36,7 @@ const getCategories = async (urlParams) => {
               // run geoWithin operation to return all stores that are within the selected radius of the user's location
               location: {
                 $geoWithin: {
-                  $centerSphere: [[long, lat], radian],
+                  $centerSphere: [[long, lat], 0.0023518],
                 },
               },
               isActive: true,

@@ -96,7 +96,7 @@ const getStores = async (urlParams) => {
     .match({
       location: {
         $geoWithin: {
-          $centerSphere: [[long, lat], radian],
+          $centerSphere: [[long, lat], 0.0023518],
         },
       },
     })
