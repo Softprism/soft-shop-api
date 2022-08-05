@@ -174,15 +174,15 @@ const sendPushToNearbyRiders = async (newDelivery, store, user) => {
     }).lean();
     console.log(`Found ${riders.length} riders nearby`);
     if (riders.length > 0) {
-      let ridersToken = await Promise.all(riders.map(async (rider) => {
+      let tokens = await Promise.all(riders.map(async (rider) => {
         // conver device token array to string
-        rider.pushDeviceToken = rider.pushDeviceToken.toString();
         return rider.pushDeviceToken;
       }));
+
       let title = "New Delivery";
       let body = `${newDelivery.receiver} has requested a delivery from ${store.name}.`;
       // send push notification to riders
-      await sendMany("ssa", ridersToken, title, body);
+      await sendMany("ssa", tokens.flat(riders.length), title, body);
       return "success";
     }
     await createLog("find_riders_for_delivery", "store", `can't find any riders for delivery requested by  ${store.name} for ${user.first_name} ${user.last_name}`);
