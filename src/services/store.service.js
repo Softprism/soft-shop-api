@@ -65,6 +65,10 @@ const getStores = async (urlParams) => {
     matchParam.isActive = false;
   } // checking closed stores
 
+  if (urlParams.isActive) {
+    matchParam.isActive = urlParams.isActive;
+  }
+
   if (urlParams.name) {
     matchParam.name = new RegExp(urlParams.name, "i");
   }
