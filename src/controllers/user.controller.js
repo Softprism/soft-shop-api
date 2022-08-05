@@ -4,6 +4,8 @@ import * as userService from "../services/user.service";
 
 import { createLog } from "../services/logs.service";
 import Basket from "../models/user-cart.model";
+import User from "../models/user.model";
+import { createActivity } from "../services/activities.service";
 
 const router = express.Router();
 
@@ -52,6 +54,13 @@ const registerUser = async (req, res, next) => {
       phone: result.user[0].phone_number,
       user_id: result.user[0]._id
     };
+    // log activity
+    await createActivity(
+      "User",
+      result.user[0]._id,
+      "Signed Up",
+      `${req.data.email} signed up successfully`
+    );
     next();
   } catch (error) {
     next(error);
@@ -83,6 +92,14 @@ const loginUser = async (req, res, next) => {
       deviceToken: req.body.pushDeviceToken,
       id: loginRequest.userDetails[0]._id,
     };
+    let user = await User.findOne({ email: req.body.email });
+    // log activity
+    await createActivity(
+      "User",
+      user._id,
+      "logged in",
+      `${user.email} logged in successfully`
+    );
     next();
   } catch (error) {
     next(error);
@@ -187,18 +204,18 @@ const addItemToBasket = async (req, res, next) => {
       res.status(200).json({ success: true, result: action.message, status: 200 });
       action.existingBasketItem.product.qty += req.body.product.qty;
       if (req.body.product.selectedVariants) {
-      // if user is adding an existing item to basket along side selected variants, the existing selected variant quantity should be incremented by the new quantity coming in
+        // if user is adding an existing item to basket along side selected variants, the existing selected variant quantity should be incremented by the new quantity coming in
         action.existingBasketItem.product.selectedVariants.forEach((variant) => {
           req.body.product.selectedVariants.forEach((basketItemVariant) => {
             if (variant.variantId.toString() === basketItemVariant.variantId) {
               variant.quantity += basketItemVariant.quantity;
             } else {
-            // find the selected variant in the existing basket item and increment quantity
+              // find the selected variant in the existing basket item and increment quantity
               let existingVariant = action.existingBasketItem.product.selectedVariants.find(
                 (variant) => variant.variantId.toString() === basketItemVariant.variantId
               );
               if (!existingVariant) {
-              // if the selected variant is not found in the existing basket item, add it to the selected variants array
+                // if the selected variant is not found in the existing basket item, add it to the selected variants array
                 action.existingBasketItem.product.selectedVariants.push(basketItemVariant);
               }
             }
@@ -364,6 +381,16 @@ const createNewPassword = async (req, res, next) => {
   }
 };
 
+const deleteAccount = async (req, res, next) => {
+  try {
+    const action = await userService.deleteAccount(req.user.id);
+
+    res.status(200).json({ success: true, result: action, status: 200 });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // ========================================================================== //
 
 export {
@@ -382,5 +409,6 @@ export {
   deleteBasketItem,
   deleteAllBasketItems,
   addCard,
-  removeCard
+  removeCard,
+  deleteAccount
 };

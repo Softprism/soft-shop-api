@@ -1,6 +1,6 @@
 import express from "express";
 import { createLog } from "../services/logs.service";
-import { sendOne, sendTopic } from "../services/push.service";
+import { sendMany, sendOne, sendTopic } from "../services/push.service";
 
 const router = express.Router();
 
@@ -18,7 +18,7 @@ router.post("/send-push",
       deviceToken, title, body, data, app
     } = req.body;
     try {
-      let request = await sendOne(app, deviceToken, title, body, data);
+      let request = await sendMany(app, deviceToken, title, body, data);
       return res.status(200).json({
         success: true,
         result: request,
@@ -50,8 +50,6 @@ router.post("/sms-feedback",
   async (req, res, next) => {
     const messageSid = req.body.MessageSid;
     const messageStatus = req.body.MessageStatus;
-
-    console.log(`SID: ${messageSid}, Status: ${messageStatus}`);
 
     res.sendStatus(200);
     await createLog("send sms", "softshop", messageStatus);

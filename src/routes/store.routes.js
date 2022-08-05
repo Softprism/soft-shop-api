@@ -10,7 +10,8 @@ import {
   getStoreFeedback, getInventoryList, updateStore,
   requestPayout, getPayoutHistory, deleteStoreLabel,
   updateStoreLabel, updateStorePhoto,
-  resetPassword
+  resetPassword,
+  deleteAccount
 } from "../controllers/store.controller";
 import { getStoreVariantsForUsers } from "../controllers/product.controller";
 
@@ -88,7 +89,7 @@ router.post("/",
   createStore,
   async (req, res) => {
     // send welcome email
-    await sendStoreSignUpMail(req.data.store.owner_email);
+    await sendStoreSignUpMail(req.data.store.owner_email, req.data.store.name);
     // create log
     await createLog("new vendor signup", "store", `A new signup from ${req.data.store.owner_name} with email - ${req.data.store.owner_email}`);
     await sendPlainEmail(
@@ -161,4 +162,7 @@ router.delete("/store-label", auth, isStoreAdmin, validator(deleteLabelValidatio
 // @desc    add label to store
 // @access  Private
 router.put("/label", auth, isStoreAdmin, validator(labelValidation), addLabel);
+
+// delete account
+router.post("/account", auth, deleteAccount);
 export default router;

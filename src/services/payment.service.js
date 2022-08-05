@@ -78,7 +78,7 @@ const verifyTransaction = async (paymentDetails) => {
           .toString(16)
           .substring(1);
       };
-        // return id of format 'card - aaaaa'
+      // return id of format 'card - aaaaa'
       return `cindex-${s4()}`;
     };
     // add card index to initiated payment card details
@@ -87,8 +87,6 @@ const verifyTransaction = async (paymentDetails) => {
     // add new card details to user
     user.cards.push(response.data.card);
     await user.save();
-
-    console.log(user.cards);
 
     // create credit transaction for Ledger
     let ledger = await Ledger.findOne({});
@@ -140,7 +138,7 @@ const verifyTransaction = async (paymentDetails) => {
       await sendStoreNewOrderSentMail(order.orderId, store.email);
 
       // send email to user to notify them of sent order
-      await sendUserNewOrderSentMail(order.orderId, order.user.email, store.email);
+      await sendUserNewOrderSentMail(order.orderId, order.user.email, store.name);
 
       await store.save();
       await order.save();
@@ -168,7 +166,6 @@ const verifyPayout = async (payload) => {
     id: payload.data.id
   };
   const response = await flw.Transfer.get_a_transfer(flwpayload);
-  console.log(response);
   if (response.data.status === "SUCCESSFUL") {
     // check if reference starts with "rider" or "store" or "logistics"
     if (payload.data.reference.startsWith("rider")) {
@@ -182,7 +179,7 @@ const verifyPayout = async (payload) => {
         "ssa",
         rider.pushDeviceToken,
         "Withdrawal Completed",
-        `Your withdrawal of ${response.data.amount} was successful`,
+        `Your withdrawal of ₦${response.data.amount} was successful`,
         {}
       );
 
@@ -211,9 +208,9 @@ const verifyPayout = async (payload) => {
       // send push notification to store
       await sendMany(
         "ssa",
-        store.pushDeviceToken,
+        store.vendorPushDeviceToken,
         "Withdrawal Completed",
-        `Your withdrawal of ${response.data.amount} was successful`,
+        `Your withdrawal of ₦${response.data.amount} was successful`,
         {} // data to be sent to store app
       );
 

@@ -23,6 +23,11 @@ const companySignup = async (req, res, next) => {
     res.status(201).json({
       success: true, result: action.saveAction, token: action.token, status: 201
     });
+
+    req.data = {
+      company_id: action.saveAction._id,
+    };
+    next();
   } catch (error) {
     return next(error);
   }
@@ -193,6 +198,20 @@ const updateCompanyAccountDetails = async (req, res, next) => {
   }
 };
 
+const deleteAccount = async (req, res, next) => {
+  try {
+    const action = await logisticsService.deleteAccount(req.logistics.id);
+
+    return res.status(200).json({
+      success: true,
+      result: action,
+      status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export {
-  companySignup, companyLogin, companyDetails, updateCompanyAddress, updateLoginDetails, updateCompanyImage, updateCompanyDetails, viewCompanyRiders, viewCompanyRiderDetails, requestWithdrawal, getAllCompanies, updateCompanyAccountDetails
+  companySignup, companyLogin, companyDetails, updateCompanyAddress, updateLoginDetails, updateCompanyImage, updateCompanyDetails, viewCompanyRiders, viewCompanyRiderDetails, requestWithdrawal, getAllCompanies, updateCompanyAccountDetails, deleteAccount
 };

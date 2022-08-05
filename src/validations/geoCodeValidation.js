@@ -9,6 +9,9 @@ const geoCodeValidation = {
     latlng: Joi.string().empty().messages({
       "string.empty": "Sorry, latlng cannot be an empty field",
     }),
+    address: Joi.string().empty().messages({
+      "string.empty": "Sorry, address cannot be an empty field",
+    }),
   }).messages({
     "object.unknown": "You have used an invalid key."
   })

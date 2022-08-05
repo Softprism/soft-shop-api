@@ -1,7 +1,6 @@
 import * as paymentService from "../services/payment.service";
 
 const verifyTransaction = async (req, res, next) => {
-  console.log(req.body);
   try {
     if (req.body.event === "transfer.completed") {
       let verify = await paymentService.verifyPayout(req.body);
@@ -25,7 +24,6 @@ const verifyTransaction = async (req, res, next) => {
 
 const acknowledgeFlwWebhook = async (req, res, next) => {
   try {
-    console.log(req.body);
     if (req.body.event === "transfer.completed") {
       res.status(200).json({ success: true, status: 200 });
       await paymentService.verifyPayout(req.body);

@@ -168,7 +168,7 @@ const createOrder = async (orderParam) => {
         .toString(16)
         .substring(1);
     };
-      // return id of format 'soft - aaaaa'
+    // return id of format 'soft - aaaaa'
     return `soft-${s4()}`;
   };
 
@@ -198,6 +198,8 @@ const createOrder = async (orderParam) => {
         "user.password",
         "user.cart",
         "user.orders",
+        "taxFee",
+        "orderFee"
       ],
     },
   ];
@@ -264,7 +266,7 @@ const createOrder = async (orderParam) => {
         },
       },
     })
-  // operations to calculate total price of all products' totalPrice field
+    // operations to calculate total price of all products' totalPrice field
     .addFields({
       totalProductPrice: {
         $sum: {
@@ -294,11 +296,29 @@ const createOrder = async (orderParam) => {
       subtotal: { $add: ["$totalProductPrice", "$totalVariantPrice"] },
     })
     .addFields({
-      taxPrice: {
+      orderFee: {
         $multiply: [
           0.03,
           { $add: ["$totalProductPrice", "$totalVariantPrice"] },
         ],
+      },
+    })
+    .addFields({
+      taxFee: {
+        $multiply: [
+          0.075,
+          "$orderFee",
+        ],
+      },
+    })
+    .addFields({
+      taxPrice: {
+        $ceil: {
+          $add: [
+            "$taxFee",
+            "$orderFee",
+          ],
+        }
       },
     })
     // calculate total price for the order
@@ -367,13 +387,14 @@ const createOrder = async (orderParam) => {
       fullname: `${neworder[0].user.first_name} ${neworder[0].user.last_name}`
     };
     neworder[0].paymentResult = await ussdPayment(payload);
+    neworder[0].paymentResult.meta.authorization.ussdBank = orderParam.ussdBank;
   }
 
   if (neworder[0].paymentResult.status === "error") {
     // Update order with more details regardless of failed payment
     let orderUpdate = await Order.findById(neworder[0]._id);
     orderUpdate.orderItems = neworder[0].orderItems;
-    orderUpdate.totalPrice = neworder[0].totalPrice;
+    orderUpdate.totalPrice = discountCheck ? neworder[0].totalDiscountedPrice : neworder[0].totalPrice;
     orderUpdate.taxPrice = neworder[0].taxPrice;
     orderUpdate.subtotal = neworder[0].subtotal;
     orderUpdate.paymentResult = neworder[0].paymentResult;
@@ -763,27 +784,30 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
   const otherRiders = await Rider.find({
     "location.coordinates": {
       $geoWithin: {
-        $centerSphere: [[store.location.coordinates[0], store.location.coordinates[1]], 0.0015],
+        $centerSphere: [[store.location.coordinates[0], store.location.coordinates[1]], 0.0023518],
       }
     }
   });
   const freeRidersLength = otherRiders.length;
 
   // check if there are more busy riders than free riders different ranges
-  if (freeRidersLength - busyRidersLength > 0 && freeRidersLength - busyRidersLength < 5) {
-    deliveryFee += deliveryFee * 0.15;
-    surge = true;
-  } else if (freeRidersLength - busyRidersLength > 5 && freeRidersLength - busyRidersLength < 10) {
-    deliveryFee += deliveryFee * 0.1;
-    surge = true;
+  if (process.env.NODE_ENV === "production") {
+    if (freeRidersLength - busyRidersLength > 0 && freeRidersLength - busyRidersLength < 5) {
+      deliveryFee += deliveryFee * 0.15;
+      surge = true;
+    } else if (freeRidersLength - busyRidersLength > 5 && freeRidersLength - busyRidersLength < 10) {
+      deliveryFee += deliveryFee * 0.1;
+      surge = true;
+    }
   }
 
   // get users basket
   const userbasketItems = await getUserBasketItems(userId);
-  console.log(userbasketItems);
 
   // calculate subtotal fee from userbascket items totalPrice
-  let taxFee = 0.03 * userbasketItems.totalPrice;
+  let subtotalFee = 0.03 * userbasketItems.totalPrice;
+  let vatFee = 0.075 * subtotalFee;
+  let taxFee = subtotalFee + vatFee;
 
   // check for deliveryFee userDiscount
   let deliveryDiscountPrice = 0;
@@ -801,7 +825,9 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
   const userTaxDiscount = await UserDiscount.findOne({ user: userId, discountType: "taxFee" });
   if (userTaxDiscount) {
     let discount = userTaxDiscount.discount / 100;
-    taxDiscountPrice = taxFee - taxFee * discount;
+    taxDiscountPrice = subtotalFee - (subtotalFee * discount);
+    let newVatFee = 0.075 * taxDiscountPrice;
+    taxDiscountPrice += newVatFee;
     taxDiscount = true;
   }
 

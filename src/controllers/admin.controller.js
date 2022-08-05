@@ -1,15 +1,20 @@
 import { validationResult } from "express-validator";
+import Admin from "../models/admin.model";
+import Roles from "../models/user-roles.model";
+import { createActivity } from "../services/activities.service";
 
 import * as adminService from "../services/admin.service";
 import * as emailService from "../services/email.service";
 import * as transactionService from "../services/transaction.service";
 import { sendStoreSignUpFollowUpMail, sendWaitListInvite } from "../utils/sendMail";
 
-const getAdmins = async (req, res) => {
+const getAdmins = async (req, res, next) => {
   try {
-    const admins = await adminService.getAdmins();
+    const admins = await adminService.getAdmins(req.query);
 
-    return res.status(200).json({ success: true, result: admins, status: 200 });
+    return res.status(200).json({
+      success: true, result: admins, size: admins.length, status: 200
+    });
   } catch (error) {
     next(error);
   }
@@ -23,6 +28,15 @@ const registerAdmin = async (req, res, next) => {
       res.status(token.status).json({ success: false, msg: token.err, status: token.status });
     } else {
       res.status(201).json({ success: true, result: token, status: 201 });
+
+      // log activity
+      let admin = await Admin.findOne({ email: req.body.email });
+      await createActivity(
+        "Admin",
+        admin._id,
+        "Signed up",
+        `Admin with role ${admin.email} logged in`
+      );
     }
   } catch (error) {
     next(error);
@@ -38,6 +52,15 @@ const loginAdmin = async (req, res, next) => {
       res.status(token.status).json({ success: false, msg: token.err, status: token.status });
     } else {
       res.status(200).json({ success: true, result: token, status: 200 });
+
+      // create activity log
+      let admin = await Admin.findOne({ email: req.body.email }).populate("role");
+      await createActivity(
+        "Admin",
+        admin._id,
+        "Logged in",
+        `Admin with role ${admin.role.name} logged in`
+      );
     }
   } catch (error) {
     next(error);
@@ -55,7 +78,7 @@ const getLoggedInAdmin = async (req, res, next) => {
 };
 
 const updateAdmin = async (req, res, next) => {
-  const admin = await adminService.updateAdmin(req.body, req.admin.id);
+  const admin = await adminService.updateAdmin(req.body, req.params.id);
 
   if (admin.msg) {
     res.status(admin.status).json({ success: false, msg: admin.msg, status: admin.status });
@@ -151,7 +174,6 @@ const confirmStorePayout = async (req, res, next) => {
     if (req.query.riderId) {
       transaction = await adminService.confirmRiderPayout(req.query.riderId);
     }
-    console.log(transaction);
     if (transaction.err) {
       res.status(transaction.status).json({
         success: false, msg: transaction.err, data: transaction.data, status: transaction.status
@@ -190,7 +212,7 @@ const getAllStores = async (req, res, next) => {
   try {
     const stores = await adminService.getAllStores(req.query);
     res.status(200).json({
-      success: true, result: stores, size: stores.length, status: 200
+      success: true, result: stores.stores, size: stores.stores.length, status: 200
     });
   } catch (error) {
     next(error);
@@ -213,9 +235,11 @@ const getUsers = async (req, res, next) => {
 const getUserById = async (req, res, next) => {
   try {
     const user = await adminService.getUserById(req.params.userId);
-
+    if (user.err) {
+      res.status(user.status).json({ success: false, msg: user.err, status: user.status });
+    }
     return res.status(200).json({
-      success: true, result: user, status: 200
+      success: true, result: user.user[0], status: 200
     });
   } catch (error) {
     next(error);
@@ -225,9 +249,36 @@ const getUserById = async (req, res, next) => {
 const getStoreById = async (req, res, next) => {
   try {
     const store = await adminService.getStoreById(req.params.storeId);
-
+    if (store.err) {
+      res.status(store.status).json({ success: false, msg: store.err, status: store.status });
+    }
     return res.status(200).json({
-      success: true, result: store, status: 200
+      success: true, result: store.store, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getRiderById = async (req, res, next) => {
+  try {
+    const rider = await adminService.getRiderById(req.params.riderId);
+    if (rider.err) {
+      res.status(rider.status).json({ success: false, msg: rider.err, status: rider.status });
+    }
+    return res.status(200).json({
+      success: true, result: rider, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getAllRiders = async (req, res, next) => {
+  try {
+    const riders = await adminService.getRiders(req.query);
+    return res.status(200).json({
+      success: true, result: riders, size: riders.length, status: 200
     });
   } catch (error) {
     next(error);
@@ -396,11 +447,209 @@ const addUserDiscount = async (req, res, next) => {
   }
 };
 
+const getDeletionRequests = async (req, res, next) => {
+  try {
+    const requests = await adminService.getDeletionRequests(req.query);
+
+    return res.status(200).json({
+      success: true, result: requests, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const createRoles = async (req, res, next) => {
+  try {
+    const action = await adminService.createRoles();
+
+    if (action.err) {
+      return res.status(action.status).json({ success: false, msg: action.err, status: action.status });
+    }
+
+    res.status(200).json({ success: true, result: action, status: 200 });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getRoles = async (req, res, next) => {
+  try {
+    const roles = await adminService.getRoles(req.query);
+
+    if (roles.err) {
+      return res.status(roles.status).json({ success: false, msg: roles.err, status: roles.status });
+    }
+
+    res.status(200).json({
+      success: true, result: roles, size: roles.length, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const approveDeleteRquest = async (req, res, next) => {
+  try {
+    const action = await adminService.approveDeleteRquest(req.params.id);
+
+    if (action.err) {
+      return res.status(action.status).json({ success: false, msg: action.err, status: action.status });
+    }
+
+    return res.status(200).json({
+      success: true, result: action, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getRole = async (req, res, next) => {
+  try {
+    const role = await adminService.getRole(req.params.roleId);
+
+    if (role.err) {
+      return res.status(roles.status).json({ success: false, msg: role.err, status: role.status });
+    }
+
+    res.status(200).json({
+      success: true, result: role[0], status: 200
+
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const storeSignUpStats = async (req, res, next) => {
+  try {
+    const stores = await adminService.storeSignUpStats(req.query.days);
+    res.status(200).json({
+      success: true, result: stores, size: stores.length, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const riderSignUpStats = async (req, res, next) => {
+  try {
+    const riders = await adminService.riderSignUpStats(req.query.days);
+    res.status(200).json({
+      success: true, result: riders, size: riders.length, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const userSignUpStats = async (req, res, next) => {
+  try {
+    const riders = await adminService.userSignUpStats(req.query.days);
+    res.status(200).json({
+      success: true, result: riders, size: riders.length, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const completedOrderStats = async (req, res, next) => {
+  try {
+    const orders = await adminService.completedOrderStats(req.query.days);
+    res.status(200).json({
+      success: true, result: orders, size: orders.length, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const completedSalesStats = async (req, res, next) => {
+  try {
+    const orders = await adminService.completedSalesStats(req.query.days);
+    res.status(200).json({
+      success: true, result: orders, size: orders.length, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const statsOverview = async (req, res, next) => {
+  try {
+    const overview = await adminService.statsOverview();
+    res.status(200).json({
+      success: true,
+      result: {
+        totalStores: overview.totalStores.length,
+        totalConsumers: overview.totalUsers.length,
+        totalRiders: overview.totalRiders.length,
+        totalOrders: overview.totalOrders.length,
+        totalSales: overview.totalSales[0].totalSales
+      },
+      status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const incomeChecker = async (req, res, next) => {
+  try {
+    const orders = await adminService.incomeChecker();
+    res.status(200).json({
+      success: true, result: orders, status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 export {
-  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin,
-  resetStorePassword, confirmStoreUpdate, createNotification, createTransaction,
-  confirmStorePayout, createCompayLedger, getAllStoresUpdateRequests,
-  getResetPasswordRequests, toggleStore, getAllStores, getUsers, getUserById,
-  getStoreById, sendRiderMail, sendStoreMail, sendUserMail, sendAllStoresMails,
-  sendAllRidersMails, sendAllUsersMails, sendAllMails, confirmLogisticsPayout, inviteUsersToBeta, confirmRiderAccountDetails, confirmLogisticsAccountDetails, addUserDiscount, sendStoreSignUpFollowUpMailCtrl
+  getAdmins,
+  registerAdmin,
+  loginAdmin,
+  getLoggedInAdmin,
+  updateAdmin,
+  resetStorePassword,
+  confirmStoreUpdate,
+  createNotification,
+  createTransaction,
+  confirmStorePayout,
+  createCompayLedger,
+  getAllStoresUpdateRequests,
+  getResetPasswordRequests,
+  toggleStore,
+  getAllStores,
+  getUsers,
+  getUserById,
+  getStoreById,
+  sendRiderMail,
+  sendStoreMail,
+  sendUserMail,
+  sendAllStoresMails,
+  sendAllRidersMails,
+  sendAllUsersMails,
+  sendAllMails,
+  confirmLogisticsPayout,
+  inviteUsersToBeta,
+  confirmRiderAccountDetails,
+  confirmLogisticsAccountDetails,
+  addUserDiscount,
+  sendStoreSignUpFollowUpMailCtrl,
+  getDeletionRequests,
+  approveDeleteRquest,
+  createRoles,
+  getRoles,
+  getRole,
+  getRiderById,
+  getAllRiders,
+  storeSignUpStats,
+  riderSignUpStats,
+  userSignUpStats,
+  completedOrderStats,
+  completedSalesStats,
+  statsOverview,
+  incomeChecker
 };

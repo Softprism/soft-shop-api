@@ -1,6 +1,6 @@
 import express from "express";
 import {
-  getRiders, verifyToken, signup, signin, getLoggedInRider, requestToken, forgotPassword, createNewPassword, updateRiderProfile, requestPayoutCtrl, getPayoutHistoryCtrl, updateRiderAccountDetailsCtrl
+  getRiders, verifyToken, signup, signin, getLoggedInRider, requestToken, forgotPassword, createNewPassword, updateRiderProfile, requestPayoutCtrl, getPayoutHistoryCtrl, updateRiderAccountDetailsCtrl, deleteAccountCtrl
 } from "../controllers/rider.controller";
 import auth from "../middleware/auth";
 import validator from "../middleware/validator";
@@ -12,7 +12,7 @@ import {
 import { hashPassword } from "../middleware/validationMiddleware";
 import Rider from "../models/rider.model";
 import { createLog } from "../services/logs.service";
-import { sendPlainEmail, sendSignUpOTPmail } from "../utils/sendMail";
+import { sendPlainEmail, sendRiderSignupMail, sendSignUpOTPmail } from "../utils/sendMail";
 
 const router = express.Router();
 
@@ -53,6 +53,10 @@ router.post("/register",
     if (process.env.NODE_ENV === "production") {
       // find rider by id
       let rider = await Rider.findById(req.data.riderId);
+
+      // send signup mail
+      let fullName = `${rider.last_name} ${rider.first_name}`;
+      await sendRiderSignupMail(rider.email, fullName);
       // create log
       await createLog("new rider signup", "rider", `A new signup from ${rider.last_name} ${rider.first_name} with email - ${rider.email}`);
       await sendPlainEmail(
@@ -106,5 +110,8 @@ router.get("/payout/history", auth, checkPagination, getPayoutHistoryCtrl);
 
 // update rider account details route
 router.patch("/profile/account", auth, updateRiderAccountDetailsCtrl);
+
+// delete account
+router.post("/account", auth, deleteAccountCtrl);
 
 export default router;

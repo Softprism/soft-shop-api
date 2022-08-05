@@ -1,5 +1,5 @@
 const errorHandler = (err, req, res, next) => {
-  console.log(1, err);
+  console.log(err);
 
   if (typeof err === "string") {
     // custom application error

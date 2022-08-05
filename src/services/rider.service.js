@@ -14,6 +14,8 @@ import Transaction from "../models/transaction.model";
 import { createTransaction } from "./transaction.service";
 import Ledger from "../models/ledger.model";
 import Logistics from "../models/logistics-company.model";
+import Deletion from "../models/delete-requests.model";
+import Delivery from "../models/delivery.model";
 
 const getAllRiders = async (urlParams) => {
   const limit = Number(urlParams.limit);
@@ -23,11 +25,51 @@ const getAllRiders = async (urlParams) => {
   delete urlParams.skip;
   delete urlParams.page;
 
-  const riders = await Rider.find(urlParams)
-    .select("-password -orders")
-    .sort({ createdDate: -1 }) // -1 for descending sorting
-    .skip(skip)
-    .limit(limit);
+  const pipeline = [
+    {
+      $unset: [
+        "password",
+        "deliveries",
+        "deliveryReview",
+        "orders"
+      ],
+    },
+  ];
+
+  const riders = await Rider.aggregate()
+    .match(urlParams)
+    .lookup({
+      from: "orders",
+      localField: "_id",
+      foreignField: "rider",
+      as: "orders",
+    })
+    .lookup({
+      from: "deliveries",
+      localField: "_id",
+      foreignField: "rider",
+      as: "deliveries",
+    })
+    .lookup({
+      from: "reviews",
+      localField: "_id",
+      foreignField: "rider",
+      as: "deliveryReview",
+    })
+
+    // adding metrics to the response
+    .addFields({
+      sumOfStars: { $sum: "$deliveryReview.star" },
+      numOfReviews: { $size: "$deliveryReview" },
+      averageRating: { $floor: { $avg: "$deliveryReview.star" } },
+      deliveryCount: { $size: "$deliveries" },
+      amountEarned: { $sum: "$deliveries.deliveryFee" },
+      orderCount: { $size: "$orders" },
+    })
+    .addFields({
+      averageRating: { $ifNull: ["$averageRating", 0] },
+    })
+    .append(pipeline);
 
   return riders;
 };
@@ -48,7 +90,6 @@ const verifyEmailAddress = async ({ email }) => {
 };
 
 const registerRider = async (riderParam) => {
-  console.log(riderParam);
   const {
     first_name, last_name, email, phone_number, password, corporate, company_id
   } = riderParam;
@@ -60,7 +101,7 @@ const registerRider = async (riderParam) => {
   }
 
   // check if server is in production
-  if (process.env.NODE_ENV === "production" && company_id) {
+  if (process.env.NODE_ENV === "production" && company_id && corporate === false) {
     // check if company exists
     let company = await Logistics.findById(company_id);
     if (!company) {
@@ -91,7 +132,7 @@ const registerRider = async (riderParam) => {
     corporate,
     company_id
   };
-    // Save rider to db
+  // Save rider to db
   const createdRider = await Rider.create(newRider);
 
   // delete sign up token
@@ -115,6 +156,15 @@ const loginRider = async (loginParam) => {
       status: 401,
     };
   }
+
+  // check if rider is verified
+  if (!rider.isVerified) {
+    return {
+      err: "Please verify your email address before logging in.",
+      status: 401,
+    };
+  }
+
   // Check if password matches with stored hash
   const isMatch = await bcrypt.compare(password, rider.password);
 
@@ -123,6 +173,13 @@ const loginRider = async (loginParam) => {
       err: "The password entered in incorrect, please try again.",
       status: 401,
     };
+  }
+
+  if (process.env.NODE_ENV === "production" && rider.isVerified === false) {
+    return { err: "Sorry, your is yet to be verified, kindly contact support@soft-shop.app.", status: 401 };
+  }
+  if (rider.isVerified === false) {
+    return { err: "Sorry, your is yet to be verified, kindly contact support@soft-shop.app", status: 401 };
   }
 
   // Define payload for token
@@ -218,8 +275,19 @@ const updateRider = async (updateParam, id) => {
   if (email) riderFields.email = email;
   if (profilePhoto) riderFields.profilePhoto = profilePhoto;
   if (pushNotifications === true || pushNotifications === false) riderFields.pushNotifications = pushNotifications;
-  if (isBusy === true || isBusy === false) riderFields.isBusy = isBusy;
+  if (isBusy === true || isBusy === false) {
+    // check if rider is on an ongoing delivery
+    let ongoingDelivery = await Delivery.findOne({
+      rider: id,
+      status: { $in: ["pending", "accepted"] },
+      riderStatus: { $in: ["Arrive at pickup", "Start Delivery", "pending"] }
+    });
 
+    if (ongoingDelivery) {
+      return { err: "You can't change your status while you're on a delivery", status: 400 };
+    }
+    riderFields.isBusy = isBusy;
+  }
   if (smsNotifications === true || smsNotifications === false) riderFields.smsNotifications = smsNotifications;
   if (promotionalNotifications === true || promotionalNotifications === false) riderFields.promotionalNotifications = promotionalNotifications;
   if (pushDeviceToken) riderFields.pushDeviceToken = pushDeviceToken;
@@ -294,7 +362,7 @@ const loggedInRider = async (riderId) => {
       as: "deliveryReview",
     })
 
-  // adding metrics to the response
+    // adding metrics to the response
     .addFields({
       sumOfStars: { $sum: "$deliveryReview.star" },
       numOfReviews: { $size: "$deliveryReview" },
@@ -313,6 +381,16 @@ const loggedInRider = async (riderId) => {
 const requestPayout = async (riderId) => {
   // get rider details
   const rider = await Rider.findById(riderId);
+
+  // check if rider has set account details
+  if (!rider.account_details.account_number) {
+    return { err: "Please update your account details.", status: 400 };
+  }
+
+  // check if there's a pending update
+  if (rider.account_details.isVerified === false) {
+    return { err: "Please wait for your account details to be approved. Contact support@soft-shop.app", status: 400 };
+  }
 
   // get ledger
   let ledger = await Ledger.findOne({});
@@ -410,6 +488,22 @@ const updateRiderAccountDetails = async (riderId, accountDetails) => {
   // return success message
   return "Account Details Updated.";
 };
+
+const deleteAccount = async (riderId) => {
+  // this service is used to delete rider account
+  // successful request sends a delete request to admin panel
+  // set rider isVerified to false
+  const rider = await Rider.findById(riderId);
+  rider.isVerified = false;
+  await rider.save();
+
+  // delete rider account
+  await Deletion.create({
+    account_type: "Rider",
+    account_id: riderId
+  });
+  return "Your account has been scheduled for deletion. We will contact you shortly.";
+};
 export {
   resetPassword,
   requestPasswordToken,
@@ -422,5 +516,6 @@ export {
   updateRider,
   requestPayout,
   getPayoutHistory,
-  updateRiderAccountDetails
+  updateRiderAccountDetails,
+  deleteAccount
 };

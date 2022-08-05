@@ -20,12 +20,14 @@ const getDistance = async (destination, origin) => {
       }
     };
   }
+  if (distance.data.rows[0].elements[0].status === "ZERO_RESULTS") {
+    distance.data.rows[0].elements[0].duration = { text: "No Results" };
+  }
   return distance.data.rows[0].elements[0].duration.text;
 };
 
 const getDistanceService = async (req, res, next) => {
   const { destination, origin } = req.query;
-  console.log(req.query);
   try {
     if (!destination) return { err: "Please enter users destination.", status: 400 };
     if (!origin) return { err: "Please enter users origin.", status: 400 };
@@ -78,4 +80,29 @@ const getDistanceServiceForDelivery = async (destination, origin) => {
   }
 };
 
-export { getDistance, getDistanceService, getDistanceServiceForDelivery };
+const getDistanceMultiUse = async (destination, origin) => {
+  try {
+    if (!destination) return { err: "Please enter destination.", status: 400 };
+    if (!origin) return { err: "Please enter origin.", status: 400 };
+
+    let distance = await client.distancematrix({
+      params: {
+        origins: [origin],
+        destinations: [destination],
+        key: process.env.GOOGLE_MAPS_API_KEY
+      },
+      timeout: 50000
+    });
+    if (distance.data.rows[0].elements[0].status === "NOT_FOUND") {
+      throw { err: "Can't resolve", status: 400 };
+    }
+
+    return distance.data.rows[0].elements[0];
+  } catch (error) {
+    throw error;
+  }
+};
+
+export {
+  getDistance, getDistanceService, getDistanceServiceForDelivery, getDistanceMultiUse
+};

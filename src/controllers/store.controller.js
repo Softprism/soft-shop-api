@@ -1,4 +1,5 @@
 import Store from "../models/store.model";
+import { createActivity } from "../services/activities.service";
 import * as storeService from "../services/store.service";
 import { sendStoreDebitMail, sendStorePayoutRequestMail } from "../utils/sendMail";
 
@@ -32,16 +33,22 @@ const createStore = async (req, res, next) => {
     const store = await storeService.createStore(req.body);
 
     if (store.err) {
-      res.status(store.status).json({ success: false, msg: store.err, status: store.status });
-    } else {
-      res.status(201).json({ success: true, result: store, status: 201 });
+      return res.status(store.status).json({ success: false, msg: store.err, status: store.status });
     }
+    res.status(201).json({ success: true, result: store, status: 201 });
 
     // find store with email
     const storeData = await Store.findOne({ email: req.body.email });
     req.data = {
       store: storeData
     };
+    // log activity
+    await createActivity(
+      "Store",
+      storeData._id,
+      "Signed Up",
+      `${storeData.name} created successfully`
+    );
     next();
   } catch (error) {
     next(error);
@@ -59,7 +66,13 @@ const loginStore = async (req, res, next) => {
     req.data = {
       id: store.store._id
     };
-    console.log(123);
+    // log activity
+    await createActivity(
+      "Store",
+      store.store._id,
+      "Logged  in",
+      `${store.store.name} logged in`
+    );
     next();
   } catch (error) {
     next(error);
@@ -326,6 +339,20 @@ const resetPassword = async (req, res, next) => {
   }
 };
 
+const deleteAccount = async (req, res, next) => {
+  try {
+    const request = await storeService.deleteAccount(req.store.id);
+
+    return res.status(200).json({
+      success: true,
+      result: request,
+      status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export {
   getStores,
   createStore,
@@ -346,5 +373,6 @@ export {
   requestPayout,
   getPayoutHistory,
   resetPassword,
-  updateStorePhoto
+  updateStorePhoto,
+  deleteAccount
 };

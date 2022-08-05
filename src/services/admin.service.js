@@ -1,13 +1,16 @@
 import bcrypt from "bcryptjs";
 
-import mongoose from "mongoose";
+import mongoose, { Mongoose } from "mongoose";
 import Admin from "../models/admin.model";
 import User from "../models/user.model";
 import Store from "../models/store.model";
 import Notification from "../models/notification.models";
 import StoreUpdate from "../models/store-update.model";
 
-import { sendStorePasswordResetConfirmationMail, sendStoreUpdateRequestApprovalMail } from "../utils/sendMail";
+import {
+  sendStorePasswordResetConfirmationMail,
+  sendStoreUpdateRequestApprovalMail,
+} from "../utils/sendMail";
 import getJwt from "../utils/jwtGenerator";
 import Transaction from "../models/transaction.model";
 import Ledger from "../models/ledger.model";
@@ -17,15 +20,37 @@ import Rider from "../models/rider.model";
 import { sendMany } from "./push.service";
 import UserDiscount from "../models/user-discount.model";
 
-const getAdmins = async () => {
-  const admins = await Admin.find();
+import Deletion from "../models/delete-requests.model";
+
+import Roles from "../models/user-roles.model";
+import { getLoggedInStore, getStoresNoGeo } from "./store.service";
+import { allUserProfiles, getLoggedInUser } from "./user.service";
+import { getAllRiders, loggedInRider } from "./rider.service";
+import Order from "../models/order.model";
+
+const getAdmins = async (urlParams) => {
+  const limit = Number(urlParams.limit);
+  const skip = Number(urlParams.skip);
+
+  delete urlParams.limit;
+  delete urlParams.skip;
+  delete urlParams.page;
+
+  const admins = await Admin.find(urlParams)
+    .populate({ path: "role", select: "name level" })
+    .select("first_name last_name email image phone_number createdDate")
+    .sort("createdDate")
+    .skip(skip)
+    .limit(limit);
   return admins;
 };
 
 const registerAdmin = async (params) => {
-  const { username, password } = params;
+  const {
+    email, password, first_name, last_name, image, role, phone_number
+  } = params;
 
-  let admin = await Admin.findOne({ username });
+  let admin = await Admin.findOne({ email });
 
   if (admin) {
     return { err: "Admin account already exists.", status: 409 };
@@ -33,8 +58,13 @@ const registerAdmin = async (params) => {
 
   // Create Admin Object
   admin = new Admin({
-    username,
+    email,
     password,
+    first_name,
+    last_name,
+    image,
+    role,
+    phone_number
   });
 
   const salt = await bcrypt.genSalt(10);
@@ -51,19 +81,22 @@ const registerAdmin = async (params) => {
 };
 
 const loginAdmin = async (loginParam) => {
-  const { username, password } = loginParam;
+  const { email, password } = loginParam;
   // Find admin with email
-  let admin = await Admin.findOne({ username });
+  let admin = await Admin.findOne({ email });
 
   if (!admin) {
-    return { err: "Admin not found.", status: 404 };
+    return { err: "Admin account not found.", status: 404 };
   }
 
   // Check if password matches with stored hash
   const isMatch = await bcrypt.compare(password, admin.password);
 
   if (!isMatch) {
-    return { err: "The password entered is invalid, please try again.", status: 401 };
+    return {
+      err: "The password entered is invalid, please try again.",
+      status: 401,
+    };
   }
 
   let token = await getJwt(admin.id, "admin");
@@ -87,13 +120,21 @@ const createNotification = async (body) => {
 };
 
 const updateAdmin = async (updateParam, id) => {
-  const { username, password } = updateParam;
+  const {
+    email, password, first_name, last_name, image, role, phone_number, verified
+  } = updateParam;
 
   // Build Admin Object
   const adminFields = {};
 
   // Check for fields
-  if (username) adminFields.username = username;
+  if (email) adminFields.email = email;
+  if (first_name) adminFields.first_name = first_name;
+  if (last_name) adminFields.last_name = last_name;
+  if (image) adminFields.image = image;
+  if (phone_number) adminFields.phone_number = phone_number;
+  if (verified) adminFields.verified = verified;
+
   if (password) {
     const salt = await bcrypt.genSalt(10);
 
@@ -123,10 +164,7 @@ const getResetPasswordRequests = async (urlParams) => {
   const limit = Number(urlParams.limit);
   const skip = Number(urlParams.skip);
   let requests = await Store.find({
-    $or: [
-      { resetPassword: "initiated" },
-      { resetPassword: "done" }
-    ]
+    $or: [{ resetPassword: "initiated" }, { resetPassword: "done" }],
   })
     .sort("createdAt")
     .skip(skip)
@@ -143,19 +181,17 @@ const resetStorePassword = async (storeEmail) => {
         .toString(16)
         .substring(1);
     };
-      // return id of format 'resetpasswordaaaa'
+    // return id of format 'resetpasswordaaaa'
     return `resetpassword${s4()}`;
   };
   const salt = await bcrypt.genSalt(10);
   let randomCode = orderId();
   const password = await bcrypt.hash(randomCode, salt);
-  let store = await Store
-    .findOneAndUpdate(
-      { email: storeEmail, resetPassword: "initiated" },
-      { $set: { resetPassword: "done", password } },
-      { omitUndefined: true, new: true, useFindAndModify: false }
-
-    );
+  let store = await Store.findOneAndUpdate(
+    { email: storeEmail, resetPassword: "initiated" },
+    { $set: { resetPassword: "done", password } },
+    { omitUndefined: true, new: true, useFindAndModify: false }
+  );
 
   if (!store) return { error: "Store not found", status: 404 };
   await sendStorePasswordResetConfirmationMail(storeEmail, randomCode);
@@ -182,10 +218,18 @@ const toggleStoreActive = async (urlParams) => {
   }
   let store = {};
   if (fetchStore.isActive) {
-    store = await Store.findByIdAndUpdate(storeId, { isActive: false }, { new: true });
+    store = await Store.findByIdAndUpdate(
+      storeId,
+      { isActive: false },
+      { new: true }
+    );
   }
   if (!fetchStore.isActive) {
-    store = await Store.findByIdAndUpdate(storeId, { isActive: true }, { new: true });
+    store = await Store.findByIdAndUpdate(
+      storeId,
+      { isActive: true },
+      { new: true }
+    );
   }
 
   return store;
@@ -197,7 +241,9 @@ const confirmStoreUpdate = async (storeID) => {
 
   let updateParams = await StoreUpdate.findOne({ store: storeID });
   // check if there are inputs to update
-  if (!updateParams) return { err: "No pending update for this store.", status: 400 };
+  if (!updateParams) {
+    return { err: "No pending update for this store.", status: 400 };
+  }
   const { newDetails } = updateParams;
 
   // get fields to update
@@ -210,7 +256,7 @@ const confirmStoreUpdate = async (storeID) => {
     phone_number,
     category,
     tax,
-    account_details
+    account_details,
   } = newDetails;
 
   const updateParam = {};
@@ -231,11 +277,12 @@ const confirmStoreUpdate = async (storeID) => {
       full_name: account_details.full_name,
       bank_name: account_details.bank_name,
       bank_code: account_details.bank_code,
-
     };
   }
 
-  if (location.type && location.coordinates.length > 0) updateParam.location = location;
+  if (location.type && location.coordinates.length > 0) {
+    updateParam.location = location;
+  }
   if (phone_number) updateParam.phone_number = phone_number;
   if (category) updateParam.category = category;
   if (name) updateParam.name = name;
@@ -262,17 +309,28 @@ const confirmStorePayout = async (storeId) => {
   let payout = await Transaction.findOne({
     ref: storeId,
     type: "Debit",
-    status: "pending"
+    status: "pending",
   });
 
-  if (payout) return { err: "No pending payout for this store.", status: 400 };
+  if (!payout) return { err: "No pending payout for this store.", status: 400 };
 
+  // create withdrawal reference
+  let ref = () => {
+    let s4 = () => {
+      return Math.floor((1 + Math.random()) * 0x10000)
+        .toString(16)
+        .substring(1);
+    };
+    // return id of format 'card - aaaaa'
+    return `store ${s4()}`;
+  };
   let payload = {
     account_bank: store.account_details.bank_code,
     account_number: store.account_details.account_number,
     amount: Number(payout.amount) - Number(payout.fee),
     narration: storeId,
-    currency: "NGN"
+    reference: ref(),
+    currency: "NGN",
   };
   let request = await initiateTransfer(payload);
   // update store payout transaction status to approved
@@ -282,7 +340,12 @@ const confirmStorePayout = async (storeId) => {
     { omitUndefined: true, new: true, useFindAndModify: false }
   );
   // send push notification to store vendorPushDeviceToken
-  await sendMany("ssa", store.vendorPushDeviceToken, "Payout Request Approved!", `Your request to withdraw ${payload.amount} has been approved`);
+  await sendMany(
+    "ssa",
+    store.vendorPushDeviceToken,
+    "Payout Request Approved!",
+    `Your request to withdraw ₦${payload.amount} has been approved`
+  );
   // await sendStorePayoutApprovalMail(store.email, payload.amount);
   return request;
 };
@@ -292,17 +355,34 @@ const confirmLogisticsPayout = async (companyId) => {
   let payout = await Transaction.findOne({
     ref: companyId,
     type: "Debit",
-    status: "pending"
+    status: "pending",
   });
 
-  if (payout) return { err: "No pending payout for this logistics company.", status: 400 };
+  if (!payout) {
+    return {
+      err: "No pending payout for this logistics company.",
+      status: 400,
+    };
+  }
+
+  // create withdrawal reference
+  let ref = () => {
+    let s4 = () => {
+      return Math.floor((1 + Math.random()) * 0x10000)
+        .toString(16)
+        .substring(1);
+    };
+    // return id of format 'card - aaaaa'
+    return `logistics ${s4()}`;
+  };
 
   let payload = {
     account_bank: company.account_details.bank_code,
     account_number: company.account_details.account_number,
     amount: Number(payout.amount) - Number(payout.fee),
     narration: company._id,
-    currency: "NGN"
+    reference: ref(),
+    currency: "NGN",
   };
   let request = await initiateTransfer(payload);
   // update store payout transaction status to approved
@@ -319,7 +399,7 @@ const confirmRiderPayout = async (riderId) => {
   let payout = await Transaction.findOne({
     ref: riderId,
     type: "Debit",
-    status: "pending"
+    status: "pending",
   });
 
   if (!payout) return { err: "No pending payout for this rider.", status: 400 };
@@ -331,7 +411,7 @@ const confirmRiderPayout = async (riderId) => {
         .toString(16)
         .substring(1);
     };
-      // return id of format 'card - aaaaa'
+    // return id of format 'card - aaaaa'
     return `rider ${s4()}`;
   };
   let payload = {
@@ -340,7 +420,7 @@ const confirmRiderPayout = async (riderId) => {
     amount: Number(payout.amount) - Number(payout.fee),
     narration: rider._id,
     reference: ref(),
-    currency: "NGN"
+    currency: "NGN",
   };
   let request = await initiateTransfer(payload);
   // update store payout transaction status to approved
@@ -365,53 +445,61 @@ const createCompayLedger = async () => {
 };
 
 const getAllStores = async (urlParams) => {
-  const limit = Number(urlParams.limit);
-  const skip = Number(urlParams.skip);
+  // const limit = Number(urlParams.limit);
+  // const skip = Number(urlParams.skip);
 
-  delete urlParams.limit;
-  delete urlParams.skip;
-  delete urlParams.page;
-  let condition = {};
-  if (urlParams.isActive) {
-    condition.isActive = urlParams.isActive;
-  }
-  const stores = await Store.find(condition)
-    .skip(skip)
-    .limit(limit);
+  // delete urlParams.limit;
+  // delete urlParams.skip;
+  // delete urlParams.page;
+  // let condition = {};
+  // if (urlParams.isActive) {
+  //   condition.isActive = urlParams.isActive;
+  // }
+  const stores = await getStoresNoGeo(urlParams);
+  // Store.find(condition).skip(skip).limit(limit);
 
   return { stores };
 };
 
 const getStoreById = async (storeId) => {
-  const store = await Store.findById(storeId);
-  if (!store) return { err: "Store not found.", status: 400 };
-
+  const store = await getLoggedInStore(storeId);
   return { store };
 };
 
 // Get all Users
 const getUsers = async (urlParams) => {
-  const limit = Number(urlParams.limit);
-  const skip = Number(urlParams.skip);
+  // const limit = Number(urlParams.limit);
+  // const skip = Number(urlParams.skip);
 
-  delete urlParams.limit;
-  delete urlParams.skip;
-  delete urlParams.page;
+  // delete urlParams.limit;
+  // delete urlParams.skip;
+  // delete urlParams.page;
 
-  const users = await User.find(urlParams)
-    .select("-password -orders -cart")
-    .skip(skip)
-    .limit(limit);
+  const users = await allUserProfiles(urlParams);
+  // await User.find(urlParams)
+  //   .select("-password -orders -cart")
+  //   .skip(skip)
+  //   .limit(limit);
 
   return users;
 };
 
 const getUserById = async (userId) => {
-  const user = await User.findById(userId)
-    .select("-password -orders -cart");
-  if (!user) return { err: "User does not exist.", status: 404 };
-
+  const user = await getLoggedInUser(userId);
+  if (user.length === 0) {
+    return { err: "user not found", status: 404 };
+  }
   return { user };
+};
+
+const getRiders = async (urlParams) => {
+  let riders = await getAllRiders(urlParams);
+  return riders;
+};
+
+const getRiderById = async (riderId) => {
+  let rider = await loggedInRider(riderId);
+  return rider;
 };
 
 const confirmRiderAccountDetails = async (riderId) => {
@@ -421,7 +509,9 @@ const confirmRiderAccountDetails = async (riderId) => {
   if (!rider) return { err: "Rider does not exist.", status: 404 };
 
   // check if account details field exists
-  if (!rider.account_details) return { err: "Account details not found.", status: 400 };
+  if (!rider.account_details) {
+    return { err: "Account details not found.", status: 400 };
+  }
 
   rider.account_details.isVerified = !rider.account_details.isVerified;
   await rider.save();
@@ -435,14 +525,19 @@ const confirmLogisticsAccountDetails = async (companyId) => {
   if (!company) return { err: "Company does not exist.", status: 404 };
 
   // check if account details field exists
-  if (!company.account_details) return { err: "Account details not found.", status: 400 };
+  if (!company.account_details) {
+    return { err: "Account details not found.", status: 400 };
+  }
 
   company.account_details.isVerified = !company.account_details.isVerified;
   await company.save();
   return company;
 };
 const addUserDiscount = async ({
-  userId, discount, expiredAt, discountType
+  userId,
+  discount,
+  expiredAt,
+  discountType,
 }) => {
   let user = await User.findById(userId);
   if (!user) return { err: "User does not exist.", status: 404 };
@@ -451,16 +546,393 @@ const addUserDiscount = async ({
     user: user._id,
     discount,
     expiredAt,
-    discountType
+    discountType,
   };
   let newDiscount = new UserDiscount(discountObj);
   await newDiscount.save();
   return newDiscount;
 };
 
+const getDeletionRequests = async (urlParams) => {
+  const limit = Number(urlParams.limit);
+  const skip = Number(urlParams.skip);
+
+  delete urlParams.limit;
+  delete urlParams.skip;
+  delete urlParams.page;
+
+  const requests = await Deletion.find(urlParams)
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit);
+
+  return requests;
+};
+
+const approveDeleteRquest = async (requestId) => {
+  // find which user the request is for
+  let request = await Deletion.findById(requestId);
+  if (!request) return { err: "Request does not exist.", status: 404 };
+
+  // find the user
+  switch (request.account_type) {
+    case "User": {
+      let user = await User.findById(request.account_id);
+      if (!user) return { err: "User does not exist.", status: 404 };
+      await User.findByIdAndDelete(request.account_id);
+      break;
+    }
+    case "Rider": {
+      let rider = await Rider.findById(request.account_id);
+      if (!rider) return { err: "Rider does not exist.", status: 404 };
+      await Rider.findByIdAndDelete(request.account_id);
+      break;
+    }
+    case "logistics": {
+      let logistics = await Logistics.findById(request.account_id);
+      if (!logistics) return { err: "Logistics does not exist.", status: 404 };
+      await Logistics.findByIdAndDelete(request.account_id);
+      break;
+    }
+    case "Store": {
+      let store = await Store.findById(request.account_id);
+      if (!store) return { err: "Store does not exist.", status: 404 };
+      await Store.findByIdAndDelete(request.account_id);
+      break;
+    }
+    default:
+      return { err: "Account type not found.", status: 400 };
+  }
+  await Deletion.findByIdAndDelete(requestId);
+  return "Request approved successfully.";
+};
+
+const createRoles = async () => {
+  let existingRoles = await Roles.find();
+
+  // check if there are roles
+  if (existingRoles.length > 1) {
+    return {
+      err: "This action can only be performed once, Delete all roles and try again",
+      status: 400,
+    };
+  }
+
+  // create new roles
+  await Roles.create([
+    { name: "admin", level: 1 },
+    { name: "owner", level: 2 },
+    { name: "finance", level: 3 },
+    { name: "support", level: 4 },
+    { name: "logistics", level: 2 },
+  ]);
+
+  return "Roles created successfully";
+};
+
+const getRoles = async (urlParams) => {
+  // setting pagination params
+  const limit = Number(urlParams.limit);
+  const skip = Number(urlParams.skip);
+  // declare fields to remove after aggregating
+  const pipeline = [
+    {
+      $unset: ["admins"],
+    },
+  ];
+
+  const roles = await Roles.aggregate()
+    .lookup({
+      from: "admins",
+      localField: "_id",
+      foreignField: "role",
+      as: "admins"
+    })
+    .addFields({
+      teamMembers: { $size: "$admins" }
+    })
+    .sort("level")
+    .skip(skip)
+    .limit(limit)
+    // appends the pipeline specified above
+    .append(pipeline);
+
+  return roles;
+};
+
+const getRole = async (id) => {
+  // declare fields to remove after aggregating
+  const pipeline = [
+    {
+      $unset: ["admins.password"],
+    },
+  ];
+
+  const role = await Roles.aggregate()
+    .match({
+      _id: mongoose.Types.ObjectId(id)
+    })
+    // .lookup({
+    //   from: "admins",
+    //   localField: "_id",
+    //   foreignField: "role",
+    //   as: "admins"
+    // })
+    // appends the pipeline specified above
+    .append(pipeline);
+
+  return role;
+};
+
+const storeSignUpStats = async (days) => {
+  if (!days) return { err: "Please, specify amount of days to get stats for.", status: 400 };
+
+  let d = new Date();
+  d.setDate(d.getDate() - days);
+  d.setHours(23);
+  d.setMinutes(59);
+  d.setSeconds(59);
+
+  let stores = await Store.aggregate()
+    .match({
+      isVerified: true,
+      createdAt: { $gt: d },
+    })
+    .addFields({
+      dayOfSignUp: { $dayOfWeek: "$createdAt" },
+      dateOfSignUp: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } }
+    })
+    .group({
+      _id: "$dateOfSignUp",
+      signUps: { $push: "$_id" },
+    })
+    .addFields({
+      weekday: { $dayOfWeek: { $dateFromString: { dateString: "$_id" } } },
+      weekdate: "$_id",
+      // totalSales: { $sum: "$sales" },
+      totalSignUps: { $size: "$signUps" },
+    })
+    .sort("weekday")
+    .project({
+      _id: 0,
+      sales: 0,
+    });
+
+  return stores;
+};
+
+const riderSignUpStats = async (days) => {
+  if (!days) return { err: "Please, specify amount of days to get stats for.", status: 400 };
+
+  let d = new Date();
+  d.setDate(d.getDate() - days);
+  d.setHours(23);
+  d.setMinutes(59);
+  d.setSeconds(59);
+
+  let riders = await Rider.aggregate()
+    .match({
+      isVerified: true,
+      createdDate: { $gt: d },
+    })
+    .addFields({
+      dayOfSignUp: { $dayOfWeek: "$createdDate" },
+      dateOfSignUp: { $dateToString: { format: "%Y-%m-%d", date: "$createdDate" } }
+    })
+    .group({
+      _id: "$dateOfSignUp",
+      signUps: { $push: "$_id" },
+    })
+    .addFields({
+      weekday: { $dayOfWeek: { $dateFromString: { dateString: "$_id" } } },
+      weekdate: "$_id",
+      // totalSales: { $sum: "$sales" },
+      totalSignUps: { $size: "$signUps" },
+    })
+    .sort("weekday")
+    .project({
+      _id: 0,
+      sales: 0,
+    });
+  return riders;
+};
+
+const userSignUpStats = async (days) => {
+  if (!days) return { err: "Please, specify amount of days to get stats for.", status: 400 };
+
+  let d = new Date();
+  d.setDate(d.getDate() - days);
+  d.setHours(23);
+  d.setMinutes(59);
+  d.setSeconds(59);
+
+  let users = await User.aggregate()
+    .match({
+      isVerified: true,
+      createdDate: { $gt: d },
+    })
+    .addFields({
+      dayOfSignUp: { $dayOfWeek: "$createdDate" },
+      dateOfSignUp: { $dateToString: { format: "%Y-%m-%d", date: "$createdDate" } }
+    })
+    .group({
+      _id: "$dateOfSignUp",
+      signUps: { $push: "$_id" },
+    })
+    .addFields({
+      weekday: { $dayOfWeek: { $dateFromString: { dateString: "$_id" } } },
+      weekdate: "$_id",
+      // totalSales: { $sum: "$sales" },
+      totalSignUps: { $size: "$signUps" },
+    })
+    .sort("weekday")
+    .project({
+      _id: 0,
+      sales: 0,
+    });
+  return users;
+};
+
+const completedOrderStats = async (days) => {
+  if (!days) return { err: "Please, specify amount of days to get stats for.", status: 400 };
+
+  let d = new Date();
+  d.setDate(d.getDate() - days);
+  d.setHours(23);
+  d.setMinutes(59);
+  d.setSeconds(59);
+
+  let completedOrders = await Order.aggregate()
+    .match({
+      // store: mongoose.Types.ObjectId(storeId),
+      status: "delivered",
+      createdAt: { $gt: d },
+    })
+    .addFields({
+      dayOfOrder: { $dayOfWeek: "$createdAt" },
+      dateOfOrder: { $dateToString: { format: "%Y-%m-%d", date: "$updatedAt" } }
+    })
+    .group({
+      _id: "$dateOfOrder",
+      orders: { $push: "$_id" },
+    })
+    .addFields({
+      weekday: { $dayOfWeek: { $dateFromString: { dateString: "$_id" } } },
+      weekdate: "$_id",
+      // totalSales: { $sum: "$sales" },
+      totalOrders: { $size: "$orders" },
+    })
+    .sort("weekday")
+    .project({
+      _id: 0,
+      orders: 0,
+    });
+
+  return completedOrders;
+};
+
+const completedSalesStats = async (days) => {
+  if (!days) return { err: "Please, specify amount of days to get stats for.", status: 400 };
+
+  let d = new Date();
+  d.setDate(d.getDate() - days);
+  d.setHours(23);
+  d.setMinutes(59);
+  d.setSeconds(59);
+
+  let completedSales = await Order.aggregate()
+    .match({
+      // store: mongoose.Types.ObjectId(storeId),
+      status: "delivered",
+      createdAt: { $gt: d },
+    })
+    .addFields({
+      dayOfOrder: { $dayOfWeek: "$createdAt" },
+      dateOfOrder: { $dateToString: { format: "%Y-%m-%d", date: "$updatedAt" } }
+    })
+    .group({
+      _id: "$dateOfOrder",
+      sales: { $push: "$totalPrice" },
+    })
+    .addFields({
+      weekday: { $dayOfWeek: { $dateFromString: { dateString: "$_id" } } },
+      weekdate: "$_id",
+      totalSales: { $sum: "$sales" },
+      // totalOrders: { $size: "$orders" },
+    })
+    .sort("weekday")
+    .project({
+      _id: 0,
+      sales: 0,
+    });
+
+  return completedSales;
+};
+
+const statsOverview = async () => {
+  const totalStores = await Store.find({ isVerified: true });
+  const totalUsers = await User.find({ isVerified: true });
+  const totalRiders = await Rider.find({ isVerified: true });
+  const totalOrders = await Order.find({ status: "delivered" });
+  const totalSales = await Order.aggregate()
+    .match({
+      status: "delivered",
+    })
+    .group({
+      _id: "$status",
+      sales: { $push: "$totalPrice" },
+    })
+    .addFields({
+      totalSales: { $sum: "$sales" },
+    })
+    .project({
+      _id: 0,
+    });
+  return {
+    totalOrders, totalRiders, totalStores, totalUsers, totalSales
+  };
+};
+
+const incomeChecker = async () => {
+  const ledger = await Ledger.findOne({}).select("-createdDate -_id -__v");
+  return ledger;
+};
+
 export {
-  getAdmins, registerAdmin, loginAdmin, getLoggedInAdmin, updateAdmin,
-  resetStorePassword, confirmStoreUpdate, createNotification, confirmStorePayout,
-  createCompayLedger, getAllStoresUpdateRequests, getResetPasswordRequests,
-  toggleStoreActive, getAllStores, getUsers, getStoreById, getUserById, confirmLogisticsPayout, confirmRiderPayout, confirmRiderAccountDetails, confirmLogisticsAccountDetails, addUserDiscount
+  getAdmins,
+  registerAdmin,
+  loginAdmin,
+  getLoggedInAdmin,
+  updateAdmin,
+  resetStorePassword,
+  confirmStoreUpdate,
+  createNotification,
+  confirmStorePayout,
+  createCompayLedger,
+  getAllStoresUpdateRequests,
+  getResetPasswordRequests,
+  toggleStoreActive,
+  getAllStores,
+  getUsers,
+  getStoreById,
+  getUserById,
+  confirmLogisticsPayout,
+  confirmRiderPayout,
+  confirmRiderAccountDetails,
+  confirmLogisticsAccountDetails,
+  addUserDiscount,
+  getDeletionRequests,
+  approveDeleteRquest,
+  createRoles,
+  getRoles,
+  getRole,
+  getRiderById,
+  getRiders,
+  storeSignUpStats,
+  riderSignUpStats,
+  userSignUpStats,
+  completedOrderStats,
+  completedSalesStats,
+  statsOverview,
+  incomeChecker
 };

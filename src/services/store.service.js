@@ -17,6 +17,7 @@ import {
   sendPasswordChangeMail, sendStorePasswordResetRequestMail, sendStoreUpdateRequestMail
 } from "../utils/sendMail";
 import Ledger from "../models/ledger.model";
+import Deletion from "../models/delete-requests.model";
 
 const getStores = async (urlParams) => {
   // declare fields to exclude from response
@@ -91,26 +92,26 @@ const getStores = async (urlParams) => {
 
   // aggregating stores
   const stores = await Store.aggregate()
-  // matching store with geolocation
+    // matching store with geolocation
     .match({
       location: {
         $geoWithin: {
-          $centerSphere: [[long, lat], radian],
+          $centerSphere: [[long, lat], 0.0023518],
         },
       },
     })
-  // matching stores with matchParam
+    // matching stores with matchParam
     .match(matchParam)
-  // match verified stores
+    // match verified stores
     .match({ isVerified: true })
-  // looking up the product collection for each stores
+    // looking up the product collection for each stores
     .lookup({
       from: "products",
       localField: "_id",
       foreignField: "store",
       as: "products",
     })
-  // looking up the order collection for each stores
+    // looking up the order collection for each stores
     .lookup({
       from: "orders",
       let: { storeId: "$_id" },
@@ -126,14 +127,14 @@ const getStores = async (urlParams) => {
       ],
       as: "orders",
     })
-  // looking up each product on the review collection
+    // looking up each product on the review collection
     .lookup({
       from: "reviews",
       localField: "orders._id",
       foreignField: "order",
       as: "orderReview",
     })
-  // adding metrics to the response
+    // adding metrics to the response
     .addFields({
       sumOfStars: { $sum: "$orderReview.star" },
       numOfReviews: { $size: "$orderReview" },
@@ -144,9 +145,9 @@ const getStores = async (urlParams) => {
     .addFields({
       averageRating: { $ifNull: ["$averageRating", 0] },
     })
-  // appending excludes
+    // appending excludes
     .append(pipeline)
-  // sorting and pagination
+    // sorting and pagination
     .sort(sort)
     .skip(skip)
     .limit(limit);
@@ -174,8 +175,8 @@ const getStoresNoGeo = async (urlParams) => {
         "products",
         "orderReview",
         "password",
-        "email",
-        "phone_number",
+        // "email",
+        // "phone_number",
         "labels",
         "orders",
       ],
@@ -194,7 +195,7 @@ const getStoresNoGeo = async (urlParams) => {
   if (!urlParams.sort) sort = "createdAt";
 
   // check for user place_id
-  if (!urlParams.place_id) return { err: "Please enter user place_id.", status: 400 };
+  if (!urlParams.place_id) urlParams.place_id = "ChIJ73FBMSH3OxARDMvAq2uA6SM"; // Victoria garden City, Lekki, Nigeria
 
   // validating rating param
   const rating = Number(urlParams.rating);
@@ -230,18 +231,18 @@ const getStoresNoGeo = async (urlParams) => {
 
   // aggregating stores
   const stores = await Store.aggregate()
-  // matching stores with matchParam
+    // matching stores with matchParam
     .match(matchParam)
     // match verified stores
     .match({ isVerified: true })
-  // looking up the product collection for each stores
+    // looking up the product collection for each stores
     .lookup({
       from: "products",
       localField: "_id",
       foreignField: "store",
       as: "products",
     })
-  // looking up the order collection for each stores
+    // looking up the order collection for each stores
     .lookup({
       from: "orders",
       let: { storeId: "$_id" },
@@ -257,27 +258,34 @@ const getStoresNoGeo = async (urlParams) => {
       ],
       as: "orders",
     })
-  // looking up each product on the review collection
+    // looking up each product on the review collection
     .lookup({
       from: "reviews",
       localField: "orders._id",
       foreignField: "order",
       as: "orderReview",
     })
-  // adding metrics to the response
+    .lookup({
+      from: "categories",
+      localField: "category",
+      foreignField: "_id",
+      as: "category",
+    })
+    // adding metrics to the response
     .addFields({
       sumOfStars: { $sum: "$orderReview.star" },
       numOfReviews: { $size: "$orderReview" },
       averageRating: { $floor: { $avg: "$orderReview.star" } },
       productCount: { $size: "$products" },
       orderCount: { $size: "$orders" },
+      category: { $arrayElemAt: ["$category", 0] },
     })
     .addFields({
       averageRating: { $ifNull: ["$averageRating", 0] },
     })
-  // appending excludes
+    // appending excludes
     .append(pipeline)
-  // sorting and pagination
+    // sorting and pagination
     .sort(sort)
     .skip(skip)
     .limit(limit);
@@ -318,26 +326,26 @@ const getStore = async (urlParams, storeId) => {
 
   // aggregating stores with active products
   let store = await Store.aggregate()
-  // matching with requested store
+    // matching with requested store
     .match({
       _id: mongoose.Types.ObjectId(storeId),
       isVerified: true,
     })
-  // looking up the store in the product collection
+    // looking up the store in the product collection
     .lookup({
       from: "products",
       localField: "_id",
       foreignField: "store",
       as: "products",
     })
-  // looking up the order collection for each stores
+    // looking up the order collection for each stores
     .lookup({
       from: "orders",
       let: { storeId: "$_id" },
       pipeline: [
         {
           $match: {
-            status: { $in: ["sent", "ready", "accepted", "enroute", "delivered", "arrived"] },
+            status: "delivered",
             $expr: {
               $eq: ["$$storeId", "$store"]
             }
@@ -346,14 +354,14 @@ const getStore = async (urlParams, storeId) => {
       ],
       as: "orders",
     })
-  // looking up each product on the review collection
+    // looking up each product on the review collection
     .lookup({
       from: "reviews",
       localField: "orders._id",
       foreignField: "order",
       as: "orderReview",
     })
-  // adding metrics to the response
+    // adding metrics to the response
     .addFields({
       sumOfStars: { $sum: "$orderReview.star" },
       numOfReviews: { $size: "$orderReview" },
@@ -367,17 +375,17 @@ const getStore = async (urlParams, storeId) => {
     .addFields({
       storeMoney: { $sum: "$orders.subtotal" },
     })
-  // appending excludes
+    // appending excludes
     .append(pipeline);
 
   // aggregating stores without active products
   if (store.length < 1) {
     store = await Store.aggregate()
-    // matching with requested store
+      // matching with requested store
       .match({
         _id: mongoose.Types.ObjectId(storeId),
       })
-    // looking up the order collection for each stores
+      // looking up the order collection for each stores
       .lookup({
         from: "orders",
         let: { storeId: "$_id" },
@@ -393,14 +401,14 @@ const getStore = async (urlParams, storeId) => {
         ],
         as: "orders",
       })
-    // looking up each product on the review collection
+      // looking up each product on the review collection
       .lookup({
         from: "reviews",
         localField: "orders._id",
         foreignField: "order",
         as: "orderReview",
       })
-    // adding metrics to the response
+      // adding metrics to the response
       .addFields({
         sumOfStars: { $sum: "$orderReview.star" },
         numOfReviews: { $size: "$orderReview" },
@@ -605,7 +613,7 @@ const updateStorePhoto = async (storeID, updateParam) => {
     {
       $set: {
         ...profilePhoto
-          && { "images.profilePhoto": profilePhoto },
+        && { "images.profilePhoto": profilePhoto },
         ...pictures && { "images.pictures": pictures },
       }
     },
@@ -735,7 +743,7 @@ const getStoreSalesStats = async (storeId, days) => {
   let salesStats = await Order.aggregate()
     .match({
       store: mongoose.Types.ObjectId(storeId),
-      status: "arrived",
+      status: "delivered",
       createdAt: { $gt: d },
     })
     .addFields({
@@ -865,7 +873,7 @@ const getStoreFeedback = async (storeId, pagingParam) => {
   const feedbacks = await Order.aggregate()
     .match({
       store: mongoose.Types.ObjectId(storeId),
-      status: "arrived"
+      status: "delivered"
     })
     .lookup({
       from: "reviews",
@@ -915,6 +923,11 @@ const getInventoryList = async (queryParam) => {
 const requestPayout = async (storeId) => {
   // get store details
   let store = await Store.findById(storeId);
+
+  // check if store has set account details
+  if (!store.account_details.account_number) {
+    return { err: "Please update your account details.", status: 400 };
+  }
 
   // get ledger details
   let ledger = await Ledger.findOne({});
@@ -1008,6 +1021,22 @@ const resetPassword = async ({ email }) => {
   return { err: "Please enter your email registered with softshop", status: 400 };
 };
 
+const deleteAccount = async (storeId) => {
+  // this service is used to delete store account
+  // successful request sends a delete request to admin panel
+  // set store isVerified to false
+  const store = await Store.findById(storeId);
+  store.isVerified = false;
+  await store.save();
+
+  // delete store account
+  await Deletion.create({
+    account_type: "Store",
+    account_id: storeId
+  });
+  return "Your account has been scheduled for deletion. We will contact you shortly.";
+};
+
 export {
   getStores,
   createStore,
@@ -1028,5 +1057,6 @@ export {
   requestPayout,
   getPayoutHistory,
   resetPassword,
-  updateStorePhoto
+  updateStorePhoto,
+  deleteAccount
 };

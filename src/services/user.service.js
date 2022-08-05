@@ -10,6 +10,7 @@ import Product from "../models/product.model";
 
 import getJwt from "../utils/jwtGenerator";
 import { verifyCardRequest } from "./payment.service";
+import Deletion from "../models/delete-requests.model";
 
 // send otp to Verify user email before sign up
 const verifyEmailAddress = async ({ email }) => {
@@ -43,7 +44,7 @@ const userProfile = async (userId) => {
       pipeline: [
         {
           $match: {
-            status: "arrived",
+            status: "delivered",
             $expr: {
               $eq: ["$$userId", "$user"]
             }
@@ -57,6 +58,63 @@ const userProfile = async (userId) => {
       totalOrders: { $size: "$userOrders" },
     })
     .append(pipeline);
+
+  return userDetails;
+};
+
+const allUserProfiles = async (urlParams) => {
+  // setting pagination params
+  const limit = Number(urlParams.limit);
+  const skip = Number(urlParams.skip);
+  let { sort } = urlParams;
+
+  // check for sort type
+  if (urlParams.sortType === "desc") sort = `-${sort}`;
+  if (!urlParams.sort) sort = "createdAt";
+
+  // cleaning up the urlParams
+  delete urlParams.limit;
+  delete urlParams.skip;
+  delete urlParams.page;
+  delete urlParams.rating;
+  delete urlParams.long;
+  delete urlParams.lat;
+  const pipeline = [
+    { $unset: ["userReviews", "userOrders", "cart", "password", "orders"] },
+  ];
+
+  const userDetails = await User.aggregate()
+    .match(urlParams)
+    .lookup({
+      from: "reviews",
+      localField: "_id",
+      foreignField: "user",
+      as: "userReviews",
+    })
+    .lookup({
+      from: "orders",
+      let: { userId: "$_id" },
+      pipeline: [
+        {
+          $match: {
+            status: "delivered",
+            $expr: {
+              $eq: ["$$userId", "$user"]
+            }
+          }
+        }
+      ],
+      as: "userOrders",
+    })
+    .addFields({
+      totalReviews: { $size: "$userReviews" },
+      totalOrders: { $size: "$userOrders" },
+    })
+    .append(pipeline)
+    // sorting and pagination
+    .sort(sort)
+    .skip(skip)
+    .limit(limit);
 
   return userDetails;
 };
@@ -119,7 +177,7 @@ const loginUser = async (loginParam) => {
     };
   }
   if (process.env.NODE_ENV === "production" && user.password !== "testing") {
-  // Check if password matches with stored hash
+    // Check if password matches with stored hash
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
@@ -148,7 +206,7 @@ const addCard = async (userId) => {
         .toString(16)
         .substring(1);
     };
-      // return id of format 'soft - aaaaa'
+    // return id of format 'soft - aaaaa'
     return `card-${s4()}`;
   };
   const payload = {
@@ -306,7 +364,7 @@ const updateBasketPrice = async (basketId) => {
     {
       $set: {
         "product.selectedVariants":
-           newBasketItemChore[0].product.selectedVariants,
+          newBasketItemChore[0].product.selectedVariants,
         "product.totalPrice": newBasketItemChore[0].product.totalPrice,
       },
     },
@@ -420,7 +478,7 @@ const getUserBasketItems = async (userId) => {
       _id: "$user",
       total: { $sum: "$product.totalPrice" },
     });
-    // get store location
+  // get store location
   const storeLocation = await Basket.aggregate()
     .match({
       user: mongoose.Types.ObjectId(userId),
@@ -594,6 +652,22 @@ const createNewPassword = async ({ token, email, password }) => {
   return user;
 };
 
+const deleteAccount = async (userId) => {
+  // this service is used to delete user account
+  // successful request sends a delete request to admin panel
+  // set user isVerified to false
+  const user = await User.findById(userId);
+  user.isVerified = false;
+  await user.save();
+
+  // delete store account
+  await Deletion.create({
+    account_type: "User",
+    account_id: userId
+  });
+  return "Your account has been scheduled for deletion. We will contact you shortly.";
+};
+
 export {
   verifyEmailAddress,
   registerUser,
@@ -611,5 +685,7 @@ export {
   deleteBasketItem,
   deleteAllBasketItems,
   addCard,
-  removeCard
+  removeCard,
+  deleteAccount,
+  allUserProfiles
 };

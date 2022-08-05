@@ -1,6 +1,7 @@
 // import logistics model es6 destructuring
 import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
+import Deletion from "../models/delete-requests.model";
 
 import Logistics from "../models/logistics-company.model";
 import Rider from "../models/rider.model";
@@ -139,7 +140,6 @@ const companyDetails = async (id) => {
 };
 
 const updateCompanyAddress = async (id, locationParam) => {
-  console.log(locationParam);
   // check if company exists
   const companyExists = await Logistics.findById(id);
   if (!companyExists) {
@@ -374,6 +374,16 @@ const viewCompanyRiderDetails = async (companyId, riderId) => {
 const requestWithdrawal = async (id) => {
   // check if company exists
   const companyExists = await Logistics.findById(id);
+
+  // check if companyExists has set account details
+  if (!companyExists.account_details.account_number) {
+    return { err: "Please update your account details.", status: 400 };
+  }
+
+  // check if there's a pending update
+  if (companyExists.account_details.isVerified === false) {
+    return { err: "Please wait for your account details to be approved. Contact support@soft-shop.app", status: 400 };
+  }
   if (!companyExists) {
     return { err: "This company does not exist", status: 401 };
   }
@@ -466,6 +476,23 @@ const updateCompanyAccountDetails = async (id, accountDetails) => {
   return "Account Details Updated Successfully";
 };
 
+const deleteAccount = async (companyId) => {
+  // this service is used to delete rider account
+  // successful request sends a delete request to admin panel
+  // set rider isVerified to false
+  const company = await Logistics.findById(companyId);
+  company.verified = false;
+  await company.save();
+
+  // delete rider account
+  await Deletion.create({
+    account_type: "Logistics",
+    account_id: companyId
+  });
+
+  return "Account Deleted Successfully";
+};
+
 export {
   getAllCompanies,
   companySignup,
@@ -478,5 +505,6 @@ export {
   viewCompanyRiders,
   viewCompanyRiderDetails,
   requestWithdrawal,
-  updateCompanyAccountDetails
+  updateCompanyAccountDetails,
+  deleteAccount
 };

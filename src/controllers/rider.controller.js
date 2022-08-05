@@ -1,6 +1,8 @@
+import Rider from "../models/rider.model";
+import { createActivity } from "../services/activities.service";
 import {
   getAllRiders, verifyEmailAddress, registerRider, loginRider, loggedInRider,
-  validateToken, requestPasswordToken, resetPassword, updateRider, requestPayout, getPayoutHistory, updateRiderAccountDetails
+  validateToken, requestPasswordToken, resetPassword, updateRider, requestPayout, getPayoutHistory, updateRiderAccountDetails, deleteAccount
 } from "../services/rider.service";
 
 // ========================================================================== //
@@ -45,6 +47,7 @@ const verifyToken = async (req, res, next) => {
 // ========================================================================== //
 const signup = async (req, res, next) => {
   try {
+    if (req.body.corporate === false) req.body.company_id = null;
     const result = await registerRider(req.body);
 
     if (result.err) {
@@ -62,6 +65,14 @@ const signup = async (req, res, next) => {
     req.data = {
       riderId: result.createdRider._id
     };
+    // log activity
+    let rider = await Rider.findOne({ email: req.body.email });
+    await createActivity(
+      "Rider",
+      rider._id,
+      "Signed up",
+      `Rider with email ${rider.email} created successfully`
+    );
     next();
   } catch (error) {
     next(error);
@@ -90,6 +101,15 @@ const signin = async (req, res, next) => {
     req.data = {
       id: loginRequest.rider._id
     };
+
+    // log activity
+    let rider = await Rider.findOne({ email: req.body.email });
+    await createActivity(
+      "Rider",
+      rider._id,
+      "Logged in",
+      `Rider with email ${rider.email} logged in successfully`
+    );
     next();
   } catch (error) {
     next(error);
@@ -229,7 +249,21 @@ const updateRiderAccountDetailsCtrl = async (req, res, next) => {
   }
 };
 
+const deleteAccountCtrl = async (req, res, next) => {
+  try {
+    const action = await deleteAccount(req.rider.id);
+
+    return res.status(200).json({
+      success: true,
+      result: action,
+      status: 200
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export {
   createNewPassword, forgotPassword, getRiders, getLoggedInRider,
-  signin, signup, verifyToken, requestToken, updateRiderProfile, requestPayoutCtrl, getPayoutHistoryCtrl, updateRiderAccountDetailsCtrl
+  signin, signup, verifyToken, requestToken, updateRiderProfile, requestPayoutCtrl, getPayoutHistoryCtrl, updateRiderAccountDetailsCtrl, deleteAccountCtrl
 };
