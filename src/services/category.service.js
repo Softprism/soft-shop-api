@@ -21,7 +21,7 @@ const getCategories = async (urlParams) => {
   // start aggregate
   return (
     Category.aggregate()
-    // lookup stores - trying to JOIN the categories and stores
+      // lookup stores - trying to JOIN the categories and stores
       .lookup({
         from: "stores",
         // declare local variable for category id, since we're using version 4 of mongodb we can't use foreign and local fields here, hence doing it the OG way.
@@ -39,16 +39,17 @@ const getCategories = async (urlParams) => {
                   $centerSphere: [[long, lat], radian],
                 },
               },
+              isActive: true,
             },
           },
         ],
         as: "stores",
       })
-    // count number of stores in each category, will return zero for empty arrays
+      // count number of stores in each category, will return zero for empty arrays
       .addFields({
         storeCount: { $size: "$stores" },
       })
-    // appends the pipeline specified above
+      // appends the pipeline specified above
       .append(pipeline)
   );
 };
@@ -64,7 +65,7 @@ const getCategoriesNogeo = async (urlParams) => {
   // start aggregate
   return (
     Category.aggregate()
-    // lookup stores - trying to JOIN the categories and stores
+      // lookup stores - trying to JOIN the categories and stores
       .lookup({
         from: "stores",
         // declare local variable for category id, since we're using version 4 of mongodb we can't use foreign and local fields here, hence doing it the OG way.
@@ -81,11 +82,11 @@ const getCategoriesNogeo = async (urlParams) => {
         ],
         as: "stores",
       })
-    // count number of stores in each category, will return zero for empty arrays
+      // count number of stores in each category, will return zero for empty arrays
       .addFields({
         storeCount: { $size: "$stores" },
       })
-    // appends the pipeline specified above
+      // appends the pipeline specified above
       .append(pipeline)
   );
 };
