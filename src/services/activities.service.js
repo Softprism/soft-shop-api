@@ -5,8 +5,6 @@ const createActivity = async (actor, actorId, title, description) => {
   try {
     await Activities.create({
       actor, actorId, title, description
-    }).then((res) => {
-      console.log(res);
     });
     return true;
   } catch (error) {
@@ -39,6 +37,9 @@ const getActivities = async (urlParams) => {
 
   if (urlParams.description) {
     urlParams.description = new RegExp(urlParams.description, "i");
+  }
+  if (urlParams.title) {
+    urlParams.title = new RegExp(urlParams.title, "i");
   }
 
   let activities = await Activities.find(urlParams)

@@ -51,7 +51,7 @@ router.post("/register",
   signup,
   async (req, res) => {
     if (process.env.NODE_ENV === "production") {
-    // find rider by id
+      // find rider by id
       let rider = await Rider.findById(req.data.riderId);
 
       // send signup mail

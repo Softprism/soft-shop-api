@@ -78,7 +78,7 @@ const verifyTransaction = async (paymentDetails) => {
           .toString(16)
           .substring(1);
       };
-        // return id of format 'card - aaaaa'
+      // return id of format 'card - aaaaa'
       return `cindex-${s4()}`;
     };
     // add card index to initiated payment card details
@@ -87,8 +87,6 @@ const verifyTransaction = async (paymentDetails) => {
     // add new card details to user
     user.cards.push(response.data.card);
     await user.save();
-
-    console.log(user.cards);
 
     // create credit transaction for Ledger
     let ledger = await Ledger.findOne({});
@@ -164,12 +162,10 @@ const verifyTransaction = async (paymentDetails) => {
 };
 
 const verifyPayout = async (payload) => {
-  console.log(payload);
   let flwpayload = {
     id: payload.data.id
   };
   const response = await flw.Transfer.get_a_transfer(flwpayload);
-  console.log(response);
   if (response.data.status === "SUCCESSFUL") {
     // check if reference starts with "rider" or "store" or "logistics"
     if (payload.data.reference.startsWith("rider")) {

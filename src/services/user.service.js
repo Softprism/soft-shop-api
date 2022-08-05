@@ -83,8 +83,6 @@ const allUserProfiles = async (urlParams) => {
     { $unset: ["userReviews", "userOrders", "cart", "password", "orders"] },
   ];
 
-  console.log(urlParams);
-
   const userDetails = await User.aggregate()
     .match(urlParams)
     .lookup({

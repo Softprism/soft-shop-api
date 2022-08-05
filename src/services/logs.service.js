@@ -3,7 +3,6 @@ import { sendPlainEmail } from "../utils/sendMail";
 
 const createLog = async (action, actor, message) => {
   await logs.create({ action, actor, message });
-  console.log("created log");
   sendPlainEmail(
     "logs@soft-shop.app",
     "A new log has been created",

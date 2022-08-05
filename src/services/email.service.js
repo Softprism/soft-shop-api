@@ -49,7 +49,6 @@ const sendAllStoresEmails = async (urlParams) => {
 
   const stores = await Store.find();
   stores.map(async (store) => {
-    console.log(store.email);
     await sendEmail(store.email, subject, body);
   });
 
@@ -75,7 +74,6 @@ const sendAllEmails = async (urlParams) => {
   const riders = await Rider.find();
 
   const array = [...users, ...stores, ...riders];
-  console.log(array);
   array.map(async (user) => {
     await sendEmail(user.email, subject, body);
   });

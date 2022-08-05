@@ -140,7 +140,6 @@ const companyDetails = async (id) => {
 };
 
 const updateCompanyAddress = async (id, locationParam) => {
-  console.log(locationParam);
   // check if company exists
   const companyExists = await Logistics.findById(id);
   if (!companyExists) {

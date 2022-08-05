@@ -38,7 +38,7 @@ const getAdmins = async (urlParams) => {
 
   const admins = await Admin.find(urlParams)
     .populate({ path: "role", select: "name level" })
-    .select("first_name last_name email image")
+    .select("first_name last_name email image phone_number createdDate")
     .sort("createdDate")
     .skip(skip)
     .limit(limit);
@@ -493,7 +493,6 @@ const getUserById = async (userId) => {
 };
 
 const getRiders = async (urlParams) => {
-  console.log(urlParams);
   let riders = await getAllRiders(urlParams);
   return riders;
 };

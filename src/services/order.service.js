@@ -388,7 +388,6 @@ const createOrder = async (orderParam) => {
     };
     neworder[0].paymentResult = await ussdPayment(payload);
     neworder[0].paymentResult.meta.authorization.ussdBank = orderParam.ussdBank;
-    console.log(neworder[0].paymentResult.meta.authorization);
   }
 
   if (neworder[0].paymentResult.status === "error") {
@@ -785,7 +784,7 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
   const otherRiders = await Rider.find({
     "location.coordinates": {
       $geoWithin: {
-        $centerSphere: [[store.location.coordinates[0], store.location.coordinates[1]], 0.0015],
+        $centerSphere: [[store.location.coordinates[0], store.location.coordinates[1]], 0.0023518],
       }
     }
   });
