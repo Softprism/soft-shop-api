@@ -172,6 +172,7 @@ const sendPushToNearbyRiders = async (newDelivery, store, user) => {
         }
       }
     }).lean();
+    console.log(`Found ${riders.length} riders nearby`);
     if (riders.length > 0) {
       let ridersToken = await Promise.all(riders.map(async (rider) => {
         // conver device token array to string
