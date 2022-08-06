@@ -5,6 +5,7 @@ import cors from "cors";
 import mongoSanitize from "express-mongo-sanitize";
 import xss from "xss-clean";
 import hpp from "hpp";
+import morgan from "morgan";
 import errorHandler from "./middleware/errorMiddleware";
 import connectDB from "./config/db";
 import router from "./routes/index";
@@ -19,6 +20,7 @@ app.use(helmet());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(cors());
+app.use(morgan("dev"));
 
 // sanitization and other preventive measuress
 app.use(mongoSanitize());
