@@ -15,6 +15,7 @@ dotenv.config();
 connectDB();
 
 const app = express();
+app.use(require("express-status-monitor")());
 
 app.use(helmet());
 app.use(express.urlencoded({ extended: false }));
