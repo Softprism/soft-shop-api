@@ -1,3 +1,5 @@
+import dash from "appmetrics-dash";
+
 import express from "express";
 import helmet from "helmet";
 import dotenv from "dotenv";
@@ -9,6 +11,8 @@ import morgan from "morgan";
 import errorHandler from "./middleware/errorMiddleware";
 import connectDB from "./config/db";
 import router from "./routes/index";
+
+dash.monitor();
 
 dotenv.config();
 
