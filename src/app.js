@@ -39,7 +39,7 @@ const config = {
   healthChecks: [
     {
       protocol: "http",
-      host: "localhost",
+      host: "soft-shop.app",
       path: "/api/vq/test",
       port: "3000"
     }
