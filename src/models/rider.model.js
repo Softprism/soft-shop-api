@@ -79,7 +79,7 @@ const riderSchema = mongoose.Schema({
     pending_payout: { type: Boolean },
     isVerified: { type: Boolean, default: false },
   },
-  isBusy: { type: Boolean, default: false },
+  isBusy: { type: Boolean, default: true },
   location: {
     type: {
       type: String,
