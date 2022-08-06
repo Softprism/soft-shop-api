@@ -16,8 +16,8 @@ connectDB();
 
 const app = express();
 const config = {
-  title: "Express Status",
-  path: "/api/v1/status",
+  title: "SoftShop Health",
+  path: "/api/v1/health",
   spans: [{
     interval: 1,
     retention: 60
@@ -40,7 +40,7 @@ const config = {
     {
       protocol: "http",
       host: "localhost",
-      path: "/admin/health/ex1",
+      path: "/api/vq/test",
       port: "3000"
     }
   ],
