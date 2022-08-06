@@ -12,7 +12,7 @@ import errorHandler from "./middleware/errorMiddleware";
 import connectDB from "./config/db";
 import router from "./routes/index";
 
-dash.monitor();
+dash.attach();
 
 dotenv.config();
 
