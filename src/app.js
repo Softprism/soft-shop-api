@@ -18,33 +18,6 @@ const app = express();
 const config = {
   title: "SoftShop Health",
   path: "/api/v1/health",
-  spans: [{
-    interval: 1,
-    retention: 60
-  }, {
-    interval: 5,
-    retention: 60
-  }, {
-    interval: 15,
-    retention: 60
-  }],
-  chartVisibility: {
-    cpu: true,
-    mem: true,
-    load: true,
-    responseTime: true,
-    rps: true,
-    statusCodes: true
-  },
-  healthChecks: [
-    {
-      protocol: "http",
-      host: "localhost",
-      path: "/api/v1/test",
-      port: "3000"
-    }
-  ],
-  ignoreStartsWith: "/admin"
 };
 app.use(require("express-status-monitor")(config));
 
