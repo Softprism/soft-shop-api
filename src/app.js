@@ -15,7 +15,38 @@ dotenv.config();
 connectDB();
 
 const app = express();
-app.use(require("express-status-monitor")());
+const config = {
+  title: "Express Status",
+  path: "/api/v1/status",
+  spans: [{
+    interval: 1,
+    retention: 60
+  }, {
+    interval: 5,
+    retention: 60
+  }, {
+    interval: 15,
+    retention: 60
+  }],
+  chartVisibility: {
+    cpu: true,
+    mem: true,
+    load: true,
+    responseTime: true,
+    rps: true,
+    statusCodes: true
+  },
+  healthChecks: [
+    {
+      protocol: "http",
+      host: "localhost",
+      path: "/admin/health/ex1",
+      port: "3000"
+    }
+  ],
+  ignoreStartsWith: "/admin"
+};
+app.use(require("express-status-monitor")(config));
 
 app.use(helmet());
 app.use(express.urlencoded({ extended: false }));
