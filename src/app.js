@@ -15,11 +15,6 @@ dotenv.config();
 connectDB();
 
 const app = express();
-const config = {
-  title: "SoftShop Health",
-  path: "/api/v1/health",
-};
-app.use(require("express-status-monitor")(config));
 
 app.use(helmet());
 app.use(express.urlencoded({ extended: false }));
