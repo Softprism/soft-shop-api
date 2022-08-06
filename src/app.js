@@ -40,7 +40,7 @@ const config = {
     {
       protocol: "http",
       host: "soft-shop.app",
-      path: "/api/vq/test",
+      path: "/api/v1/test",
       port: "3000"
     }
   ],
