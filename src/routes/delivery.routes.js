@@ -388,7 +388,7 @@ router.patch(
       //   "The delivery for your order has been completed."
       // );
       // change order status to delivered
-      order.status = "arrived";
+      // order.status = "arrived";
       await order.save();
 
       // change rider isBusy status to false
