@@ -107,7 +107,7 @@ const getStores = async (urlParams) => {
     // matching stores with matchParam
     .match(matchParam)
     // match verified stores
-    .match({ isVerified: true, isActive: true })
+    .match({ isVerified: true })
     // looking up the product collection for each stores
     .lookup({
       from: "products",
