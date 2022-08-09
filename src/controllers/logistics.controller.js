@@ -27,6 +27,13 @@ const companySignup = async (req, res, next) => {
     req.data = {
       company_id: action.saveAction._id,
     };
+
+    // create user config on signup
+    await createUserConfig({
+      user: "Logistics",
+      userId: action.saveAction._id,
+      fee: 10
+    });
     next();
   } catch (error) {
     return next(error);

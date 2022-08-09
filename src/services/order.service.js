@@ -805,7 +805,12 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
   const userbasketItems = await getUserBasketItems(userId);
 
   // calculate subtotal fee from userbascket items totalPrice
-  let subtotalFee = 0.03 * userbasketItems.totalPrice;
+  // get user Platform fee
+  let userPlatFormFee = await Userconfig.findOne({
+    user: "User",
+    userId,
+  });
+  let subtotalFee = (userPlatFormFee.fee / 100) * userbasketItems.totalPrice;
   let vatFee = 0.075 * subtotalFee;
   let taxFee = subtotalFee + vatFee;
 

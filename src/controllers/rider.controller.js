@@ -65,6 +65,13 @@ const signup = async (req, res, next) => {
     req.data = {
       riderId: result.createdRider._id
     };
+
+    // create user config on signup
+    await createUserConfig({
+      user: "Rider",
+      userId: result.createdRider._id,
+      fee: 10
+    });
     // log activity
     let rider = await Rider.findOne({ email: req.body.email });
     await createActivity(

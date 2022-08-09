@@ -23,6 +23,7 @@ import { createLog } from "../services/logs.service";
 import { createTransaction } from "../services/transaction.service";
 import Logistics from "../models/logistics-company.model";
 import { createVat } from "../services/vat.service";
+import Userconfig from "../models/configurations.model";
 
 const router = express.Router();
 
@@ -141,9 +142,24 @@ router.patch(
     let delivery = await Delivery.findOne({ order: order._id });
 
     // calculate delivery fee, order fee and store fee
-    let deliveryFee = 0.04 * order.deliveryPrice;
-    let orderFee = 0.03 * order.subtotal;
-    let storeFee = 0.05 * order.subtotal;
+    // get rider's platform fee
+    let riderDeliveryFee = await Userconfig.findOne({
+      user: "Rider",
+      userId: req.localData.rider,
+    });
+    // get user Platform fee
+    let userPlatFormFee = await Userconfig.findOne({
+      user: "User",
+      userId: req.localData.user,
+    });
+    // get store platform fee
+    let storePlatformFee = await Userconfig.findOne({
+      user: "Store",
+      userId: req.localData.rider,
+    });
+    let deliveryFee = (riderDeliveryFee.fee / 100) * order.deliveryPrice;
+    let orderFee = (userPlatFormFee.fee / 100) * order.subtotal;
+    let storeFee = (storePlatformFee.fee / 100) * order.subtotal;
 
     // calculate VAT for paying parties
     let deliveryTax = 0.075 * deliveryFee;

@@ -16,6 +16,7 @@ import waitlistRoutes from "./waitlist.routes";
 import vendorRoutes from "./vendor.routes";
 import LogisticsRoute from "./logistics.routes";
 import VatRoute from "./vat.route";
+import UserConfigRoute from "./userConfig.route";
 
 const router = new Router();
 // api routes
@@ -36,5 +37,6 @@ router.use("/waitlists", waitlistRoutes);
 router.use("/vendors", vendorRoutes);
 router.use("/logistics", LogisticsRoute);
 router.use("/vat", VatRoute);
+router.use("/user-config", UserConfigRoute);
 
 export default router;
