@@ -57,6 +57,18 @@ const userSchema = mongoose.Schema({
       }),
     ],
   },
+  referral_id: {
+    type: String,
+    unique: true,
+    lowercase: true,
+    trim: true
+  },
+  referee: {
+    type: String,
+    lowercase: true,
+    default: "SoftShop",
+    trim: true
+  },
   password: {
     type: String,
     required: true,

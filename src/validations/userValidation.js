@@ -37,6 +37,7 @@ const registerValidation = {
       "any.required": "Token id is required.",
       "string.length": "Token id must be a valid mongoose id.",
     }),
+    referral_id: Joi.string()
   }).messages({
     "object.unknown": "You have used an invalid key."
   })
