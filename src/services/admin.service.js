@@ -536,7 +536,6 @@ const confirmLogisticsAccountDetails = async (companyId) => {
 const addUserDiscount = async ({
   userId,
   discount,
-  expiredAt,
   discountType,
 }) => {
   let user = await User.findById(userId);
@@ -545,7 +544,6 @@ const addUserDiscount = async ({
   let discountObj = {
     user: user._id,
     discount,
-    expiredAt,
     discountType,
   };
   let newDiscount = new UserDiscount(discountObj);
