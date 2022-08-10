@@ -12,6 +12,7 @@ import { getDistanceService, getDistanceServiceForDelivery } from "../utils/get-
 import Rider from "../models/rider.model";
 import UserDiscount from "../models/user-discount.model";
 import { getUserBasketItems } from "./user.service";
+import Userconfig from "../models/configurations.model";
 
 const getOrders = async (urlParams) => {
   // initialize match parameters, get limit, skip & sort values
