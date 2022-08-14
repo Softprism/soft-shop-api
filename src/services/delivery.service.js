@@ -51,7 +51,7 @@ const acceptDelivery = async (deliveryId, riderId, urlParams) => {
   if (process.env.NODE_ENV === "production") {
     condition.location = {
       $geoWithin: {
-        $centerSphere: [[long, lat], 0.0023518],
+        $centerSphere: [[long, lat], 10000.23456],
       },
     };
   }
@@ -195,7 +195,7 @@ const getAllDeliveries = async (urlParams) => {
     radian = parseFloat(urlParams.radius / 6378.1); // calculate in km
     condition.location = {
       $geoWithin: {
-        $centerSphere: [[long, lat], 0.0023518],
+        $centerSphere: [[long, lat], 10000.23456],
       },
     };
   }

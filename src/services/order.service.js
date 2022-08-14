@@ -785,7 +785,7 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
   const otherRiders = await Rider.find({
     "location.coordinates": {
       $geoWithin: {
-        $centerSphere: [[store.location.coordinates[0], store.location.coordinates[1]], 0.0023518],
+        $centerSphere: [[store.location.coordinates[0], store.location.coordinates[1]], 10000.23456],
       }
     }
   });
