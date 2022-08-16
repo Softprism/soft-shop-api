@@ -2,12 +2,7 @@ import logs from "../models/logs.model";
 import { sendPlainEmail } from "../utils/sendMail";
 
 const createLog = async (action, actor, message) => {
-  await logs.create({ action, actor, message });
-  sendPlainEmail(
-    "logs@soft-shop.app",
-    "A new log has been created",
-    `A new log has been created with action: ${action} and message: ${message}`
-  );
+  // await logs.create({ action, actor, message });
 };
 
 const getLogs = async (filter) => {

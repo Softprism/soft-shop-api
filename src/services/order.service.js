@@ -12,6 +12,7 @@ import { getDistanceService, getDistanceServiceForDelivery } from "../utils/get-
 import Rider from "../models/rider.model";
 import UserDiscount from "../models/user-discount.model";
 import { getUserBasketItems } from "./user.service";
+import Userconfig from "../models/configurations.model";
 
 const getOrders = async (urlParams) => {
   // initialize match parameters, get limit, skip & sort values
@@ -784,7 +785,7 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
   const otherRiders = await Rider.find({
     "location.coordinates": {
       $geoWithin: {
-        $centerSphere: [[store.location.coordinates[0], store.location.coordinates[1]], 0.0023518],
+        $centerSphere: [[store.location.coordinates[0], store.location.coordinates[1]], 10000.23456],
       }
     }
   });
@@ -805,7 +806,12 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
   const userbasketItems = await getUserBasketItems(userId);
 
   // calculate subtotal fee from userbascket items totalPrice
-  let subtotalFee = 0.03 * userbasketItems.totalPrice;
+  // get user Platform fee
+  let userPlatFormFee = await Userconfig.findOne({
+    user: "User",
+    userId,
+  });
+  let subtotalFee = (userPlatFormFee.fee / 100) * userbasketItems.totalPrice;
   let vatFee = 0.075 * subtotalFee;
   let taxFee = subtotalFee + vatFee;
 

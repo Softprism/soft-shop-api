@@ -168,7 +168,7 @@ const sendPushToNearbyRiders = async (newDelivery, store, user) => {
     const riders = await Rider.find({
       "location.coordinates": {
         $geoWithin: {
-          $centerSphere: [[long, lat], 0.0023518]
+          $centerSphere: [[long, lat], 10000.23456]
         }
       }
     }).lean();

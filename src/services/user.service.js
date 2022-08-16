@@ -11,6 +11,7 @@ import Product from "../models/product.model";
 import getJwt from "../utils/jwtGenerator";
 import { verifyCardRequest } from "./payment.service";
 import Deletion from "../models/delete-requests.model";
+import Referral from "../models/referral.model";
 
 // send otp to Verify user email before sign up
 const verifyEmailAddress = async ({ email }) => {
@@ -121,8 +122,12 @@ const allUserProfiles = async (urlParams) => {
 
 // Register User
 const registerUser = async (userParam) => {
+  let verifyReferral = await Referral.findOne({ referral_id: userParam.referral_id });
+  if (!verifyReferral) {
+    userParam.referral_id = "SoftShop";
+  }
   const {
-    first_name, last_name, email, phone_number, password
+    first_name, last_name, email, phone_number, password, referral_id, pushDeviceToken
   } = userParam;
 
   // check if user exists
@@ -138,6 +143,8 @@ const registerUser = async (userParam) => {
     email,
     phone_number,
     password,
+    referee: referral_id,
+    pushDeviceToken
   });
 
   // verify user's signup token
@@ -667,6 +674,10 @@ const deleteAccount = async (userId) => {
   });
   return "Your account has been scheduled for deletion. We will contact you shortly.";
 };
+
+// const getReferralLink = async (userId) => {
+//   const referralLink = `https://soft-shop.app`
+// };
 
 export {
   verifyEmailAddress,

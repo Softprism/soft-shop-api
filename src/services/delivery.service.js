@@ -51,7 +51,7 @@ const acceptDelivery = async (deliveryId, riderId, urlParams) => {
   if (process.env.NODE_ENV === "production") {
     condition.location = {
       $geoWithin: {
-        $centerSphere: [[long, lat], 0.0023518],
+        $centerSphere: [[long, lat], 10000.23456],
       },
     };
   }
@@ -118,7 +118,7 @@ const updatedRiderStatus = async (deliveryId, riderId, status) => {
   // // update order Status
   if (status === "Complete Drop off") {
     //   await Order.findByIdAndUpdate({ _id: delivery.order }, { status: "completed" }, { new: true });
-    await Delivery.findByIdAndUpdate(deliveryId, { status: "arrived" });
+    // await Delivery.findByIdAndUpdate(deliveryId, { status: "arrived" });
     //   // change rider isBusy status to false
     //   await Rider.findByIdAndUpdate(riderId, { isBusy: false });
   }
@@ -195,7 +195,7 @@ const getAllDeliveries = async (urlParams) => {
     radian = parseFloat(urlParams.radius / 6378.1); // calculate in km
     condition.location = {
       $geoWithin: {
-        $centerSphere: [[long, lat], 0.0023518],
+        $centerSphere: [[long, lat], 10000.23456],
       },
     };
   }
