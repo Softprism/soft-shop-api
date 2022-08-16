@@ -127,7 +127,7 @@ const registerUser = async (userParam) => {
     userParam.referral_id = "SoftShop";
   }
   const {
-    first_name, last_name, email, phone_number, password, referral_id
+    first_name, last_name, email, phone_number, password, referral_id, pushDeviceToken
   } = userParam;
 
   // check if user exists
@@ -143,7 +143,8 @@ const registerUser = async (userParam) => {
     email,
     phone_number,
     password,
-    referee: referral_id
+    referee: referral_id,
+    pushDeviceToken
   });
 
   // verify user's signup token
