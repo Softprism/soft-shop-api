@@ -63,7 +63,7 @@ router.post(
         order: order._id,
         orderId: order.orderId,
         // add delivery fee minus 3%
-        deliveryFee: Number(order.deliveryPrice - Math.round(order.deliveryPrice * 0.04)),
+        deliveryFee: Number(order.deliveryPrice),
         user: user._id,
         store: store._id
       };
