@@ -325,6 +325,7 @@ const createOrder = async (orderParam) => {
   // }
   // check if payment type is transfer
   let discountCheck = orderParam.totalDiscountedPrice > 0;
+  console.log("discount check", discountCheck);
   if (neworder[0].paymentMethod === "Transfer") {
     const payload = {
       tx_ref: neworder[0].orderId,
