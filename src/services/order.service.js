@@ -150,6 +150,7 @@ const getOrders = async (urlParams) => {
 };
 
 const createOrder = async (orderParam) => {
+  console.log(orderParam);
   const { store, user } = orderParam;
 
   // validate user
