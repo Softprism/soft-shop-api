@@ -32,7 +32,7 @@ const order_validation = {
     deliveryDiscount: Joi.boolean(),
     deliveryDiscountPrice: Joi.number(),
     taxPrice: Joi.number(),
-    subTotal: Joi.number(),
+    subtotal: Joi.number(),
     totalPrice: Joi.number(),
     platformFeeDiscount: Joi.boolean(),
     platformFeeDiscountPrice: Joi.number(),
