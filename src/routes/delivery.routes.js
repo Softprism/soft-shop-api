@@ -150,16 +150,25 @@ router.patch(
       user: "Rider",
       userId: req.localData.rider,
     });
+    if (!riderDeliveryFee) {
+      riderDeliveryFee.fee = 10;
+    }
     // get user Platform fee
     let userPlatFormFee = await Userconfig.findOne({
       user: "User",
       userId: req.localData.user,
     });
+    if (!userPlatFormFee) {
+      userPlatFormFee.fee = 5;
+    }
     // get store platform fee
     let storePlatformFee = await Userconfig.findOne({
       user: "Store",
       userId: req.localData.rider,
     });
+    if (!storePlatformFee) {
+      storePlatformFee.fee = 15;
+    }
     let deliveryFee = (riderDeliveryFee.fee / 100) * order.deliveryPrice;
     let orderFee = (userPlatFormFee.fee / 100) * order.subtotal;
     let storeFee = (storePlatformFee.fee / 100) * order.subtotal;
