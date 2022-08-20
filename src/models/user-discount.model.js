@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const userDiscountSchema = mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   discount: { type: Number }, // %
-  discountType: { type: String, enum: ["deliveryFee", "taxFee", "subtotal"] },
+  discountType: { type: String, enum: ["deliveryFee", "taxFee", "subtotal", "vendor", "jointp"] },
   createdAt: { type: Date, default: Date.now },
   expiredAt: { type: Date, default: Date.now, expires: 172740 },
 });

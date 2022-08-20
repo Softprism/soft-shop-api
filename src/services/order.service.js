@@ -269,59 +269,39 @@ const createOrder = async (orderParam) => {
     })
     // operations to calculate total price of all products' totalPrice field
     .addFields({
-      totalProductPrice: {
-        $sum: {
-          $map: {
-            input: "$orderItems",
-            as: "orderItem",
-            in: {
-              $sum: "$$orderItem.totalPrice",
-            },
-          },
-        },
-      },
+      totalProductPrice: 0,
       // operations to calculate total price of all selectedVariants' totalPrice field
-      totalVariantPrice: {
-        $sum: {
-          $map: {
-            input: "$orderItems.selectedVariants",
-            as: "selectedVariant",
-            in: {
-              $sum: "$$selectedVariant.totalPrice",
-            },
-          },
-        },
-      },
+      totalVariantPrice: 0
     })
-    .addFields({
-      subtotal: { $add: ["$totalProductPrice", "$totalVariantPrice"] },
-    })
-    .addFields({
-      orderFee: {
-        $multiply: [
-          0.03,
-          { $add: ["$totalProductPrice", "$totalVariantPrice"] },
-        ],
-      },
-    })
-    .addFields({
-      taxFee: {
-        $multiply: [
-          0.075,
-          "$orderFee",
-        ],
-      },
-    })
-    .addFields({
-      taxPrice: {
-        $ceil: {
-          $add: [
-            "$taxFee",
-            "$orderFee",
-          ],
-        }
-      },
-    })
+    // .addFields({
+    //   subtotal: { $add: ["$totalProductPrice", "$totalVariantPrice"] },
+    // })
+    // .addFields({
+    //   orderFee: {
+    //     $multiply: [
+    //       0.03,
+    //       { $add: ["$totalProductPrice", "$totalVariantPrice"] },
+    //     ],
+    //   },
+    // })
+    // .addFields({
+    //   taxFee: {
+    //     $multiply: [
+    //       0.075,
+    //       "$orderFee",
+    //     ],
+    //   },
+    // })
+    // .addFields({ no longer needed
+    //   taxPrice: {
+    //     $ceil: {
+    //       $add: [
+    //         "$taxFee",
+    //         "$orderFee",
+    //       ],
+    //     }
+    //   },
+    // })
     // calculate total price for the order
     .addFields({
       totalPrice: {
@@ -395,9 +375,6 @@ const createOrder = async (orderParam) => {
     // Update order with more details regardless of failed payment
     let orderUpdate = await Order.findById(neworder[0]._id);
     orderUpdate.orderItems = neworder[0].orderItems;
-    orderUpdate.totalPrice = discountCheck ? neworder[0].totalDiscountedPrice : neworder[0].totalPrice;
-    orderUpdate.taxPrice = neworder[0].taxPrice;
-    orderUpdate.subtotal = neworder[0].subtotal;
     orderUpdate.paymentResult = neworder[0].paymentResult;
     orderUpdate.markModified("paymentResult");
     await orderUpdate.save();
@@ -733,6 +710,11 @@ const encryptDetails = async (cardDetails) => {
 };
 
 const calculateDeliveryFee = async (userId, { storeId, destination, origin }) => {
+  // 1. Get the distance between the user's location & store's location
+  // 2. calculate delivery fee
+  // 3. check for surge and increase delivery fee
+  // 4. Calculate subtotal fee (platformFee & vat)
+  // 5. Check for discount in delivery fee
   const distance = await getDistanceServiceForDelivery(destination, origin);
 
   // find store and populate store's category
@@ -815,11 +797,14 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
   let vatFee = 0.075 * subtotalFee;
   let taxFee = subtotalFee + vatFee;
 
+  // create discount array to add to orders in the future.
+  let orderDiscounts = [];
   // check for deliveryFee userDiscount
   let deliveryDiscountPrice = 0;
   let deliveryDiscount = false;
   const userDeliveryDiscount = await UserDiscount.findOne({ user: userId, discountType: "deliveryFee" });
   if (userDeliveryDiscount) {
+    orderDiscounts.push(userDeliveryDiscount._id);
     let discount = userDeliveryDiscount.discount / 100;
     deliveryDiscountPrice = deliveryFee - deliveryFee * discount;
     deliveryDiscount = true;
@@ -830,6 +815,7 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
   let taxDiscount = false;
   const userTaxDiscount = await UserDiscount.findOne({ user: userId, discountType: "taxFee" });
   if (userTaxDiscount) {
+    orderDiscounts.push(userTaxDiscount._id);
     let discount = userTaxDiscount.discount / 100;
     taxDiscountPrice = subtotalFee - (subtotalFee * discount);
     let newVatFee = 0.075 * taxDiscountPrice;
@@ -842,6 +828,7 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
   let subtotalDiscount = false;
   const userSubtotalDiscount = await UserDiscount.findOne({ user: userId, discountType: "subtotal" });
   if (userSubtotalDiscount) {
+    orderDiscounts.push(userSubtotalDiscount._id);
     let discount = userSubtotalDiscount.discount / 100;
     subtotalDiscountPrice = userbasketItems.totalPrice - userbasketItems.totalPrice * discount;
     subtotalDiscount = true;
@@ -865,6 +852,7 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
     subtotalDiscount,
     subtotalDiscountPrice: Math.ceil(subtotalDiscountPrice),
     totalDiscountedPrice: Math.ceil(deliveryDiscountPrice + taxDiscountPrice + subtotalDiscountPrice),
+    discountList: orderDiscounts
   };
 };
 

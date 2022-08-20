@@ -24,6 +24,8 @@ import { createTransaction } from "../services/transaction.service";
 import Logistics from "../models/logistics-company.model";
 import { createVat } from "../services/vat.service";
 import Userconfig from "../models/configurations.model";
+import Ledger from "../models/ledger.model";
+import UserDiscount from "../models/user-discount.model";
 
 const router = express.Router();
 
@@ -140,6 +142,7 @@ router.patch(
     let rider = await Rider.findById(req.localData.rider);
     let order = await Order.findById(req.localData.order);
     let delivery = await Delivery.findOne({ order: order._id });
+    let ledger = await Ledger.findOne({});
 
     // calculate delivery fee, order fee and store fee
     // get rider's platform fee
@@ -167,8 +170,8 @@ router.patch(
     let storeTax = 0.075 * storeFee;
 
     // update rider isBusy status to false
-    rider.isBusy = false;
-    await rider.save();
+    // rider.isBusy = false;
+    // await rider.save();
 
     // check if rider belongs to a company
 
@@ -234,12 +237,24 @@ router.patch(
     // create credit transaction for ledger
     await createTransaction(
       {
-        amount: orderFee + storeFee + deliveryFee,
+        amount: orderFee + storeFee + deliveryFee + orderTax + storeTax + deliveryTax,
         type: "Credit",
         to: "Ledger",
-        receiver: delivery._id,
+        receiver: ledger._id,
         status: "completed",
         ref: delivery.orderId,
+        fee: 0
+      }
+    );
+    // remove vat from ledger
+    await createTransaction(
+      {
+        amount: orderTax + storeTax + deliveryTax,
+        type: "Debit",
+        to: "Ledger",
+        receiver: ledger._id,
+        status: "completed",
+        ref: "discount",
         fee: 0
       }
     );
@@ -251,7 +266,7 @@ router.patch(
       `Order - ${order.orderId} completed`,
       "Your order has been delivered and completed, please rate your experience shopping from this store."
     );
-    // send mail to store, notify them of rider delivery acceptance
+    // send mail to store, notify them of rider delivery completion
     let data = {
       event: "completed_order",
       route: "/",
@@ -266,6 +281,38 @@ router.patch(
     );
     // send mail to user, notify them of order completd
     await sendUserOrderCompletedMail(order.orderId, user.email);
+
+    // check order for discount
+    if (order.deliveryDiscount === true || order.platformFeeDiscount === true || order.subtotalDiscount === true) {
+      order.discounts.forEach(async (discountId) => {
+        let discount = await UserDiscount.findById(discountId);
+        if (discount.type !== "vendor") {
+          await createTransaction(
+            {
+              amount: order.totalPrice - order.totalDiscountedPrice,
+              type: "Debit",
+              to: "Ledger",
+              receiver: ledger._id,
+              status: "completed",
+              ref: "softshop discount",
+              fee: 0
+            }
+          );
+        } else {
+          await createTransaction(
+            {
+              amount: Number(order.subtotal - order.subtotalDiscountPrice),
+              type: "Debit",
+              to: "Store",
+              receiver: store._id,
+              status: "completed",
+              ref: delivery.orderId,
+              fee: 0
+            }
+          );
+        }
+      });
+    }
   }
 );
 

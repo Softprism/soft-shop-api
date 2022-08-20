@@ -31,14 +31,8 @@ const createOrder = async (req, res, next) => {
 
     // update order
     // cehck for discount
-    if (req.body.totalDiscountedPrice > 0) {
-      newOrder.totalPrice = req.body.totalDiscountedPrice;
-    }
     let orderUpdate = await Order.findById(newOrder._id);
     orderUpdate.orderItems = newOrder.orderItems;
-    orderUpdate.totalPrice = newOrder.totalPrice;
-    orderUpdate.taxPrice = newOrder.taxPrice;
-    orderUpdate.subtotal = newOrder.subtotal;
     orderUpdate.paymentResult = newOrder.paymentResult;
 
     if (newOrder.paymentMethod === "Transfer") {
@@ -49,23 +43,6 @@ const createOrder = async (req, res, next) => {
 
     // send email notification on order initiated
     await sendNewOrderInitiatedMail(newOrder.orderId, newOrder.user.email, newOrder.totalPrice, newOrder.store.name);
-
-    // notify order app on new order
-    // await sendMany(
-    //   "ssa",
-    //   newOrder.store.orderPushDeviceToken,
-    //   "New Order",
-    // );
-
-    // create notification for rider
-    let riders = await Rider.find();
-    let ridersId = [];
-    if (riders) {
-      ridersId = riders.map((rider) => {
-        return rider._id;
-      });
-    }
-    await createNotification(ridersId, newOrder._id);
   } catch (error) {
     next(error);
   }
