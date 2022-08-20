@@ -828,13 +828,16 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
   // check for subtotal userDiscount
   let subtotalDiscountPrice = 0;
   let subtotalDiscount = false;
-  const userSubtotalDiscount = await UserDiscount.findOne({ user: userId, discountType: "subtotal" });
+  const userSubtotalDiscount = await UserDiscount.findOne(
+    { $or: [{ user: userId, discountType: "subtotal" }, { vendor: storeId, discountType: "vendor" }] }
+  );
   if (userSubtotalDiscount) {
     orderDiscounts.push(userSubtotalDiscount._id);
     let discount = userSubtotalDiscount.discount / 100;
     subtotalDiscountPrice = userbasketItems.totalPrice - userbasketItems.totalPrice * discount;
     subtotalDiscount = true;
   }
+  console.log(orderDiscounts);
   // return ceiled values for all fees
   return {
     subtotalFee: Math.ceil(userbasketItems.totalPrice),

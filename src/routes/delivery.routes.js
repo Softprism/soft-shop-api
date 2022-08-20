@@ -144,7 +144,6 @@ router.patch(
     let delivery = await Delivery.findOne({ order: order._id });
     let ledger = await Ledger.findOne({});
 
-    console.log("started completing");
     // calculate delivery fee, order fee and store fee
     // get rider's platform fee
     let riderDeliveryFee = await Userconfig.findOne({
@@ -171,7 +170,6 @@ router.patch(
     if (!storePlatformFee) {
       storePlatformFee = { fee: 15 };
     }
-    console.log("printing fees");
     let deliveryFee = (riderDeliveryFee.fee / 100) * order.deliveryPrice;
     let orderFee = (userPlatFormFee.fee / 100) * order.subtotal;
     let storeFee = (storePlatformFee.fee / 100) * order.subtotal;
@@ -180,8 +178,6 @@ router.patch(
     let deliveryTax = 0.075 * deliveryFee;
     let orderTax = 0.075 * orderFee;
     let storeTax = 0.075 * storeFee;
-
-    console.log(deliveryFee, deliveryTax, orderFee, orderTax, storeFee, storeTax);
 
     // update rider isBusy status to false
     // rider.isBusy = false;
@@ -298,34 +294,69 @@ router.patch(
 
     // check order for discount
     if (order.deliveryDiscount === true || order.platformFeeDiscount === true || order.subtotalDiscount === true) {
-      order.discounts.forEach(async (discountId) => {
-        let discount = await UserDiscount.findById(discountId);
-        if (discount.type !== "vendor") {
-          await createTransaction(
-            {
-              amount: order.totalPrice - order.totalDiscountedPrice,
-              type: "Debit",
-              to: "Ledger",
-              receiver: ledger._id,
-              status: "completed",
-              ref: "softshop discount",
-              fee: 0
-            }
-          );
-        } else {
-          await createTransaction(
-            {
-              amount: Number(order.subtotal - order.subtotalDiscountPrice),
-              type: "Debit",
-              to: "Store",
-              receiver: store._id,
-              status: "completed",
-              ref: delivery.orderId,
-              fee: 0
-            }
-          );
-        }
-      });
+      if (discount.type === "deliveryFee") {
+        // get amount softshop would pay for
+        await createTransaction(
+          {
+            amount: order.deliveryPrice - order.deliveryDiscountPrice,
+            type: "Debit",
+            to: "Ledger",
+            receiver: ledger._id,
+            status: "completed",
+            ref: discount.type,
+            fee: 0
+          }
+        );
+      } else if (discount.type === "taxFee") {
+        await createTransaction(
+          {
+            amount: Number(order.taxPrice - order.platformFeeDiscountPrice),
+            type: "Debit",
+            to: "Ledger",
+            receiver: ledger._id,
+            status: "completed",
+            ref: discount.type,
+            fee: 0
+          }
+        );
+      } else if (discount.type === "subtotal") {
+        await createTransaction(
+          {
+            amount: Number(order.subtotal - order.subtotalDiscountPrice),
+            type: "Debit",
+            to: "Ledger",
+            receiver: ledger._id,
+            status: "completed",
+            ref: discount.type,
+            fee: 0
+          }
+        );
+      } else if (discount.type === "vendor") {
+        // remove balance from store
+        await createTransaction(
+          {
+            amount: Number(order.subtotal - order.subtotalDiscountPrice),
+            type: "Debit",
+            to: "Store",
+            receiver: store._id,
+            status: "completed",
+            ref: `${discount.type} discount`,
+            fee: 0
+          }
+        );
+        // credit store fees since store is giving discount
+        await createTransaction(
+          {
+            amount: Number(storeFee),
+            type: "Credit",
+            to: "Store",
+            receiver: store._id,
+            status: "completed",
+            ref: delivery.orderId,
+            fee: storeFee
+          }
+        );
+      }
     }
   }
 );

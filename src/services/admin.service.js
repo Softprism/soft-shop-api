@@ -535,14 +535,21 @@ const confirmLogisticsAccountDetails = async (companyId) => {
 };
 const addUserDiscount = async ({
   userId,
+  vendorId,
   discount,
   discountType,
 }) => {
-  let user = await User.findById(userId);
-  if (!user) return { err: "User does not exist.", status: 404 };
+  if (userId) {
+    let user = await User.findById(userId);
+    if (!user) return { err: "User does not exist.", status: 404 };
+  } else if (vendorId) {
+    let store = await Store.findById(vendorId);
+    if (!store) return { err: "store does not exist.", status: 404 };
+  }
 
   let discountObj = {
-    user: user._id,
+    user: userId,
+    vendor: vendorId,
     discount,
     discountType,
   };
