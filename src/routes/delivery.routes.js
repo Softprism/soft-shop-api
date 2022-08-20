@@ -144,6 +144,7 @@ router.patch(
     let delivery = await Delivery.findOne({ order: order._id });
     let ledger = await Ledger.findOne({});
 
+    console.log("started completing");
     // calculate delivery fee, order fee and store fee
     // get rider's platform fee
     let riderDeliveryFee = await Userconfig.findOne({
@@ -151,7 +152,7 @@ router.patch(
       userId: req.localData.rider,
     });
     if (!riderDeliveryFee) {
-      riderDeliveryFee.fee = 10;
+      riderDeliveryFee = { fee: 10 };
     }
     // get user Platform fee
     let userPlatFormFee = await Userconfig.findOne({
@@ -159,16 +160,18 @@ router.patch(
       userId: req.localData.user,
     });
     if (!userPlatFormFee) {
-      userPlatFormFee.fee = 5;
+      userPlatFormFee = { fee: 5 };
     }
+
     // get store platform fee
     let storePlatformFee = await Userconfig.findOne({
       user: "Store",
       userId: req.localData.rider,
     });
     if (!storePlatformFee) {
-      storePlatformFee.fee = 15;
+      storePlatformFee = { fee: 15 };
     }
+    console.log("printing fees");
     let deliveryFee = (riderDeliveryFee.fee / 100) * order.deliveryPrice;
     let orderFee = (userPlatFormFee.fee / 100) * order.subtotal;
     let storeFee = (storePlatformFee.fee / 100) * order.subtotal;
@@ -177,6 +180,8 @@ router.patch(
     let deliveryTax = 0.075 * deliveryFee;
     let orderTax = 0.075 * orderFee;
     let storeTax = 0.075 * storeFee;
+
+    console.log(deliveryFee, deliveryTax, orderFee, orderTax, storeFee, storeTax);
 
     // update rider isBusy status to false
     // rider.isBusy = false;
@@ -263,7 +268,7 @@ router.patch(
         to: "Ledger",
         receiver: ledger._id,
         status: "completed",
-        ref: "discount",
+        ref: "tax",
         fee: 0
       }
     );
