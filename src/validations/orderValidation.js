@@ -39,6 +39,7 @@ const order_validation = {
     subtotalDiscount: Joi.boolean(),
     subtotalDiscountPrice: Joi.number(),
     totalDiscountedPrice: Joi.number(),
+    discounts: Joi.array(),
     card: Joi.string().empty().messages({
       "string.empty": "Sorry, user card token is empty",
     }),
