@@ -1,4 +1,5 @@
 import * as logisticsService from "../services/logistics.service";
+import { createUserConfig } from "../services/userConfig.service";
 
 const getAllCompanies = async (req, res, next) => {
   try {
