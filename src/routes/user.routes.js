@@ -24,6 +24,8 @@ import User from "../models/user.model";
 import { createLog } from "../services/logs.service";
 import Token from "../models/tokens.model";
 import getOTP from "../utils/sendOTP";
+import Referral from "../models/referral.model";
+import { addUserDiscount } from "../services/admin.service";
 
 const router = express.Router();
 
@@ -53,6 +55,46 @@ router.post(
     // delete sign up token
     await Token.findByIdAndDelete(req.body.token);
     let user = await User.findById(req.data.user_id);
+    // compute referral id
+    let ref_id = () => {
+      let s4 = () => {
+        return Math.floor((1 + Math.random()) * 0x10000)
+          .toString(16)
+          .substring(1);
+      };
+      // return id of format 'soft - aaaaa'
+      return `ref-${s4()}`;
+    };
+    user.referral_id = ref_id();
+    await user.save();
+
+    // add discount to user's profile
+    await addUserDiscount({
+      userId: req.data.user_id,
+      discount: 30,
+      discountType: "subtotal",
+    });
+    // add discount to user's profile
+    await addUserDiscount({
+      userId: req.data.user_id,
+      discount: 50,
+      discountType: "taxFee",
+    });
+
+    // create user referral account
+    await Referral.create({
+      referral_id: user.referral_id,
+      reffered: []
+    });
+    if (req.body.referral_id) {
+      // add user to referee's referred count
+      let referee = await Referral.findOne({ referral_id: req.body.referral_id });
+      if (referee) {
+        referee.reffered.push(req.data.user_id);
+        await referee.save();
+      }
+    }
+
     // send email to user
     // capitalize user's first name
     user.first_name = user.first_name.charAt(0).toUpperCase() + user.first_name.slice(1);
@@ -63,11 +105,6 @@ router.post(
     // create log
     await createLog("user signup", "user", `A new user - ${user.first_name} ${user.last_name} with email - ${user.email} just signed on softshop`);
     // send log email
-    await sendPlainEmail(
-      "logs@soft-shop.app",
-      "A new user has signed up",
-      `A new user has signed up with email: ${user.email}`
-    );
   }
 );
 

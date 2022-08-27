@@ -65,6 +65,15 @@ const getStores = async (urlParams) => {
     matchParam.isActive = false;
   } // checking closed stores
 
+  console.log(urlParams.isActive);
+
+  if (urlParams.isActive === "true") {
+    matchParam.isActive = true;
+  }
+  if (urlParams.isActive === "false") {
+    matchParam.isActive = false;
+  }
+  console.log(matchParam);
   if (urlParams.name) {
     matchParam.name = new RegExp(urlParams.name, "i");
   }
@@ -96,7 +105,7 @@ const getStores = async (urlParams) => {
     .match({
       location: {
         $geoWithin: {
-          $centerSphere: [[long, lat], 0.0023518],
+          $centerSphere: [[long, lat], 10000.23456],
         },
       },
     })

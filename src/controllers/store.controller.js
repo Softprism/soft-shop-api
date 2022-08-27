@@ -42,6 +42,13 @@ const createStore = async (req, res, next) => {
     req.data = {
       store: storeData
     };
+
+    // create user config on signup
+    await createUserConfig({
+      user: "Store",
+      userId: storeData._id,
+      fee: 20
+    });
     // log activity
     await createActivity(
       "Store",

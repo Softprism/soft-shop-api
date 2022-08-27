@@ -6,6 +6,7 @@ import { createLog } from "../services/logs.service";
 import Basket from "../models/user-cart.model";
 import User from "../models/user.model";
 import { createActivity } from "../services/activities.service";
+import { createUserConfig } from "../services/userConfig.service";
 
 const router = express.Router();
 
@@ -54,6 +55,13 @@ const registerUser = async (req, res, next) => {
       phone: result.user[0].phone_number,
       user_id: result.user[0]._id
     };
+
+    // create user config on signup
+    await createUserConfig({
+      user: "User",
+      userId: result.user[0]._id,
+      fee: 5
+    });
     // log activity
     await createActivity(
       "User",
@@ -61,6 +69,9 @@ const registerUser = async (req, res, next) => {
       "Signed Up",
       `${req.data.email} signed up successfully`
     );
+
+    // create user log
+
     next();
   } catch (error) {
     next(error);
