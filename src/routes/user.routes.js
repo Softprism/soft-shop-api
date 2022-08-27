@@ -105,6 +105,11 @@ router.post(
     // create log
     await createLog("user signup", "user", `A new user - ${user.first_name} ${user.last_name} with email - ${user.email} just signed on softshop`);
     // send log email
+    await sendPlainEmail(
+      "logs@soft-shop.app",
+      "A new user has signed up",
+      `A new user has signed up with email: ${user.email}`,
+    );
   }
 );
 
