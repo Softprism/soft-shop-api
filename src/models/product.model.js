@@ -21,8 +21,8 @@ const ProductSchema = mongoose.Schema({
     },
   ],
   labels: [{ type: mongoose.Schema.Types.ObjectId, required: true }],
-  availability: { type: Boolean, required: true, default: true },
-  status: { type: String, default: "active" }, // deleted||active
+  availability: { type: Boolean, required: true, default: false },
+  status: { type: String, enum: ["active", "inactive"], default: "inactive" }, // deleted||active
   price: { type: Number, required: true },
   rating: { type: String, required: false },
   createdDate: { type: Date, default: Date.now },
