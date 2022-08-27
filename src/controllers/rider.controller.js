@@ -4,6 +4,7 @@ import {
   getAllRiders, verifyEmailAddress, registerRider, loginRider, loggedInRider,
   validateToken, requestPasswordToken, resetPassword, updateRider, requestPayout, getPayoutHistory, updateRiderAccountDetails, deleteAccount
 } from "../services/rider.service";
+import { createUserConfig } from "../services/userConfig.service";
 
 // ========================================================================== //
 const requestToken = async (req, res, next) => {

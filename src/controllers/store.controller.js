@@ -1,6 +1,7 @@
 import Store from "../models/store.model";
 import { createActivity } from "../services/activities.service";
 import * as storeService from "../services/store.service";
+import { createUserConfig } from "../services/userConfig.service";
 import { sendStoreDebitMail, sendStorePayoutRequestMail } from "../utils/sendMail";
 
 const getStores = async (req, res, next) => {
