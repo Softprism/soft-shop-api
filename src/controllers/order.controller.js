@@ -21,6 +21,7 @@ const getOrders = async (req, res, next) => {
 
 const createOrder = async (req, res, next) => {
   try {
+    console.log(req.body);
     if (req.user) req.body.user = req.user.id;
     if (req.body.totalPrice) { console.log(`total price coming from app ${req.body.totalPrice}`); }
 
@@ -36,9 +37,9 @@ const createOrder = async (req, res, next) => {
     let orderUpdate = await Order.findById(newOrder._id);
     console.log(`order update is ${orderUpdate}`);
     orderUpdate.orderItems = newOrder.orderItems;
-    orderUpdate.subtotal = newOrder.subtotal;
-    orderUpdate.taxPrice = newOrder.taxPrice;
-    orderUpdate.totalPrice = newOrder.totalPrice;
+    // orderUpdate.subtotal = newOrder.subtotal;
+    // orderUpdate.taxPrice = newOrder.taxPrice;
+    // orderUpdate.totalPrice = newOrder.totalPrice;
     orderUpdate.paymentResult = newOrder.paymentResult;
 
     if (newOrder.paymentMethod === "Transfer") {
