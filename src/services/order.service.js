@@ -151,7 +151,7 @@ const getOrders = async (urlParams) => {
 
 const createOrder = async (orderParam) => {
   const { store, user } = orderParam;
-
+  console.log(`order param is ${orderParam}`);
   // validate user
   const vUser = await User.findById(user);
 
