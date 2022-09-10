@@ -151,7 +151,7 @@ const getOrders = async (urlParams) => {
 
 const createOrder = async (orderParam) => {
   const {
-    store, user, deliveryFee
+    store, user, deliveryPrice
   } = orderParam;
 
   // validate user
@@ -174,8 +174,9 @@ const createOrder = async (orderParam) => {
   let subtotalFee = (userPlatFormFee.fee / 100) * userbasketItems.totalPrice;
   let vatFee = 0.075 * subtotalFee;
   let taxFee = subtotalFee + vatFee;
-  orderParam.totalPrice = Number(deliveryFee + userbasketItems.totalPrice + taxFee);
-  orderParam.subtotal = Number(userbasketItems.totalPrice);
+  orderParam.subtotal = Math.ceil(Number(userbasketItems.totalPrice));
+  orderParam.taxPrice = Math.ceil(Number(taxFee));
+  orderParam.totalPrice = Number(deliveryPrice + orderParam.subtotal + orderParam.taxPrice);
   // generates random unique id;
   let orderId = () => {
     let s4 = () => {

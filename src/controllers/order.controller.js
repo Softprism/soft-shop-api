@@ -21,12 +21,10 @@ const getOrders = async (req, res, next) => {
 
 const createOrder = async (req, res, next) => {
   try {
-    console.log(req.body);
     if (req.user) req.body.user = req.user.id;
     if (req.body.totalPrice) { console.log(`total price coming from app ${req.body.totalPrice}`); }
 
     const newOrder = await orderService.createOrder(req.body);
-    console.log(`order created is ${newOrder}`);
 
     if (newOrder.err) return res.status(newOrder.status).json({ success: false, msg: newOrder.err, status: newOrder.status });
 
@@ -35,7 +33,6 @@ const createOrder = async (req, res, next) => {
     // update order
     // cehck for discount
     let orderUpdate = await Order.findById(newOrder._id);
-    console.log(`order update is ${orderUpdate}`);
     orderUpdate.orderItems = newOrder.orderItems;
     // orderUpdate.subtotal = newOrder.subtotal;
     // orderUpdate.taxPrice = newOrder.taxPrice;
@@ -47,7 +44,6 @@ const createOrder = async (req, res, next) => {
     }
     orderUpdate.markModified("paymentResult");
     await orderUpdate.save();
-    console.log(`order update after saving ${orderUpdate}`);
 
     // send email notification on order initiated
     await sendNewOrderInitiatedMail(newOrder.orderId, newOrder.user.email, newOrder.totalPrice, newOrder.store.name);
