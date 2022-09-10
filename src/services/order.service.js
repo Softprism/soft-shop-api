@@ -6,7 +6,7 @@ import Store from "../models/store.model";
 import Review from "../models/review.model";
 
 import {
-  bankTransfer, ussdPayment, cardPayment, verifyTransaction
+  bankTransfer, ussdPayment, cardPayment, verifyTransaction, encryptCard
 } from "./payment.service";
 import { getDistanceService, getDistanceServiceForDelivery } from "../utils/get-distance";
 import Rider from "../models/rider.model";
@@ -150,7 +150,6 @@ const getOrders = async (urlParams) => {
 };
 
 const createOrder = async (orderParam) => {
-  console.log(orderParam);
   const { store, user } = orderParam;
 
   // validate user
@@ -270,39 +269,59 @@ const createOrder = async (orderParam) => {
     })
     // operations to calculate total price of all products' totalPrice field
     .addFields({
-      totalProductPrice: 0,
+      totalProductPrice: {
+        $sum: {
+          $map: {
+            input: "$orderItems",
+            as: "orderItem",
+            in: {
+              $sum: "$$orderItem.totalPrice",
+            },
+          },
+        },
+      },
       // operations to calculate total price of all selectedVariants' totalPrice field
-      totalVariantPrice: 0
+      totalVariantPrice: {
+        $sum: {
+          $map: {
+            input: "$orderItems.selectedVariants",
+            as: "selectedVariant",
+            in: {
+              $sum: "$$selectedVariant.totalPrice",
+            },
+          },
+        },
+      },
     })
-    // .addFields({
-    //   subtotal: { $add: ["$totalProductPrice", "$totalVariantPrice"] },
-    // })
-    // .addFields({
-    //   orderFee: {
-    //     $multiply: [
-    //       0.03,
-    //       { $add: ["$totalProductPrice", "$totalVariantPrice"] },
-    //     ],
-    //   },
-    // })
-    // .addFields({
-    //   taxFee: {
-    //     $multiply: [
-    //       0.075,
-    //       "$orderFee",
-    //     ],
-    //   },
-    // })
-    // .addFields({ no longer needed
-    //   taxPrice: {
-    //     $ceil: {
-    //       $add: [
-    //         "$taxFee",
-    //         "$orderFee",
-    //       ],
-    //     }
-    //   },
-    // })
+    .addFields({
+      subtotal: { $add: ["$totalProductPrice", "$totalVariantPrice"] },
+    })
+    .addFields({
+      orderFee: {
+        $multiply: [
+          0.03,
+          { $add: ["$totalProductPrice", "$totalVariantPrice"] },
+        ],
+      },
+    })
+    .addFields({
+      taxFee: {
+        $multiply: [
+          0.075,
+          "$orderFee",
+        ],
+      },
+    })
+    .addFields({
+      taxPrice: {
+        $ceil: {
+          $add: [
+            "$taxFee",
+            "$orderFee",
+          ],
+        }
+      },
+    })
     // calculate total price for the order
     .addFields({
       totalPrice: {
@@ -318,69 +337,88 @@ const createOrder = async (orderParam) => {
     })
     .append(pipeline);
 
-  // console.log(1, orderParam.totalDiscountedPrice > 0, !neworder[0].deliveryDiscount || !neworder[0].platformFeeDiscount || !neworder[0].subtotalDiscount, (!(orderParam.totalDiscountedPrice > 0 && (!neworder[0].deliveryDiscount || !neworder[0].platformFeeDiscount || !neworder[0].subtotalDiscount))));
-  // // check for discount
-  // if (orderParam.totalDiscountedPrice > 0 && (neworder[0].deliveryDiscount === false || neworder[0].platformFeeDiscount === false || neworder[0].subtotalDiscount === false)) {
-  //   // return error
-  //   return { err: "Discounts are not set for this store.", status: 409 };
-  // }
-  // check if payment type is transfer
   let discountCheck = orderParam.totalDiscountedPrice > 0;
-  console.log("discount check", discountCheck);
   if (neworder[0].paymentMethod === "Transfer") {
-    const payload = {
-      tx_ref: neworder[0].orderId,
-      amount: discountCheck ? neworder[0].totalDiscountedPrice : neworder[0].totalPrice,
-      email: neworder[0].user.email,
-      phone_number: neworder[0].user.phone_number,
-      currency: "NGN",
-      fullname: `${neworder[0].user.first_name} ${neworder[0].user.last_name}`,
-      narration: `softshop payment - ${neworder[0].orderId}`,
-      is_permanent: 0,
-    };
     // eslint-disable-next-line no-use-before-define
-    neworder[0].paymentResult = await bankTransfer(payload);
-
-    // add account name to response
-    neworder[0].paymentResult.account_name = `softshop payment ${neworder[0].paymentResult.meta.authorization.transfer_note.substring(neworder[0].paymentResult.meta.authorization.transfer_note.indexOf("-"))}`;
+    try {
+      const payload = {
+        tx_ref: neworder[0].orderId,
+        amount: discountCheck ? neworder[0].totalDiscountedPrice : neworder[0].totalPrice,
+        email: neworder[0].user.email,
+        phone_number: neworder[0].user.phone_number,
+        currency: "NGN",
+        fullname: `${neworder[0].user.first_name} ${neworder[0].user.last_name}`,
+        narration: `softshop payment - ${neworder[0].orderId}`,
+      };
+      neworder[0].paymentResult = await bankTransfer(payload);
+      // add account name to response
+      neworder[0].paymentResult.account_name = `softshop payment ${neworder[0].paymentResult.meta.authorization.transfer_note.substring(neworder[0].paymentResult.meta.authorization.transfer_note.indexOf("-"))}`;
+    } catch (error) {
+      // Update order with more details regardless of failed payment
+      let orderUpdate = await Order.findById(neworder[0]._id);
+      orderUpdate.orderItems = neworder[0].orderItems;
+      orderUpdate.totalPrice = discountCheck ? neworder[0].totalDiscountedPrice : neworder[0].totalPrice;
+      orderUpdate.taxPrice = neworder[0].taxPrice;
+      orderUpdate.subtotal = neworder[0].subtotal;
+      orderUpdate.paymentResult = neworder[0].paymentResult;
+      orderUpdate.markModified("paymentResult");
+      await orderUpdate.save();
+      return { err: `${neworder[0].paymentResult.message}...We're bnable to process transfer payments at this time, please try other payment options.`, status: 400 };
+    }
   }
   if (neworder[0].paymentMethod === "Card") {
-    const payload = {
-      token: orderParam.card, // This is the card token returned from the transaction verification endpoint as data.card.token
-      currency: "NGN",
-      country: "NG",
-      amount: discountCheck ? neworder[0].totalDiscountedPrice : neworder[0].totalPrice,
-      email: neworder[0].user.email,
-      first_name: neworder[0].user.first_name,
-      last_name: neworder[0].user.last_name,
-      frequency: 10,
-      narration: `softshop payment - ${neworder[0].orderId}`,
-      tx_ref: neworder[0].orderId
-    };
-    neworder[0].paymentResult = await cardPayment(payload);
+    try {
+      const payload = {
+        token: orderParam.card, // This is the card token returned from the transaction verification endpoint as data.card.token
+        currency: "NGN",
+        country: "NG",
+        amount: discountCheck ? neworder[0].totalDiscountedPrice : neworder[0].totalPrice,
+        email: neworder[0].user.email,
+        first_name: neworder[0].user.first_name,
+        last_name: neworder[0].user.last_name,
+        frequency: 10,
+        narration: `softshop payment - ${neworder[0].orderId}`,
+        tx_ref: neworder[0].orderId
+      };
+      neworder[0].paymentResult = await cardPayment(payload);
+    } catch (error) {
+      // Update order with more details regardless of failed payment
+      let orderUpdate = await Order.findById(neworder[0]._id);
+      orderUpdate.orderItems = neworder[0].orderItems;
+      orderUpdate.totalPrice = discountCheck ? neworder[0].totalDiscountedPrice : neworder[0].totalPrice;
+      orderUpdate.taxPrice = neworder[0].taxPrice;
+      orderUpdate.subtotal = neworder[0].subtotal;
+      orderUpdate.paymentResult = neworder[0].paymentResult;
+      orderUpdate.markModified("paymentResult");
+      await orderUpdate.save();
+      return { err: `${neworder[0].paymentResult.message}...We're unable to process card payments at this time, please try other payment options..`, status: 400 };
+    }
   }
   if (neworder[0].paymentMethod === "USSD") {
-    const payload = {
-      tx_ref: neworder[0].orderId,
-      account_bank: orderParam.bankCode,
-      amount: discountCheck ? neworder[0].totalDiscountedPrice : neworder[0].totalPrice,
-      currency: "NGN",
-      email: neworder[0].user.email,
-      phone_number: neworder[0].user.phone_number,
-      fullname: `${neworder[0].user.first_name} ${neworder[0].user.last_name}`
-    };
-    neworder[0].paymentResult = await ussdPayment(payload);
-    neworder[0].paymentResult.meta.authorization.ussdBank = orderParam.ussdBank;
-  }
-
-  if (neworder[0].paymentResult.status === "error") {
-    // Update order with more details regardless of failed payment
-    let orderUpdate = await Order.findById(neworder[0]._id);
-    orderUpdate.orderItems = neworder[0].orderItems;
-    orderUpdate.paymentResult = neworder[0].paymentResult;
-    orderUpdate.markModified("paymentResult");
-    await orderUpdate.save();
-    return { err: `${neworder[0].paymentResult.message} Order has been initiated, please try paying again or select another payment method.`, status: 400 };
+    try {
+      const payload = {
+        tx_ref: neworder[0].orderId,
+        account_bank: orderParam.bankCode,
+        amount: discountCheck ? neworder[0].totalDiscountedPrice : neworder[0].totalPrice,
+        currency: "NGN",
+        email: neworder[0].user.email,
+        phone_number: neworder[0].user.phone_number,
+        fullname: `${neworder[0].user.first_name} ${neworder[0].user.last_name}`
+      };
+      neworder[0].paymentResult = await ussdPayment(payload);
+      neworder[0].paymentResult.meta.authorization.ussdBank = orderParam.ussdBank;
+    } catch (error) {
+      // Update order with more details regardless of failed payment
+      let orderUpdate = await Order.findById(neworder[0]._id);
+      orderUpdate.orderItems = neworder[0].orderItems;
+      orderUpdate.totalPrice = discountCheck ? neworder[0].totalDiscountedPrice : neworder[0].totalPrice;
+      orderUpdate.taxPrice = neworder[0].taxPrice;
+      orderUpdate.subtotal = neworder[0].subtotal;
+      orderUpdate.paymentResult = neworder[0].paymentResult;
+      orderUpdate.markModified("paymentResult");
+      await orderUpdate.save();
+      return { err: `${neworder[0].paymentResult.message}...We're unable to process USSD payments at this time, please try other payment options..`, status: 400 };
+    }
   }
 
   return neworder[0];
@@ -707,16 +745,12 @@ const reviewOrder = async (review) => {
 
 const encryptDetails = async (cardDetails) => {
   // let result = await encryptCard(cardDetails);
-  let charge = await cardPayment(cardDetails);
+  let charge = await encryptCard(cardDetails);
+  console.log(charge);
   return charge;
 };
 
 const calculateDeliveryFee = async (userId, { storeId, destination, origin }) => {
-  // 1. Get the distance between the user's location & store's location
-  // 2. calculate delivery fee
-  // 3. check for surge and increase delivery fee
-  // 4. Calculate subtotal fee (platformFee & vat)
-  // 5. Check for discount in delivery fee
   const distance = await getDistanceServiceForDelivery(destination, origin);
 
   // find store and populate store's category
@@ -799,14 +833,11 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
   let vatFee = 0.075 * subtotalFee;
   let taxFee = subtotalFee + vatFee;
 
-  // create discount array to add to orders in the future.
-  let orderDiscounts = [];
   // check for deliveryFee userDiscount
   let deliveryDiscountPrice = 0;
   let deliveryDiscount = false;
   const userDeliveryDiscount = await UserDiscount.findOne({ user: userId, discountType: "deliveryFee" });
   if (userDeliveryDiscount) {
-    orderDiscounts.push(userDeliveryDiscount._id);
     let discount = userDeliveryDiscount.discount / 100;
     deliveryDiscountPrice = deliveryFee - deliveryFee * discount;
     deliveryDiscount = true;
@@ -817,7 +848,6 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
   let taxDiscount = false;
   const userTaxDiscount = await UserDiscount.findOne({ user: userId, discountType: "taxFee" });
   if (userTaxDiscount) {
-    orderDiscounts.push(userTaxDiscount._id);
     let discount = userTaxDiscount.discount / 100;
     taxDiscountPrice = subtotalFee - (subtotalFee * discount);
     let newVatFee = 0.075 * taxDiscountPrice;
@@ -828,16 +858,12 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
   // check for subtotal userDiscount
   let subtotalDiscountPrice = 0;
   let subtotalDiscount = false;
-  const userSubtotalDiscount = await UserDiscount.findOne(
-    { $or: [{ user: userId, discountType: "subtotal" }, { vendor: storeId, discountType: "vendor" }] }
-  );
+  const userSubtotalDiscount = await UserDiscount.findOne({ user: userId, discountType: "subtotal" });
   if (userSubtotalDiscount) {
-    orderDiscounts.push(userSubtotalDiscount._id);
     let discount = userSubtotalDiscount.discount / 100;
     subtotalDiscountPrice = userbasketItems.totalPrice - userbasketItems.totalPrice * discount;
     subtotalDiscount = true;
   }
-  console.log(orderDiscounts);
   // return ceiled values for all fees
   return {
     subtotalFee: Math.ceil(userbasketItems.totalPrice),
@@ -857,7 +883,6 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
     subtotalDiscount,
     subtotalDiscountPrice: Math.ceil(subtotalDiscountPrice),
     totalDiscountedPrice: Math.ceil(deliveryDiscountPrice + taxDiscountPrice + subtotalDiscountPrice),
-    discountList: orderDiscounts
   };
 };
 
