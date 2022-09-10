@@ -55,6 +55,7 @@ const sendEmail = async (toEmail, mailSubj, mailBody, fileName, path, cid) => {
 
 const sendPlainEmail = async (toEmail, mailSubj, mailBody) => {
   try {
+    console.log(`Starting email send at ${executingAt()}`);
     let transporter = nodemailer.createTransport({
       host: "mail.soft-shop.app",
       port: 465,
@@ -76,7 +77,7 @@ const sendPlainEmail = async (toEmail, mailSubj, mailBody) => {
 
     // Set mail options
     let mailOptions = {
-      from: "\"Logs from SoftShop\" <nduka@soft-shop.app>",
+      from: "\"SoftShop Support\" <support@soft-shop.app>",
       to: toEmail,
       subject: mailSubj,
       html: mailBody,
@@ -84,6 +85,7 @@ const sendPlainEmail = async (toEmail, mailSubj, mailBody) => {
 
     // Send email
     let sender = await transporter.sendMail(mailOptions);
+    console.log(`ending email send at ${executingAt()}`);
     return sender;
   } catch (error) {
     throw error;
