@@ -267,61 +267,7 @@ const createOrder = async (orderParam) => {
         },
       },
     })
-    // operations to calculate total price of all products' totalPrice field
-    .addFields({
-      totalProductPrice: {
-        $sum: {
-          $map: {
-            input: "$orderItems",
-            as: "orderItem",
-            in: {
-              $sum: "$$orderItem.totalPrice",
-            },
-          },
-        },
-      },
-      // operations to calculate total price of all selectedVariants' totalPrice field
-      totalVariantPrice: {
-        $sum: {
-          $map: {
-            input: "$orderItems.selectedVariants",
-            as: "selectedVariant",
-            in: {
-              $sum: "$$selectedVariant.totalPrice",
-            },
-          },
-        },
-      },
-    })
-    .addFields({
-      subtotal: { $add: ["$totalProductPrice", "$totalVariantPrice"] },
-    })
-    .addFields({
-      orderFee: {
-        $multiply: [
-          0.03,
-          { $add: ["$totalProductPrice", "$totalVariantPrice"] },
-        ],
-      },
-    })
-    .addFields({
-      taxFee: {
-        $multiply: [
-          0.075,
-          "$orderFee",
-        ],
-      },
-    })
-    .addFields({
-      taxPrice: {
-        $ceil: {
-          $add: [
-            "$taxFee",
-            "$orderFee",
-          ],
-        }
-      },
-    })
+
     // calculate total price for the order
     .addFields({
       totalPrice: {
