@@ -33,6 +33,7 @@ const createOrder = async (req, res, next) => {
     // cehck for discount
     let orderUpdate = await Order.findById(newOrder._id);
     orderUpdate.orderItems = newOrder.orderItems;
+    orderUpdate.totalPrice = newOrder.totalPrice;
     orderUpdate.paymentResult = newOrder.paymentResult;
 
     if (newOrder.paymentMethod === "Transfer") {
