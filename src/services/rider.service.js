@@ -254,6 +254,8 @@ const resetPassword = async ({ token, email, password }) => {
 
 // Update Rider Details
 const updateRider = async (updateParam, id) => {
+  console.log("Update Params");
+  console.log(updateParam);
   const {
     first_name, last_name, email, original_password, password, phone_number, profilePhoto, pushNotifications, smsNotifications, promotionalNotifications, pushDeviceToken, account_details, location, place_id, isBusy
   } = updateParam;

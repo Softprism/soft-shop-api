@@ -48,9 +48,9 @@ const sendAllStoresEmails = async (urlParams) => {
   const { subject, body } = urlParams;
 
   const stores = await Store.find();
-  stores.map(async (store) => {
-    await sendEmail(store.email, subject, body);
-  });
+  await Promise.all(stores.map(async (store) => {
+    sendEmail(store.email, subject, body);
+  }));
 
   return "Sending messages to stores";
 };
@@ -59,9 +59,9 @@ const sendAllUsersEmails = async (urlParams) => {
   const { subject, body } = urlParams;
 
   const users = await User.find();
-  users.map(async (user) => {
-    await sendEmail(user.email, subject, body);
-  });
+  await Promise.all(users.map(async (user) => {
+    sendEmail(user.email, subject, body);
+  }));
 
   return "Sending messages to users";
 };
@@ -74,9 +74,9 @@ const sendAllEmails = async (urlParams) => {
   const riders = await Rider.find();
 
   const array = [...users, ...stores, ...riders];
-  array.map(async (user) => {
-    await sendEmail(user.email, subject, body);
-  });
+  await Promise.all(array.map(async (user) => {
+    sendEmail(user.email, subject, body);
+  }));
 
   return "Sending messages to all users";
 };
