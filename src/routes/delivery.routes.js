@@ -24,6 +24,8 @@ import { createTransaction } from "../services/transaction.service";
 import Logistics from "../models/logistics-company.model";
 import { createVat } from "../services/vat.service";
 import Userconfig from "../models/configurations.model";
+import Ledger from "../models/ledger.model";
+import UserDiscount from "../models/user-discount.model";
 
 const router = express.Router();
 
@@ -61,7 +63,7 @@ router.post(
         order: order._id,
         orderId: order.orderId,
         // add delivery fee minus 3%
-        deliveryFee: Number(order.deliveryPrice - Math.round(order.deliveryPrice * 0.04)),
+        deliveryFee: Number(order.deliveryPrice),
         user: user._id,
         store: store._id
       };
@@ -140,6 +142,7 @@ router.patch(
     let rider = await Rider.findById(req.localData.rider);
     let order = await Order.findById(req.localData.order);
     let delivery = await Delivery.findOne({ order: order._id });
+    let ledger = await Ledger.findOne({});
 
     // calculate delivery fee, order fee and store fee
     // get rider's platform fee
@@ -147,16 +150,26 @@ router.patch(
       user: "Rider",
       userId: req.localData.rider,
     });
+    if (!riderDeliveryFee) {
+      riderDeliveryFee = { fee: 10 };
+    }
     // get user Platform fee
     let userPlatFormFee = await Userconfig.findOne({
       user: "User",
       userId: req.localData.user,
     });
+    if (!userPlatFormFee) {
+      userPlatFormFee = { fee: 5 };
+    }
+
     // get store platform fee
     let storePlatformFee = await Userconfig.findOne({
       user: "Store",
       userId: req.localData.rider,
     });
+    if (!storePlatformFee) {
+      storePlatformFee = { fee: 15 };
+    }
     let deliveryFee = (riderDeliveryFee.fee / 100) * order.deliveryPrice;
     let orderFee = (userPlatFormFee.fee / 100) * order.subtotal;
     let storeFee = (storePlatformFee.fee / 100) * order.subtotal;
@@ -167,8 +180,8 @@ router.patch(
     let storeTax = 0.075 * storeFee;
 
     // update rider isBusy status to false
-    rider.isBusy = false;
-    await rider.save();
+    // rider.isBusy = false;
+    // await rider.save();
 
     // check if rider belongs to a company
 
@@ -234,12 +247,24 @@ router.patch(
     // create credit transaction for ledger
     await createTransaction(
       {
-        amount: orderFee + storeFee + deliveryFee,
+        amount: orderFee + storeFee + deliveryFee + orderTax + storeTax + deliveryTax,
         type: "Credit",
         to: "Ledger",
-        receiver: delivery._id,
+        receiver: ledger._id,
         status: "completed",
         ref: delivery.orderId,
+        fee: 0
+      }
+    );
+    // remove vat from ledger
+    await createTransaction(
+      {
+        amount: orderTax + storeTax + deliveryTax,
+        type: "Debit",
+        to: "Ledger",
+        receiver: ledger._id,
+        status: "completed",
+        ref: "tax",
         fee: 0
       }
     );
@@ -251,7 +276,7 @@ router.patch(
       `Order - ${order.orderId} completed`,
       "Your order has been delivered and completed, please rate your experience shopping from this store."
     );
-    // send mail to store, notify them of rider delivery acceptance
+    // send mail to store, notify them of rider delivery completion
     let data = {
       event: "completed_order",
       route: "/",
@@ -266,6 +291,73 @@ router.patch(
     );
     // send mail to user, notify them of order completd
     await sendUserOrderCompletedMail(order.orderId, user.email);
+
+    // check order for discount
+    if (order.deliveryDiscount === true || order.platformFeeDiscount === true || order.subtotalDiscount === true) {
+      if (discount.type === "deliveryFee") {
+        // get amount softshop would pay for
+        await createTransaction(
+          {
+            amount: order.deliveryPrice - order.deliveryDiscountPrice,
+            type: "Debit",
+            to: "Ledger",
+            receiver: ledger._id,
+            status: "completed",
+            ref: discount.type,
+            fee: 0
+          }
+        );
+      } else if (discount.type === "taxFee") {
+        await createTransaction(
+          {
+            amount: Number(order.taxPrice - order.platformFeeDiscountPrice),
+            type: "Debit",
+            to: "Ledger",
+            receiver: ledger._id,
+            status: "completed",
+            ref: discount.type,
+            fee: 0
+          }
+        );
+      } else if (discount.type === "subtotal") {
+        await createTransaction(
+          {
+            amount: Number(order.subtotal - order.subtotalDiscountPrice),
+            type: "Debit",
+            to: "Ledger",
+            receiver: ledger._id,
+            status: "completed",
+            ref: discount.type,
+            fee: 0
+          }
+        );
+      } else if (discount.type === "vendor") {
+        // remove balance from store
+        await createTransaction(
+          {
+            amount: Number(order.subtotal - order.subtotalDiscountPrice),
+            type: "Debit",
+            to: "Store",
+            receiver: store._id,
+            status: "completed",
+            ref: `${discount.type} discount`,
+            fee: 0
+          }
+        );
+        // credit store fees since store is giving discount
+        await createTransaction(
+          {
+            amount: Number(storeFee),
+            type: "Credit",
+            to: "Store",
+            receiver: store._id,
+            status: "completed",
+            ref: delivery.orderId,
+            fee: storeFee
+          }
+        );
+      }
+    }
   }
 );
 

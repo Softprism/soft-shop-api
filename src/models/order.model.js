@@ -127,6 +127,10 @@ const OrderSchema = mongoose.Schema(
     subtotalDiscount: { type: Boolean, default: false },
     subtotalDiscountPrice: { type: Number, default: 0.0 },
     totalDiscountedPrice: { type: Number, default: 0.0 },
+    discounts: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "UserDiscount",
+    }],
     createdAt: { type: Date, default: Date.now },
   },
   { timestamps: true }

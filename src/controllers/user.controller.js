@@ -108,7 +108,7 @@ const loginUser = async (req, res, next) => {
     await createActivity(
       "User",
       user._id,
-      "logged in",
+      "Logged in",
       `${user.email} logged in successfully`
     );
     next();
@@ -139,6 +139,16 @@ const addCard = async (req, res, next) => {
     const action = await userService.addCard(req.user.id);
 
     res.status(200).json({ success: true, result: action, status: 200 });
+
+    // find user
+    let user = await User.findById(req.user.id);
+    // log activity
+    await createActivity(
+      "User",
+      user._id,
+      "Add Card Request",
+      `${user.email} requested to add card`
+    );
   } catch (error) {
     next(error);
   }
@@ -148,6 +158,16 @@ const removeCard = async (req, res, next) => {
     const action = await userService.removeCard(req.user.id, req.query.card_index);
 
     res.status(200).json({ success: true, result: action, status: 200 });
+
+    // find user
+    let user = await User.findById(req.user.id);
+    // log activity
+    await createActivity(
+      "User",
+      user._id,
+      "Remove Card",
+      `${user.email} removed a card`
+    );
   } catch (error) {
     next(error);
   }
@@ -177,6 +197,18 @@ const updateUser = async (req, res, next) => {
       user,
       status: 200
     });
+
+    // find user
+    // let  = await User.findById(req.user.id);
+    // log activity
+    let str = JSON.stringify(req.body);
+    console.log(str);
+    await createActivity(
+      "User",
+      user[0]._id,
+      "Updated Profile",
+      `${user.email} updated their profile with the following details \r\n ${str}`
+    );
 
     req.localData = {
       user: user[0],
@@ -235,7 +267,16 @@ const addItemToBasket = async (req, res, next) => {
       }
       await action.existingBasketItem.save();
       await userService.updateBasketPrice(action.existingBasketItem._id);
-      createLog("update_basket_item", "user", "basket item updated successfully");
+      // createLog("update_basket_item", "user", "basket item updated successfully");
+      // find user
+      let user = await User.findById(req.user.id);
+      // log activity
+      await createActivity(
+        "User",
+        user._id,
+        "Basket Updated",
+        `${user.email} updated their basket `
+      );
     } else {
       res.status(200).json({ success: true, result: action, status: 200 });
 
@@ -246,7 +287,16 @@ const addItemToBasket = async (req, res, next) => {
       await newBasketItem.save();
       await userService.updateBasketPrice(newBasketItem._id);
       // create log
-      await createLog("new basket item", "user", `A user with id ${req.user.id} just  added an item to their basket.`);
+      // await createLog("new basket item", "user", `A user with id ${req.user.id} just  added an item to their basket.`);
+      // find user
+      let user = await User.findById(req.user.id);
+      // log activity
+      await createActivity(
+        "User",
+        user._id,
+        "New Basket Item",
+        `${user.email} added a new item to their basket`
+      );
     }
   } catch (error) {
     next(error);
@@ -306,7 +356,16 @@ const deleteBasketItem = async (req, res, next) => {
 
     res.status(200).json({ success: true, result: action, status: 200 });
     // create log
-    await createLog("user remove basket item", "user", `A user  with id - ${req.user.id} just removed an item from their basket`);
+    // await createLog("user remove basket item", "user", `A user  with id - ${req.user.id} just removed an item from their basket`);
+    // find user
+    let user = await User.findById(req.user.id);
+    // log activity
+    await createActivity(
+      "User",
+      user._id,
+      "Basket Item Deleted",
+      `${user.email} deleted an Item from their basket`
+    );
   } catch (error) {
     next(error);
   }
@@ -324,6 +383,15 @@ const deleteAllBasketItems = async (req, res, next) => {
     }
 
     res.status(200).json({ success: true, result: action, status: 200 });
+    // find user
+    let user = await User.findById(req.user.id);
+    // log activity
+    await createActivity(
+      "User",
+      user._id,
+      "All Basket Items Deleted",
+      `${user.email} deleted all Items in their basket`
+    );
   } catch (error) {
     next(error);
   }
@@ -342,6 +410,16 @@ const forgotPassword = async (req, res, next) => {
     }
 
     res.status(200).json({ success: true, result: action, status: 200 });
+
+    // find user
+    // let user = await User.findById(req.user.id);
+    // log activity
+    await createActivity(
+      "User",
+      action.user._id,
+      "Forgot Password Request",
+      `${action.user.email} is trying to reset their password`
+    );
 
     req.localData = {
       user: action.user,
@@ -382,6 +460,15 @@ const createNewPassword = async (req, res, next) => {
 
     res.status(200).json({ success: true, result: action, status: 200 });
 
+    // let user = await User.findById(req.user.id);
+    // log activity
+    await createActivity(
+      "User",
+      action[0]._id,
+      "New Password",
+      `${action[0].email} created new password`
+    );
+
     req.localData = {
       user: action[0],
       token: req.body.token,
@@ -397,6 +484,15 @@ const deleteAccount = async (req, res, next) => {
     const action = await userService.deleteAccount(req.user.id);
 
     res.status(200).json({ success: true, result: action, status: 200 });
+
+    // let user = await User.findById(req.user.id);
+    // log activity
+    await createActivity(
+      "User",
+      action[0]._id,
+      "Delete Account",
+      `${action[0].email} requested for account deletion`
+    );
   } catch (error) {
     next(error);
   }

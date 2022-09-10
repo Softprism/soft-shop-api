@@ -6,7 +6,7 @@ import Store from "../models/store.model";
 import Review from "../models/review.model";
 
 import {
-  bankTransfer, ussdPayment, cardPayment, verifyTransaction
+  bankTransfer, ussdPayment, cardPayment, verifyTransaction, encryptCard
 } from "./payment.service";
 import { getDistanceService, getDistanceServiceForDelivery } from "../utils/get-distance";
 import Rider from "../models/rider.model";
@@ -337,71 +337,88 @@ const createOrder = async (orderParam) => {
     })
     .append(pipeline);
 
-  // console.log(1, orderParam.totalDiscountedPrice > 0, !neworder[0].deliveryDiscount || !neworder[0].platformFeeDiscount || !neworder[0].subtotalDiscount, (!(orderParam.totalDiscountedPrice > 0 && (!neworder[0].deliveryDiscount || !neworder[0].platformFeeDiscount || !neworder[0].subtotalDiscount))));
-  // // check for discount
-  // if (orderParam.totalDiscountedPrice > 0 && (neworder[0].deliveryDiscount === false || neworder[0].platformFeeDiscount === false || neworder[0].subtotalDiscount === false)) {
-  //   // return error
-  //   return { err: "Discounts are not set for this store.", status: 409 };
-  // }
-  // check if payment type is transfer
   let discountCheck = orderParam.totalDiscountedPrice > 0;
   if (neworder[0].paymentMethod === "Transfer") {
-    const payload = {
-      tx_ref: neworder[0].orderId,
-      amount: discountCheck ? neworder[0].totalDiscountedPrice : neworder[0].totalPrice,
-      email: neworder[0].user.email,
-      phone_number: neworder[0].user.phone_number,
-      currency: "NGN",
-      fullname: `${neworder[0].user.first_name} ${neworder[0].user.last_name}`,
-      narration: `softshop payment - ${neworder[0].orderId}`,
-      is_permanent: 0,
-    };
     // eslint-disable-next-line no-use-before-define
-    neworder[0].paymentResult = await bankTransfer(payload);
-
-    // add account name to response
-    neworder[0].paymentResult.account_name = `softshop payment ${neworder[0].paymentResult.meta.authorization.transfer_note.substring(neworder[0].paymentResult.meta.authorization.transfer_note.indexOf("-"))}`;
+    try {
+      const payload = {
+        tx_ref: neworder[0].orderId,
+        amount: discountCheck ? neworder[0].totalDiscountedPrice : neworder[0].totalPrice,
+        email: neworder[0].user.email,
+        phone_number: neworder[0].user.phone_number,
+        currency: "NGN",
+        fullname: `${neworder[0].user.first_name} ${neworder[0].user.last_name}`,
+        narration: `softshop payment - ${neworder[0].orderId}`,
+      };
+      neworder[0].paymentResult = await bankTransfer(payload);
+      // add account name to response
+      neworder[0].paymentResult.account_name = `softshop payment ${neworder[0].paymentResult.meta.authorization.transfer_note.substring(neworder[0].paymentResult.meta.authorization.transfer_note.indexOf("-"))}`;
+    } catch (error) {
+      // Update order with more details regardless of failed payment
+      let orderUpdate = await Order.findById(neworder[0]._id);
+      orderUpdate.orderItems = neworder[0].orderItems;
+      orderUpdate.totalPrice = neworder[0].totalPrice;
+      orderUpdate.taxPrice = neworder[0].taxPrice;
+      orderUpdate.subtotal = neworder[0].subtotal;
+      orderUpdate.paymentResult = neworder[0].paymentResult;
+      orderUpdate.markModified("paymentResult");
+      await orderUpdate.save();
+      return { err: `${neworder[0].paymentResult.message}...We're bnable to process transfer payments at this time, please try other payment options.`, status: 400 };
+    }
   }
   if (neworder[0].paymentMethod === "Card") {
-    const payload = {
-      token: orderParam.card, // This is the card token returned from the transaction verification endpoint as data.card.token
-      currency: "NGN",
-      country: "NG",
-      amount: discountCheck ? neworder[0].totalDiscountedPrice : neworder[0].totalPrice,
-      email: neworder[0].user.email,
-      first_name: neworder[0].user.first_name,
-      last_name: neworder[0].user.last_name,
-      frequency: 10,
-      narration: `softshop payment - ${neworder[0].orderId}`,
-      tx_ref: neworder[0].orderId
-    };
-    neworder[0].paymentResult = await cardPayment(payload);
+    try {
+      const payload = {
+        token: orderParam.card, // This is the card token returned from the transaction verification endpoint as data.card.token
+        currency: "NGN",
+        country: "NG",
+        amount: discountCheck ? neworder[0].totalDiscountedPrice : neworder[0].totalPrice,
+        email: neworder[0].user.email,
+        first_name: neworder[0].user.first_name,
+        last_name: neworder[0].user.last_name,
+        frequency: 10,
+        narration: `softshop payment - ${neworder[0].orderId}`,
+        tx_ref: neworder[0].orderId
+      };
+      neworder[0].paymentResult = await cardPayment(payload);
+    } catch (error) {
+      // Update order with more details regardless of failed payment
+      let orderUpdate = await Order.findById(neworder[0]._id);
+      orderUpdate.orderItems = neworder[0].orderItems;
+      orderUpdate.totalPrice = neworder[0].totalPrice;
+      orderUpdate.taxPrice = neworder[0].taxPrice;
+      orderUpdate.subtotal = neworder[0].subtotal;
+      orderUpdate.paymentResult = neworder[0].paymentResult;
+      orderUpdate.markModified("paymentResult");
+      await orderUpdate.save();
+      return { err: `${neworder[0].paymentResult.message}...We're unable to process card payments at this time, please try other payment options..`, status: 400 };
+    }
   }
   if (neworder[0].paymentMethod === "USSD") {
-    const payload = {
-      tx_ref: neworder[0].orderId,
-      account_bank: orderParam.bankCode,
-      amount: discountCheck ? neworder[0].totalDiscountedPrice : neworder[0].totalPrice,
-      currency: "NGN",
-      email: neworder[0].user.email,
-      phone_number: neworder[0].user.phone_number,
-      fullname: `${neworder[0].user.first_name} ${neworder[0].user.last_name}`
-    };
-    neworder[0].paymentResult = await ussdPayment(payload);
-    neworder[0].paymentResult.meta.authorization.ussdBank = orderParam.ussdBank;
-  }
-
-  if (neworder[0].paymentResult.status === "error") {
-    // Update order with more details regardless of failed payment
-    let orderUpdate = await Order.findById(neworder[0]._id);
-    orderUpdate.orderItems = neworder[0].orderItems;
-    orderUpdate.totalPrice = discountCheck ? neworder[0].totalDiscountedPrice : neworder[0].totalPrice;
-    orderUpdate.taxPrice = neworder[0].taxPrice;
-    orderUpdate.subtotal = neworder[0].subtotal;
-    orderUpdate.paymentResult = neworder[0].paymentResult;
-    orderUpdate.markModified("paymentResult");
-    await orderUpdate.save();
-    return { err: `${neworder[0].paymentResult.message} Order has been initiated, please try paying again or select another payment method.`, status: 400 };
+    try {
+      const payload = {
+        tx_ref: neworder[0].orderId,
+        account_bank: orderParam.bankCode,
+        amount: discountCheck ? neworder[0].totalDiscountedPrice : neworder[0].totalPrice,
+        currency: "NGN",
+        email: neworder[0].user.email,
+        phone_number: neworder[0].user.phone_number,
+        fullname: `${neworder[0].user.first_name} ${neworder[0].user.last_name}`
+      };
+      neworder[0].paymentResult = await ussdPayment(payload);
+      neworder[0].paymentResult.meta.authorization.ussdBank = orderParam.ussdBank;
+    } catch (error) {
+      // Update order with more details regardless of failed payment
+      let orderUpdate = await Order.findById(neworder[0]._id);
+      orderUpdate.orderItems = neworder[0].orderItems;
+      orderUpdate.totalPrice = neworder[0].totalPrice;
+      orderUpdate.taxPrice = neworder[0].taxPrice;
+      orderUpdate.subtotal = neworder[0].subtotal;
+      orderUpdate.paymentResult = neworder[0].paymentResult;
+      orderUpdate.markModified("paymentResult");
+      await orderUpdate.save();
+      return { err: `${neworder[0].paymentResult.message}...We're unable to process USSD payments at this time, please try other payment options..`, status: 400 };
+    }
   }
 
   return neworder[0];
@@ -728,7 +745,8 @@ const reviewOrder = async (review) => {
 
 const encryptDetails = async (cardDetails) => {
   // let result = await encryptCard(cardDetails);
-  let charge = await cardPayment(cardDetails);
+  let charge = await encryptCard(cardDetails);
+  console.log(charge);
   return charge;
 };
 
