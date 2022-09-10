@@ -56,6 +56,7 @@ const StoreSchema = mongoose.Schema({
   },
   createdAt: { type: Date, default: Date.now },
 },
+  // eslint-disable-next-line indent
   { timestamps: true });
 
 StoreSchema.index({ location: "2dsphere" });
