@@ -154,17 +154,6 @@ const createOrder = async (orderParam) => {
     store, user, deliveryFee
   } = orderParam;
 
-  const userbasketItems = await getUserBasketItems(user);
-
-  let userPlatFormFee = await Userconfig.findOne({
-    user: "User",
-    userId: user,
-  });
-  let subtotalFee = (userPlatFormFee.fee / 100) * userbasketItems.totalPrice;
-  let vatFee = 0.075 * subtotalFee;
-  let taxFee = subtotalFee + vatFee;
-  orderParam.totalPrice = deliveryFee + userbasketItems.totalPrice + taxFee;
-  orderParam.subtotal = userbasketItems.totalPrice;
   // validate user
   const vUser = await User.findById(user);
 
@@ -175,6 +164,18 @@ const createOrder = async (orderParam) => {
   if (!vStore.isActive) {
     return { err: "Sorry you can't create order from an inactive store.", status: 409 };
   }
+
+  const userbasketItems = await getUserBasketItems(user);
+
+  let userPlatFormFee = await Userconfig.findOne({
+    user: "User",
+    userId: user,
+  });
+  let subtotalFee = (userPlatFormFee.fee / 100) * userbasketItems.totalPrice;
+  let vatFee = 0.075 * subtotalFee;
+  let taxFee = subtotalFee + vatFee;
+  orderParam.totalPrice = Number(deliveryFee + userbasketItems.totalPrice + taxFee);
+  orderParam.subtotal = Number(userbasketItems.totalPrice);
   // generates random unique id;
   let orderId = () => {
     let s4 = () => {
