@@ -19,9 +19,9 @@ const StoreSchema = mongoose.Schema({
   },
   password: { type: String, required: true },
   category: { type: mongoose.Schema.Types.ObjectId, ref: "Category" },
-  openingTime: { type: String },
-  closingTime: { type: String },
-  deliveryTime: { type: String },
+  openingTime: { type: String, default: "22:00" },
+  closingTime: { type: String, default: "07:00" },
+  deliveryTime: { type: String, default: "15" },
   prepTime: { type: Number, default: 20 },
   location: {
     type: { type: String, default: "Point", enum: ["Point"] },
@@ -56,7 +56,7 @@ const StoreSchema = mongoose.Schema({
   },
   createdAt: { type: Date, default: Date.now },
 },
-{ timestamps: true });
+  { timestamps: true });
 
 StoreSchema.index({ location: "2dsphere" });
 const Store = mongoose.model("Store", StoreSchema);
