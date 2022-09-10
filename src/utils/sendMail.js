@@ -4,8 +4,13 @@ import handlebars from "handlebars";
 import path from "path";
 import fs from "fs";
 
+let startTime = performance.now(); // Run at the beginning of the code
+function executingAt() {
+  return (performance.now() - startTime) / 1000;
+}
 const sendEmail = async (toEmail, mailSubj, mailBody, fileName, path, cid) => {
   try {
+    console.log(`Starting email send at ${executingAt()}`);
     let transporter = nodemailer.createTransport({
       host: "mail.soft-shop.app",
       port: 465,
@@ -41,6 +46,7 @@ const sendEmail = async (toEmail, mailSubj, mailBody, fileName, path, cid) => {
 
     // Send email
     let sender = await transporter.sendMail(mailOptions);
+    console.log(`ending email send at ${executingAt()}`);
     return sender;
   } catch (error) {
     throw error;
