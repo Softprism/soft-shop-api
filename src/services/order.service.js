@@ -151,7 +151,7 @@ const getOrders = async (urlParams) => {
 
 const createOrder = async (orderParam) => {
   const { store, user } = orderParam;
-  console.log(`order param is ${orderParam}`);
+
   // validate user
   const vUser = await User.findById(user);
 
@@ -267,7 +267,32 @@ const createOrder = async (orderParam) => {
         },
       },
     })
-
+    // operations to calculate total price of all products' totalPrice field
+    .addFields({
+      totalProductPrice: {
+        $sum: {
+          $map: {
+            input: "$orderItems",
+            as: "orderItem",
+            in: {
+              $sum: "$$orderItem.totalPrice",
+            },
+          },
+        },
+      },
+      // operations to calculate total price of all selectedVariants' totalPrice field
+      totalVariantPrice: {
+        $sum: {
+          $map: {
+            input: "$orderItems.selectedVariants",
+            as: "selectedVariant",
+            in: {
+              $sum: "$$selectedVariant.totalPrice",
+            },
+          },
+        },
+      },
+    })
     // calculate total price for the order
     .addFields({
       totalPrice: {
