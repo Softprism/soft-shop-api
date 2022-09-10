@@ -151,11 +151,20 @@ const getOrders = async (urlParams) => {
 
 const createOrder = async (orderParam) => {
   const {
-    store, user, deliveryFee, subtotal, taxFee
+    store, user, deliveryFee
   } = orderParam;
 
-  orderParam.totalPrice = deliveryFee + subtotal + taxFee;
+  const userbasketItems = await getUserBasketItems(user);
 
+  let userPlatFormFee = await Userconfig.findOne({
+    user: "User",
+    userId: user,
+  });
+  let subtotalFee = (userPlatFormFee.fee / 100) * userbasketItems.totalPrice;
+  let vatFee = 0.075 * subtotalFee;
+  let taxFee = subtotalFee + vatFee;
+  orderParam.totalPrice = deliveryFee + userbasketItems.totalPrice + taxFee;
+  orderParam.subtotal = userbasketItems.totalPrice;
   // validate user
   const vUser = await User.findById(user);
 
