@@ -357,7 +357,7 @@ const createOrder = async (orderParam) => {
       // Update order with more details regardless of failed payment
       let orderUpdate = await Order.findById(neworder[0]._id);
       orderUpdate.orderItems = neworder[0].orderItems;
-      orderUpdate.totalPrice = discountCheck ? neworder[0].totalDiscountedPrice : neworder[0].totalPrice;
+      orderUpdate.totalPrice = neworder[0].totalPrice;
       orderUpdate.taxPrice = neworder[0].taxPrice;
       orderUpdate.subtotal = neworder[0].subtotal;
       orderUpdate.paymentResult = neworder[0].paymentResult;
@@ -385,7 +385,7 @@ const createOrder = async (orderParam) => {
       // Update order with more details regardless of failed payment
       let orderUpdate = await Order.findById(neworder[0]._id);
       orderUpdate.orderItems = neworder[0].orderItems;
-      orderUpdate.totalPrice = discountCheck ? neworder[0].totalDiscountedPrice : neworder[0].totalPrice;
+      orderUpdate.totalPrice = neworder[0].totalPrice;
       orderUpdate.taxPrice = neworder[0].taxPrice;
       orderUpdate.subtotal = neworder[0].subtotal;
       orderUpdate.paymentResult = neworder[0].paymentResult;
@@ -411,7 +411,7 @@ const createOrder = async (orderParam) => {
       // Update order with more details regardless of failed payment
       let orderUpdate = await Order.findById(neworder[0]._id);
       orderUpdate.orderItems = neworder[0].orderItems;
-      orderUpdate.totalPrice = discountCheck ? neworder[0].totalDiscountedPrice : neworder[0].totalPrice;
+      orderUpdate.totalPrice = neworder[0].totalPrice;
       orderUpdate.taxPrice = neworder[0].taxPrice;
       orderUpdate.subtotal = neworder[0].subtotal;
       orderUpdate.paymentResult = neworder[0].paymentResult;
