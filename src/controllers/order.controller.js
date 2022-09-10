@@ -36,6 +36,8 @@ const createOrder = async (req, res, next) => {
     let orderUpdate = await Order.findById(newOrder._id);
     console.log(`order update is ${orderUpdate}`);
     orderUpdate.orderItems = newOrder.orderItems;
+    orderUpdate.subtotal = newOrder.subtotal;
+    orderUpdate.taxPrice = newOrder.taxPrice;
     orderUpdate.totalPrice = newOrder.totalPrice;
     orderUpdate.paymentResult = newOrder.paymentResult;
 
