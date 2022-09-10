@@ -22,7 +22,7 @@ const getOrders = async (req, res, next) => {
 const createOrder = async (req, res, next) => {
   try {
     if (req.user) req.body.user = req.user.id;
-    console.log(`total price coming from app ${req.bodu.totalPrice}`);
+    if (req.body.totalPrice) { console.log(`total price coming from app ${req.body.totalPrice}`); }
 
     const newOrder = await orderService.createOrder(req.body);
     console.log(`order created is ${newOrder}`);
