@@ -143,6 +143,7 @@ router.patch(
   auth,
   complete_Delivery,
   async (req, res) => {
+    console.log(`Starting operation at ${executingAt()}`);
     let user = await User.findById(req.localData.user);
     let store = await Store.findById(req.localData.store);
     let rider = await Rider.findById(req.localData.rider);
@@ -228,7 +229,6 @@ router.patch(
       deliveryFee, deliveryTax, req.localData.order, "Delivery Partner"
     );
 
-    console.log(`Starting operation at ${executingAt()}`);
     // create credit transaction for store
     await createTransaction(
       {
@@ -298,7 +298,6 @@ router.patch(
     );
     // send mail to user, notify them of order completd
     await sendUserOrderCompletedMail(order.orderId, user.email);
-    console.log(`ending ${executingAt()}`);
 
     // check order for discount
     if (order.deliveryDiscount === true || order.platformFeeDiscount === true || order.subtotalDiscount === true) {
@@ -396,7 +395,9 @@ router.patch(
         }
       }
     }
+    console.log(`ending operation at ${executingAt()}`);
   }
+
 );
 
 // @route   PUT /review
