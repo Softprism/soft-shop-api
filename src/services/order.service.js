@@ -784,7 +784,7 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
   let deliveryDiscountPrice = 0;
   let deliveryDiscount = false;
   const userDeliveryDiscount = await UserDiscount.findOne({ user: userId, discountType: "deliveryFee" });
-  if (userDeliveryDiscount) {
+  if (userDeliveryDiscount && userDeliveryDiscount.count < userDeliveryDiscount.limit) {
     let discount = userDeliveryDiscount.discount / 100;
     deliveryDiscountPrice = deliveryFee - deliveryFee * discount;
     deliveryDiscount = true;
@@ -794,7 +794,7 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
   let taxDiscountPrice = 0;
   let taxDiscount = false;
   const userTaxDiscount = await UserDiscount.findOne({ user: userId, discountType: "taxFee" });
-  if (userTaxDiscount) {
+  if (userTaxDiscount && userTaxDiscount.count < userTaxDiscount.limit) {
     let discount = userTaxDiscount.discount / 100;
     taxDiscountPrice = subtotalFee - (subtotalFee * discount);
     let newVatFee = 0.075 * taxDiscountPrice;
@@ -806,7 +806,7 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
   let subtotalDiscountPrice = 0;
   let subtotalDiscount = false;
   const userSubtotalDiscount = await UserDiscount.findOne({ user: userId, discountType: "subtotal" });
-  if (userSubtotalDiscount) {
+  if (userSubtotalDiscount && userSubtotalDiscount.count < userSubtotalDiscount.limit) {
     let discount = userSubtotalDiscount.discount / 100;
     subtotalDiscountPrice = userbasketItems.totalPrice - userbasketItems.totalPrice * discount;
     subtotalDiscount = true;
