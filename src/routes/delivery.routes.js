@@ -157,31 +157,23 @@ router.patch(
       user: "Rider",
       userId: req.localData.rider,
     });
-    // get user Platform fee
-    let userPlatFormFeePromise = Userconfig.findOne({
-      user: "User",
-      userId: req.localData.user,
-    });
 
     // get store platform fee
     let storePlatformFeePromise = Userconfig.findOne({
       user: "Store",
       userId: req.localData.rider,
     });
-    let [user, store, rider, order, delivery, ledger, riderDeliveryFee, userPlatFormFee, storePlatformFee] = await Promise.all([userPromise, storePromise, riderPromise, orderPromise, deliveryPromise, ledgerPromise, riderDeliveryFeePromise, userPlatFormFeePromise, storePlatformFeePromise]);
+    let [user, store, rider, order, delivery, ledger, riderDeliveryFee, storePlatformFee] = await Promise.all([userPromise, storePromise, riderPromise, orderPromise, deliveryPromise, ledgerPromise, riderDeliveryFeePromise, storePlatformFeePromise]);
 
     if (!riderDeliveryFee) {
       riderDeliveryFee = { fee: 10 };
-    }
-    if (!userPlatFormFee) {
-      userPlatFormFee = { fee: 5 };
     }
     if (!storePlatformFee) {
       storePlatformFee = { fee: 15 };
     }
 
     let deliveryFee = (riderDeliveryFee.fee / 100) * order.deliveryPrice;
-    let orderFee = (userPlatFormFee.fee / 100) * order.subtotal;
+    let orderFee = order.taxPrice;
     let storeFee = (storePlatformFee.fee / 100) * order.subtotal;
 
     // calculate VAT for paying parties
