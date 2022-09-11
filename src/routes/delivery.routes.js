@@ -315,6 +315,11 @@ router.patch(
             fee: 0
           }
         );
+        // find delivery discount
+        let deliveryDiscount = await UserDiscount.findOne({ user: user._id, discountType: "deliveryFee" });
+        // increment count
+        deliveryDiscount.count += 1;
+        await deliveryDiscount.save();
       }
       if (order.platformFeeDiscountPrice > 0) {
         await createTransaction(
@@ -328,6 +333,11 @@ router.patch(
             fee: 0
           }
         );
+        // find platformFee discount
+        let platformFeeDiscount = await UserDiscount.findOne({ user: user._id, discountType: "taxFee" });
+        // increment count
+        platformFeeDiscount.count += 1;
+        await platformFeeDiscount.save();
       }
       if (order.subtotalDiscountPrice > 0) {
         await createTransaction(
@@ -341,6 +351,11 @@ router.patch(
             fee: 0
           }
         );
+        // find subtotalFee discount
+        let subtotalFeeDiscount = await UserDiscount.findOne({ user: user._id, discountType: "subtotal" });
+        // increment count
+        subtotalFeeDiscount.count += 1;
+        await subtotalFeeDiscount.save();
       }
     }
     // check if it's first order
@@ -374,6 +389,7 @@ router.patch(
         }
       }
     }
+
     console.log(`ending operation 3 at ${executingAt()}`);
   }
 
