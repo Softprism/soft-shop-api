@@ -201,13 +201,13 @@ router.patch(
 
       // create credit transaction and VAT log for logistics company
       let corpTrnxPromise = createTransaction({
-        amount: Number(delivery.deliveryFee - deliveryTax),
+        amount: Number(delivery.deliveryFee - deliveryTax - deliveryFee),
         type: "Credit",
         to: "logistics",
         receiver: company._id,
         status: "completed",
         ref: delivery.orderId,
-        fee: deliveryFee
+        fee: deliveryFee + deliveryFee
       });
 
       let crvPromise = createVat(
@@ -218,13 +218,13 @@ router.patch(
       // create credit transaction and VAT log for rider
       await createTransaction(
         {
-          amount: Number(delivery.deliveryFee - deliveryTax),
+          amount: Number(delivery.deliveryFee - deliveryTax - deliveryFee),
           type: "Credit",
           to: "Rider",
           receiver: rider._id,
           status: "completed",
           ref: delivery.orderId,
-          fee: deliveryFee
+          fee: deliveryFee + deliveryTax
         }
       );
     }
@@ -242,7 +242,7 @@ router.patch(
         receiver: store._id,
         status: "completed",
         ref: delivery.orderId,
-        fee: storeFee
+        fee: storeFee + storeTax
       }
     );
 
@@ -275,7 +275,7 @@ router.patch(
         to: "Ledger",
         receiver: ledger._id,
         status: "completed",
-        ref: "tax",
+        ref: `tax for ${order.orderId}`,
         fee: 0
       }
     );
