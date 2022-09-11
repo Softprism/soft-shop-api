@@ -358,7 +358,7 @@ router.patch(
         if (refereeUserAccount) {
           // check for existing discount
           let existingDiscount = await UserDiscount.findOne({ user: refereeUserAccount._id, discountType: "subtotal" });
-          if (existingDiscount) {
+          if (existingDiscount && existingDiscount.count < existingDiscount.limit) {
             // check if discount is still less than 50%
             if (existingDiscount.discount < 50) {
               existingDiscount.discount += 5;
