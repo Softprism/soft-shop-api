@@ -538,6 +538,7 @@ const addUserDiscount = async ({
   vendorId,
   discount,
   discountType,
+  limit
 }) => {
   if (userId) {
     let user = await User.findById(userId);
@@ -547,11 +548,14 @@ const addUserDiscount = async ({
     if (!store) return { err: "store does not exist.", status: 404 };
   }
 
+  if (!limit) limit = 1;
+
   let discountObj = {
     user: userId,
     vendor: vendorId,
     discount,
     discountType,
+    limit
   };
   let newDiscount = new UserDiscount(discountObj);
   await newDiscount.save();

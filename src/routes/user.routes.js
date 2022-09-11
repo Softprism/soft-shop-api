@@ -71,20 +71,23 @@ router.post(
     // add discount to user's profile
     await addUserDiscount({
       userId: req.data.user_id,
-      discount: 30,
+      discount: 5,
       discountType: "subtotal",
+      limit: 3
     });
     // add discount to user's profile
     await addUserDiscount({
       userId: req.data.user_id,
       discount: 50,
       discountType: "taxFee",
+      limit: 3
     });
 
     // create user referral account
     await Referral.create({
       referral_id: user.referral_id,
-      reffered: []
+      reffered: [],
+      account_balance: 0.00
     });
     if (req.body.referral_id) {
       // add user to referee's referred count
