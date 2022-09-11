@@ -412,36 +412,36 @@ const addItemToBasket = async (userId, basketItemMeta) => {
   }
 
   // check if product exists in basket and increment product and selected variant quantities
-  let existingBasketItem = await Basket.findOne({
-    user: userId,
-    "product.productId": basketItemMeta.product.productId
-  });
-  if (existingBasketItem) {
-    return { existingBasketItem, message: "Item Updated Successfully", status: 201 };
-    // existingBasketItem.product.qty += basketItemMeta.product.qty;
-    // if (basketItemMeta.product.selectedVariants) {
-    //   // if user is adding an existing item to basket along side selected variants, the existing selected variant quantity should be incremented by the new quantity coming in
-    //   existingBasketItem.product.selectedVariants.forEach((variant) => {
-    //     basketItemMeta.product.selectedVariants.forEach((basketItemVariant) => {
-    //       if (variant.variantId.toString() === basketItemVariant.variantId) {
-    //         variant.quantity += basketItemVariant.quantity;
-    //       } else {
-    //         // find the selected variant in the existing basket item and increment quantity
-    //         let existingVariant = existingBasketItem.product.selectedVariants.find(
-    //           (variant) => variant.variantId.toString() === basketItemVariant.variantId
-    //         );
-    //         if (!existingVariant) {
-    //           // if the selected variant is not found in the existing basket item, add it to the selected variants array
-    //           existingBasketItem.product.selectedVariants.push(basketItemVariant);
-    //         }
-    //       }
-    //     });
-    //   });
-    // }
-    // await existingBasketItem.save();
-    // let basketUpdate = await updateBasketPrice(existingBasketItem._id);
-    // return basketUpdate;
-  }
+  // let existingBasketItem = await Basket.findOne({
+  //   user: userId,
+  //   "product.productId": basketItemMeta.product.productId
+  // });
+  // if (existingBasketItem) {
+  //   return { existingBasketItem, message: "Item Updated Successfully", status: 201 };
+  // existingBasketItem.product.qty += basketItemMeta.product.qty;
+  // if (basketItemMeta.product.selectedVariants) {
+  //   // if user is adding an existing item to basket along side selected variants, the existing selected variant quantity should be incremented by the new quantity coming in
+  //   existingBasketItem.product.selectedVariants.forEach((variant) => {
+  //     basketItemMeta.product.selectedVariants.forEach((basketItemVariant) => {
+  //       if (variant.variantId.toString() === basketItemVariant.variantId) {
+  //         variant.quantity += basketItemVariant.quantity;
+  //       } else {
+  //         // find the selected variant in the existing basket item and increment quantity
+  //         let existingVariant = existingBasketItem.product.selectedVariants.find(
+  //           (variant) => variant.variantId.toString() === basketItemVariant.variantId
+  //         );
+  //         if (!existingVariant) {
+  //           // if the selected variant is not found in the existing basket item, add it to the selected variants array
+  //           existingBasketItem.product.selectedVariants.push(basketItemVariant);
+  //         }
+  //       }
+  //     });
+  //   });
+  // }
+  // await existingBasketItem.save();
+  // let basketUpdate = await updateBasketPrice(existingBasketItem._id);
+  // return basketUpdate;
+  // }
 
   // // add item to basket
   // let newBasketItem = new Basket(basketItemMeta);

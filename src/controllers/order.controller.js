@@ -46,7 +46,13 @@ const createOrder = async (req, res, next) => {
     await orderUpdate.save();
 
     // send email notification on order initiated
-    await sendNewOrderInitiatedMail(newOrder.orderId, newOrder.user.email, newOrder.totalPrice, newOrder.store.name);
+    let totalPrice = 0;
+    if (newOrder.totalDiscountedPrice > 0) {
+      totalPrice = newOrder.totalDiscountedPrice;
+    } else {
+      totalPrice = newOrder.totalPrice;
+    }
+    await sendNewOrderInitiatedMail(newOrder.orderId, newOrder.user.email, totalPrice, newOrder.store.name);
   } catch (error) {
     next(error);
   }
