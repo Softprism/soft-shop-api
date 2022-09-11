@@ -150,7 +150,9 @@ const getOrders = async (urlParams) => {
 };
 
 const createOrder = async (orderParam) => {
-  const { store, user } = orderParam;
+  const {
+    store, user, deliveryPrice
+  } = orderParam;
 
   // validate user
   const vUser = await User.findById(user);
@@ -162,6 +164,19 @@ const createOrder = async (orderParam) => {
   if (!vStore.isActive) {
     return { err: "Sorry you can't create order from an inactive store.", status: 409 };
   }
+
+  const userbasketItems = await getUserBasketItems(user);
+
+  let userPlatFormFee = await Userconfig.findOne({
+    user: "User",
+    userId: user,
+  });
+  let subtotalFee = (userPlatFormFee.fee / 100) * userbasketItems.totalPrice;
+  let vatFee = 0.075 * subtotalFee;
+  let taxFee = subtotalFee + vatFee;
+  orderParam.subtotal = Math.ceil(Number(userbasketItems.totalPrice));
+  orderParam.taxPrice = Math.ceil(Number(taxFee));
+  orderParam.totalPrice = Number(deliveryPrice + orderParam.subtotal + orderParam.taxPrice);
   // generates random unique id;
   let orderId = () => {
     let s4 = () => {
@@ -267,74 +282,6 @@ const createOrder = async (orderParam) => {
         },
       },
     })
-    // operations to calculate total price of all products' totalPrice field
-    .addFields({
-      totalProductPrice: {
-        $sum: {
-          $map: {
-            input: "$orderItems",
-            as: "orderItem",
-            in: {
-              $sum: "$$orderItem.totalPrice",
-            },
-          },
-        },
-      },
-      // operations to calculate total price of all selectedVariants' totalPrice field
-      totalVariantPrice: {
-        $sum: {
-          $map: {
-            input: "$orderItems.selectedVariants",
-            as: "selectedVariant",
-            in: {
-              $sum: "$$selectedVariant.totalPrice",
-            },
-          },
-        },
-      },
-    })
-    .addFields({
-      subtotal: { $add: ["$totalProductPrice", "$totalVariantPrice"] },
-    })
-    .addFields({
-      orderFee: {
-        $multiply: [
-          0.03,
-          { $add: ["$totalProductPrice", "$totalVariantPrice"] },
-        ],
-      },
-    })
-    .addFields({
-      taxFee: {
-        $multiply: [
-          0.075,
-          "$orderFee",
-        ],
-      },
-    })
-    .addFields({
-      taxPrice: {
-        $ceil: {
-          $add: [
-            "$taxFee",
-            "$orderFee",
-          ],
-        }
-      },
-    })
-    // calculate total price for the order
-    .addFields({
-      totalPrice: {
-        $ceil: {
-          $add: [
-            "$taxPrice",
-            "$totalProductPrice",
-            "$totalVariantPrice",
-            "$deliveryPrice",
-          ]
-        },
-      },
-    })
     .append(pipeline);
 
   let discountCheck = orderParam.totalDiscountedPrice > 0;
@@ -357,9 +304,9 @@ const createOrder = async (orderParam) => {
       // Update order with more details regardless of failed payment
       let orderUpdate = await Order.findById(neworder[0]._id);
       orderUpdate.orderItems = neworder[0].orderItems;
-      orderUpdate.totalPrice = neworder[0].totalPrice;
-      orderUpdate.taxPrice = neworder[0].taxPrice;
-      orderUpdate.subtotal = neworder[0].subtotal;
+      // orderUpdate.totalPrice = neworder[0].totalPrice;
+      // orderUpdate.taxPrice = neworder[0].taxPrice;
+      // orderUpdate.subtotal = neworder[0].subtotal;
       orderUpdate.paymentResult = neworder[0].paymentResult;
       orderUpdate.markModified("paymentResult");
       await orderUpdate.save();
@@ -385,9 +332,9 @@ const createOrder = async (orderParam) => {
       // Update order with more details regardless of failed payment
       let orderUpdate = await Order.findById(neworder[0]._id);
       orderUpdate.orderItems = neworder[0].orderItems;
-      orderUpdate.totalPrice = neworder[0].totalPrice;
-      orderUpdate.taxPrice = neworder[0].taxPrice;
-      orderUpdate.subtotal = neworder[0].subtotal;
+      // orderUpdate.totalPrice = neworder[0].totalPrice;
+      // orderUpdate.taxPrice = neworder[0].taxPrice;
+      // orderUpdate.subtotal = neworder[0].subtotal;
       orderUpdate.paymentResult = neworder[0].paymentResult;
       orderUpdate.markModified("paymentResult");
       await orderUpdate.save();
@@ -411,9 +358,9 @@ const createOrder = async (orderParam) => {
       // Update order with more details regardless of failed payment
       let orderUpdate = await Order.findById(neworder[0]._id);
       orderUpdate.orderItems = neworder[0].orderItems;
-      orderUpdate.totalPrice = neworder[0].totalPrice;
-      orderUpdate.taxPrice = neworder[0].taxPrice;
-      orderUpdate.subtotal = neworder[0].subtotal;
+      // orderUpdate.totalPrice = neworder[0].totalPrice;
+      // orderUpdate.taxPrice = neworder[0].taxPrice;
+      // orderUpdate.subtotal = neworder[0].subtotal;
       orderUpdate.paymentResult = neworder[0].paymentResult;
       orderUpdate.markModified("paymentResult");
       await orderUpdate.save();
