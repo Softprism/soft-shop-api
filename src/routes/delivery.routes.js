@@ -375,6 +375,7 @@ router.patch(
       if (referee) {
         // add 300 naira to referee's balance
         referee.account_balance += 300;
+        await referee.save();
         // add discount to referee
         let refereeUserAccount = await User.findOne({ referral_id: user.referee });
         if (refereeUserAccount) {
@@ -384,6 +385,7 @@ router.patch(
             // check if discount is still less than 50%
             if (existingDiscount.discount < 50) {
               existingDiscount.discount += 5;
+              await existingDiscount.save();
             }
           } else {
             await addUserDiscount({
