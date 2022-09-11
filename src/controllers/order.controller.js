@@ -22,6 +22,7 @@ const getOrders = async (req, res, next) => {
 const createOrder = async (req, res, next) => {
   try {
     if (req.user) req.body.user = req.user.id;
+    if (req.body.totalPrice) { console.log(`total price coming from app ${req.body.totalPrice}`); }
 
     const newOrder = await orderService.createOrder(req.body);
 
@@ -33,7 +34,9 @@ const createOrder = async (req, res, next) => {
     // cehck for discount
     let orderUpdate = await Order.findById(newOrder._id);
     orderUpdate.orderItems = newOrder.orderItems;
-    orderUpdate.totalPrice = newOrder.totalPrice;
+    // orderUpdate.subtotal = newOrder.subtotal;
+    // orderUpdate.taxPrice = newOrder.taxPrice;
+    // orderUpdate.totalPrice = newOrder.totalPrice;
     orderUpdate.paymentResult = newOrder.paymentResult;
 
     if (newOrder.paymentMethod === "Transfer") {
@@ -43,7 +46,13 @@ const createOrder = async (req, res, next) => {
     await orderUpdate.save();
 
     // send email notification on order initiated
-    await sendNewOrderInitiatedMail(newOrder.orderId, newOrder.user.email, newOrder.totalPrice, newOrder.store.name);
+    let totalPrice = 0;
+    if (newOrder.totalDiscountedPrice > 0) {
+      totalPrice = newOrder.totalDiscountedPrice;
+    } else {
+      totalPrice = newOrder.totalPrice;
+    }
+    await sendNewOrderInitiatedMail(newOrder.orderId, newOrder.user.email, totalPrice, newOrder.store.name);
   } catch (error) {
     next(error);
   }
