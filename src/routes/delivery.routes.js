@@ -248,9 +248,11 @@ router.patch(
     );
 
     // create credit transaction for ledger
+    let discountCheck = order.totalDiscountedPrice > 0;
+    let ordTotalPrice = discountCheck ? order.totalDiscountedPrice : order.totalPrice;
     let crvLedgerPromise = createTransaction(
       {
-        amount: orderFee + storeFee + deliveryFee + orderTax + storeTax + deliveryTax + order.totalPrice,
+        amount: orderFee + storeFee + deliveryFee + orderTax + storeTax + deliveryTax + ordTotalPrice,
         type: "Credit",
         to: "Ledger",
         receiver: ledger._id,
