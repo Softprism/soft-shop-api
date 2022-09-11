@@ -258,7 +258,7 @@ router.patch(
     // create credit transaction for ledger
     let crvLedgerPromise = createTransaction(
       {
-        amount: orderFee + storeFee + deliveryFee + orderTax + storeTax + deliveryTax,
+        amount: orderFee + storeFee + deliveryFee + orderTax + storeTax + deliveryTax + order.totalPrice,
         type: "Credit",
         to: "Ledger",
         receiver: ledger._id,
