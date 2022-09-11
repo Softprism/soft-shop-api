@@ -302,7 +302,7 @@ router.patch(
 
     // check order for discount
     if (order.deliveryDiscount === true || order.platformFeeDiscount === true || order.subtotalDiscount === true) {
-      if (discount.type === "deliveryFee") {
+      if (order.deliveryDiscountPrice > 0) {
         // get amount softshop would pay for
         await createTransaction(
           {
@@ -315,7 +315,7 @@ router.patch(
             fee: 0
           }
         );
-      } else if (discount.type === "taxFee") {
+      } else if (order.platformFeeDiscountPrice > 0) {
         await createTransaction(
           {
             amount: Number(order.taxPrice - order.platformFeeDiscountPrice),
@@ -327,7 +327,7 @@ router.patch(
             fee: 0
           }
         );
-      } else if (discount.type === "subtotal") {
+      } else if (order.subtotalDiscountPrice > 0) {
         await createTransaction(
           {
             amount: Number(order.subtotal - order.subtotalDiscountPrice),
@@ -339,32 +339,33 @@ router.patch(
             fee: 0
           }
         );
-      } else if (discount.type === "vendor") {
-        // remove balance from store
-        await createTransaction(
-          {
-            amount: Number(order.subtotal - order.subtotalDiscountPrice),
-            type: "Debit",
-            to: "Store",
-            receiver: store._id,
-            status: "completed",
-            ref: `${discount.type} discount`,
-            fee: 0
-          }
-        );
-        // credit store fees since store is giving discount
-        await createTransaction(
-          {
-            amount: Number(storeFee),
-            type: "Credit",
-            to: "Store",
-            receiver: store._id,
-            status: "completed",
-            ref: delivery.orderId,
-            fee: storeFee
-          }
-        );
       }
+      //  else if (discount.type === "vendor") {
+      //   // remove balance from store
+      //   await createTransaction(
+      //     {
+      //       amount: Number(order.subtotal - order.subtotalDiscountPrice),
+      //       type: "Debit",
+      //       to: "Store",
+      //       receiver: store._id,
+      //       status: "completed",
+      //       ref: `${discount.type} discount`,
+      //       fee: 0
+      //     }
+      //   );
+      //   // credit store fees since store is giving discount
+      //   await createTransaction(
+      //     {
+      //       amount: Number(storeFee),
+      //       type: "Credit",
+      //       to: "Store",
+      //       receiver: store._id,
+      //       status: "completed",
+      //       ref: delivery.orderId,
+      //       fee: storeFee
+      //     }
+      //   );
+      // }
     }
     // check if it's first order
     let firstOrder = await Order.find({ user: req.localData.user, status: "delivered" });
