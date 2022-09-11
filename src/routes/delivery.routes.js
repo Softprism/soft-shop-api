@@ -144,39 +144,42 @@ router.patch(
   complete_Delivery,
   async (req, res) => {
     console.log(`Starting operation at ${executingAt()}`);
-    let user = await User.findById(req.localData.user);
-    let store = await Store.findById(req.localData.store);
-    let rider = await Rider.findById(req.localData.rider);
-    let order = await Order.findById(req.localData.order);
-    let delivery = await Delivery.findOne({ order: order._id });
-    let ledger = await Ledger.findOne({});
+    let userPromise = User.findById(req.localData.user);
+    let storePromise = Store.findById(req.localData.store);
+    let riderPromise = Rider.findById(req.localData.rider);
+    let orderPromise = Order.findById(req.localData.order);
+    let deliveryPromise = Delivery.findOne({ order: req.localData.order });
+    let ledgerPromise = Ledger.findOne({});
 
     // calculate delivery fee, order fee and store fee
     // get rider's platform fee
-    let riderDeliveryFee = await Userconfig.findOne({
+    let riderDeliveryFeePromise = Userconfig.findOne({
       user: "Rider",
       userId: req.localData.rider,
     });
-    if (!riderDeliveryFee) {
-      riderDeliveryFee = { fee: 10 };
-    }
     // get user Platform fee
-    let userPlatFormFee = await Userconfig.findOne({
+    let userPlatFormFeePromise = Userconfig.findOne({
       user: "User",
       userId: req.localData.user,
     });
-    if (!userPlatFormFee) {
-      userPlatFormFee = { fee: 5 };
-    }
 
     // get store platform fee
-    let storePlatformFee = await Userconfig.findOne({
+    let storePlatformFeePromise = Userconfig.findOne({
       user: "Store",
       userId: req.localData.rider,
     });
+    let [user, store, rider, order, delivery, ledger, riderDeliveryFee, userPlatFormFee, storePlatformFee] = await Promise.all([userPromise, storePromise, riderPromise, orderPromise, deliveryPromise, ledgerPromise, riderDeliveryFeePromise, userPlatFormFeePromise, storePlatformFeePromise]);
+
+    if (!riderDeliveryFee) {
+      riderDeliveryFee = { fee: 10 };
+    }
+    if (!userPlatFormFee) {
+      userPlatFormFee = { fee: 5 };
+    }
     if (!storePlatformFee) {
       storePlatformFee = { fee: 15 };
     }
+
     let deliveryFee = (riderDeliveryFee.fee / 100) * order.deliveryPrice;
     let orderFee = (userPlatFormFee.fee / 100) * order.subtotal;
     let storeFee = (storePlatformFee.fee / 100) * order.subtotal;
@@ -197,7 +200,7 @@ router.patch(
       let company = await Logistics.findById(rider.company_id);
 
       // create credit transaction and VAT log for logistics company
-      await createTransaction({
+      let corpTrnxPromise = createTransaction({
         amount: Number(delivery.deliveryFee - deliveryTax),
         type: "Credit",
         to: "logistics",
@@ -207,9 +210,10 @@ router.patch(
         fee: deliveryFee
       });
 
-      await createVat(
+      let crvPromise = createVat(
         deliveryFee, deliveryTax, req.localData.order, "Delivery Partner"
       );
+      await Promise.all([corpTrnxPromise, crvPromise]);
     } else {
       // create credit transaction and VAT log for rider
       await createTransaction(
@@ -225,12 +229,12 @@ router.patch(
       );
     }
 
-    await createVat(
+    let crVatDeliveryPromise1 = createVat(
       deliveryFee, deliveryTax, req.localData.order, "Delivery Partner"
     );
 
     // create credit transaction for store
-    await createTransaction(
+    let storeCredTrnxPromise = createTransaction(
       {
         amount: Number(order.subtotal - storeFee - storeTax),
         type: "Credit",
@@ -242,17 +246,17 @@ router.patch(
       }
     );
 
-    await createVat(
+    let crvStorePromise = createVat(
       storeFee, storeTax, req.localData.order, "Vendor"
     );
 
     // create VAT log for users
-    await createVat(
+    let crvUserPromise = createVat(
       orderFee, orderTax, req.localData.order, "Customer"
     );
 
     // create credit transaction for ledger
-    await createTransaction(
+    let crvLedgerPromise = createTransaction(
       {
         amount: orderFee + storeFee + deliveryFee + orderTax + storeTax + deliveryTax,
         type: "Credit",
@@ -264,7 +268,7 @@ router.patch(
       }
     );
     // remove vat from ledger
-    await createTransaction(
+    let vatDevitTrnxPromise = createTransaction(
       {
         amount: orderTax + storeTax + deliveryTax,
         type: "Debit",
@@ -277,7 +281,7 @@ router.patch(
     );
 
     // send push notification to user
-    await sendMany(
+    let userPushPromise = sendMany(
       "ssa",
       user.pushDeviceToken,
       `Order - ${order.orderId} completed`,
@@ -289,7 +293,7 @@ router.patch(
       route: "/",
       index: "3"
     };
-    await sendMany(
+    let storePushPromise = sendMany(
       "ssa",
       store.orderPushDeviceToken,
       `Order -  ${order.orderId} completed`,
@@ -297,7 +301,10 @@ router.patch(
       data
     );
     // send mail to user, notify them of order completd
-    await sendUserOrderCompletedMail(order.orderId, user.email);
+    let userEmailPromise = sendUserOrderCompletedMail(order.orderId, user.email);
+
+    await Promise.all([crVatDeliveryPromise1, storeCredTrnxPromise, crvStorePromise, crvUserPromise, crvLedgerPromise, vatDevitTrnxPromise, userPushPromise, storePushPromise, userEmailPromise]);
+    console.log(`ending operation 2 at ${executingAt()}`);
 
     // check order for discount
     if (order.deliveryDiscount === true || order.platformFeeDiscount === true || order.subtotalDiscount === true) {
@@ -310,11 +317,12 @@ router.patch(
             to: "Ledger",
             receiver: ledger._id,
             status: "completed",
-            ref: "delivery discount",
+            ref: `delivery discount - ${order.orderId}`,
             fee: 0
           }
         );
-      } else if (order.platformFeeDiscountPrice > 0) {
+      }
+      if (order.platformFeeDiscountPrice > 0) {
         await createTransaction(
           {
             amount: Number(order.taxPrice - order.platformFeeDiscountPrice),
@@ -322,11 +330,12 @@ router.patch(
             to: "Ledger",
             receiver: ledger._id,
             status: "completed",
-            ref: "platform fee discount",
+            ref: `platform fee discount - ${order.orderId}`,
             fee: 0
           }
         );
-      } else if (order.subtotalDiscountPrice > 0) {
+      }
+      if (order.subtotalDiscountPrice > 0) {
         await createTransaction(
           {
             amount: Number(order.subtotal - order.subtotalDiscountPrice),
@@ -334,37 +343,11 @@ router.patch(
             to: "Ledger",
             receiver: ledger._id,
             status: "completed",
-            ref: "product price discount",
+            ref: `product price discount - ${order.orderId}`,
             fee: 0
           }
         );
       }
-      //  else if (discount.type === "vendor") {
-      //   // remove balance from store
-      //   await createTransaction(
-      //     {
-      //       amount: Number(order.subtotal - order.subtotalDiscountPrice),
-      //       type: "Debit",
-      //       to: "Store",
-      //       receiver: store._id,
-      //       status: "completed",
-      //       ref: `${discount.type} discount`,
-      //       fee: 0
-      //     }
-      //   );
-      //   // credit store fees since store is giving discount
-      //   await createTransaction(
-      //     {
-      //       amount: Number(storeFee),
-      //       type: "Credit",
-      //       to: "Store",
-      //       receiver: store._id,
-      //       status: "completed",
-      //       ref: delivery.orderId,
-      //       fee: storeFee
-      //     }
-      //   );
-      // }
     }
     // check if it's first order
     let firstOrder = await Order.find({ user: req.localData.user, status: "delivered" });
@@ -397,7 +380,7 @@ router.patch(
         }
       }
     }
-    console.log(`ending operation at ${executingAt()}`);
+    console.log(`ending operation 3 at ${executingAt()}`);
   }
 
 );
