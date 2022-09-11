@@ -310,7 +310,7 @@ router.patch(
             to: "Ledger",
             receiver: ledger._id,
             status: "completed",
-            ref: discount.type,
+            ref: "delivery discount",
             fee: 0
           }
         );
@@ -322,7 +322,7 @@ router.patch(
             to: "Ledger",
             receiver: ledger._id,
             status: "completed",
-            ref: discount.type,
+            ref: "platform fee discount",
             fee: 0
           }
         );
@@ -334,7 +334,7 @@ router.patch(
             to: "Ledger",
             receiver: ledger._id,
             status: "completed",
-            ref: discount.type,
+            ref: "product price discount",
             fee: 0
           }
         );
