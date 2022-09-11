@@ -26,8 +26,14 @@ import { createVat } from "../services/vat.service";
 import Userconfig from "../models/configurations.model";
 import Ledger from "../models/ledger.model";
 import UserDiscount from "../models/user-discount.model";
+import Referral from "../models/referral.model";
+import { addUserDiscount } from "../services/admin.service";
 
 const router = express.Router();
+let startTime = performance.now(); // Run at the beginning of the code
+function executingAt() {
+  return (performance.now() - startTime) / 1000;
+}
 
 // @route   POST /stores/orders/delivery
 // @desc    Create delivery
@@ -222,6 +228,7 @@ router.patch(
       deliveryFee, deliveryTax, req.localData.order, "Delivery Partner"
     );
 
+    console.log(`Starting operation at ${executingAt()}`);
     // create credit transaction for store
     await createTransaction(
       {
@@ -291,6 +298,7 @@ router.patch(
     );
     // send mail to user, notify them of order completd
     await sendUserOrderCompletedMail(order.orderId, user.email);
+    console.log(`ending ${executingAt()}`);
 
     // check order for discount
     if (order.deliveryDiscount === true || order.platformFeeDiscount === true || order.subtotalDiscount === true) {
@@ -356,6 +364,35 @@ router.patch(
             fee: storeFee
           }
         );
+      }
+    }
+    // check if it's first order
+    let firstOrder = await Order.find({ user: req.localData.user, status: "delivered" });
+    if (firstOrder.length === 1) {
+      // credit referee's bonus
+      // find referee
+      let referee = await Referral.findOne({ referral_id: user.referee });
+      if (referee) {
+        // add 300 naira to referee's balance
+        referee.account_balance += 300;
+        // add discount to referee
+        let refereeUserAccount = await User.findOne({ referral_id: user.referee });
+        if (refereeUserAccount) {
+          // check for existing discount
+          let existingDiscount = await UserDiscount.findOne({ user: refereeUserAccount._id, discountType: "subtotal" });
+          if (existingDiscount) {
+            // check if discount is still less than 50%
+            if (existingDiscount.discount < 50) {
+              existingDiscount.discount += 5;
+            }
+          } else {
+            await addUserDiscount({
+              userId: refereeUserAccount._id,
+              discount: 5,
+              discountType: "subtotal",
+            });
+          }
+        }
       }
     }
   }
