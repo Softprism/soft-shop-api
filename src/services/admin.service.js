@@ -27,6 +27,7 @@ import { getLoggedInStore, getStoresNoGeo } from "./store.service";
 import { allUserProfiles, getLoggedInUser } from "./user.service";
 import { getAllRiders, loggedInRider } from "./rider.service";
 import Order from "../models/order.model";
+import Referral from "../models/referral.model";
 
 const getAdmins = async (urlParams) => {
   const limit = Number(urlParams.limit);
@@ -907,6 +908,41 @@ const incomeChecker = async () => {
   return ledger;
 };
 
+const createReferralAccount = async (userId) => {
+  // check if user has referral code
+  let checkUser = await User.findById(userId);
+  if (checkUser.referral_id) {
+    return { err: "This user has been signed up on the referral program", status: 400 };
+  }
+  let ref_id = () => {
+    let s4 = () => {
+      return Math.floor((1 + Math.random()) * 0x10000)
+        .toString(16)
+        .substring(1);
+    };
+    // return id of format 'soft - aaaaa'
+    return `ref-${s4()}`;
+  };
+  let newReferralCode = ref_id();
+  // check if user exists and generate referral code
+  let user = await User.findByIdAndUpdate(
+    { _id: userId },
+    { $set: { referral_id: newReferralCode } },
+    { omitUndefined: true, new: true, useFindAndModify: false }
+  );
+  if (!user.referral_id) {
+    return { err: "Error updating this user's account, user may not exist.", status: 400 };
+  }
+
+  // create account on referral model
+  await Referral.create({
+    referral_id: newReferralCode,
+    reffered: [],
+    account_balance: 0.00
+  });
+  return "Referral Account created successfully";
+};
+
 export {
   getAdmins,
   registerAdmin,
@@ -943,5 +979,6 @@ export {
   completedOrderStats,
   completedSalesStats,
   statsOverview,
-  incomeChecker
+  incomeChecker,
+  createReferralAccount
 };

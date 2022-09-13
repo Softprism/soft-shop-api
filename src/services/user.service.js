@@ -675,7 +675,7 @@ const deleteAccount = async (userId) => {
   return "Your account has been scheduled for deletion. We will contact you shortly.";
 };
 
-const getReferralBalance = async (userId) => {
+const getReferralDetails = async (userId) => {
   // get user profile
   let user = await User.findById(userId);
   if (!user) {
@@ -689,11 +689,13 @@ const getReferralBalance = async (userId) => {
   }
 
   // find referral data
-  let referral_data = await Referral.findOne({ referral_id: referral_code });
+  let referral_data = await Referral.findOne({ referral_id: referral_code }).lean();
   if (!referral_data) {
     return { err: "We can't find your referral data at this time, please contact support@soft-shop.app", status: 400 };
   }
-  return referral_data.account_balance;
+  referral_data.reffered = referral_data.reffered.length;
+  console.log(referral_data);
+  return referral_data;
 };
 
 export {
@@ -716,5 +718,5 @@ export {
   removeCard,
   deleteAccount,
   allUserProfiles,
-  getReferralBalance
+  getReferralDetails
 };

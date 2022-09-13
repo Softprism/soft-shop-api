@@ -498,9 +498,9 @@ const deleteAccount = async (req, res, next) => {
   }
 };
 
-const getReferralBalance = async (req, res, next) => {
+const getReferralDetails = async (req, res, next) => {
   try {
-    const action = await userService.getReferralBalance(req.user);
+    const action = await userService.getReferralDetails(req.user.id);
     if (action.err) {
       return res
         .status(action.status)
@@ -533,5 +533,5 @@ export {
   addCard,
   removeCard,
   deleteAccount,
-  getReferralBalance
+  getReferralDetails
 };

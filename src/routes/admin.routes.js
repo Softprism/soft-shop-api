@@ -8,7 +8,7 @@ import {
   getResetPasswordRequests, toggleStore, getAllStores, getUsers,
   getUserById, getStoreById, sendRiderMail, sendStoreMail, sendUserMail,
 
-  sendAllStoresMails, sendAllRidersMails, sendAllUsersMails, sendAllMails, inviteUsersToBeta, confirmRiderAccountDetails, confirmLogisticsAccountDetails, addUserDiscount, sendStoreSignUpFollowUpMailCtrl, createRoles, getRoles, getRole, pproveDeleteRquest, getDeletionRequests, approveDeleteRquest, getRiderById, getAllRiders, storeSignUpStats, riderSignUpStats, userSignUpStats, completedOrderStats, completedSalesStats, statsOverview, incomeChecker
+  sendAllStoresMails, sendAllRidersMails, sendAllUsersMails, sendAllMails, inviteUsersToBeta, confirmRiderAccountDetails, confirmLogisticsAccountDetails, addUserDiscount, sendStoreSignUpFollowUpMailCtrl, createRoles, getRoles, getRole, pproveDeleteRquest, getDeletionRequests, approveDeleteRquest, getRiderById, getAllRiders, storeSignUpStats, riderSignUpStats, userSignUpStats, completedOrderStats, completedSalesStats, statsOverview, incomeChecker, createReferralAccount
 
 } from "../controllers/admin.controller";
 import validator from "../middleware/validator";
@@ -49,7 +49,12 @@ router.get("/users", auth, isAdmin, checkPagination, getUsers);
 // @route   GET /users/:userId
 // @desc    Get a User
 // @access  Private
-router.get("/users/:userId", auth, isAdmin, getUserById,);
+router.get("/referrals/users/:userId", auth, isAdmin, createReferralAccount);
+
+// @route   GET /users/:userId
+// @desc    Get a User
+// @access  Private
+router.get("/users/:userId", auth, isAdmin, getUserById);
 
 // @route   GET /admins/riders
 // @desc    Get all riders
