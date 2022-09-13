@@ -5,7 +5,7 @@ import {
   updateUser, addItemToBasket, forgotPassword, validateToken,
   createNewPassword, verifyEmailAddress, getUserBasketItems,
   // createUserBasket,
-  editBasketItems, deleteBasketItem, deleteAllBasketItems, addCard, removeCard, deleteAccount
+  editBasketItems, deleteBasketItem, deleteAllBasketItems, addCard, removeCard, deleteAccount, getReferralBalance
 } from "../controllers/user.controller";
 import validator from "../middleware/validator";
 import auth from "../middleware/auth";
@@ -243,5 +243,8 @@ router.patch(
 
 // delete account
 router.post("/account", auth, deleteAccount);
+
+// delete account
+router.get("/referral-balance", auth, getReferralBalance);
 
 export default router;

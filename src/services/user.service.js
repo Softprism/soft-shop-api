@@ -675,9 +675,26 @@ const deleteAccount = async (userId) => {
   return "Your account has been scheduled for deletion. We will contact you shortly.";
 };
 
-// const getReferralLink = async (userId) => {
-//   const referralLink = `https://soft-shop.app`
-// };
+const getReferralBalance = async (userId) => {
+  // get user profile
+  let user = await User.findById(userId);
+  if (!user) {
+    return { err: "We can't find this account. Please contact support@soft-shop.app to resolve this.", status: 400 };
+  }
+
+  // find referral code
+  let referral_code = user.referral_id;
+  if (!referral_code) {
+    return { err: "You don't have a referral_code, please contact support@soft-shop.app if you want to participate in the referral program", status: 400 };
+  }
+
+  // find referral data
+  let referral_data = await Referral.findOne({ referral_id: referral_code });
+  if (!referral_data) {
+    return { err: "We can't find your referral data at this time, please contact support@soft-shop.app", status: 400 };
+  }
+  return referral_data.account_balance;
+};
 
 export {
   verifyEmailAddress,
@@ -698,5 +715,6 @@ export {
   addCard,
   removeCard,
   deleteAccount,
-  allUserProfiles
+  allUserProfiles,
+  getReferralBalance
 };

@@ -498,6 +498,21 @@ const deleteAccount = async (req, res, next) => {
   }
 };
 
+const getReferralBalance = async (req, res, next) => {
+  try {
+    const action = await userService.getReferralBalance(req.user);
+    if (action.err) {
+      return res
+        .status(action.status)
+        .json({ success: false, msg: action.err, status: action.status });
+    }
+
+    res.status(200).json({ success: true, result: action, status: 200 });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // ========================================================================== //
 
 export {
@@ -517,5 +532,6 @@ export {
   deleteAllBasketItems,
   addCard,
   removeCard,
-  deleteAccount
+  deleteAccount,
+  getReferralBalance
 };
