@@ -49,7 +49,7 @@ router.get("/users", auth, isAdmin, checkPagination, getUsers);
 // @route   GET /users/:userId
 // @desc    Get a User
 // @access  Private
-router.get("/referrals/users/:userId", auth, isAdmin, createReferralAccount);
+router.get("/referrals/users/:userId", auth, createReferralAccount);
 
 // @route   GET /users/:userId
 // @desc    Get a User
