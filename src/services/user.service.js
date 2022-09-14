@@ -760,6 +760,10 @@ const updateReferralAccountDetails = async (userId, accountParam) => {
   let user = await User.findById(userId);
 
   let referral_details = await Referral.findOne({ referral_id: user.referral_id });
+
+  if (!referral_details) {
+    return { err: "We can't find your referral data at this time, please contact support@soft-shop.app", status: 400 };
+  }
   const {
     account_number, bank_code, full_name, bank_name
   } = accountParam;
