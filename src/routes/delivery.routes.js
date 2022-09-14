@@ -1,6 +1,7 @@
 /* eslint-disable import/named */
 import express from "express";
 
+import { create } from "handlebars";
 import auth from "../middleware/auth";
 import {
   create_Delivery, accept_Delivery, update_DeliveryStatus, complete_Delivery,
@@ -366,8 +367,17 @@ router.patch(
       let referee = await Referral.findOne({ referral_id: user.referee });
       if (referee) {
         // add 300 naira to referee's balance
-        referee.account_balance += 300;
-        await referee.save();
+        await createTransaction(
+          {
+            amount: 300,
+            type: "Credit",
+            to: "User",
+            receiver: user._id,
+            status: "completed",
+            ref: delivery.orderId,
+            fee: 0
+          }
+        );
         // add discount to referee
         let refereeUserAccount = await User.findOne({ referral_id: user.referee });
         if (refereeUserAccount) {
