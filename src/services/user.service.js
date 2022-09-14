@@ -705,6 +705,10 @@ const requestPayout = async (userId) => {
 
   let referral_details = await Referral.findOne({ referral_id: user.referral_id });
 
+  if (!referral_details) {
+    return { err: "We can't find your referral data at this time, please contact support@soft-shop.app", status: 400 };
+  }
+
   // set payout variable and check if there's sufficient funds
   let payout = referral_details.account_balance;
   if (payout < 5000) return { err: "Insufficent Funds. You need up to NGN5000 to request for payouts.", status: 400 };
