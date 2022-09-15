@@ -78,7 +78,7 @@ router.post(
     // add discount to user's profile
     await addUserDiscount({
       userId: req.data.user_id,
-      discount: 50,
+      discount: 40,
       discountType: "taxFee",
       limit: 3
     });

@@ -365,24 +365,24 @@ router.patch(
       // credit referee's bonus
       // find referee
       let referee = await Referral.findOne({ referral_id: user.referee });
-      if (referee) {
+      let refereeUserId = await User.findOne({ referral_id: referee.referral_id });
+      if (referee && referee.reffered.length < 10) {
         // add 300 naira to referee's balance
         await createTransaction(
           {
             amount: 300,
             type: "Credit",
             to: "User",
-            receiver: user._id,
+            receiver: refereeUserId._id,
             status: "completed",
-            ref: delivery.orderId,
+            ref: `Your referral completed their first order - ${delivery.orderId}`,
             fee: 0
           }
         );
         // add discount to referee
-        let refereeUserAccount = await User.findOne({ referral_id: user.referee });
-        if (refereeUserAccount) {
+        if (refereeUserId) {
           // check for existing discount
-          let existingDiscount = await UserDiscount.findOne({ user: refereeUserAccount._id, discountType: "subtotal" });
+          let existingDiscount = await UserDiscount.findOne({ user: refereeUserId._id, discountType: "subtotal" });
           if (existingDiscount && existingDiscount.count < existingDiscount.limit) {
             // check if discount is still less than 50%
             if (existingDiscount.discount < 50) {
@@ -391,7 +391,7 @@ router.patch(
             }
           } else {
             await addUserDiscount({
-              userId: refereeUserAccount._id,
+              userId: refereeUserId._id,
               discount: 5,
               discountType: "subtotal",
             });
