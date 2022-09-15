@@ -364,37 +364,71 @@ router.patch(
     if (firstOrder.length === 1) {
       // credit referee's bonus
       // find referee
+      // consumers are not worthy of 300 bonus when they get pass 10 referrals
       let referee = await Referral.findOne({ referral_id: user.referee });
       let refereeUserId = await User.findOne({ referral_id: referee.referral_id });
-      if (referee && referee.reffered.length < 10) {
+      if (referee) {
         // add 300 naira to referee's balance
-        await createTransaction(
-          {
-            amount: 300,
-            type: "Credit",
-            to: "User",
-            receiver: refereeUserId._id,
-            status: "completed",
-            ref: `Your referral completed their first order - ${delivery.orderId}`,
-            fee: 0
-          }
-        );
-        // add discount to referee
-        if (refereeUserId) {
-          // check for existing discount
-          let existingDiscount = await UserDiscount.findOne({ user: refereeUserId._id, discountType: "subtotal" });
-          if (existingDiscount && existingDiscount.count < existingDiscount.limit) {
-            // check if discount is still less than 50%
-            if (existingDiscount.discount < 50) {
-              existingDiscount.discount += 5;
-              await existingDiscount.save();
+        if (referee.isConumer === true && referee.reffered.length < 10) {
+          await createTransaction(
+            {
+              amount: 300,
+              type: "Credit",
+              to: "User",
+              receiver: refereeUserId._id,
+              status: "completed",
+              ref: `Your referral completed their first order - ${delivery.orderId}`,
+              fee: 0
             }
-          } else {
-            await addUserDiscount({
-              userId: refereeUserId._id,
-              discount: 5,
-              discountType: "subtotal",
-            });
+          );
+          // add discount to referee
+          if (refereeUserId) {
+            // check for existing discount
+            let existingDiscount = await UserDiscount.findOne({ user: refereeUserId._id, discountType: "subtotal" });
+            if (existingDiscount && existingDiscount.count < existingDiscount.limit) {
+              // check if discount is still less than 50%
+              if (existingDiscount.discount < 50) {
+                existingDiscount.discount += 5;
+                await existingDiscount.save();
+              }
+            } else {
+              await addUserDiscount({
+                userId: refereeUserId._id,
+                discount: 5,
+                discountType: "subtotal",
+              });
+            }
+          }
+        }
+        if (referee.isConumer === false) {
+          await createTransaction(
+            {
+              amount: 300,
+              type: "Credit",
+              to: "User",
+              receiver: refereeUserId._id,
+              status: "completed",
+              ref: `Your referral completed their first order - ${delivery.orderId}`,
+              fee: 0
+            }
+          );
+          // add discount to referee
+          if (refereeUserId) {
+            // check for existing discount
+            let existingDiscount = await UserDiscount.findOne({ user: refereeUserId._id, discountType: "subtotal" });
+            if (existingDiscount && existingDiscount.count < existingDiscount.limit) {
+              // check if discount is still less than 50%
+              if (existingDiscount.discount < 50) {
+                existingDiscount.discount += 5;
+                await existingDiscount.save();
+              }
+            } else {
+              await addUserDiscount({
+                userId: refereeUserId._id,
+                discount: 5,
+                discountType: "subtotal",
+              });
+            }
           }
         }
       }
