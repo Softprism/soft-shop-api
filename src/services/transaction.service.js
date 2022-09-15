@@ -101,7 +101,7 @@ const createTransaction = async ({
     // send push notification to store on debit
     await sendMany(
       "ssa",
-      store.vendorPushDeviceToken,
+      user.pushDeviceToken,
       "Your Referral Account Has Been Debited",
       `Your SoftShop account has been debited with ${amount}`,
       {}
