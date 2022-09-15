@@ -715,12 +715,15 @@ const requestPayout = async (userId) => {
   if (!referral_details.account_number) {
     return { err: "Please update your account details or contact support@soft-shop.app", status: 400 };
   }
-
+  // check if is consumer
+  if (referral_details.isConsumer === true) {
+    return { err: "bank withdrawals are not allowed for consumers on softshop", status: 400 };
+  }
   // set payout variable and check if there's sufficient funds
   let payout = referral_details.account_balance;
   if (payout < 5000) return { err: "Insufficent Funds. You need up to NGN5000 to request for payouts.", status: 400 };
 
-  // check for pending store and ledger request
+  // check for pending user request
   let oldUserRequest = await Transaction.findOne({
     type: "Debit",
     status: "pending",
@@ -744,9 +747,9 @@ const requestPayout = async (userId) => {
     referral_details.account_balance = Number(referral_details.total_credit) - Number(referral_details.total_debit);
     await referral_details.save();
 
-    return { email: store.email, payout, transaction: oldStoreRequest };
+    return "payout request sent";
   }
-  // create  debit transaction for store
+  // create  debit transaction for user
   let newUserTransaction = await createTransaction({
     amount: payout,
     type: "Debit",
@@ -760,6 +763,7 @@ const requestPayout = async (userId) => {
   if (!newUserTransaction) return { err: "Error requesting payout. Please try again", status: 400 };
   referral_details.pendingWithdrawal = true;
   await referral_details.save();
+  return "payout request sent";
 };
 
 const updateReferralAccountDetails = async (userId, accountParam) => {

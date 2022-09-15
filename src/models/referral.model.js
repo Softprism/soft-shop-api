@@ -5,6 +5,7 @@ const referralSchema = mongoose.Schema({
   reffered: [{ type: mongoose.Types.ObjectId, ref: "User" }],
   total_credit: { type: Number, default: 0.00 },
   total_debit: { type: Number, default: 0.00 },
+  isConsumer: { type: Boolean, default: false },
   account_number: { type: String },
   bank_code: { type: String },
   full_name: { type: String },

@@ -13,6 +13,8 @@ import Rider from "../models/rider.model";
 import UserDiscount from "../models/user-discount.model";
 import { getUserBasketItems } from "./user.service";
 import Userconfig from "../models/configurations.model";
+import Referral from "../models/referral.model";
+import { createTransaction } from "./transaction.service";
 
 const getOrders = async (urlParams) => {
   // initialize match parameters, get limit, skip & sort values
@@ -698,10 +700,11 @@ const encryptDetails = async (cardDetails) => {
 };
 
 const calculateDeliveryFee = async (userId, { storeId, destination, origin }) => {
-  const distance = await getDistanceServiceForDelivery(destination, origin);
+  const distancePromise = getDistanceServiceForDelivery(destination, origin);
 
   // find store and populate store's category
-  const store = await Store.findById(storeId).populate("category");
+  const storePromise = Store.findById(storeId).populate("category");
+  const [distance, store] = await Promise.all([distancePromise, storePromise]);
   // if store is not found return error
   if (!store) return { err: "Store not found.", status: 404 };
 
@@ -736,7 +739,7 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
 
   // check for surge by checking the amount of riders that isBusy is true and false
   let surge = false;
-  const busyRiders = await Rider.find({
+  const busyRidersPromise = Rider.find({
     store: storeId,
     isBusy: true,
     location: {
@@ -745,15 +748,18 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
       }
     }
   });
-  const busyRidersLength = busyRiders.length;
 
-  const otherRiders = await Rider.find({
+  const otherRidersPromise = Rider.find({
     "location.coordinates": {
       $geoWithin: {
         $centerSphere: [[store.location.coordinates[0], store.location.coordinates[1]], 10000.23456],
       }
     }
   });
+
+  const [busyRiders, otherRiders] = await Promise.all([busyRidersPromise, otherRidersPromise]);
+
+  const busyRidersLength = busyRiders.length;
   const freeRidersLength = otherRiders.length;
 
   // check if there are more busy riders than free riders different ranges
@@ -768,14 +774,16 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
   }
 
   // get users basket
-  const userbasketItems = await getUserBasketItems(userId);
+  const userbasketItemsPromise = getUserBasketItems(userId);
 
   // calculate subtotal fee from userbascket items totalPrice
   // get user Platform fee
-  let userPlatFormFee = await Userconfig.findOne({
+  let userPlatFormFeePromise = Userconfig.findOne({
     user: "User",
     userId,
   });
+  const [userbasketItems, userPlatFormFee] = await Promise.all([userbasketItemsPromise, userPlatFormFeePromise]);
+
   let subtotalFee = (userPlatFormFee.fee / 100) * userbasketItems.totalPrice;
   let vatFee = 0.075 * subtotalFee;
   let taxFee = subtotalFee + vatFee;
@@ -811,6 +819,39 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
     subtotalDiscountPrice = userbasketItems.totalPrice - userbasketItems.totalPrice * discount;
     subtotalDiscount = true;
   }
+
+  // check for referral
+  let userData = await User.findById(userId);
+  let referralBonus = await Referral.findOne({ referral_id: userData.referral_id, isConsumer: true });
+  // check if referral exists
+  if (referralBonus && referralBonus.account_balance >= 500 && subtotalDiscountPrice > 0) {
+    subtotalDiscountPrice -= referralBonus.account_balance;
+    if (subtotalDiscountPrice < 500) {
+      let offsetBalance = 500 - subtotalDiscountPrice;
+      referralBonus.total_debit += Number(offsetBalance);
+      referralBonus.account_balance = Number(referralBonus.total_credit) - Number(referralBonus.total_debit);
+      await referralBonus.save();
+    } else {
+      referralBonus.total_debit += Number(referralBonus.account_balance);
+      referralBonus.account_balance = Number(referralBonus.total_credit) - Number(referralBonus.total_debit);
+      await referralBonus.save();
+      subtotalDiscount = true;
+    }
+  } else if (referralBonus && referralBonus.account_balance >= 600 && subtotalDiscountPrice === 0 && subtotalDiscount === false) {
+    subtotalDiscountPrice = userbasketItems.totalPrice - referralBonus.account_balance;
+    if (subtotalDiscountPrice < 500) {
+      let offsetBalance = 500 - subtotalDiscountPrice;
+      referralBonus.total_debit += Number(offsetBalance);
+      referralBonus.account_balance = Number(referralBonus.total_credit) - Number(referralBonus.total_debit);
+      await referralBonus.save();
+    } else {
+      referralBonus.total_debit += Number(referralBonus.account_balance);
+      referralBonus.account_balance = Number(referralBonus.total_credit) - Number(referralBonus.total_debit);
+      await referralBonus.save();
+    }
+    subtotalDiscount = true;
+  }
+
   // return ceiled values for all fees
   return {
     subtotalFee: Math.ceil(userbasketItems.totalPrice),
