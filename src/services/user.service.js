@@ -13,6 +13,7 @@ import { verifyCardRequest } from "./payment.service";
 import Deletion from "../models/delete-requests.model";
 import Referral from "../models/referral.model";
 import Transaction from "../models/transaction.model";
+import { createTransaction } from "./transaction.service";
 
 // send otp to Verify user email before sign up
 const verifyEmailAddress = async ({ email }) => {
@@ -705,8 +706,14 @@ const requestPayout = async (userId) => {
 
   let referral_details = await Referral.findOne({ referral_id: user.referral_id });
 
+  // check if referral account exists
   if (!referral_details) {
     return { err: "We can't find your referral data at this time, please contact support@soft-shop.app", status: 400 };
+  }
+
+  // check if account details exists
+  if (!referral_details.account_number) {
+    return { err: "Please update your account details or contact support@soft-shop.app", status: 400 };
   }
 
   // set payout variable and check if there's sufficient funds
