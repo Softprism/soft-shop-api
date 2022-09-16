@@ -367,10 +367,12 @@ router.patch(
       // find referee
       // consumers are not worthy of 300 bonus when they get pass 10 referrals
       let referee = await Referral.findOne({ referral_id: user.referee });
+      console.log(referee);
       let refereeUserId = await User.findOne({ referral_id: referee.referral_id });
       if (referee) {
         // add 300 naira to referee's balance
-        if (referee.isConumer === true && referee.reffered.length < 10) {
+        if (referee.isConsumer === true && referee.reffered.length < 10) {
+          console.log("true asf");
           await createTransaction(
             {
               amount: 300,
@@ -401,7 +403,7 @@ router.patch(
             }
           }
         }
-        if (referee.isConumer === false) {
+        if (referee.isConsumer === false) {
           await createTransaction(
             {
               amount: 300,
@@ -443,6 +445,7 @@ router.patch(
         let discountDetails = await UserDiscount.findOne({ user: user._id, discountType: "subtotal" });
         if (discountDetails) {
           discountDetails.count += 1;
+          await discountDetails.save();
         }
       }
       // check if delivery discount
@@ -451,6 +454,7 @@ router.patch(
         let discountDetails = await UserDiscount.findOne({ user: user._id, discountType: "deliveryFee" });
         if (discountDetails) {
           discountDetails.count += 1;
+          await discountDetails.save();
         }
       }
       // check if platform fee discount
@@ -459,6 +463,7 @@ router.patch(
         let discountDetails = await UserDiscount.findOne({ user: user._id, discountType: "taxFee" });
         if (discountDetails) {
           discountDetails.count += 1;
+          await discountDetails.save();
         }
       }
     }

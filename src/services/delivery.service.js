@@ -143,6 +143,9 @@ const completeDelivery = async (orderId, riderId) => {
   if (!order) {
     return { err: "Order does not exists.", status: 404, };
   }
+  if (!order.status === "arrived") {
+    return { err: "We can't complete this order at this time.", status: 400, };
+  }
   // check if user who requested for order is the same with the logged in user
   if (order.rider.toString() !== riderId.toString()) {
     return { err: "You're not permitted to carry out this action", status: 403, };
