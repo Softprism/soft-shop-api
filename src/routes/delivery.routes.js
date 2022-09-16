@@ -174,6 +174,7 @@ router.patch(
     }
 
     let deliveryFee = (riderDeliveryFee.fee / 100) * order.deliveryPrice;
+
     let discountCheck2 = order.platformFeeDiscount === true && order.platformFeeDiscountPrice > 0;
     let orderFee = discountCheck2 ? order.platformFeeDiscountPrice : order.taxPrice;
     let storeFee = (storePlatformFee.fee / 100) * order.subtotal;
@@ -329,7 +330,7 @@ router.patch(
 
     // check order for discount
     if (order.deliveryDiscount === true || order.platformFeeDiscount === true || order.subtotalDiscount === true) {
-      if (order.deliveryDiscountPrice > 0) {
+      if (order.deliveryDiscount === true && order.deliveryDiscountPrice > 0) {
         // get amount softshop would pay for
         await createTransaction(
           {
@@ -348,7 +349,7 @@ router.patch(
         deliveryDiscount.count += 1;
         await deliveryDiscount.save();
       }
-      if (order.platformFeeDiscountPrice > 0) {
+      if (order.platformFeeDiscount === true && order.platformFeeDiscountPrice > 0) {
         await createTransaction(
           {
             amount: Number(order.taxPrice - order.platformFeeDiscountPrice),
@@ -366,7 +367,7 @@ router.patch(
         platformFeeDiscount.count += 1;
         await platformFeeDiscount.save();
       }
-      if (order.subtotalDiscountPrice > 0) {
+      if (order.subtotalDiscount === true && order.subtotalDiscountPrice > 0) {
         await createTransaction(
           {
             amount: Number(order.subtotal - order.subtotalDiscountPrice),

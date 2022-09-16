@@ -855,6 +855,22 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
     subtotalDiscount = true;
   }
 
+  // check for referral bonus and add it to subtotal discount
+  let referralBonus = await Referral.findOne({ referral_id: userId, isConsumer: true });
+  // check if referral exists
+  if (referralBonus && referralBonus.account_balance >= 500 && subtotalDiscountPrice > 0 && subtotalDiscount === true) {
+    subtotalDiscountPrice -= referralBonus.account_balance;
+    if (subtotalDiscountPrice < 500) {
+      orderParam.subtotalDiscountPrice = 500;
+    }
+  } else if (referralBonus && referralBonus.account_balance >= 600 && subtotalDiscountPrice === 0 && subtotalDiscount === false) {
+    subtotalDiscountPrice = userbasketItems.totalPrice - referralBonus.account_balance;
+    if (subtotalDiscountPrice < 500) {
+      subtotalDiscountPrice = 500;
+    }
+    subtotalDiscount = true;
+  }
+
   // return ceiled values for all fees
   return {
     subtotalFee: Math.ceil(userbasketItems.totalPrice),
