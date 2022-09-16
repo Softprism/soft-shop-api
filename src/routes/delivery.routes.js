@@ -289,6 +289,7 @@ router.patch(
       route: "/",
       index: "3"
     };
+    // send push notification to store
     let storePushPromise = sendMany(
       "ssa",
       store.orderPushDeviceToken,
