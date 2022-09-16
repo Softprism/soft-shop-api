@@ -199,6 +199,7 @@ const createOrder = async (orderParam) => {
   if (referralBonus && referralBonus.account_balance >= 600 && orderParam.subtotalDiscountPrice > 500) {
     orderParam.subtotalDiscountPrice -= referralBonus.account_balance;
     console.log(`is subtotalDiscount < 500? ${orderParam.subtotalDiscountPrice < 500}`);
+    console.log(`Subtotal Discount Price: ${orderParam.subtotalDiscountPrice}`);
     if (orderParam.subtotalDiscountPrice < 500) {
       let offsetBalance = 500 - orderParam.subtotalDiscountPrice;
       console.log(`offsetBalance: ${offsetBalance}`);
