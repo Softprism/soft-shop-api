@@ -734,6 +734,7 @@ const encryptDetails = async (cardDetails) => {
 };
 
 const calculateDeliveryFee = async (userId, { storeId, destination, origin }) => {
+  console.log(userId, { storeId, destination, origin });
   const distancePromise = getDistanceServiceForDelivery(destination, origin);
 
   // find store and populate store's category
@@ -856,12 +857,15 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
   }
 
   // check for referral bonus and add it to subtotal discount
-  let referralBonus = await Referral.findOne({ referral_id: userId, isConsumer: true });
+  // get userDetails
+  let userDetails = await User.findById(userId);
+  let referralBonus = await Referral.findOne({ referral_id: userDetails.referral_id, isConsumer: true });
+  console.log(referralBonus);
   // check if referral exists
   if (referralBonus && referralBonus.account_balance >= 500 && subtotalDiscountPrice > 0 && subtotalDiscount === true) {
     subtotalDiscountPrice -= referralBonus.account_balance;
     if (subtotalDiscountPrice < 500) {
-      orderParam.subtotalDiscountPrice = 500;
+      subtotalDiscountPrice = 500;
     }
   } else if (referralBonus && referralBonus.account_balance >= 600 && subtotalDiscountPrice === userbasketItems.totalPrice && subtotalDiscount === false) {
     subtotalDiscountPrice = userbasketItems.totalPrice - referralBonus.account_balance;
