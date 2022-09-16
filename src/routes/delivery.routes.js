@@ -252,14 +252,38 @@ router.patch(
     // create credit transaction for ledger
     let discountCheck = order.totalDiscountedPrice > 0;
     let ordTotalPrice = discountCheck ? order.totalDiscountedPrice : order.totalPrice;
-    let crvLedgerPromise = createTransaction(
+    let crvLedgerPromise1 = createTransaction(
       {
-        amount: orderFee + storeFee + deliveryFee + orderTax + storeTax + deliveryTax + ordTotalPrice,
+        amount: ordTotalPrice,
         type: "Credit",
         to: "Ledger",
         receiver: ledger._id,
         status: "completed",
-        ref: `Monies accrued from order: ${delivery.orderId}`,
+        ref: `Total order price for order: ${delivery.orderId}`,
+        fee: 0
+      }
+    );
+
+    let crvLedgerPromise2 = createTransaction(
+      {
+        amount: orderFee + storeFee + deliveryFee,
+        type: "Credit",
+        to: "Ledger",
+        receiver: ledger._id,
+        status: "completed",
+        ref: `Total Fees accrued order: ${delivery.orderId}`,
+        fee: 0
+      }
+    );
+
+    let crvLedgerPromise3 = createTransaction(
+      {
+        amount: storeTax + deliveryTax + ordTotalPrice,
+        type: "Credit",
+        to: "Ledger",
+        receiver: ledger._id,
+        status: "completed",
+        ref: `Tax accrued from order: ${delivery.orderId}`,
         fee: 0
       }
     );
@@ -300,7 +324,7 @@ router.patch(
     // send mail to user, notify them of order completd
     let userEmailPromise = sendUserOrderCompletedMail(order.orderId, user.email);
 
-    await Promise.all([crVatDeliveryPromise1, storeCredTrnxPromise, crvStorePromise, crvUserPromise, crvLedgerPromise, vatDevitTrnxPromise, userPushPromise, storePushPromise, userEmailPromise]);
+    await Promise.all([crVatDeliveryPromise1, storeCredTrnxPromise, crvStorePromise, crvUserPromise, crvLedgerPromise1, crvLedgerPromise2, crvLedgerPromise3, vatDevitTrnxPromise, userPushPromise, storePushPromise, userEmailPromise]);
     console.log(`ending operation 2 at ${executingAt()}`);
 
     // check order for discount
