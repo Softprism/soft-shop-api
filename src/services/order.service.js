@@ -173,6 +173,7 @@ const createOrder = async (orderParam) => {
     user: "User",
     userId: user,
   });
+
   let subtotalFee = (userPlatFormFee.fee / 100) * userbasketItems.totalPrice;
   let vatFee = 0.075 * subtotalFee;
   let taxFee = subtotalFee + vatFee;
