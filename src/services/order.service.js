@@ -201,9 +201,15 @@ const createOrder = async (orderParam) => {
     console.log(`is subtotalDiscount < 500? ${orderParam.subtotalDiscountPrice < 500}`);
     if (orderParam.subtotalDiscountPrice < 500) {
       let offsetBalance = 500 - orderParam.subtotalDiscountPrice;
+      console.log(`offsetBalance: ${offsetBalance}`);
       referralBonus.total_debit += Number(offsetBalance);
+      console.log(`total debit: ${referralBonus.total_debit}`);
+
       referralBonus.account_balance = Number(referralBonus.total_credit) - Number(referralBonus.total_debit);
+      console.log(`account balance: ${referralBonus.account_balance}`);
+
       await referralBonus.save();
+      console.log(`saved referral bonus: ${referralBonus}`);
       orderParam.subtotalDiscountPrice = 500;
     } else {
       referralBonus.total_debit += Number(referralBonus.account_balance);
