@@ -194,7 +194,7 @@ const createOrder = async (orderParam) => {
   // check for referral bonus and add it to subtotal discount
   let referralBonus = await Referral.findOne({ referral_id: vUser.referral_id, isConsumer: true });
   // check if referral exists
-  if (referralBonus && referralBonus.account_balance >= 600) {
+  if (referralBonus && referralBonus.account_balance >= 600 && orderParam.subtotalDiscountPrice > 500) {
     orderParam.subtotalDiscountPrice -= referralBonus.account_balance;
     if (orderParam.subtotalDiscountPrice < 500) {
       let offsetBalance = 500 - orderParam.subtotalDiscountPrice;
@@ -207,6 +207,7 @@ const createOrder = async (orderParam) => {
       referralBonus.account_balance = Number(referralBonus.total_credit) - Number(referralBonus.total_debit);
       await referralBonus.save();
     }
+    orderParam.subtotalDiscount = true;
   }
 
   // creates an order for user after all validation passes
@@ -719,7 +720,6 @@ const encryptDetails = async (cardDetails) => {
 };
 
 const calculateDeliveryFee = async (userId, { storeId, destination, origin }) => {
-  console.log(userId, { storeId, destination, origin });
   const distancePromise = getDistanceServiceForDelivery(destination, origin);
 
   // find store and populate store's category
@@ -838,24 +838,6 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
     let discount = userSubtotalDiscount.discount / 100;
     subtotalDiscountPrice = userbasketItems.totalPrice - userbasketItems.totalPrice * discount;
     if (subtotalDiscountPrice < 500) subtotalDiscountPrice = 500;
-    subtotalDiscount = true;
-  }
-
-  // check for referral bonus and add it to subtotal discount
-  // get userDetails
-  let userDetails = await User.findById(userId);
-  let referralBonus = await Referral.findOne({ referral_id: userDetails.referral_id, isConsumer: true });
-  // check if referral exists
-  if (referralBonus && referralBonus.account_balance >= 600 && subtotalDiscount === true) {
-    subtotalDiscountPrice -= referralBonus.account_balance;
-    if (subtotalDiscountPrice < 500) {
-      subtotalDiscountPrice = 500;
-    }
-  } else if (referralBonus && referralBonus.account_balance >= 600 && subtotalDiscountPrice === userbasketItems.totalPrice && subtotalDiscount === false) {
-    subtotalDiscountPrice = userbasketItems.totalPrice - referralBonus.account_balance;
-    if (subtotalDiscountPrice < 500) {
-      subtotalDiscountPrice = 500;
-    }
     subtotalDiscount = true;
   }
 
