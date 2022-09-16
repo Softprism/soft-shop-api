@@ -26,6 +26,7 @@ import Token from "../models/tokens.model";
 import getOTP from "../utils/sendOTP";
 import Referral from "../models/referral.model";
 import { addUserDiscount } from "../services/admin.service";
+import { createActivity } from "../services/activities.service";
 
 const router = express.Router();
 
@@ -38,8 +39,12 @@ router.post(
   verifyEmailAddress,
   async (req, res) => {
     // send otp
-    let token = await getOTP("user-signup", req.data.email);
-    await sendSignUpOTPmail(req.data.email, token.otp);
+    try {
+      let token = await getOTP("user-signup", req.data.email);
+      await sendSignUpOTPmail(req.data.email, token.otp);
+    } catch (error) {
+      await createActivity("User", "Signup Process", "Can't send email for OTP signup", `${error.response} ||||| ${error.message}`);
+    }
   }
 );
 

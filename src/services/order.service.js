@@ -851,6 +851,7 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
   if (userSubtotalDiscount && userSubtotalDiscount.count < userSubtotalDiscount.limit) {
     let discount = userSubtotalDiscount.discount / 100;
     subtotalDiscountPrice = userbasketItems.totalPrice - userbasketItems.totalPrice * discount;
+    if (subtotalDiscountPrice < 500) subtotalDiscountPrice = 500;
     subtotalDiscount = true;
   }
 
