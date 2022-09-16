@@ -207,7 +207,7 @@ const createOrder = async (orderParam) => {
       referralBonus.account_balance = Number(referralBonus.total_credit) - Number(referralBonus.total_debit);
       await referralBonus.save();
     }
-  } else if (referralBonus && referralBonus.account_balance >= 600 && orderParam.subtotalDiscountPrice === 0 && orderParam.subtotalDiscount === false) {
+  } else if (referralBonus && referralBonus.account_balance >= 600 && orderParam.subtotalDiscountPrice === userbasketItems.totalPrice && orderParam.subtotalDiscount === false) {
     orderParam.subtotalDiscountPrice = userbasketItems.totalPrice - referralBonus.account_balance;
     if (orderParam.subtotalDiscountPrice < 500) {
       let offsetBalance = 500 - orderParam.subtotalDiscountPrice;
@@ -863,7 +863,7 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
     if (subtotalDiscountPrice < 500) {
       orderParam.subtotalDiscountPrice = 500;
     }
-  } else if (referralBonus && referralBonus.account_balance >= 600 && subtotalDiscountPrice === 0 && subtotalDiscount === false) {
+  } else if (referralBonus && referralBonus.account_balance >= 600 && subtotalDiscountPrice === userbasketItems.totalPrice && subtotalDiscount === false) {
     subtotalDiscountPrice = userbasketItems.totalPrice - referralBonus.account_balance;
     if (subtotalDiscountPrice < 500) {
       subtotalDiscountPrice = 500;
