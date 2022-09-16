@@ -193,27 +193,18 @@ const createOrder = async (orderParam) => {
 
   // check for referral bonus and add it to subtotal discount
   let referralBonus = await Referral.findOne({ referral_id: vUser.referral_id, isConsumer: true });
-  console.log(`referral details: ${referralBonus}`);
   // check if referral exists
-  console.log(`does referral exist and balance >= 600? ${referralBonus && referralBonus.account_balance >= 600 && orderParam.subtotalDiscountPrice > 500}`);
   if (referralBonus && referralBonus.account_balance >= 600 && orderParam.subtotalDiscountPrice > 500) {
     let existingSdp = orderParam.subtotalDiscountPrice;
     orderParam.subtotalDiscountPrice -= referralBonus.account_balance;
-    console.log(`is subtotalDiscount < 500? ${orderParam.subtotalDiscountPrice < 500}`);
-    console.log(`Subtotal Discount Price: ${orderParam.subtotalDiscountPrice}`);
-    console.log(`Existing Subtotal Discount Price: ${existingSdp}`);
 
     if (orderParam.subtotalDiscountPrice < 500) {
       let offsetBalance = 500 - existingSdp;
-      console.log(`offsetBalance: ${offsetBalance}`);
-      referralBonus.total_debit += Number(offsetBalance);
-      console.log(`total debit: ${referralBonus.total_debit}`);
+      referralBonus.total_debit += Math.abs(offsetBalance);
 
       referralBonus.account_balance = Number(referralBonus.total_credit) - Number(referralBonus.total_debit);
-      console.log(`account balance: ${referralBonus.account_balance}`);
 
       await referralBonus.save();
-      console.log(`saved referral bonus: ${referralBonus}`);
       orderParam.subtotalDiscountPrice = 500;
     } else {
       referralBonus.total_debit += Number(referralBonus.account_balance);
