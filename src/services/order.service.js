@@ -157,23 +157,26 @@ const createOrder = async (orderParam) => {
   } = orderParam;
 
   // validate user
-  const vUser = await User.findById(user);
+  const vUserPromise = User.findById(user);
 
   // validate store
-  const vStore = await Store.findById(store);
+  const vStorePromise = Store.findById(store);
+
+  const [vUser, vStore] = await Promise.all([vUserPromise, vStorePromise]);
+
   if (!vStore) return { err: "Store not found.", status: 404 };
   // validate if store is active
   if (!vStore.isActive) {
     return { err: "Sorry you can't create order from an inactive store.", status: 409 };
   }
 
-  const userbasketItems = await getUserBasketItems(user);
+  const userbasketItemsPromise = getUserBasketItems(user);
 
-  let userPlatFormFee = await Userconfig.findOne({
+  let userPlatFormFeePromise = Userconfig.findOne({
     user: "User",
     userId: user,
   });
-
+  const [userbasketItems, userPlatFormFee] = await Promsise.all(userbasketItemsPromise, userPlatFormFeePromise);
   let subtotalFee = (userPlatFormFee.fee / 100) * userbasketItems.totalPrice;
   let vatFee = 0.075 * subtotalFee;
   let taxFee = subtotalFee + vatFee;
@@ -201,14 +204,14 @@ const createOrder = async (orderParam) => {
     if (orderParam.subtotalDiscountPrice < 500) {
       let offsetBalance = 500 - existingSdp;
       referralBonus.total_debit += Math.abs(offsetBalance);
-
+      orderParam.totalDiscountedPrice -= Math.abs(offsetBalance);
       referralBonus.account_balance = Number(referralBonus.total_credit) - Number(referralBonus.total_debit);
-
       await referralBonus.save();
       orderParam.subtotalDiscountPrice = 500;
     } else {
       referralBonus.total_debit += Number(referralBonus.account_balance);
       referralBonus.account_balance = Number(referralBonus.total_credit) - Number(referralBonus.total_debit);
+      orderParam.totalDiscountedPrice -= referralBonus.account_balance;
       await referralBonus.save();
     }
     orderParam.subtotalDiscount = true;
