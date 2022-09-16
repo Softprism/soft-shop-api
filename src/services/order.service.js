@@ -197,11 +197,14 @@ const createOrder = async (orderParam) => {
   // check if referral exists
   console.log(`does referral exist and balance >= 600? ${referralBonus && referralBonus.account_balance >= 600 && orderParam.subtotalDiscountPrice > 500}`);
   if (referralBonus && referralBonus.account_balance >= 600 && orderParam.subtotalDiscountPrice > 500) {
+    let existingSdp = orderParam.subtotalDiscountPrice;
     orderParam.subtotalDiscountPrice -= referralBonus.account_balance;
     console.log(`is subtotalDiscount < 500? ${orderParam.subtotalDiscountPrice < 500}`);
     console.log(`Subtotal Discount Price: ${orderParam.subtotalDiscountPrice}`);
+    console.log(`Existing Subtotal Discount Price: ${existingSdp}`);
+
     if (orderParam.subtotalDiscountPrice < 500) {
-      let offsetBalance = 500 - orderParam.subtotalDiscountPrice;
+      let offsetBalance = 500 - existingSdp;
       console.log(`offsetBalance: ${offsetBalance}`);
       referralBonus.total_debit += Number(offsetBalance);
       console.log(`total debit: ${referralBonus.total_debit}`);
