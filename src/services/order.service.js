@@ -176,7 +176,7 @@ const createOrder = async (orderParam) => {
     user: "User",
     userId: user,
   });
-  const [userbasketItems, userPlatFormFee] = await Promise.all(userbasketItemsPromise, userPlatFormFeePromise);
+  const [userbasketItems, userPlatFormFee] = await Promise.all([userbasketItemsPromise, userPlatFormFeePromise]);
   let subtotalFee = (userPlatFormFee.fee / 100) * userbasketItems.totalPrice;
   let vatFee = 0.075 * subtotalFee;
   let taxFee = subtotalFee + vatFee;
