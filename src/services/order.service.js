@@ -194,7 +194,7 @@ const createOrder = async (orderParam) => {
   // check for referral bonus and add it to subtotal discount
   let referralBonus = await Referral.findOne({ referral_id: vUser.referral_id, isConsumer: true });
   // check if referral exists
-  if (referralBonus && referralBonus.account_balance >= 500 && orderParam.subtotalDiscountPrice > 0 && orderParam.subtotalDiscount === true) {
+  if (referralBonus && referralBonus.account_balance >= 600) {
     orderParam.subtotalDiscountPrice -= referralBonus.account_balance;
     if (orderParam.subtotalDiscountPrice < 500) {
       let offsetBalance = 500 - orderParam.subtotalDiscountPrice;
@@ -206,21 +206,6 @@ const createOrder = async (orderParam) => {
       referralBonus.total_debit += Number(referralBonus.account_balance);
       referralBonus.account_balance = Number(referralBonus.total_credit) - Number(referralBonus.total_debit);
       await referralBonus.save();
-    }
-  } else if (referralBonus && referralBonus.account_balance >= 600 && orderParam.subtotalDiscountPrice === userbasketItems.totalPrice && orderParam.subtotalDiscount === false) {
-    orderParam.subtotalDiscountPrice = userbasketItems.totalPrice - referralBonus.account_balance;
-    if (orderParam.subtotalDiscountPrice < 500) {
-      let offsetBalance = 500 - orderParam.subtotalDiscountPrice;
-      referralBonus.total_debit += Number(offsetBalance);
-      referralBonus.account_balance = Number(referralBonus.total_credit) - Number(referralBonus.total_debit);
-      await referralBonus.save();
-      orderParam.subtotalDiscountPrice = 500;
-      orderParam.subtotalDiscount = true;
-    } else {
-      referralBonus.total_debit += Number(referralBonus.account_balance);
-      referralBonus.account_balance = Number(referralBonus.total_credit) - Number(referralBonus.total_debit);
-      await referralBonus.save();
-      orderParam.subtotalDiscount = true;
     }
   }
 
@@ -860,9 +845,8 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
   // get userDetails
   let userDetails = await User.findById(userId);
   let referralBonus = await Referral.findOne({ referral_id: userDetails.referral_id, isConsumer: true });
-  console.log(referralBonus);
   // check if referral exists
-  if (referralBonus && referralBonus.account_balance >= 500 && subtotalDiscountPrice > 0 && subtotalDiscount === true) {
+  if (referralBonus && referralBonus.account_balance >= 600 && subtotalDiscount === true) {
     subtotalDiscountPrice -= referralBonus.account_balance;
     if (subtotalDiscountPrice < 500) {
       subtotalDiscountPrice = 500;
