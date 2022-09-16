@@ -73,14 +73,14 @@ router.post(
       userId: req.data.user_id,
       discount: 15,
       discountType: "subtotal",
-      limit: 3
+      limit: 2
     });
     // add discount to user's profile
     await addUserDiscount({
       userId: req.data.user_id,
       discount: 35,
       discountType: "taxFee",
-      limit: 3
+      limit: 2
     });
 
     // create user referral account
