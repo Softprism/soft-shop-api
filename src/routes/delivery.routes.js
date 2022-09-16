@@ -259,7 +259,7 @@ router.patch(
         to: "Ledger",
         receiver: ledger._id,
         status: "completed",
-        ref: delivery.orderId,
+        ref: `Monies accrued from order: ${delivery.orderId}`,
         fee: 0
       }
     );
@@ -437,36 +437,6 @@ router.patch(
       }
     }
 
-    // check if order was discounted then add to count
-    if (order.totalDiscountedPrice > 0) {
-      // check if subtotal discount
-      if (order.subtotalDiscount === true) {
-        // find discount details
-        let discountDetails = await UserDiscount.findOne({ user: user._id, discountType: "subtotal" });
-        if (discountDetails) {
-          discountDetails.count += 1;
-          await discountDetails.save();
-        }
-      }
-      // check if delivery discount
-      if (order.deliveryDiscount === true) {
-        // find discount details
-        let discountDetails = await UserDiscount.findOne({ user: user._id, discountType: "deliveryFee" });
-        if (discountDetails) {
-          discountDetails.count += 1;
-          await discountDetails.save();
-        }
-      }
-      // check if platform fee discount
-      if (order.platformFeeDiscount === true) {
-        // find discount details
-        let discountDetails = await UserDiscount.findOne({ user: user._id, discountType: "taxFee" });
-        if (discountDetails) {
-          discountDetails.count += 1;
-          await discountDetails.save();
-        }
-      }
-    }
     console.log(`ending operation 3 at ${executingAt()}`);
   }
 );
