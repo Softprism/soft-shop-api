@@ -174,7 +174,8 @@ router.patch(
     }
 
     let deliveryFee = (riderDeliveryFee.fee / 100) * order.deliveryPrice;
-    let orderFee = order.taxPrice;
+    let discountCheck2 = order.platformFeeDiscount === true && order.platformFeeDiscountPrice > 0;
+    let orderFee = discountCheck2 ? order.platformFeeDiscountPrice : order.taxPrice;
     let storeFee = (storePlatformFee.fee / 100) * order.subtotal;
 
     // calculate VAT for paying parties
