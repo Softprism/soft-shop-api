@@ -826,7 +826,7 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
   }
 
   // check for taxFee userDiscount
-  let taxDiscountPrice = subtotalFee;
+  let taxDiscountPrice = taxFee;
   let taxDiscount = false;
   const userTaxDiscount = await UserDiscount.findOne({ user: userId, discountType: "taxFee" });
   if (userTaxDiscount && userTaxDiscount.count < userTaxDiscount.limit) {
