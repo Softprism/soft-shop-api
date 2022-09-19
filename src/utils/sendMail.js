@@ -234,10 +234,11 @@ const sendUserSignUpMail = async (toEmail, firstName) => {
   let filePath = `${__dirname}/../mails/logo.png`;
   let cid = "logo";
 
-  let sendAction = await sendEmail(toEmail, subject, htmlToSend, fileName, filePath, cid);
-  console.log(sendAction);
-  if (!sendAction) {
-    console.log(`signup mail not sent to ${toEmail}`);
+  try {
+    let sendAction = await sendEmail(toEmail, subject, htmlToSend, fileName, filePath, cid);
+  } catch (error) {
+    console.log(`signup mail not sent to ${toEmail} reason: ${error}`);
+    return { err: error, status: 500 };
   }
 };
 

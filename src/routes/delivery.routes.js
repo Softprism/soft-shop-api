@@ -1,6 +1,7 @@
 /* eslint-disable import/named */
 import express from "express";
 
+import { create } from "handlebars";
 import auth from "../middleware/auth";
 import {
   create_Delivery, accept_Delivery, update_DeliveryStatus, complete_Delivery,
@@ -173,7 +174,9 @@ router.patch(
     }
 
     let deliveryFee = (riderDeliveryFee.fee / 100) * order.deliveryPrice;
-    let orderFee = order.taxPrice;
+
+    let discountCheck2 = order.platformFeeDiscount === true && order.platformFeeDiscountPrice > 0;
+    let orderFee = discountCheck2 ? order.platformFeeDiscountPrice : order.taxPrice;
     let storeFee = (storePlatformFee.fee / 100) * order.subtotal;
 
     // calculate VAT for paying parties
@@ -250,14 +253,38 @@ router.patch(
     // create credit transaction for ledger
     let discountCheck = order.totalDiscountedPrice > 0;
     let ordTotalPrice = discountCheck ? order.totalDiscountedPrice : order.totalPrice;
-    let crvLedgerPromise = createTransaction(
+    let crvLedgerPromise1 = createTransaction(
       {
-        amount: orderFee + storeFee + deliveryFee + orderTax + storeTax + deliveryTax + ordTotalPrice,
+        amount: ordTotalPrice,
         type: "Credit",
         to: "Ledger",
         receiver: ledger._id,
         status: "completed",
-        ref: delivery.orderId,
+        ref: `Total order price for order: ${delivery.orderId}`,
+        fee: 0
+      }
+    );
+
+    let crvLedgerPromise2 = createTransaction(
+      {
+        amount: orderFee + storeFee + deliveryFee,
+        type: "Credit",
+        to: "Ledger",
+        receiver: ledger._id,
+        status: "completed",
+        ref: `Total Fees accrued order: ${delivery.orderId}`,
+        fee: 0
+      }
+    );
+
+    let crvLedgerPromise3 = createTransaction(
+      {
+        amount: storeTax + deliveryTax + ordTotalPrice,
+        type: "Credit",
+        to: "Ledger",
+        receiver: ledger._id,
+        status: "completed",
+        ref: `Tax accrued from order: ${delivery.orderId}`,
         fee: 0
       }
     );
@@ -287,6 +314,7 @@ router.patch(
       route: "/",
       index: "3"
     };
+    // send push notification to store
     let storePushPromise = sendMany(
       "ssa",
       store.orderPushDeviceToken,
@@ -297,12 +325,12 @@ router.patch(
     // send mail to user, notify them of order completd
     let userEmailPromise = sendUserOrderCompletedMail(order.orderId, user.email);
 
-    await Promise.all([crVatDeliveryPromise1, storeCredTrnxPromise, crvStorePromise, crvUserPromise, crvLedgerPromise, vatDevitTrnxPromise, userPushPromise, storePushPromise, userEmailPromise]);
+    await Promise.all([crVatDeliveryPromise1, storeCredTrnxPromise, crvStorePromise, crvUserPromise, crvLedgerPromise1, crvLedgerPromise2, crvLedgerPromise3, vatDevitTrnxPromise, userPushPromise, storePushPromise, userEmailPromise]);
     console.log(`ending operation 2 at ${executingAt()}`);
 
     // check order for discount
     if (order.deliveryDiscount === true || order.platformFeeDiscount === true || order.subtotalDiscount === true) {
-      if (order.deliveryDiscountPrice > 0) {
+      if (order.deliveryDiscount === true && order.deliveryDiscountPrice > 0) {
         // get amount softshop would pay for
         await createTransaction(
           {
@@ -321,7 +349,7 @@ router.patch(
         deliveryDiscount.count += 1;
         await deliveryDiscount.save();
       }
-      if (order.platformFeeDiscountPrice > 0) {
+      if (order.platformFeeDiscount === true && order.platformFeeDiscountPrice > 0) {
         await createTransaction(
           {
             amount: Number(order.taxPrice - order.platformFeeDiscountPrice),
@@ -339,7 +367,7 @@ router.patch(
         platformFeeDiscount.count += 1;
         await platformFeeDiscount.save();
       }
-      if (order.subtotalDiscountPrice > 0) {
+      if (order.subtotalDiscount === true && order.subtotalDiscountPrice > 0) {
         await createTransaction(
           {
             amount: Number(order.subtotal - order.subtotalDiscountPrice),
@@ -363,28 +391,73 @@ router.patch(
     if (firstOrder.length === 1) {
       // credit referee's bonus
       // find referee
+      // consumers are not worthy of 300 bonus when they get pass 10 referrals
       let referee = await Referral.findOne({ referral_id: user.referee });
+      console.log(referee);
+      let refereeUserId = await User.findOne({ referral_id: referee.referral_id });
       if (referee) {
         // add 300 naira to referee's balance
-        referee.account_balance += 300;
-        await referee.save();
-        // add discount to referee
-        let refereeUserAccount = await User.findOne({ referral_id: user.referee });
-        if (refereeUserAccount) {
-          // check for existing discount
-          let existingDiscount = await UserDiscount.findOne({ user: refereeUserAccount._id, discountType: "subtotal" });
-          if (existingDiscount && existingDiscount.count < existingDiscount.limit) {
-            // check if discount is still less than 50%
-            if (existingDiscount.discount < 50) {
-              existingDiscount.discount += 5;
-              await existingDiscount.save();
+        if (referee.isConsumer === true && referee.reffered.length < 10) {
+          console.log("true asf");
+          await createTransaction(
+            {
+              amount: 300,
+              type: "Credit",
+              to: "User",
+              receiver: refereeUserId._id,
+              status: "completed",
+              ref: `Your referral completed their first order - ${delivery.orderId}`,
+              fee: 0
             }
-          } else {
-            await addUserDiscount({
-              userId: refereeUserAccount._id,
-              discount: 5,
-              discountType: "subtotal",
-            });
+          );
+          // add discount to referee
+          if (refereeUserId) {
+            // check for existing discount
+            let existingDiscount = await UserDiscount.findOne({ user: refereeUserId._id, discountType: "subtotal" });
+            if (existingDiscount && existingDiscount.count < existingDiscount.limit) {
+              // check if discount is still less than 50%
+              if (existingDiscount.discount < 50) {
+                existingDiscount.discount += 5;
+                await existingDiscount.save();
+              }
+            } else {
+              await addUserDiscount({
+                userId: refereeUserId._id,
+                discount: 5,
+                discountType: "subtotal",
+              });
+            }
+          }
+        }
+        if (referee.isConsumer === false) {
+          await createTransaction(
+            {
+              amount: 300,
+              type: "Credit",
+              to: "User",
+              receiver: refereeUserId._id,
+              status: "completed",
+              ref: `Your referral completed their first order - ${delivery.orderId}`,
+              fee: 0
+            }
+          );
+          // add discount to referee
+          if (refereeUserId) {
+            // check for existing discount
+            let existingDiscount = await UserDiscount.findOne({ user: refereeUserId._id, discountType: "subtotal" });
+            if (existingDiscount && existingDiscount.count < existingDiscount.limit) {
+              // check if discount is still less than 50%
+              if (existingDiscount.discount < 50) {
+                existingDiscount.discount += 5;
+                await existingDiscount.save();
+              }
+            } else {
+              await addUserDiscount({
+                userId: refereeUserId._id,
+                discount: 5,
+                discountType: "subtotal",
+              });
+            }
           }
         }
       }
@@ -392,7 +465,6 @@ router.patch(
 
     console.log(`ending operation 3 at ${executingAt()}`);
   }
-
 );
 
 // @route   PUT /review

@@ -48,7 +48,7 @@ const createStore = async (req, res, next) => {
     await createUserConfig({
       user: "Store",
       userId: storeData._id,
-      fee: 20
+      fee: 15
     });
     // log activity
     await createActivity(

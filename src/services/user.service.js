@@ -12,6 +12,8 @@ import getJwt from "../utils/jwtGenerator";
 import { verifyCardRequest } from "./payment.service";
 import Deletion from "../models/delete-requests.model";
 import Referral from "../models/referral.model";
+import Transaction from "../models/transaction.model";
+import { createTransaction } from "./transaction.service";
 
 // send otp to Verify user email before sign up
 const verifyEmailAddress = async ({ email }) => {
@@ -675,10 +677,118 @@ const deleteAccount = async (userId) => {
   return "Your account has been scheduled for deletion. We will contact you shortly.";
 };
 
-// const getReferralLink = async (userId) => {
-//   const referralLink = `https://soft-shop.app`
-// };
+const getReferralDetails = async (userId) => {
+  // get user profile
+  let user = await User.findById(userId);
+  if (!user) {
+    return { err: "We can't find this account. Please contact support@soft-shop.app to resolve this.", status: 400 };
+  }
 
+  // find referral code
+  let referral_code = user.referral_id;
+  if (!referral_code) {
+    return { err: "You don't have a referral_code, please contact support@soft-shop.app if you want to participate in the referral program", status: 404 };
+  }
+
+  // find referral data
+  let referral_data = await Referral.findOne({ referral_id: referral_code }).lean();
+  if (!referral_data) {
+    return { err: "We can't find your referral data at this time, please contact support@soft-shop.app", status: 400 };
+  }
+  referral_data.reffered = referral_data.reffered.length;
+  console.log(referral_data);
+  return referral_data;
+};
+
+const requestPayout = async (userId) => {
+  // get user details
+  let user = await User.findById(userId);
+
+  let referral_details = await Referral.findOne({ referral_id: user.referral_id });
+
+  // check if referral account exists
+  if (!referral_details) {
+    return { err: "We can't find your referral data at this time, please contact support@soft-shop.app", status: 400 };
+  }
+
+  // check if account details exists
+  if (!referral_details.account_number) {
+    return { err: "Please update your account details or contact support@soft-shop.app", status: 400 };
+  }
+  // check if is consumer
+  if (referral_details.isConsumer === true) {
+    return { err: "bank withdrawals are not allowed for consumers on softshop", status: 400 };
+  }
+  // set payout variable and check if there's sufficient funds
+  let payout = referral_details.account_balance;
+  if (payout < 5000) return { err: "Insufficent Funds. You need up to NGN5000 to request for payouts.", status: 400 };
+
+  // check for pending user request
+  let oldUserRequest = await Transaction.findOne({
+    type: "Debit",
+    status: "pending",
+    ref: userId,
+    to: "User"
+  });
+
+  if (oldUserRequest && referral_details.pendingWithdrawal === true) {
+    await Transaction.findOneAndUpdate(
+      {
+        type: "Debit",
+        ref: storeId,
+        status: "userId",
+        to: "User"
+      },
+      { $inc: { amount: Number(payout) } }
+    );
+
+    // update store account balance
+    referral_details.total_debit += Number(payout);
+    referral_details.account_balance = Number(referral_details.total_credit) - Number(referral_details.total_debit);
+    await referral_details.save();
+
+    return "payout request sent";
+  }
+  // create  debit transaction for user
+  let newUserTransaction = await createTransaction({
+    amount: payout,
+    type: "Debit",
+    to: "User",
+    receiver: userId,
+    ref: referral_details.referral_id, // do not modify this, being used in the transaction service
+    fee: 0
+  });
+
+  // check for error while creating new transaction
+  if (!newUserTransaction) return { err: "Error requesting payout. Please try again", status: 400 };
+  referral_details.pendingWithdrawal = true;
+  await referral_details.save();
+  return "payout request sent";
+};
+
+const updateReferralAccountDetails = async (userId, accountParam) => {
+  // get user details
+  let user = await User.findById(userId);
+
+  let referral_details = await Referral.findOne({ referral_id: user.referral_id });
+
+  if (!referral_details) {
+    return { err: "We can't find your referral data at this time, please contact support@soft-shop.app", status: 400 };
+  }
+  const {
+    account_number, bank_code, full_name, bank_name
+  } = accountParam;
+
+  // modify existing records
+  referral_details.account_number = account_number;
+  referral_details.bank_code = bank_code;
+  referral_details.full_name = full_name;
+  referral_details.bank_name = bank_name;
+
+  await referral_details.save();
+
+  return "Account created successfully";
+};
 export {
   verifyEmailAddress,
   registerUser,
@@ -698,5 +808,8 @@ export {
   addCard,
   removeCard,
   deleteAccount,
-  allUserProfiles
+  allUserProfiles,
+  getReferralDetails,
+  requestPayout,
+  updateReferralAccountDetails
 };

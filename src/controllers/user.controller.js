@@ -498,6 +498,51 @@ const deleteAccount = async (req, res, next) => {
   }
 };
 
+const getReferralDetails = async (req, res, next) => {
+  try {
+    const action = await userService.getReferralDetails(req.user.id);
+    if (action.err) {
+      return res
+        .status(action.status)
+        .json({ success: false, msg: action.err, status: action.status });
+    }
+
+    res.status(200).json({ success: true, result: action, status: 200 });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const requestPayout = async (req, res, next) => {
+  try {
+    const action = await userService.requestPayout(req.user.id);
+    if (action.err) {
+      return res
+        .status(action.status)
+        .json({ success: false, msg: action.err, status: action.status });
+    }
+
+    res.status(200).json({ success: true, result: action, status: 200 });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const updateReferralAccountDetails = async (req, res, next) => {
+  try {
+    const action = await userService.updateReferralAccountDetails(req.user.id, req.body);
+    if (action.err) {
+      return res
+        .status(action.status)
+        .json({ success: false, msg: action.err, status: action.status });
+    }
+
+    res.status(200).json({ success: true, result: action, status: 200 });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // ========================================================================== //
 
 export {
@@ -517,5 +562,8 @@ export {
   deleteAllBasketItems,
   addCard,
   removeCard,
-  deleteAccount
+  deleteAccount,
+  getReferralDetails,
+  requestPayout,
+  updateReferralAccountDetails
 };

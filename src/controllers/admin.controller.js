@@ -606,6 +606,20 @@ const incomeChecker = async (req, res, next) => {
     next(error);
   }
 };
+
+const createReferralAccount = async (req, res, next) => {
+  try {
+    const account = await adminService.createReferralAccount(req.params.userId);
+
+    if (account.err) {
+      return res.status(account.status).json({ success: false, msg: account.err, status: account.status });
+    }
+
+    res.status(200).json({ success: true, result: account, status: 200 });
+  } catch (error) {
+    next(error);
+  }
+};
 export {
   getAdmins,
   registerAdmin,
@@ -651,5 +665,6 @@ export {
   completedOrderStats,
   completedSalesStats,
   statsOverview,
-  incomeChecker
+  incomeChecker,
+  createReferralAccount
 };

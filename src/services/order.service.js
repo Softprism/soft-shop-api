@@ -13,6 +13,8 @@ import Rider from "../models/rider.model";
 import UserDiscount from "../models/user-discount.model";
 import { getUserBasketItems } from "./user.service";
 import Userconfig from "../models/configurations.model";
+import Referral from "../models/referral.model";
+import { createTransaction } from "./transaction.service";
 
 const getOrders = async (urlParams) => {
   // initialize match parameters, get limit, skip & sort values
@@ -155,22 +157,26 @@ const createOrder = async (orderParam) => {
   } = orderParam;
 
   // validate user
-  const vUser = await User.findById(user);
+  const vUserPromise = User.findById(user);
 
   // validate store
-  const vStore = await Store.findById(store);
+  const vStorePromise = Store.findById(store);
+
+  const [vUser, vStore] = await Promise.all([vUserPromise, vStorePromise]);
+
   if (!vStore) return { err: "Store not found.", status: 404 };
   // validate if store is active
   if (!vStore.isActive) {
     return { err: "Sorry you can't create order from an inactive store.", status: 409 };
   }
 
-  const userbasketItems = await getUserBasketItems(user);
+  const userbasketItemsPromise = getUserBasketItems(user);
 
-  let userPlatFormFee = await Userconfig.findOne({
+  let userPlatFormFeePromise = Userconfig.findOne({
     user: "User",
     userId: user,
   });
+  const [userbasketItems, userPlatFormFee] = await Promise.all([userbasketItemsPromise, userPlatFormFeePromise]);
   let subtotalFee = (userPlatFormFee.fee / 100) * userbasketItems.totalPrice;
   let vatFee = 0.075 * subtotalFee;
   let taxFee = subtotalFee + vatFee;
@@ -187,6 +193,29 @@ const createOrder = async (orderParam) => {
     // return id of format 'soft - aaaaa'
     return `soft-${s4()}`;
   };
+
+  // check for referral bonus and add it to subtotal discount
+  let referralBonus = await Referral.findOne({ referral_id: vUser.referral_id, isConsumer: true });
+  // check if referral exists
+  if (referralBonus && referralBonus.account_balance >= 600 && orderParam.subtotalDiscountPrice > 500) {
+    let existingSdp = orderParam.subtotalDiscountPrice;
+    orderParam.subtotalDiscountPrice -= referralBonus.account_balance;
+
+    if (orderParam.subtotalDiscountPrice < 500) {
+      let offsetBalance = 500 - existingSdp;
+      referralBonus.total_debit += Math.abs(offsetBalance);
+      orderParam.totalDiscountedPrice -= Math.abs(offsetBalance);
+      referralBonus.account_balance = Number(referralBonus.total_credit) - Number(referralBonus.total_debit);
+      await referralBonus.save();
+      orderParam.subtotalDiscountPrice = 500;
+    } else {
+      referralBonus.total_debit += Number(referralBonus.account_balance);
+      referralBonus.account_balance = Number(referralBonus.total_credit) - Number(referralBonus.total_debit);
+      orderParam.totalDiscountedPrice -= referralBonus.account_balance;
+      await referralBonus.save();
+    }
+    orderParam.subtotalDiscount = true;
+  }
 
   // creates an order for user after all validation passes
   const order = new Order(orderParam);
@@ -698,10 +727,11 @@ const encryptDetails = async (cardDetails) => {
 };
 
 const calculateDeliveryFee = async (userId, { storeId, destination, origin }) => {
-  const distance = await getDistanceServiceForDelivery(destination, origin);
+  const distancePromise = getDistanceServiceForDelivery(destination, origin);
 
   // find store and populate store's category
-  const store = await Store.findById(storeId).populate("category");
+  const storePromise = Store.findById(storeId).populate("category");
+  const [distance, store] = await Promise.all([distancePromise, storePromise]);
   // if store is not found return error
   if (!store) return { err: "Store not found.", status: 404 };
 
@@ -736,7 +766,7 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
 
   // check for surge by checking the amount of riders that isBusy is true and false
   let surge = false;
-  const busyRiders = await Rider.find({
+  const busyRidersPromise = Rider.find({
     store: storeId,
     isBusy: true,
     location: {
@@ -745,15 +775,18 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
       }
     }
   });
-  const busyRidersLength = busyRiders.length;
 
-  const otherRiders = await Rider.find({
+  const otherRidersPromise = Rider.find({
     "location.coordinates": {
       $geoWithin: {
         $centerSphere: [[store.location.coordinates[0], store.location.coordinates[1]], 10000.23456],
       }
     }
   });
+
+  const [busyRiders, otherRiders] = await Promise.all([busyRidersPromise, otherRidersPromise]);
+
+  const busyRidersLength = busyRiders.length;
   const freeRidersLength = otherRiders.length;
 
   // check if there are more busy riders than free riders different ranges
@@ -768,20 +801,22 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
   }
 
   // get users basket
-  const userbasketItems = await getUserBasketItems(userId);
+  const userbasketItemsPromise = getUserBasketItems(userId);
 
   // calculate subtotal fee from userbascket items totalPrice
   // get user Platform fee
-  let userPlatFormFee = await Userconfig.findOne({
+  let userPlatFormFeePromise = Userconfig.findOne({
     user: "User",
     userId,
   });
+  const [userbasketItems, userPlatFormFee] = await Promise.all([userbasketItemsPromise, userPlatFormFeePromise]);
+
   let subtotalFee = (userPlatFormFee.fee / 100) * userbasketItems.totalPrice;
   let vatFee = 0.075 * subtotalFee;
   let taxFee = subtotalFee + vatFee;
 
   // check for deliveryFee userDiscount
-  let deliveryDiscountPrice = 0;
+  let deliveryDiscountPrice = deliveryFee;
   let deliveryDiscount = false;
   const userDeliveryDiscount = await UserDiscount.findOne({ user: userId, discountType: "deliveryFee" });
   if (userDeliveryDiscount && userDeliveryDiscount.count < userDeliveryDiscount.limit) {
@@ -791,7 +826,7 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
   }
 
   // check for taxFee userDiscount
-  let taxDiscountPrice = 0;
+  let taxDiscountPrice = taxFee;
   let taxDiscount = false;
   const userTaxDiscount = await UserDiscount.findOne({ user: userId, discountType: "taxFee" });
   if (userTaxDiscount && userTaxDiscount.count < userTaxDiscount.limit) {
@@ -803,14 +838,16 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
   }
 
   // check for subtotal userDiscount
-  let subtotalDiscountPrice = 0;
+  let subtotalDiscountPrice = userbasketItems.totalPrice;
   let subtotalDiscount = false;
   const userSubtotalDiscount = await UserDiscount.findOne({ user: userId, discountType: "subtotal" });
   if (userSubtotalDiscount && userSubtotalDiscount.count < userSubtotalDiscount.limit) {
     let discount = userSubtotalDiscount.discount / 100;
     subtotalDiscountPrice = userbasketItems.totalPrice - userbasketItems.totalPrice * discount;
+    if (subtotalDiscountPrice < 500) subtotalDiscountPrice = 500;
     subtotalDiscount = true;
   }
+
   // return ceiled values for all fees
   return {
     subtotalFee: Math.ceil(userbasketItems.totalPrice),

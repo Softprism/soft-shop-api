@@ -5,7 +5,7 @@ import {
   updateUser, addItemToBasket, forgotPassword, validateToken,
   createNewPassword, verifyEmailAddress, getUserBasketItems,
   // createUserBasket,
-  editBasketItems, deleteBasketItem, deleteAllBasketItems, addCard, removeCard, deleteAccount
+  editBasketItems, deleteBasketItem, deleteAllBasketItems, addCard, removeCard, deleteAccount, getReferralBalance, getReferralDetails, requestPayout, updateReferralAccountDetails
 } from "../controllers/user.controller";
 import validator from "../middleware/validator";
 import auth from "../middleware/auth";
@@ -26,6 +26,7 @@ import Token from "../models/tokens.model";
 import getOTP from "../utils/sendOTP";
 import Referral from "../models/referral.model";
 import { addUserDiscount } from "../services/admin.service";
+import { createActivity } from "../services/activities.service";
 
 const router = express.Router();
 
@@ -38,8 +39,12 @@ router.post(
   verifyEmailAddress,
   async (req, res) => {
     // send otp
-    let token = await getOTP("user-signup", req.data.email);
-    await sendSignUpOTPmail(req.data.email, token.otp);
+    try {
+      let token = await getOTP("user-signup", req.data.email);
+      await sendSignUpOTPmail(req.data.email, token.otp);
+    } catch (error) {
+      await createActivity("User", "Signup Process", "Can't send email for OTP signup", `${error.response} ||||| ${error.message}`);
+    }
   }
 );
 
@@ -71,16 +76,16 @@ router.post(
     // add discount to user's profile
     await addUserDiscount({
       userId: req.data.user_id,
-      discount: 5,
+      discount: 15,
       discountType: "subtotal",
-      limit: 3
+      limit: 2
     });
     // add discount to user's profile
     await addUserDiscount({
       userId: req.data.user_id,
-      discount: 50,
+      discount: 35,
       discountType: "taxFee",
-      limit: 3
+      limit: 2
     });
 
     // create user referral account
@@ -243,5 +248,14 @@ router.patch(
 
 // delete account
 router.post("/account", auth, deleteAccount);
+
+// delete account
+router.get("/referral-balance", auth, getReferralDetails);
+
+// request payout
+router.post("/referral/request-payout", auth, requestPayout);
+
+// add payment details
+router.patch("/referral/bank-details", auth, updateReferralAccountDetails);
 
 export default router;

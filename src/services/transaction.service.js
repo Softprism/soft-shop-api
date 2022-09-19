@@ -1,8 +1,10 @@
 import Ledger from "../models/ledger.model";
 import Logistics from "../models/logistics-company.model";
+import Referral from "../models/referral.model";
 import Rider from "../models/rider.model";
 import Store from "../models/store.model";
 import Transaction from "../models/transaction.model";
+import User from "../models/user.model";
 import {
   sendRiderCreditMail,
   sendRiderDebitMail, sendStoreCreditMail, sendStoreDebitMail
@@ -61,6 +63,50 @@ const createTransaction = async ({
     );
   }
 
+  // credit user
+  if (newTrans && to === "User" && type === "Credit" && status === "completed") {
+    let user = await User.findById(receiver);
+
+    let referral_details = await Referral.findOne({ referral_id: user.referral_id });
+
+    referral_details.total_credit += Number(amount);
+    referral_details.account_balance = Number(referral_details.total_credit) - Number(referral_details.total_debit);
+    await referral_details.save();
+
+    // send email to store on credit
+    // await sendStoreCreditMail(store.email, amount);
+
+    // send push notification to store on credit
+    await sendMany(
+      "ssa",
+      user.pushDeviceToken,
+      "Your Referral Account Has Been Credited",
+      `Your SoftShop account has been credited with ${amount}`,
+      {}
+    );
+  }
+
+  // debit user
+  if (newTrans && to === "User" && type === "Debit") {
+    let user = await User.findById(receiver);
+
+    let referral_details = await Referral.findOne({ referral_id: user.referral_id });
+    referral_details.total_debit += Number(amount);
+    referral_details.account_balance = Number(referral_details.total_credit) - Number(referral_details.total_debit);
+    await referral_details.save();
+
+    // send email to store on debit
+    // await sendStoreDebitMail(store.email, amount);
+
+    // send push notification to store on debit
+    await sendMany(
+      "ssa",
+      user.pushDeviceToken,
+      "Your Referral Account Has Been Debited",
+      `Your SoftShop account has been debited with ${amount}`,
+      {}
+    );
+  }
   // credit ledger
   if (newTrans && to === "Ledger" && type === "Credit") {
     let ledger = await Ledger.findOne({});
