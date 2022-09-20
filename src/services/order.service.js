@@ -866,7 +866,7 @@ const calculateDeliveryFee = async (userId, { storeId, destination, origin }) =>
     platformFeeDiscountPrice: Math.ceil(taxDiscountPrice),
     subtotalDiscount,
     subtotalDiscountPrice: Math.ceil(subtotalDiscountPrice),
-    totalDiscountedPrice: Math.ceil(deliveryDiscountPrice + taxDiscountPrice + subtotalDiscountPrice),
+    totalDiscountedPrice: Math.ceil(deliveryDiscountPrice) + Math.ceil(taxDiscountPrice) + Math.ceil(subtotalDiscountPrice)
   };
 };
 
